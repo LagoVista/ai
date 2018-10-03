@@ -1,0 +1,53 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27703.2047
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LagoVista.AI.Models", "src\LagoVista.AI.Models\LagoVista.AI.Models.csproj", "{DBCD2830-19A4-48C2-A904-53BA41FF51CA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LagoVista.AI", "src\LagoVista.AI\LagoVista.AI.csproj", "{4B1FDFF2-3D5A-447A-9CEC-418CAE70A9BD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LagoVista.AI.Rest", "src\LagoVista.AI.Rest\LagoVista.AI.Rest.csproj", "{959E9FD1-D6A7-4173-B106-F2BC9930846E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{374F4C7F-619C-4B41-AAAC-0F9B3B259F07}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0C3AF45F-896E-44A6-9A2A-E62A8609B5D4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LagoVista.AI.Tests", "tests\LagoVista.AI.Tests\LagoVista.AI.Tests.csproj", "{92E31462-FE30-4B55-9AF7-3CB12483B5FC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DBCD2830-19A4-48C2-A904-53BA41FF51CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DBCD2830-19A4-48C2-A904-53BA41FF51CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DBCD2830-19A4-48C2-A904-53BA41FF51CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DBCD2830-19A4-48C2-A904-53BA41FF51CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4B1FDFF2-3D5A-447A-9CEC-418CAE70A9BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4B1FDFF2-3D5A-447A-9CEC-418CAE70A9BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4B1FDFF2-3D5A-447A-9CEC-418CAE70A9BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4B1FDFF2-3D5A-447A-9CEC-418CAE70A9BD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{959E9FD1-D6A7-4173-B106-F2BC9930846E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{959E9FD1-D6A7-4173-B106-F2BC9930846E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{959E9FD1-D6A7-4173-B106-F2BC9930846E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{959E9FD1-D6A7-4173-B106-F2BC9930846E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{92E31462-FE30-4B55-9AF7-3CB12483B5FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{92E31462-FE30-4B55-9AF7-3CB12483B5FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{92E31462-FE30-4B55-9AF7-3CB12483B5FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{92E31462-FE30-4B55-9AF7-3CB12483B5FC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{DBCD2830-19A4-48C2-A904-53BA41FF51CA} = {374F4C7F-619C-4B41-AAAC-0F9B3B259F07}
+		{4B1FDFF2-3D5A-447A-9CEC-418CAE70A9BD} = {374F4C7F-619C-4B41-AAAC-0F9B3B259F07}
+		{959E9FD1-D6A7-4173-B106-F2BC9930846E} = {374F4C7F-619C-4B41-AAAC-0F9B3B259F07}
+		{92E31462-FE30-4B55-9AF7-3CB12483B5FC} = {0C3AF45F-896E-44A6-9A2A-E62A8609B5D4}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {29D4F79F-3C1A-46CA-BA14-25CEA87D4B71}
+	EndGlobalSection
+EndGlobal
