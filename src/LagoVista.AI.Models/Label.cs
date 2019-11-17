@@ -8,6 +8,9 @@ namespace LagoVista.AI.Models
     {
         public string Id { get; set; }
 
+        [FormField(LabelResource: AIResources.Names.Common_Name, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
+        public string Name { get; set; }
+
         [FormField(LabelResource: AIResources.Names.Label_Title, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
         public string Title { get; set; }
 

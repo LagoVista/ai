@@ -185,6 +185,27 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:ModelRevision_Notes
 
 		public static string ModelRevision_Notes { get { return GetResourceString("ModelRevision_Notes"); } }
+//Resources:AIResources:ModelRevision_Quality
+
+		public static string ModelRevision_Quality { get { return GetResourceString("ModelRevision_Quality"); } }
+//Resources:AIResources:ModelRevision_Quality_Excellent
+
+		public static string ModelRevision_Quality_Excellent { get { return GetResourceString("ModelRevision_Quality_Excellent"); } }
+//Resources:AIResources:ModelRevision_Quality_Good
+
+		public static string ModelRevision_Quality_Good { get { return GetResourceString("ModelRevision_Quality_Good"); } }
+//Resources:AIResources:ModelRevision_Quality_Medium
+
+		public static string ModelRevision_Quality_Medium { get { return GetResourceString("ModelRevision_Quality_Medium"); } }
+//Resources:AIResources:ModelRevision_Quality_Poor
+
+		public static string ModelRevision_Quality_Poor { get { return GetResourceString("ModelRevision_Quality_Poor"); } }
+//Resources:AIResources:ModelRevision_Quality_Select
+
+		public static string ModelRevision_Quality_Select { get { return GetResourceString("ModelRevision_Quality_Select"); } }
+//Resources:AIResources:ModelRevision_Quality_Unknown
+
+		public static string ModelRevision_Quality_Unknown { get { return GetResourceString("ModelRevision_Quality_Unknown"); } }
 //Resources:AIResources:ModelRevision_Settings
 
 		public static string ModelRevision_Settings { get { return GetResourceString("ModelRevision_Settings"); } }
@@ -265,6 +286,13 @@ namespace LagoVista.AI.Models.Resources
 			public const string ModelRevision_Help = "ModelRevision_Help";
 			public const string ModelRevision_Labels = "ModelRevision_Labels";
 			public const string ModelRevision_Notes = "ModelRevision_Notes";
+			public const string ModelRevision_Quality = "ModelRevision_Quality";
+			public const string ModelRevision_Quality_Excellent = "ModelRevision_Quality_Excellent";
+			public const string ModelRevision_Quality_Good = "ModelRevision_Quality_Good";
+			public const string ModelRevision_Quality_Medium = "ModelRevision_Quality_Medium";
+			public const string ModelRevision_Quality_Poor = "ModelRevision_Quality_Poor";
+			public const string ModelRevision_Quality_Select = "ModelRevision_Quality_Select";
+			public const string ModelRevision_Quality_Unknown = "ModelRevision_Quality_Unknown";
 			public const string ModelRevision_Settings = "ModelRevision_Settings";
 			public const string ModelRevision_Status = "ModelRevision_Status";
 			public const string ModelRevision_Status_Alpha = "ModelRevision_Status_Alpha";

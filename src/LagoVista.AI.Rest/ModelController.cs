@@ -112,6 +112,7 @@ namespace LagoVista.AI.Rest
         {
             var model = DetailResponse<ModelRevision>.Create();
             model.Model.Id = Guid.NewGuid().ToId();
+            model.Model.Datestamp = DateTime.UtcNow.ToString();
             return model;
         }
 
@@ -124,6 +125,7 @@ namespace LagoVista.AI.Rest
         public DetailResponse<ModelNotes> CreateNewModelNote()
         {
             var model = DetailResponse<ModelNotes>.Create();
+            model.Model.Datestamp = DateTime.UtcNow.ToString();
             model.Model.Id = Guid.NewGuid().ToId();
             return model;
         }

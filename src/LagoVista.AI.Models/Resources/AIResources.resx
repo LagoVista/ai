@@ -210,6 +210,27 @@
   <data name="ModelRevision_Notes" xml:space="preserve">
     <value>Notes</value>
   </data>
+  <data name="ModelRevision_Quality" xml:space="preserve">
+    <value>Quality</value>
+  </data>
+  <data name="ModelRevision_Quality_Excellent" xml:space="preserve">
+    <value>Excellent</value>
+  </data>
+  <data name="ModelRevision_Quality_Good" xml:space="preserve">
+    <value>Good</value>
+  </data>
+  <data name="ModelRevision_Quality_Medium" xml:space="preserve">
+    <value>Medium</value>
+  </data>
+  <data name="ModelRevision_Quality_Poor" xml:space="preserve">
+    <value>Poor</value>
+  </data>
+  <data name="ModelRevision_Quality_Select" xml:space="preserve">
+    <value>-select quality-</value>
+  </data>
+  <data name="ModelRevision_Quality_Unknown" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
   <data name="ModelRevision_Settings" xml:space="preserve">
     <value>Settings</value>
   </data>
