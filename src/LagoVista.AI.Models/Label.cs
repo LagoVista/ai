@@ -1,26 +1,26 @@
 ﻿using LagoVista.AI.Models.Resources;
 using LagoVista.Core.Attributes;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace LagoVista.AI.Models
 {
+    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.Label_Title, AIResources.Names.Label_Help, AIResources.Names.Label_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources))]
     public class Label
     {
+        public string Id { get; set; }
+
         [FormField(LabelResource: AIResources.Names.Label_Title, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
         public string Title { get; set; }
 
         [FormField(LabelResource: AIResources.Names.Label_Index, FieldType: FieldTypes.Integer, IsRequired: true, ResourceType: typeof(AIResources))]
         public int Index { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.Label_Key, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
+        [FormField(LabelResource: AIResources.Names.Label_Key, FieldType: FieldTypes.Key, IsRequired: true, ResourceType: typeof(AIResources))]
         public string Key { get; set; }
 
         [FormField(LabelResource: AIResources.Names.Label_Icon, FieldType: FieldTypes.Text, IsRequired: false, ResourceType: typeof(AIResources))]
         public string Icon { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.Label_Description, FieldType: FieldTypes.MultiLineText, IsRequired: false, ResourceType: typeof(AIResources))]
+        [FormField(LabelResource: AIResources.Names.Common_Description, FieldType: FieldTypes.MultiLineText, IsRequired: false, ResourceType: typeof(AIResources))]
         public string Description { get; set; }
     }
 }

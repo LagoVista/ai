@@ -9,6 +9,7 @@ namespace LagoVista.AI
         Task AddModelAsync(Model model);
         Task UpdateModelAsync(Model model);
         Task<Model> GetModelAsync(string modelId);
+        Task<ListResponse<ModelSummary>> GetModelSummariesForCategoryAsync(string orgId, string categoryId, ListRequest listRequest);
         Task<ListResponse<ModelSummary>> GetModelSummariesForOrgAsync(string orgId, ListRequest listRequest);
         Task DeleteModelAsync(string id);
         Task<bool> QueryKeyInUseAsync(string key, string org);

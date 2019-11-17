@@ -9,9 +9,12 @@ using LagoVista.AI.Models;
 using LagoVista.Core.Models.UIMetaData;
 using System;
 using LagoVista.Core;
+using LagoVista.IoT.Web.Common.Attributes;
 
 namespace LagoVista.AI.Rest
 {
+    [ConfirmedUser]
+    [AppBuilder]
     public class ModelController : LagoVistaBaseController
     {
         readonly IModelManager _mgr;
@@ -27,8 +30,8 @@ namespace LagoVista.AI.Rest
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
-        [HttpPost("/api/model")]
-        public Task<InvokeResult> AddInstanceAsync([FromBody] Model model)
+        [HttpPost("/api/ml/model")]
+        public Task<InvokeResult> AddModelAsync([FromBody] Model model)
         {
             return _mgr.AddModelAsync(model, OrgEntityHeader, UserEntityHeader);
         }
@@ -38,11 +41,17 @@ namespace LagoVista.AI.Rest
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
-        [HttpPut("/api/model")]
-        public Task<InvokeResult> UpdateInstanceAsync([FromBody] Model model)
+        [HttpPut("/api/ml/model")]
+        public Task<InvokeResult> UpdateModelAsync([FromBody] Model model)
         {
             SetUpdatedProperties(model);
             return _mgr.UpdateModelAsync(model, OrgEntityHeader, UserEntityHeader);
+        }
+
+        [HttpPost("/api/mlmodel/{modelid}/{revision}")]
+        public Task<InvokeResult> UploadModel(string modelid, int revision, [FromBody] byte[] model)
+        {
+            return _mgr.UploadModel(modelid, revision, model, OrgEntityHeader, UserEntityHeader);
         }
 
         /// <summary>
@@ -60,7 +69,7 @@ namespace LagoVista.AI.Rest
         /// Model - Get all for org
         /// </summary>
         /// <returns></returns>
-        [HttpGet("/api/models")]
+        [HttpGet("/api/ml/models")]
         public Task<ListResponse<ModelSummary>> GetModelsForOrg()
         {
             return _mgr.GetModelsForOrgAsync(OrgEntityHeader, UserEntityHeader, GetListRequestFromHeader());
@@ -71,7 +80,7 @@ namespace LagoVista.AI.Rest
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        [HttpGet("/api/model/{id}")]
+        [HttpGet("/api/ml/model/{id}")]
         public async Task<DetailResponse<Model>> GetModelAsync(string id)
         {
             var model = await _mgr.GetModelAsync(id, OrgEntityHeader, UserEntityHeader);
@@ -83,7 +92,7 @@ namespace LagoVista.AI.Rest
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        [HttpGet("/api/model/factory")]
+        [HttpGet("/api/ml/model/factory")]
         public DetailResponse<Model> CreateNewModel()
         {
             var model = DetailResponse<Model>.Create();
@@ -94,14 +103,54 @@ namespace LagoVista.AI.Rest
         }
 
         /// <summary>
-        /// Model - Create new
+        /// Model - Create new Revision
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        [HttpGet("/api/model/{id}/revision/factory")]
-        public DetailResponse<ModelRevision> CreateNewModel(string id)
+        [HttpGet("/api/ml/model/revision/factory")]
+        public DetailResponse<ModelRevision> CreateNewModelRevision()
         {
             var model = DetailResponse<ModelRevision>.Create();
+            model.Model.Id = Guid.NewGuid().ToId();
+            return model;
+        }
+
+        /// <summary>
+        /// Model - Create new Notes
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpGet("/api/ml/model/note/factory")]
+        public DetailResponse<ModelNotes> CreateNewModelNote()
+        {
+            var model = DetailResponse<ModelNotes>.Create();
+            model.Model.Id = Guid.NewGuid().ToId();
+            return model;
+        }
+
+        /// <summary>
+        /// Model - Create new Experiment
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpGet("/api/ml/model/experiment/factory")]
+        public DetailResponse<Experiment> CreateNewModelExperiment()
+        {
+            var model = DetailResponse<Experiment>.Create();
+            model.Model.Id = Guid.NewGuid().ToId();
+            return model;
+        }
+
+
+        /// <summary>
+        /// Model - Create new Label
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpGet("/api/ml/model/label/factory")]
+        public DetailResponse<Label> CreateNewLabel()
+        {
+            var model = DetailResponse<Label>.Create();
             model.Model.Id = Guid.NewGuid().ToId();
             return model;
         }
@@ -110,7 +159,7 @@ namespace LagoVista.AI.Rest
         /// Model - Key In Use
         /// </summary>
         /// <returns></returns>
-        [HttpGet("/api/model/{key}/keyinuse")]
+        [HttpGet("/api/ml/model/{key}/keyinuse")]
         public Task<bool> ModelKeyInUseAsync(String key)
         {
             return _mgr.QueryKeyInUse(key, OrgEntityHeader);

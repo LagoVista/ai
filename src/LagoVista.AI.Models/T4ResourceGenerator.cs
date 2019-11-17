@@ -116,6 +116,9 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:Model_ModelCategory
 
 		public static string Model_ModelCategory { get { return GetResourceString("Model_ModelCategory"); } }
+//Resources:AIResources:Model_ModelCategory_Select
+
+		public static string Model_ModelCategory_Select { get { return GetResourceString("Model_ModelCategory_Select"); } }
 //Resources:AIResources:Model_ModelType
 
 		public static string Model_ModelType { get { return GetResourceString("Model_ModelType"); } }
@@ -239,6 +242,7 @@ namespace LagoVista.AI.Models.Resources
 			public const string Model_Experiments = "Model_Experiments";
 			public const string Model_Help = "Model_Help";
 			public const string Model_ModelCategory = "Model_ModelCategory";
+			public const string Model_ModelCategory_Select = "Model_ModelCategory_Select";
 			public const string Model_ModelType = "Model_ModelType";
 			public const string Model_Revisions = "Model_Revisions";
 			public const string Model_Title = "Model_Title";

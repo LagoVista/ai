@@ -18,13 +18,15 @@ namespace LagoVista.AI.Managers
             this._repo = repo;
         }
 
-        public Task AddExperimentResultAsync(ExperimentResult result, EntityHeader org, EntityHeader uesr)
+        public Task AddExperimentResultAsync(ExperimentResult result, EntityHeader org, EntityHeader user)
         {
+            AuthorizeOrgAccessAsync(user, org, typeof(ExperimentResult), Core.Validation.Actions.Create);
             return this._repo.AddResultAsync(result);
         }
 
-        public Task<ListResponse<ExperimentResult>> GetExperimentResultsAsync(string modelId, string revisionId, EntityHeader org, EntityHeader user, ListRequest listRequest)
+        public Task<ListResponse<ExperimentResult>> GetExperimentResultsAsync(string modelId, int revisionId, EntityHeader org, EntityHeader user, ListRequest listRequest)
         {
+            AuthorizeOrgAccessAsync(user, org, typeof(ExperimentResult), Core.Validation.Actions.Read);
             return this._repo.GetResultsAsync(modelId, revisionId, listRequest);
         }
     }

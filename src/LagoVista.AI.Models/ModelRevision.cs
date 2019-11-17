@@ -31,13 +31,28 @@ namespace LagoVista.AI.Models
         public const string Status_Beta = "beta";
         public const string Status_Production = "production";
         public const string Status_Obsolete = "obsolete";
-        
+
+        public ModelRevision()
+        {
+            Labels = new List<Label>();
+            Notes = new List<ModelNotes>();
+        }
+
+
+        public string Id { get; set; }
+
+        [FormField(LabelResource: AIResources.Names.Common_Name, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
+        public string Name { get; set; }
+
+        [FormField(LabelResource: AIResources.Names.Common_Key, HelpResource: AIResources.Names.Common_Key_Help, FieldType: FieldTypes.Key, RegExValidationMessageResource: AIResources.Names.Common_Key_Validation, ResourceType: typeof(AIResources), IsRequired: true)]
+        public String Key { get; set; }
+
         [FormField(LabelResource: AIResources.Names.ModelRevision_Version_Number, FieldType: FieldTypes.Integer, IsRequired:true, IsUserEditable:false, ResourceType: typeof(AIResources))]
         public int VersionNumber { get; set; }
 
         public String Datestamp { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.ModelRevision_Status, FieldType: FieldTypes.Picker, IsRequired: true, WaterMark: AIResources.Names.ModelRevision_Status_Select, ResourceType: typeof(AIResources))]
+        [FormField(LabelResource: AIResources.Names.ModelRevision_Status, FieldType: FieldTypes.Picker, EnumType:typeof(ModelRevisionStatus), IsRequired: true, WaterMark: AIResources.Names.ModelRevision_Status_Select, ResourceType: typeof(AIResources))]
         public EntityHeader<ModelRevisionStatus> Status { get; set; }
 
         [FormField(LabelResource: AIResources.Names.ModelRevision_Settings, FieldType: FieldTypes.MultiLineText, ResourceType: typeof(AIResources))]

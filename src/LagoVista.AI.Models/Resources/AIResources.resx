@@ -255,6 +255,9 @@
   <data name="Model_ModelCategory" xml:space="preserve">
     <value>Model Category</value>
   </data>
+  <data name="Model_ModelCategory_Select" xml:space="preserve">
+    <value>-select model category-</value>
+  </data>
   <data name="Model_ModelType" xml:space="preserve">
     <value>Model Type</value>
   </data>

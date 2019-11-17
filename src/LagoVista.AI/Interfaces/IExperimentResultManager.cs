@@ -12,6 +12,6 @@ namespace LagoVista.AI
     {
         Task AddExperimentResultAsync(ExperimentResult result, EntityHeader org, EntityHeader uesr);
 
-        Task<ListResponse<ExperimentResult>> GetExperimentResultsAsync(string modelId, string revisionId, EntityHeader org, EntityHeader user, ListRequest listRequest);
+        Task<ListResponse<ExperimentResult>> GetExperimentResultsAsync(string modelId, int revisionId, EntityHeader org, EntityHeader user, ListRequest listRequest);
     }
 }

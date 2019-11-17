@@ -1,5 +1,4 @@
-﻿using LagoVista.AI.Interfaces;
-using LagoVista.AI.Models;
+﻿using LagoVista.AI.Models;
 using LagoVista.Core.Models;
 using LagoVista.Core.Models.UIMetaData;
 using Newtonsoft.Json;

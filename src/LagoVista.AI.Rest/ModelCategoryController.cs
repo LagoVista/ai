@@ -9,9 +9,12 @@ using System;
 using LagoVista.Core.Models.UIMetaData;
 using LagoVista.AI.Models;
 using LagoVista.Core;
+using LagoVista.IoT.Web.Common.Attributes;
 
 namespace LagoVista.AI.Rest
 {
+    [ConfirmedUser]
+    [AppBuilder]
     public class ModelCategoryController : LagoVistaBaseController
     {
         readonly IModelCategoryManager _mgr;
@@ -27,7 +30,7 @@ namespace LagoVista.AI.Rest
         /// </summary>
         /// <param name="modelCategory"></param>
         /// <returns></returns>
-        [HttpPost("/api/modelcategory")]
+        [HttpPost("/api/ml/modelcategory")]
         public Task<InvokeResult> AddInstanceAsync([FromBody] ModelCategory modelCategory)
         {
             return _mgr.AddModelCategoryAsync(modelCategory, OrgEntityHeader, UserEntityHeader);
@@ -38,7 +41,7 @@ namespace LagoVista.AI.Rest
         /// </summary>
         /// <param name="modelCategory"></param>
         /// <returns></returns>
-        [HttpPut("/api/modelcategory")]
+        [HttpPut("/api/ml/modelcategory")]
         public Task<InvokeResult> UpdateInstanceAsync([FromBody] ModelCategory modelCategory)
         {
             SetUpdatedProperties(modelCategory);
@@ -50,7 +53,7 @@ namespace LagoVista.AI.Rest
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        [HttpDelete("/api/modelcategory/{id}")]
+        [HttpDelete("/api/ml/modelcategory/{id}")]
         public Task<InvokeResult> DeleteModelCategoryAsync(string id)
         {
             return _mgr.DeleteModelCategoryAsync(id, OrgEntityHeader, UserEntityHeader);
@@ -60,10 +63,10 @@ namespace LagoVista.AI.Rest
         /// Model Category - Get all for org
         /// </summary>
         /// <returns></returns>
-        [HttpGet("/api/modelcategories")]
+        [HttpGet("/api/ml/modelcategories")]
         public Task<ListResponse<ModelCategorySummary>> GetModelCategoryForOrg()
         {
-            return  _mgr.GetModelCategoriesForOrgAsync(OrgEntityHeader.Id, UserEntityHeader, GetListRequestFromHeader());
+            return  _mgr.GetModelCategoriesForOrgAsync(OrgEntityHeader, UserEntityHeader, GetListRequestFromHeader());
         }
 
         /// <summary>
@@ -71,7 +74,7 @@ namespace LagoVista.AI.Rest
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        [HttpGet("/api/modelcategory/{id}")]
+        [HttpGet("/api/ml/modelcategory/{id}")]
         public async Task<DetailResponse<ModelCategory>> GetModelCategoryAsync(string id)
         {
             var modelCateogry = await _mgr.GetModelCategoryAsync(id, OrgEntityHeader, UserEntityHeader);
@@ -83,7 +86,7 @@ namespace LagoVista.AI.Rest
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        [HttpGet("/api/modelcategory/factory")]
+        [HttpGet("/api/ml/modelcategory/factory")]
         public DetailResponse<ModelCategory> CreateNewModelCategory()
         {
             var modelCategory = DetailResponse<ModelCategory>.Create();
@@ -98,7 +101,7 @@ namespace LagoVista.AI.Rest
         /// Model Category - Key In Use
         /// </summary>
         /// <returns></returns>
-        [HttpGet("/api/modelcategory/{key}/keyinuse")]
+        [HttpGet("/api/ml/modelcategory/{key}/keyinuse")]
         public Task<bool> ModelCategoryKeyInUseAsync(String key)
         {
             return _mgr.QueryKeyInUse(key, OrgEntityHeader);

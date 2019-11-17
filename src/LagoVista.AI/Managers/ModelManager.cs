@@ -5,19 +5,24 @@ using LagoVista.Core.Models;
 using LagoVista.Core.Models.UIMetaData;
 using LagoVista.Core.PlatformSupport;
 using LagoVista.Core.Validation;
-using System;
 using System.Threading.Tasks;
 
 namespace LagoVista.AI.Managers
 {
     public class ModelManager : ManagerBase, IModelManager
     {
-        public ModelManager(ILogger logger, IAppConfig appConfig, IDependencyManager dependencyManager, ISecurity security) 
+        // Storage for the meta data about the model.
+        IModelRepo _repo;
+
+        // Storage for the actual model.
+        IMLModelRepo _modelRepo;
+
+        public ModelManager(IModelRepo modelRepo, IMLModelRepo mlModelRepo, ILogger logger, IAppConfig appConfig, IDependencyManager dependencyManager, ISecurity security) 
             : base(logger, appConfig, dependencyManager, security)
         {
+            this._repo = modelRepo;
+            this._modelRepo = mlModelRepo;
         }
-
-        IModelRepo _repo;
 
         public async Task<InvokeResult> AddModelAsync(Model model, EntityHeader org, EntityHeader user)
         {
@@ -29,22 +34,25 @@ namespace LagoVista.AI.Managers
             return InvokeResult.Success;
         }
 
-        public Task<InvokeResult<ModelRevision>> AddRevisionAsync(string modelId, ModelRevision revision, EntityHeader org, EntityHeader user)
+        public async Task<InvokeResult> AddRevisionAsync(string modelId, ModelRevision revision, EntityHeader org, EntityHeader user)
         {
-            throw new NotImplementedException();
+            var model = await GetModelAsync(modelId, org, user);
+            model.Revisions.Add(revision);
+            return await UpdateModelAsync(model, org, user);
         }
 
-        public async Task<InvokeResult> UploadModel(string modelId, string revisionId, byte[] model, EntityHeader org, EntityHeader user)
+        public async Task<InvokeResult> UploadModel(string modelId, int revision, byte[] model, EntityHeader org, EntityHeader user)
         {
-            await this._repo.AddMLModelAsync(org.Id, modelId, revisionId, model);
+            await this._modelRepo.AddModelAsync(org.Id, modelId, revision, model);
+            await AuthorizeOrgAccessAsync(user, org, typeof(Model), Actions.Update);
             return InvokeResult.Success;
         }
 
         public async Task<DependentObjectCheckResult> CheckInUseAsync(string id, EntityHeader org, EntityHeader user)
         {
-            var host = await _repo.GetModelAsync(id);
-            await AuthorizeAsync(host, AuthorizeResult.AuthorizeActions.Read, user, org);
-            return await CheckForDepenenciesAsync(host);
+            var model = await _repo.GetModelAsync(id);
+            await AuthorizeAsync(model, AuthorizeResult.AuthorizeActions.Read, user, org);
+            return await CheckForDepenenciesAsync(model);
         }
 
         public async Task<InvokeResult> DeleteModelsync(string id, EntityHeader org, EntityHeader user)
@@ -55,11 +63,6 @@ namespace LagoVista.AI.Managers
             await ConfirmNoDepenenciesAsync(host);
             await _repo.DeleteModelAsync(id);
             return InvokeResult.Success;
-        }
-
-        public Task<InvokeResult<byte[]>> GetMLModelAsync(string id, string revisionId, EntityHeader org, EntityHeader user)
-        {
-            throw new NotImplementedException();
         }
 
         public async Task<Model> GetModelAsync(string id, EntityHeader org, EntityHeader user)
@@ -88,7 +91,20 @@ namespace LagoVista.AI.Managers
             await _repo.UpdateModelAsync(model);
 
             return result.ToInvokeResult();
+        }
 
+        public async Task<ListResponse<ModelSummary>> GetModelsForCategoryAsync(string categoryKey, EntityHeader org, EntityHeader user, ListRequest listRequest)
+        {
+            await AuthorizeAsync(user, org, "GetModelsForCatgory");
+
+            return await _repo.GetModelSummariesForCategoryAsync(org.Id, categoryKey, listRequest);
+        }
+
+        public async Task<InvokeResult<byte[]>> GetMLModelAsync(string modelId, int revision, EntityHeader org, EntityHeader user)
+        {
+            await AuthorizeAsync(user, org, "GetMLModel");
+
+            return await _modelRepo.GetModelAsync(org.Id, modelId, revision);
         }
     }
 }

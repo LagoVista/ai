@@ -6,7 +6,7 @@ namespace LagoVista.AI
 {
     public interface IMLModelRepo
     {
-        Task AddModelAsync(string orgId, string modelId, string revisionId, byte[] model);
-        Task<InvokeResult<Byte[]>> GetModelAsync(string orgId, string modelId);
+        Task<InvokeResult> AddModelAsync(string orgId, string modelId, int revisionId, byte[] model);
+        Task<InvokeResult<Byte[]>> GetModelAsync(string orgId, string modelId, int revisionId);
     }
 }

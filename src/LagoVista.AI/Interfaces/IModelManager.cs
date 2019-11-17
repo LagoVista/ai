@@ -16,8 +16,9 @@ namespace LagoVista.AI
         Task<InvokeResult> DeleteModelsync(string id, EntityHeader org, EntityHeader user);
         Task<bool> QueryKeyInUse(string key, EntityHeader org);
         Task<ListResponse<ModelSummary>> GetModelsForOrgAsync(EntityHeader org, EntityHeader user, ListRequest listRequest);
-        Task<InvokeResult> UploadModel(string modelId, string revisionId, byte[] model, EntityHeader org, EntityHeader user);
-        Task<InvokeResult<Byte[]>> GetMLModelAsync(string id, string revision, EntityHeader org, EntityHeader user);
-        Task<InvokeResult<ModelRevision>> AddRevisionAsync(string modelId, ModelRevision revision, EntityHeader org, EntityHeader user);
+        Task<ListResponse<ModelSummary>> GetModelsForCategoryAsync(string categoryKey, EntityHeader org, EntityHeader user, ListRequest listRequest);
+        Task<InvokeResult> UploadModel(string modelId, int revision, byte[] model, EntityHeader org, EntityHeader user);
+        Task<InvokeResult<Byte[]>> GetMLModelAsync(string id, int revision, EntityHeader org, EntityHeader user);
+        Task<InvokeResult> AddRevisionAsync(string modelId, ModelRevision revision, EntityHeader org, EntityHeader user);
     }
 }

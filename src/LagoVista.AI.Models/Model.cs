@@ -5,6 +5,7 @@ using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
 using Newtonsoft.Json;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 
 namespace LagoVista.AI.Models
@@ -28,13 +29,20 @@ namespace LagoVista.AI.Models
         public const string ModelType_TF_Lite = "tensorflow_lite";
         public const string ModelType_PyTorch = "pytorch";
 
+        public Model()
+        {
+            Revisions = new List<ModelRevision>();
+            Experiments = new List<Experiment>();
+            Notes = new List<ModelNotes>();
+        }
+
         public string DatabaseName { get; set; }
         public string EntityType { get; set; }
 
         [JsonProperty("id")]
         public string Id { get; set; }
 
-        [FormField(LabelResource:AIResources.Names.Common_Name,FieldType: FieldTypes.Text, IsRequired:true, ResourceType: typeof(AIResources))]
+        [FormField(LabelResource: AIResources.Names.Common_Name, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
         public string Name { get; set; }
 
         [FormField(LabelResource: AIResources.Names.Common_Key, HelpResource: AIResources.Names.Common_Key_Help, FieldType: FieldTypes.Key, RegExValidationMessageResource: AIResources.Names.Common_Key_Validation, ResourceType: typeof(AIResources), IsRequired: true)]
@@ -43,17 +51,21 @@ namespace LagoVista.AI.Models
         [FormField(LabelResource: AIResources.Names.Common_Description, FieldType: FieldTypes.MultiLineText, ResourceType: typeof(AIResources))]
         public string Description { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.Model_ModelCategory, FieldType: FieldTypes.EntityHeaderPicker, IsRequired:true, ResourceType: typeof(AIResources))]
+        [FormField(LabelResource: AIResources.Names.Model_ModelCategory, FieldType: FieldTypes.EntityHeaderPicker, IsRequired: true, WaterMark:AIResources.Names.Model_ModelCategory_Select, ResourceType: typeof(AIResources))]
         public EntityHeader ModelCategory { get; set; }
 
         [FormField(LabelResource: AIResources.Names.Model_Revisions, FieldType: FieldTypes.ChildList, ResourceType: typeof(AIResources))]
         public List<ModelRevision> Revisions { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.Model_ModelType, FieldType: FieldTypes.Picker, IsRequired:true, WaterMark:AIResources.Names.Model_Type_Select, ResourceType: typeof(AIResources))]
+        [FormField(LabelResource: AIResources.Names.Model_ModelType, FieldType: FieldTypes.Picker, EnumType:typeof(ModelType), IsRequired: true, WaterMark: AIResources.Names.Model_Type_Select, ResourceType: typeof(AIResources))]
         public EntityHeader<ModelType> ModelType { get; set; }
 
         [FormField(LabelResource: AIResources.Names.Model_Experiments, FieldType: FieldTypes.ChildList, ResourceType: typeof(AIResources))]
         public List<Experiment> Experiments { get; set; }
+
+        [FormField(LabelResource: AIResources.Names.ModelRevision_Notes, FieldType: FieldTypes.ChildList, ResourceType: typeof(AIResources))]
+        public List<ModelNotes> Notes { get; set; }
+
 
         public string CreationDate { get; set; }
         public string LastUpdatedDate { get; set; }
@@ -62,6 +74,27 @@ namespace LagoVista.AI.Models
         public bool IsPublic { get; set; }
         public EntityHeader OwnerOrganization { get; set; }
         public EntityHeader OwnerUser { get; set; }
+
+        [CustomValidator]
+        public void Validate(ValidationResult result)
+        {
+            if (Revisions.GroupBy(rev => rev.VersionNumber).Count() != Revisions.Count)
+            {
+                result.AddUserError("Revision Indexes must be unique.");
+            }
+        }
+
+        public ModelSummary CreateSummary()
+        {
+            return new ModelSummary()
+            {
+                Id = Id,
+                Description = Description,
+                IsPublic = IsPublic,
+                Key = Key,
+                Name = Name,
+            };
+        }
     }
 
     public class ModelSummary : SummaryData

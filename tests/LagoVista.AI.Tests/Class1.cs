@@ -1,5 +1,4 @@
-﻿using LagoVista.AI.Interfaces;
-using LagoVista.AI.Models;
+﻿using LagoVista.AI.Models;
 using LagoVista.AI.Services;
 using LagoVista.Core.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

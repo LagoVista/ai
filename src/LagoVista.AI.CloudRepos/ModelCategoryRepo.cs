@@ -1,42 +1,56 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using LagoVista.AI.Models;
+using LagoVista.CloudStorage.DocumentDB;
 using LagoVista.Core.Models.UIMetaData;
+using LagoVista.IoT.Logging.Loggers;
 
 namespace LagoVista.AI.CloudRepos
 {
-    public class ModelCategoryRepo : IModelCategoryRepo
+    public class ModelCategoryRepo : DocumentDBRepoBase<ModelCategory>, IModelCategoryRepo
     {
+        private readonly bool _shouldConsolidateCollections;
+        public ModelCategoryRepo(IMLRepoSettings repoSettings, IAdminLogger logger) :
+            base(repoSettings.MLDocDbStorage.Uri, repoSettings.MLDocDbStorage.AccessKey, repoSettings.MLDocDbStorage.ResourceName, logger)
+        {
+            _shouldConsolidateCollections = repoSettings.ShouldConsolidateCollections;
+        }
+
+        protected override bool ShouldConsolidateCollections => _shouldConsolidateCollections;
         public Task AddModelCategoryAsync(ModelCategory modelCategory)
         {
-            throw new NotImplementedException();
+            return this.CreateDocumentAsync(modelCategory);
         }
 
         public Task DeleteModelCategoryAsync(string id)
         {
-            throw new NotImplementedException();
+            return base.DeleteDocumentAsync(id);
         }
 
         public Task<ModelCategory> GetModelCategoryAsync(string modelId)
         {
-            throw new NotImplementedException();
+            return base.GetDocumentAsync(modelId);
         }
 
-        public Task<ListResponse<ModelCategorySummary>> GetModelCategorySummariesForOrgAsync(string orgId, ListRequest listRequest)
+        public async Task<ListResponse<ModelCategorySummary>> GetModelCategorySummariesForOrgAsync(string orgId, ListRequest listRequest)
         {
-            throw new NotImplementedException();
+            var items = await base.QueryAsync(qry => qry.OwnerOrganization.Id == orgId);
+
+            var summaries = from item in items
+                            select item.CreateSummary();
+
+            return ListResponse<ModelCategorySummary>.Create(listRequest, summaries);
         }
 
-        public Task<bool> QueryKeyInUseAsync(string key, string org)
+        public async Task<bool> QueryKeyInUseAsync(string key, string orgId)
         {
-            throw new NotImplementedException();
+            var items = await base.QueryAsync(attr => (attr.OwnerOrganization.Id == orgId || attr.IsPublic == true) && attr.Key == key);
+            return items.Any();
         }
 
         public Task UpdateModelCategoryAsync(ModelCategory modelCategory)
         {
-            throw new NotImplementedException();
+            return base.UpsertDocumentAsync(modelCategory);
         }
     }
 }
