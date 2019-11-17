@@ -6,9 +6,9 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LagoVista.AI.Services
+namespace LagoVista.AI.Managers
 {
-    public class HubManager
+    public class HubManager : IHubManager
     {
         public Task<InvokeResult<Hub>> GetHubForOrgAsync(EntityHeader org, EntityHeader user)
         {

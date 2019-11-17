@@ -7,8 +7,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LagoVista.AI.Models\LagoVista.AI.Models.csproj" />
-    <PackageReference Include="LagoVista.Core" Version="2.1.439-beta1607" />
-    <PackageReference Include="LagoVista.IoT.Logging" Version="2.1.439-beta1607" />
+    <PackageReference Include="LagoVista.Core" Version="2.1.914-beta1652" />
+    <PackageReference Include="LagoVista.IoT.Logging" Version="2.1.914-beta1652" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
   </ItemGroup>
 
