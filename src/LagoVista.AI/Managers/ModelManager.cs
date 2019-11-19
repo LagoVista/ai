@@ -43,9 +43,8 @@ namespace LagoVista.AI.Managers
 
         public async Task<InvokeResult> UploadModel(string modelId, int revision, byte[] model, EntityHeader org, EntityHeader user)
         {
-            await this._modelRepo.AddModelAsync(org.Id, modelId, revision, model);
             await AuthorizeOrgAccessAsync(user, org, typeof(Model), Actions.Update);
-            return InvokeResult.Success;
+            return await this._modelRepo.AddModelAsync(org.Id, modelId, revision, model);
         }
 
         public async Task<DependentObjectCheckResult> CheckInUseAsync(string id, EntityHeader org, EntityHeader user)
@@ -102,7 +101,8 @@ namespace LagoVista.AI.Managers
 
         public async Task<InvokeResult<byte[]>> GetMLModelAsync(string modelId, int revision, EntityHeader org, EntityHeader user)
         {
-            await AuthorizeAsync(user, org, "GetMLModel");
+            //Do this for a security check.
+            await this.GetModelAsync(modelId, org, user);
 
             return await _modelRepo.GetModelAsync(org.Id, modelId, revision);
         }

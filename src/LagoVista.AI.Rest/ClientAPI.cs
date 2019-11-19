@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -49,10 +50,12 @@ namespace LagoVista.AI.Rest
         }
 
         [HttpGet("/clientapi/ml/mlmodel/{modelid}/{revisionid}")]
-        public async Task<byte[]> GetMLModelAsync(string modelid, int revisionid)
+        public async Task<IActionResult> GetMLModelAsync(string modelid, int revisionid)
         {
             var result = await _modelManager.GetMLModelAsync(modelid, revisionid, OrgEntityHeader, UserEntityHeader);
-            return result.Result;
+
+            var ms = new MemoryStream(result.Result);
+            return new FileStreamResult(ms, "application/octet-stream");
         }
 
         [HttpPost("/clientapi/ml/model/experiment/result")]

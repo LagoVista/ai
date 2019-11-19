@@ -8,8 +8,11 @@ using System.Threading.Tasks;
 using LagoVista.AI.Models;
 using LagoVista.Core.Models.UIMetaData;
 using System;
+using System.Linq;
 using LagoVista.Core;
 using LagoVista.IoT.Web.Common.Attributes;
+using Microsoft.AspNetCore.Http;
+using System.IO;
 
 namespace LagoVista.AI.Rest
 {
@@ -48,10 +51,36 @@ namespace LagoVista.AI.Rest
             return _mgr.UpdateModelAsync(model, OrgEntityHeader, UserEntityHeader);
         }
 
-        [HttpPost("/api/mlmodel/{modelid}/{revision}")]
-        public Task<InvokeResult> UploadModel(string modelid, int revision, [FromBody] byte[] model)
+        [HttpPost("/api/ml/model/{modelid}/{revision}")]
+        public Task<InvokeResult> UploadModel(string modelid, int revision, IFormFile file)
         {
-            return _mgr.UploadModel(modelid, revision, model, OrgEntityHeader, UserEntityHeader);
+            if(file == null)
+            {
+                throw new ArgumentNullException(nameof(file));
+            }
+
+            using (var stream = file.OpenReadStream())
+            {
+                var model = new byte[stream.Length];
+                stream.Position = 0;
+                stream.Read(model, 0, (int)stream.Length);
+
+                return _mgr.UploadModel(modelid, revision, model, OrgEntityHeader, UserEntityHeader);
+            }
+        }
+
+        [HttpGet("/api/ml/model/{modelid}/{revisionid}")]
+        public async Task<IActionResult> GetMLModelAsync(string modelid, int revisionid)
+        {
+            var result = await _mgr.GetMLModelAsync(modelid, revisionid, OrgEntityHeader, UserEntityHeader);
+
+            if(!result.Successful)
+            {
+                throw new Exception(result.Errors.First().Message);
+            }
+
+            var ms = new MemoryStream(result.Result);
+            return new FileStreamResult(ms, "application/octet-stream");
         }
 
         /// <summary>
@@ -59,7 +88,7 @@ namespace LagoVista.AI.Rest
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        [HttpDelete("/api/model/{id}")]
+        [HttpDelete("/api/ml/model/{id}")]
         public Task<InvokeResult> DeleteModelAsync(string id)
         {
             return _mgr.DeleteModelsync(id, OrgEntityHeader, UserEntityHeader);

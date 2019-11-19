@@ -20,7 +20,7 @@ namespace LagoVista.AI.CloudRepos
 
         private string GetContainerName(string orgId)
         {
-            return $"mlmodels{orgId}";
+            return $"mlmodels{orgId}".ToLower();
         }
 
         private CloudBlobClient CreateBlobClient()
@@ -33,7 +33,7 @@ namespace LagoVista.AI.CloudRepos
 
         private string GetBlobName(string modelId, int revisionId)
         {
-            return $"{modelId}-{revisionId}.model";
+            return $"{modelId}.{revisionId}.model";
         }
 
         public async Task<InvokeResult> AddModelAsync(string orgId, string modelId, int revisionId, byte[] model)
