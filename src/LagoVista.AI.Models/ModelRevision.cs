@@ -71,12 +71,12 @@ namespace LagoVista.AI.Models
         [FormField(LabelResource: AIResources.Names.Common_Key, HelpResource: AIResources.Names.Common_Key_Help, FieldType: FieldTypes.Key, RegExValidationMessageResource: AIResources.Names.Common_Key_Validation, ResourceType: typeof(AIResources), IsRequired: true)]
         public String Key { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.ModelRevision_Version_Number, FieldType: FieldTypes.Integer, IsRequired:true, IsUserEditable:false, ResourceType: typeof(AIResources))]
+        [FormField(LabelResource: AIResources.Names.ModelRevision_Version_Number, FieldType: FieldTypes.Integer, IsRequired: true, IsUserEditable: false, ResourceType: typeof(AIResources))]
         public int VersionNumber { get; set; }
 
         public String Datestamp { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.ModelRevision_Status, FieldType: FieldTypes.Picker, EnumType:typeof(ModelRevisionStatus), IsRequired: true, WaterMark: AIResources.Names.ModelRevision_Status_Select, ResourceType: typeof(AIResources))]
+        [FormField(LabelResource: AIResources.Names.ModelRevision_Status, FieldType: FieldTypes.Picker, EnumType: typeof(ModelRevisionStatus), IsRequired: true, WaterMark: AIResources.Names.ModelRevision_Status_Select, ResourceType: typeof(AIResources))]
         public EntityHeader<ModelRevisionStatus> Status { get; set; }
 
         [FormField(LabelResource: AIResources.Names.ModelRevision_Quality, FieldType: FieldTypes.Picker, EnumType: typeof(ModelQuality), IsRequired: true, WaterMark: AIResources.Names.ModelRevision_Quality_Select, ResourceType: typeof(AIResources))]
@@ -96,5 +96,30 @@ namespace LagoVista.AI.Models
 
         [FormField(LabelResource: AIResources.Names.ModelRevision_Preprocessors, FieldType: FieldTypes.ChildList, ResourceType: typeof(AIResources))]
         public List<Preprocessor> Preprocessors { get; set; }
+
+        public ModelRevisionSummary ToSummary()
+        {
+            return new ModelRevisionSummary()
+            {
+                Id = Id,
+                VersionNumber = VersionNumber,
+                Datestmap = Datestamp,
+                Status = Status.Text,
+                StatusId = Status.Id,
+                Quality = Quality.Text,
+                QualityId = Quality.Id,
+            };
+        }
+    }
+
+    public class ModelRevisionSummary
+    {
+        public String Id { get; set; }
+        public int VersionNumber { get; set; }
+        public String Datestmap { get; set; }
+        public String Status { get; set; }
+        public String StatusId { get; set; }
+        public String Quality { get; set; }
+        public String QualityId { get; set; }
     }
 }

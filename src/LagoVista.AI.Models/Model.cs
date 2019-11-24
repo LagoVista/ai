@@ -93,12 +93,14 @@ namespace LagoVista.AI.Models
                 IsPublic = IsPublic,
                 Key = Key,
                 Name = Name,
+                Revisions = new List<ModelRevisionSummary>(Revisions.Select(rev=>rev.ToSummary()))
             };
         }
     }
 
     public class ModelSummary : SummaryData
     {
-
+        
+        public List<ModelRevisionSummary> Revisions { get; set; }
     }
 }

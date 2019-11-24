@@ -94,9 +94,9 @@ namespace LagoVista.AI.Managers
 
         public async Task<ListResponse<ModelSummary>> GetModelsForCategoryAsync(string categoryKey, EntityHeader org, EntityHeader user, ListRequest listRequest)
         {
-            await AuthorizeAsync(user, org, "GetModelsForCatgory");
-
-            return await _repo.GetModelSummariesForCategoryAsync(org.Id, categoryKey, listRequest);
+            var summaries = await _repo.GetModelSummariesForCategoryAsync(org.Id, categoryKey, listRequest);
+            await AuthorizeOrgAccessAsync(user, org, typeof(ModelSummary), Actions.Read, summaries);
+            return summaries;
         }
 
         public async Task<InvokeResult<byte[]>> GetMLModelAsync(string modelId, int revision, EntityHeader org, EntityHeader user)
