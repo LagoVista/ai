@@ -1,6 +1,7 @@
 ﻿using LagoVista.AI.Models.Resources;
 using LagoVista.Core.Attributes;
 using LagoVista.Core.Models;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 
@@ -56,11 +57,12 @@ namespace LagoVista.AI.Models
         {
             Labels = new List<Label>();
             Notes = new List<ModelNotes>();
+            Preprocessors = new List<Preprocessor>();
             Status = EntityHeader<ModelRevisionStatus>.Create(ModelRevisionStatus.New);
             Quality = EntityHeader<ModelQuality>.Create(ModelQuality.Unknown);
         }
 
-
+        [JsonProperty("id")]
         public string Id { get; set; }
 
         [FormField(LabelResource: AIResources.Names.Common_Name, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
@@ -80,13 +82,19 @@ namespace LagoVista.AI.Models
         [FormField(LabelResource: AIResources.Names.ModelRevision_Quality, FieldType: FieldTypes.Picker, EnumType: typeof(ModelQuality), IsRequired: true, WaterMark: AIResources.Names.ModelRevision_Quality_Select, ResourceType: typeof(AIResources))]
         public EntityHeader<ModelQuality> Quality { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.ModelRevision_Settings, FieldType: FieldTypes.MultiLineText, ResourceType: typeof(AIResources))]
-        public String Settings { get; set; }
+        [FormField(LabelResource: AIResources.Names.ModelRevision_TrainingSettings, FieldType: FieldTypes.MultiLineText, ResourceType: typeof(AIResources))]
+        public string TrainingSettings { get; set; }
+
+        [FormField(LabelResource: AIResources.Names.ModelRevision_Settings, FieldType: FieldTypes.ChildList, ResourceType: typeof(AIResources))]
+        public List<ModelSetting> Settings { get; set; }
 
         [FormField(LabelResource: AIResources.Names.ModelRevision_Labels, FieldType: FieldTypes.ChildList, ResourceType: typeof(AIResources))]
         public List<Label> Labels { get; set; }
 
         [FormField(LabelResource: AIResources.Names.ModelRevision_Notes, FieldType: FieldTypes.ChildList, ResourceType: typeof(AIResources))]
         public List<ModelNotes> Notes { get; set; }
+
+        [FormField(LabelResource: AIResources.Names.ModelRevision_Preprocessors, FieldType: FieldTypes.ChildList, ResourceType: typeof(AIResources))]
+        public List<Preprocessor> Preprocessors { get; set; }
     }
 }

@@ -134,7 +134,6 @@ namespace LagoVista.AI.Rest
         /// <summary>
         /// Model - Create new Revision
         /// </summary>
-        /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("/api/ml/model/revision/factory")]
         public DetailResponse<ModelRevision> CreateNewModelRevision()
@@ -148,7 +147,6 @@ namespace LagoVista.AI.Rest
         /// <summary>
         /// Model - Create new Notes
         /// </summary>
-        /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("/api/ml/model/note/factory")]
         public DetailResponse<ModelNotes> CreateNewModelNote()
@@ -162,7 +160,6 @@ namespace LagoVista.AI.Rest
         /// <summary>
         /// Model - Create new Experiment
         /// </summary>
-        /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("/api/ml/model/experiment/factory")]
         public DetailResponse<Experiment> CreateNewModelExperiment()
@@ -174,9 +171,44 @@ namespace LagoVista.AI.Rest
 
 
         /// <summary>
+        /// Model - Create new preprocessor
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("/api/ml/model/preprocessor/factory")]
+        public DetailResponse<Preprocessor> CreateNewPreprocessor()
+        {
+            var model = DetailResponse<Preprocessor>.Create();
+            model.Model.Id = Guid.NewGuid().ToId();
+            return model;
+        }
+
+        /// <summary>
+        /// Model - Create new preprocessor setting
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("/api/ml/model/preprocessor/setting/factory")]
+        public DetailResponse<PreprocessorSetting> CreateNewPreprocessorSetting()
+        {
+            var model = DetailResponse<PreprocessorSetting>.Create();
+            model.Model.Id = Guid.NewGuid().ToId();
+            return model;
+        }
+
+        /// <summary>
+        /// Model - Create new preprocessor setting
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("/api/ml/model/setting/factory")]
+        public DetailResponse<ModelSetting> CreateNewModelSetting()
+        {
+            var model = DetailResponse<ModelSetting>.Create();
+            model.Model.Id = Guid.NewGuid().ToId();
+            return model;
+        }
+
+        /// <summary>
         /// Model - Create new Label
         /// </summary>
-        /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("/api/ml/model/label/factory")]
         public DetailResponse<Label> CreateNewLabel()

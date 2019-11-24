@@ -185,6 +185,9 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:ModelRevision_Notes
 
 		public static string ModelRevision_Notes { get { return GetResourceString("ModelRevision_Notes"); } }
+//Resources:AIResources:ModelRevision_Preprocessors
+
+		public static string ModelRevision_Preprocessors { get { return GetResourceString("ModelRevision_Preprocessors"); } }
 //Resources:AIResources:ModelRevision_Quality
 
 		public static string ModelRevision_Quality { get { return GetResourceString("ModelRevision_Quality"); } }
@@ -236,9 +239,51 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:ModelRevision_Title
 
 		public static string ModelRevision_Title { get { return GetResourceString("ModelRevision_Title"); } }
+//Resources:AIResources:ModelRevision_TrainingSettings
+
+		public static string ModelRevision_TrainingSettings { get { return GetResourceString("ModelRevision_TrainingSettings"); } }
 //Resources:AIResources:ModelRevision_Version_Number
 
 		public static string ModelRevision_Version_Number { get { return GetResourceString("ModelRevision_Version_Number"); } }
+//Resources:AIResources:ModelSetting_Description
+
+		public static string ModelSetting_Description { get { return GetResourceString("ModelSetting_Description"); } }
+//Resources:AIResources:ModelSetting_Help
+
+		public static string ModelSetting_Help { get { return GetResourceString("ModelSetting_Help"); } }
+//Resources:AIResources:ModelSetting_Title
+
+		public static string ModelSetting_Title { get { return GetResourceString("ModelSetting_Title"); } }
+//Resources:AIResources:ModelSetting_Value
+
+		public static string ModelSetting_Value { get { return GetResourceString("ModelSetting_Value"); } }
+//Resources:AIResources:Preprocessor_ClassName
+
+		public static string Preprocessor_ClassName { get { return GetResourceString("Preprocessor_ClassName"); } }
+//Resources:AIResources:Preprocessor_Description
+
+		public static string Preprocessor_Description { get { return GetResourceString("Preprocessor_Description"); } }
+//Resources:AIResources:Preprocessor_Help
+
+		public static string Preprocessor_Help { get { return GetResourceString("Preprocessor_Help"); } }
+//Resources:AIResources:Preprocessor_Settings
+
+		public static string Preprocessor_Settings { get { return GetResourceString("Preprocessor_Settings"); } }
+//Resources:AIResources:Preprocessor_Title
+
+		public static string Preprocessor_Title { get { return GetResourceString("Preprocessor_Title"); } }
+//Resources:AIResources:PreprocessorSetting_Description
+
+		public static string PreprocessorSetting_Description { get { return GetResourceString("PreprocessorSetting_Description"); } }
+//Resources:AIResources:PreprocessorSetting_Help
+
+		public static string PreprocessorSetting_Help { get { return GetResourceString("PreprocessorSetting_Help"); } }
+//Resources:AIResources:PreprocessorSetting_Title
+
+		public static string PreprocessorSetting_Title { get { return GetResourceString("PreprocessorSetting_Title"); } }
+//Resources:AIResources:PreprocessorSetting_Value
+
+		public static string PreprocessorSetting_Value { get { return GetResourceString("PreprocessorSetting_Value"); } }
 
 		public static class Names
 		{
@@ -286,6 +331,7 @@ namespace LagoVista.AI.Models.Resources
 			public const string ModelRevision_Help = "ModelRevision_Help";
 			public const string ModelRevision_Labels = "ModelRevision_Labels";
 			public const string ModelRevision_Notes = "ModelRevision_Notes";
+			public const string ModelRevision_Preprocessors = "ModelRevision_Preprocessors";
 			public const string ModelRevision_Quality = "ModelRevision_Quality";
 			public const string ModelRevision_Quality_Excellent = "ModelRevision_Quality_Excellent";
 			public const string ModelRevision_Quality_Good = "ModelRevision_Quality_Good";
@@ -303,7 +349,21 @@ namespace LagoVista.AI.Models.Resources
 			public const string ModelRevision_Status_Production = "ModelRevision_Status_Production";
 			public const string ModelRevision_Status_Select = "ModelRevision_Status_Select";
 			public const string ModelRevision_Title = "ModelRevision_Title";
+			public const string ModelRevision_TrainingSettings = "ModelRevision_TrainingSettings";
 			public const string ModelRevision_Version_Number = "ModelRevision_Version_Number";
+			public const string ModelSetting_Description = "ModelSetting_Description";
+			public const string ModelSetting_Help = "ModelSetting_Help";
+			public const string ModelSetting_Title = "ModelSetting_Title";
+			public const string ModelSetting_Value = "ModelSetting_Value";
+			public const string Preprocessor_ClassName = "Preprocessor_ClassName";
+			public const string Preprocessor_Description = "Preprocessor_Description";
+			public const string Preprocessor_Help = "Preprocessor_Help";
+			public const string Preprocessor_Settings = "Preprocessor_Settings";
+			public const string Preprocessor_Title = "Preprocessor_Title";
+			public const string PreprocessorSetting_Description = "PreprocessorSetting_Description";
+			public const string PreprocessorSetting_Help = "PreprocessorSetting_Help";
+			public const string PreprocessorSetting_Title = "PreprocessorSetting_Title";
+			public const string PreprocessorSetting_Value = "PreprocessorSetting_Value";
 		}
 	}
 }

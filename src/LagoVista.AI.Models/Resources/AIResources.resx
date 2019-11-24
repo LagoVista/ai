@@ -210,6 +210,9 @@
   <data name="ModelRevision_Notes" xml:space="preserve">
     <value>Notes</value>
   </data>
+  <data name="ModelRevision_Preprocessors" xml:space="preserve">
+    <value>Preprocessors</value>
+  </data>
   <data name="ModelRevision_Quality" xml:space="preserve">
     <value>Quality</value>
   </data>
@@ -261,8 +264,23 @@
   <data name="ModelRevision_Title" xml:space="preserve">
     <value>Model Revision</value>
   </data>
+  <data name="ModelRevision_TrainingSettings" xml:space="preserve">
+    <value>Training Settings</value>
+  </data>
   <data name="ModelRevision_Version_Number" xml:space="preserve">
     <value>Version Number</value>
+  </data>
+  <data name="ModelSetting_Description" xml:space="preserve">
+    <value>A model setting is a value used by the inference engine for a model revision.</value>
+  </data>
+  <data name="ModelSetting_Help" xml:space="preserve">
+    <value>A model setting is a value used by the inference engine for a model revision.</value>
+  </data>
+  <data name="ModelSetting_Title" xml:space="preserve">
+    <value>Model Settings</value>
+  </data>
+  <data name="ModelSetting_Value" xml:space="preserve">
+    <value>Value</value>
   </data>
   <data name="Model_Description" xml:space="preserve">
     <value>A model is a model type that is used for performing classifications, it consists of revisions that have the actual model.</value>
@@ -302,5 +320,32 @@
   </data>
   <data name="Model_Type_TensorFlow_Lite" xml:space="preserve">
     <value>Tensor Flow Lite</value>
+  </data>
+  <data name="PreprocessorSetting_Description" xml:space="preserve">
+    <value>A preprocessor setting is a value that is passed to the preprocessor to effect how the preprocessor will run.</value>
+  </data>
+  <data name="PreprocessorSetting_Help" xml:space="preserve">
+    <value>A preprocessor setting is a value that is passed to the preprocessor to effect how the preprocessor will run.</value>
+  </data>
+  <data name="PreprocessorSetting_Title" xml:space="preserve">
+    <value>Preprocessor Setting</value>
+  </data>
+  <data name="PreprocessorSetting_Value" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="Preprocessor_ClassName" xml:space="preserve">
+    <value>ClassName</value>
+  </data>
+  <data name="Preprocessor_Description" xml:space="preserve">
+    <value>A preprocessor is an algorithm that is ran to conditional an input prior to running it through an inference engine.</value>
+  </data>
+  <data name="Preprocessor_Help" xml:space="preserve">
+    <value>A preprocessor is an algorithm that is ran to conditional an input prior to running it through an inference engine.</value>
+  </data>
+  <data name="Preprocessor_Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Preprocessor_Title" xml:space="preserve">
+    <value>Preprocessor</value>
   </data>
 </root>
