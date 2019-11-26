@@ -207,6 +207,9 @@
   <data name="ModelRevision_Labels" xml:space="preserve">
     <value>Labels</value>
   </data>
+  <data name="ModelRevision_Minor_Version_Number" xml:space="preserve">
+    <value>Minor Version Number</value>
+  </data>
   <data name="ModelRevision_Notes" xml:space="preserve">
     <value>Notes</value>
   </data>

@@ -12,7 +12,7 @@ namespace LagoVista.AI.Models
 {
     public enum ModelType
     {
-        [EnumLabel(Model.ModelType_TF_Lite, AIResources.Names.Model_Type_PyTorch, typeof(AIResources))]
+        [EnumLabel(Model.ModelType_PyTorch, AIResources.Names.Model_Type_PyTorch, typeof(AIResources))]
         PyTorch,
 
         [EnumLabel(Model.ModelType_TF, AIResources.Names.Model_Type_TensorFlow, typeof(AIResources))]

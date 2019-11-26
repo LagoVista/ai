@@ -3,6 +3,7 @@ using LagoVista.Core.Attributes;
 using LagoVista.Core.Models;
 using Newtonsoft.Json;
 using System;
+using LagoVista.Core;
 using System.Collections.Generic;
 
 namespace LagoVista.AI.Models
@@ -60,6 +61,7 @@ namespace LagoVista.AI.Models
             Preprocessors = new List<Preprocessor>();
             Status = EntityHeader<ModelRevisionStatus>.Create(ModelRevisionStatus.New);
             Quality = EntityHeader<ModelQuality>.Create(ModelQuality.Unknown);
+            Datestamp = DateTime.UtcNow.ToJSONString();
         }
 
         [JsonProperty("id")]
@@ -73,6 +75,9 @@ namespace LagoVista.AI.Models
 
         [FormField(LabelResource: AIResources.Names.ModelRevision_Version_Number, FieldType: FieldTypes.Integer, IsRequired: true, IsUserEditable: false, ResourceType: typeof(AIResources))]
         public int VersionNumber { get; set; }
+
+        [FormField(LabelResource: AIResources.Names.ModelRevision_Minor_Version_Number, FieldType: FieldTypes.Integer, IsRequired: true, IsUserEditable: false, ResourceType: typeof(AIResources))]
+        public int MinorVersionNumber { get; set; }
 
         public String Datestamp { get; set; }
 
@@ -103,6 +108,7 @@ namespace LagoVista.AI.Models
             {
                 Id = Id,
                 VersionNumber = VersionNumber,
+                MinorVersionNumber = MinorVersionNumber,
                 Datestmap = Datestamp,
                 Status = Status.Text,
                 StatusId = Status.Id,
@@ -116,6 +122,7 @@ namespace LagoVista.AI.Models
     {
         public String Id { get; set; }
         public int VersionNumber { get; set; }
+        public int MinorVersionNumber { set; get; }
         public String Datestmap { get; set; }
         public String Status { get; set; }
         public String StatusId { get; set; }

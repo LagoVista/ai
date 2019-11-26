@@ -182,6 +182,9 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:ModelRevision_Labels
 
 		public static string ModelRevision_Labels { get { return GetResourceString("ModelRevision_Labels"); } }
+//Resources:AIResources:ModelRevision_Minor_Version_Number
+
+		public static string ModelRevision_Minor_Version_Number { get { return GetResourceString("ModelRevision_Minor_Version_Number"); } }
 //Resources:AIResources:ModelRevision_Notes
 
 		public static string ModelRevision_Notes { get { return GetResourceString("ModelRevision_Notes"); } }
@@ -330,6 +333,7 @@ namespace LagoVista.AI.Models.Resources
 			public const string ModelRevision_Description = "ModelRevision_Description";
 			public const string ModelRevision_Help = "ModelRevision_Help";
 			public const string ModelRevision_Labels = "ModelRevision_Labels";
+			public const string ModelRevision_Minor_Version_Number = "ModelRevision_Minor_Version_Number";
 			public const string ModelRevision_Notes = "ModelRevision_Notes";
 			public const string ModelRevision_Preprocessors = "ModelRevision_Preprocessors";
 			public const string ModelRevision_Quality = "ModelRevision_Quality";
