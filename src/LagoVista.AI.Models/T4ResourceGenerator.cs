@@ -122,6 +122,12 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:Model_ModelType
 
 		public static string Model_ModelType { get { return GetResourceString("Model_ModelType"); } }
+//Resources:AIResources:Model_PreferredRevision
+
+		public static string Model_PreferredRevision { get { return GetResourceString("Model_PreferredRevision"); } }
+//Resources:AIResources:Model_PreferredRevision_Select
+
+		public static string Model_PreferredRevision_Select { get { return GetResourceString("Model_PreferredRevision_Select"); } }
 //Resources:AIResources:Model_Revisions
 
 		public static string Model_Revisions { get { return GetResourceString("Model_Revisions"); } }
@@ -313,6 +319,8 @@ namespace LagoVista.AI.Models.Resources
 			public const string Model_ModelCategory = "Model_ModelCategory";
 			public const string Model_ModelCategory_Select = "Model_ModelCategory_Select";
 			public const string Model_ModelType = "Model_ModelType";
+			public const string Model_PreferredRevision = "Model_PreferredRevision";
+			public const string Model_PreferredRevision_Select = "Model_PreferredRevision_Select";
 			public const string Model_Revisions = "Model_Revisions";
 			public const string Model_Title = "Model_Title";
 			public const string Model_Type = "Model_Type";

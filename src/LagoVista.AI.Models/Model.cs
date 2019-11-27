@@ -66,6 +66,8 @@ namespace LagoVista.AI.Models
         [FormField(LabelResource: AIResources.Names.ModelRevision_Notes, FieldType: FieldTypes.ChildList, ResourceType: typeof(AIResources))]
         public List<ModelNotes> Notes { get; set; }
 
+        [FormField(LabelResource: AIResources.Names.Model_PreferredRevision, FieldType: FieldTypes.EntityHeaderPicker, IsRequired: false, WaterMark: AIResources.Names.Model_PreferredRevision_Select, ResourceType: typeof(AIResources))]
+        public EntityHeader PreferredRevision { get; set; }
 
         public string CreationDate { get; set; }
         public string LastUpdatedDate { get; set; }

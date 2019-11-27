@@ -303,6 +303,12 @@
   <data name="Model_ModelType" xml:space="preserve">
     <value>Model Type</value>
   </data>
+  <data name="Model_PreferredRevision" xml:space="preserve">
+    <value>Preferred Revision</value>
+  </data>
+  <data name="Model_PreferredRevision_Select" xml:space="preserve">
+    <value>-select preferred revision-</value>
+  </data>
   <data name="Model_Revisions" xml:space="preserve">
     <value>Revisions</value>
   </data>
