@@ -89,6 +89,9 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:Label_Description
 
 		public static string Label_Description { get { return GetResourceString("Label_Description"); } }
+//Resources:AIResources:Label_Enabled
+
+		public static string Label_Enabled { get { return GetResourceString("Label_Enabled"); } }
 //Resources:AIResources:Label_Help
 
 		public static string Label_Help { get { return GetResourceString("Label_Help"); } }
@@ -104,6 +107,9 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:Label_Title
 
 		public static string Label_Title { get { return GetResourceString("Label_Title"); } }
+//Resources:AIResources:Label_Visible
+
+		public static string Label_Visible { get { return GetResourceString("Label_Visible"); } }
 //Resources:AIResources:Model_Description
 
 		public static string Model_Description { get { return GetResourceString("Model_Description"); } }
@@ -308,11 +314,13 @@ namespace LagoVista.AI.Models.Resources
 			public const string Experiment_Instructions = "Experiment_Instructions";
 			public const string Experiment_Title = "Experiment_Title";
 			public const string Label_Description = "Label_Description";
+			public const string Label_Enabled = "Label_Enabled";
 			public const string Label_Help = "Label_Help";
 			public const string Label_Icon = "Label_Icon";
 			public const string Label_Index = "Label_Index";
 			public const string Label_Key = "Label_Key";
 			public const string Label_Title = "Label_Title";
+			public const string Label_Visible = "Label_Visible";
 			public const string Model_Description = "Model_Description";
 			public const string Model_Experiments = "Model_Experiments";
 			public const string Model_Help = "Model_Help";

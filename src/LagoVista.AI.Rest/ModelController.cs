@@ -214,6 +214,8 @@ namespace LagoVista.AI.Rest
         public DetailResponse<Label> CreateNewLabel()
         {
             var model = DetailResponse<Label>.Create();
+            model.Model.Enabled = true;
+            model.Model.Visible = true;
             model.Model.Id = Guid.NewGuid().ToId();
             return model;
         }
