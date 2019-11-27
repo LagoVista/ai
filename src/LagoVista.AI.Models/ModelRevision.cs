@@ -109,7 +109,7 @@ namespace LagoVista.AI.Models
                 Id = Id,
                 VersionNumber = VersionNumber,
                 MinorVersionNumber = MinorVersionNumber,
-                Datestmap = Datestamp,
+                Datestamp = Datestamp,
                 Status = Status.Text,
                 StatusId = Status.Id,
                 Quality = Quality.Text,
@@ -123,7 +123,7 @@ namespace LagoVista.AI.Models
         public String Id { get; set; }
         public int VersionNumber { get; set; }
         public int MinorVersionNumber { set; get; }
-        public String Datestmap { get; set; }
+        public String Datestamp { get; set; }
         public String Status { get; set; }
         public String StatusId { get; set; }
         public String Quality { get; set; }
