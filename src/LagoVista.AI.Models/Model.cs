@@ -51,13 +51,13 @@ namespace LagoVista.AI.Models
         [FormField(LabelResource: AIResources.Names.Common_Description, FieldType: FieldTypes.MultiLineText, ResourceType: typeof(AIResources))]
         public string Description { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.Model_ModelCategory, FieldType: FieldTypes.EntityHeaderPicker, IsRequired: true, WaterMark:AIResources.Names.Model_ModelCategory_Select, ResourceType: typeof(AIResources))]
+        [FormField(LabelResource: AIResources.Names.Model_ModelCategory, FieldType: FieldTypes.EntityHeaderPicker, IsRequired: true, WaterMark: AIResources.Names.Model_ModelCategory_Select, ResourceType: typeof(AIResources))]
         public EntityHeader ModelCategory { get; set; }
 
         [FormField(LabelResource: AIResources.Names.Model_Revisions, FieldType: FieldTypes.ChildList, ResourceType: typeof(AIResources))]
         public List<ModelRevision> Revisions { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.Model_ModelType, FieldType: FieldTypes.Picker, EnumType:typeof(ModelType), IsRequired: true, WaterMark: AIResources.Names.Model_Type_Select, ResourceType: typeof(AIResources))]
+        [FormField(LabelResource: AIResources.Names.Model_ModelType, FieldType: FieldTypes.Picker, EnumType: typeof(ModelType), IsRequired: true, WaterMark: AIResources.Names.Model_Type_Select, ResourceType: typeof(AIResources))]
         public EntityHeader<ModelType> ModelType { get; set; }
 
         [FormField(LabelResource: AIResources.Names.Model_Experiments, FieldType: FieldTypes.ChildList, ResourceType: typeof(AIResources))]
@@ -78,7 +78,7 @@ namespace LagoVista.AI.Models
         [CustomValidator]
         public void Validate(ValidationResult result)
         {
-            if (Revisions.GroupBy(rev => rev.VersionNumber).Count() != Revisions.Count)
+            if (Revisions.GroupBy(rev => new { rev.VersionNumber, rev.MinorVersionNumber}).Count() != Revisions.Count)
             {
                 result.AddUserError("Revision Indexes must be unique.");
             }
@@ -93,14 +93,14 @@ namespace LagoVista.AI.Models
                 IsPublic = IsPublic,
                 Key = Key,
                 Name = Name,
-                Revisions = new List<ModelRevisionSummary>(Revisions.Select(rev=>rev.ToSummary()))
+                Revisions = new List<ModelRevisionSummary>(Revisions.Select(rev => rev.ToSummary()))
             };
         }
     }
 
     public class ModelSummary : SummaryData
     {
-        
+
         public List<ModelRevisionSummary> Revisions { get; set; }
     }
 }
