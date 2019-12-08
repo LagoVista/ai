@@ -1,8 +1,10 @@
 ﻿using LagoVista.AI.Models;
+using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.IoT.Web.Common.Controllers;
 using LagoVista.UserAdmin.Models.Users;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -27,6 +29,30 @@ namespace LagoVista.AI.Rest
             this._experimentResultManager = experimentResultManager;
             this._modelManager = modelManager;
             this._modelCategoryManager = modelCategoryManager;
+        }
+
+        [HttpPost("/clientapi/ml/model/{modelid}/{revision}")]
+        public Task<InvokeResult> UploadModel(string modelid, int revision, IFormFile file)
+        {
+            if (file == null)
+            {
+                throw new ArgumentNullException(nameof(file));
+            }
+
+            using (var stream = file.OpenReadStream())
+            {
+                var model = new byte[stream.Length];
+                stream.Position = 0;
+                stream.Read(model, 0, (int)stream.Length);
+
+                return _modelManager.UploadModel(modelid, revision, model, OrgEntityHeader, UserEntityHeader);
+            }
+        }
+
+        [HttpPost("/clientapi/ml/model/{modelid}")]
+        public Task<InvokeResult<ModelRevision>> UploadRevision(string modelId, [FromBody] ModelRevision revision)
+        {
+            return _modelManager.AddRevisionAsync(modelId, revision, OrgEntityHeader, UserEntityHeader);
         }
 
         [HttpGet("/clientapi/ml/models/category/{categoryid}")]

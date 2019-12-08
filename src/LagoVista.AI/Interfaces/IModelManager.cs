@@ -9,6 +9,7 @@ namespace LagoVista.AI
 {
     public interface IModelManager
     {
+        Task<InvokeResult<ModelRevision>> AddRevisionAsync(String modelId, ModelRevision revision, EntityHeader org, EntityHeader user);
         Task<InvokeResult> AddModelAsync(Model model, EntityHeader org, EntityHeader user);
         Task<Model> GetModelAsync(string id, EntityHeader org, EntityHeader user);
         Task<InvokeResult> UpdateModelAsync(Model model, EntityHeader org, EntityHeader user);
@@ -19,6 +20,5 @@ namespace LagoVista.AI
         Task<ListResponse<ModelSummary>> GetModelsForCategoryAsync(string categoryKey, EntityHeader org, EntityHeader user, ListRequest listRequest);
         Task<InvokeResult> UploadModel(string modelId, int revision, byte[] model, EntityHeader org, EntityHeader user);
         Task<InvokeResult<Byte[]>> GetMLModelAsync(string id, int revision, EntityHeader org, EntityHeader user);
-        Task<InvokeResult> AddRevisionAsync(string modelId, ModelRevision revision, EntityHeader org, EntityHeader user);
     }
 }

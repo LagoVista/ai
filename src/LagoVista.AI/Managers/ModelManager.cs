@@ -1,10 +1,13 @@
 ﻿using LagoVista.AI.Models;
+using LagoVista.Core;
 using LagoVista.Core.Interfaces;
 using LagoVista.Core.Managers;
 using LagoVista.Core.Models;
 using LagoVista.Core.Models.UIMetaData;
 using LagoVista.Core.PlatformSupport;
 using LagoVista.Core.Validation;
+using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace LagoVista.AI.Managers
@@ -32,13 +35,6 @@ namespace LagoVista.AI.Managers
             await _repo.AddModelAsync(model);
 
             return InvokeResult.Success;
-        }
-
-        public async Task<InvokeResult> AddRevisionAsync(string modelId, ModelRevision revision, EntityHeader org, EntityHeader user)
-        {
-            var model = await GetModelAsync(modelId, org, user);
-            model.Revisions.Add(revision);
-            return await UpdateModelAsync(model, org, user);
         }
 
         public async Task<InvokeResult> UploadModel(string modelId, int revision, byte[] model, EntityHeader org, EntityHeader user)
@@ -105,6 +101,38 @@ namespace LagoVista.AI.Managers
             await this.GetModelAsync(modelId, org, user);
 
             return await _modelRepo.GetModelAsync(org.Id, modelId, revision);
+        }
+
+        public async Task<InvokeResult<ModelRevision>> AddRevisionAsync(string modelId, ModelRevision revision, EntityHeader org, EntityHeader user)
+        {
+            revision.Id = Guid.NewGuid().ToId();
+
+            var model = await this.GetModelAsync(modelId, org, user);
+            model.Revisions.Add(revision);
+            revision.VersionNumber = model.Revisions.Count;
+            revision.MinorVersionNumber = 1;
+
+            if(model.Revisions.Any())
+            {
+                if (!revision.Preprocessors.Any())
+                {
+                    revision.Preprocessors.AddRange(model.Revisions.Last().Preprocessors);
+                }
+
+                if(!revision.Settings.Any())
+                {
+                    revision.Settings.AddRange(model.Revisions.Last().Settings);
+                }
+
+                if (String.IsNullOrEmpty(revision.TrainingSettings))
+                {
+                    revision.TrainingSettings = revision.TrainingSettings;
+                }
+            }
+
+            await this.UpdateModelAsync(model, org, user);
+
+            return InvokeResult<ModelRevision>.Create(revision);
         }
     }
 }
