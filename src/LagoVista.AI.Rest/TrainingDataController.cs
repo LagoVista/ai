@@ -17,12 +17,12 @@ namespace LagoVista.AI.Rest
     [AppBuilder]
     public class TrainingDataController : LagoVistaBaseController
     {
-        readonly I _mgr;
+        readonly ITrainingDataSetManager _mgr;
 
-        public TrainingDataController(IModelManager modelManager, UserManager<AppUser> userManager, IAdminLogger logger)
+        public TrainingDataController(ITrainingDataSetManager mgr, UserManager<AppUser> userManager, IAdminLogger logger)
             : base(userManager, logger)
         {
-            _mgr = modelManager;
+            _mgr = mgr;
         }
     
         public Task<InvokeResult> AddTrainingDataSetAsync([FromBody] TrainingDataSet set)

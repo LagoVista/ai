@@ -51,7 +51,7 @@ namespace LagoVista.AI.Rest
                 stream.Position = 0;
                 stream.Read(sample, 0, (int)stream.Length);
 
-                return _sampleManager.AddSampleAsync(sample, tagIds, file.ContentType, OrgEntityHeader, UserEntityHeader);
+                return _sampleManager.AddSampleAsync(sample, file.FileName, file.ContentType, tagIds, OrgEntityHeader, UserEntityHeader);
             }
         }
 
@@ -60,8 +60,8 @@ namespace LagoVista.AI.Rest
         /// </summary>
         /// <param name="file"></param>
         /// <returns></returns>
-        [HttpPut("/api/ml/sample")]
-        public Task<InvokeResult> UpdateSampleAsync(IFormFile file)
+        [HttpPut("/api/ml/sample/{sampleid}")]
+        public Task<InvokeResult> UpdateSampleAsync(IFormFile file, string sampleid)
         {
             if (file == null)
             {
@@ -74,7 +74,7 @@ namespace LagoVista.AI.Rest
                 stream.Position = 0;
                 stream.Read(sample, 0, (int)stream.Length);
 
-                return _sampleManager.UpdateSampleAsync(sample, OrgEntityHeader, UserEntityHeader);
+                return _sampleManager.UpdateSampleAsync(sampleid, sample, OrgEntityHeader, UserEntityHeader);
             }
         }
 
@@ -134,9 +134,9 @@ namespace LagoVista.AI.Rest
         /// <param name="labelid"></param>
         /// <returns></returns>
         [HttpGet("/api/ml/samples/label/{labelid}")]
-        public Task<ListResponse<Sample>> GetSamplesForLabelAsync(string labelid)
+        public Task<ListResponse<SampleSummary>> GetSamplesForLabelAsync(string labelid)
         {
-            return _sampleManager.GetSamplesForLabelAsync(labelid, OrgEntityHeader, UserEntityHeader);
+            return _sampleManager.GetSamplesForLabelAsync(labelid, OrgEntityHeader, UserEntityHeader, GetListRequestFromHeader());
         }
     }
 }

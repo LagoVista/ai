@@ -77,7 +77,7 @@ namespace LagoVista.AI.Managers
             return InvokeResult.Success;
         }
 
-        public async Task<InvokeResult<Sample>> AddSampleAsync(byte[] sampleBytes, string fileName, List<string> labelIds, string contentType, EntityHeader org, EntityHeader user)
+        public async Task<InvokeResult<Sample>> AddSampleAsync(byte[] sampleBytes, string fileName, string contentType, List<string> labelIds, EntityHeader org, EntityHeader user)
         {
             var now = DateTime.UtcNow;
 

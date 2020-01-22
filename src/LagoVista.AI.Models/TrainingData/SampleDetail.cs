@@ -12,6 +12,8 @@ namespace LagoVista.AI.Models.TrainingData
         public string Name { get; set; }
         public string Key { get; set; }
 
+        public string FileName { get; set; }
+
         public string CreationDate { get; set; }
         public string LastUpdatedDate { get; set; }
 
@@ -34,6 +36,7 @@ namespace LagoVista.AI.Models.TrainingData
                 LastUpdatedDate = sample.LastUpdatedDate,
                 Id = sample.RowKey,
                 Name = sample.Name,
+                FileName = sample.FileName,
                 Key = sample.Key,
                 OwnerOrganization = EntityHeader.Create(sample.OwnerOrganizationId, sample.OwnerOrganizationName),
             };
