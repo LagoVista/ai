@@ -56,7 +56,7 @@ namespace LagoVista.AI.Models
 
         public ModelRevision()
         {
-            Labels = new List<Label>();
+            Labels = new List<EntityHeader>();
             Notes = new List<ModelNotes>();
             Preprocessors = new List<Preprocessor>();
             Status = EntityHeader<ModelRevisionStatus>.Create(ModelRevisionStatus.New);
@@ -94,7 +94,7 @@ namespace LagoVista.AI.Models
         public List<ModelSetting> Settings { get; set; }
 
         [FormField(LabelResource: AIResources.Names.ModelRevision_Labels, FieldType: FieldTypes.ChildList, ResourceType: typeof(AIResources))]
-        public List<Label> Labels { get; set; }
+        public List<EntityHeader> Labels { get; set; }
 
         [FormField(LabelResource: AIResources.Names.ModelRevision_Notes, FieldType: FieldTypes.ChildList, ResourceType: typeof(AIResources))]
         public List<ModelNotes> Notes { get; set; }

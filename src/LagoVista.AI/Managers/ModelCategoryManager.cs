@@ -38,10 +38,10 @@ namespace LagoVista.AI.Managers
 
         public async Task<InvokeResult> DeleteModelCategoryAsync(string id, EntityHeader org, EntityHeader user)
         {
-            var host = await _repo.GetModelCategoryAsync(id);
+            var cateogry = await _repo.GetModelCategoryAsync(id);
 
-            await AuthorizeAsync(host, AuthorizeResult.AuthorizeActions.Delete, user, org);
-            await ConfirmNoDepenenciesAsync(host);
+            await AuthorizeAsync(cateogry, AuthorizeResult.AuthorizeActions.Delete, user, org);
+            await ConfirmNoDepenenciesAsync(cateogry);
             await _repo.DeleteModelCategoryAsync(id);
             return InvokeResult.Success;
         }
