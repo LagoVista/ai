@@ -65,7 +65,7 @@ namespace LagoVista.AI.Rest
         [HttpGet("/api/ml/labels")]
         public Task<ListResponse<LabelSummary>> GetLabelsForOrgAsync()
         {
-            return _labelManager.GetLabelsForOrgAsync(OrgEntityHeader, UserEntityHeader);
+            return _labelManager.GetLabelsForOrgAsync(OrgEntityHeader, UserEntityHeader, GetListRequestFromHeader());
         }
 
         /// <summary>
@@ -76,7 +76,7 @@ namespace LagoVista.AI.Rest
         [HttpGet("/api/ml/labels/search")]
         public Task<ListResponse<LabelSummary>> GetLabelsForOrgAsync(string search)
         {
-            return _labelManager.SearchLabelsAsync(search, OrgEntityHeader, UserEntityHeader);
+            return _labelManager.SearchLabelsAsync(search, OrgEntityHeader, UserEntityHeader, GetListRequestFromHeader());
         }
     }
 }

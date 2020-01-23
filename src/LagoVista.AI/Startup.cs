@@ -10,6 +10,9 @@ namespace LagoVista.AI
             services.AddTransient<IModelCategoryManager, ModelCategoryManager>();
             services.AddTransient<IModelManager, ModelManager>();
             services.AddTransient<IHubManager, HubManager>();
+            services.AddTransient<ITrainingDataSetManager, TrainingDataSetManager>();
+            services.AddTransient<ISampleManager, SampleManager>();
+            services.AddTransient<ILabelManager, ILabelManager>();
             services.AddTransient<IExperimentResultManager, ExperimentResultManager>();
         }
     }

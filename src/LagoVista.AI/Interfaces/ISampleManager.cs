@@ -12,7 +12,7 @@ namespace LagoVista.AI
     {
         Task<InvokeResult<Sample>> AddSampleAsync(byte[] sampleBytes, string fileName, string contentType, List<string> tagIds, EntityHeader org, EntityHeader user);
         Task<InvokeResult> UpdateSampleAsync(string sampleId, byte[] sampleBytes, EntityHeader org, EntityHeader user);
-        Task<byte[]> GetSampleAsync(string sampleIdd, EntityHeader org, EntityHeader user);
+        Task<InvokeResult<byte[]>> GetSampleAsync(string sampleIdd, EntityHeader org, EntityHeader user);
         Task<SampleDetail> GetSampleDetailAsync(string sampleId, EntityHeader org, EntityHeader user);
         Task<InvokeResult> AddLabelForSampleAsync(string sampleId, string labelId, EntityHeader org, EntityHeader user);
         Task<InvokeResult> RemoveLabelFromSampleAsync(string sampleId, string labelId, EntityHeader org, EntityHeader user);

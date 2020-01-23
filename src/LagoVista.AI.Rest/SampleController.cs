@@ -111,9 +111,9 @@ namespace LagoVista.AI.Rest
         public async Task<IActionResult> GetSampleAsync(string id)
         {
             var sampleDetail = await _sampleManager.GetSampleDetailAsync(id, OrgEntityHeader, UserEntityHeader);
-            var sampleBytes = await _sampleManager.GetSampleAsync(id, OrgEntityHeader, UserEntityHeader);
+            var result = await _sampleManager.GetSampleAsync(id, OrgEntityHeader, UserEntityHeader);
 
-            var ms = new MemoryStream(sampleBytes);
+            var ms = new MemoryStream(result.Result);
             return new FileStreamResult(ms, "application/octet-stream");
         }
 

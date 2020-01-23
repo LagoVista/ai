@@ -37,7 +37,7 @@ namespace LagoVista.AI.Managers
 
         public async Task<InvokeResult> AddLabelForSampleAsync(string sampleId, string labelId, EntityHeader org, EntityHeader user)
         {
-            var sample = await this._sampleRepo.GetSampleAsync(sampleId);
+            var sample = await this._sampleRepo.GetSampleAsync(sampleId, org.Id);
             return await AddLabelForSampleAsync(sample, labelId, org, user);
         }
 
@@ -117,7 +117,7 @@ namespace LagoVista.AI.Managers
             return InvokeResult<Sample>.Create(sample);
         }
 
-        public async Task<byte[]> GetSampleAsync(string sampleId, EntityHeader org, EntityHeader user)
+        public async Task<InvokeResult<byte[]>> GetSampleAsync(string sampleId, EntityHeader org, EntityHeader user)
         {
             // leave this to do a validtion check.
             await GetSampleDetailAsync(sampleId, org, user);
@@ -126,7 +126,7 @@ namespace LagoVista.AI.Managers
 
         public async Task<SampleDetail> GetSampleDetailAsync(string sampleId, EntityHeader org, EntityHeader user)
         {
-            var sample = await _sampleRepo.GetSampleAsync(sampleId);
+            var sample = await _sampleRepo.GetSampleAsync(sampleId, org.Id);
             var labels = await _labelSampleRepo.GetLabelsForSampleAsync(sampleId);
 
             var detail = SampleDetail.FromSample(sample);
