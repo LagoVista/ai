@@ -1,4 +1,5 @@
 ﻿using LagoVista.AI.Models;
+using LagoVista.Core;
 using LagoVista.Core.Models.UIMetaData;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
@@ -7,6 +8,7 @@ using LagoVista.IoT.Web.Common.Controllers;
 using LagoVista.UserAdmin.Models.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Threading.Tasks;
 
 namespace LagoVista.AI.Rest
@@ -46,7 +48,7 @@ namespace LagoVista.AI.Rest
             SetUpdatedProperties(label);
             return _labelManager.UpdateLabelAsync(label, OrgEntityHeader, UserEntityHeader);
         }
-
+  
         /// <summary>
         /// Label - Get
         /// </summary>
@@ -57,6 +59,22 @@ namespace LagoVista.AI.Rest
         {
             return DetailResponse<Label>.Create(await _labelManager.GetLabelAsync(id, OrgEntityHeader, UserEntityHeader));
         }
+
+        /// <summary>
+        /// Label - Get
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpGet("/api/ml/label/factory")]
+        public DetailResponse<Label> CreateLabelAsync(string id)
+        {
+            var result = DetailResponse<Label>.Create();
+            result.Model.Id = Guid.NewGuid().ToId();
+            SetOwnedProperties(result.Model);
+            SetAuditProperties(result.Model);
+            return result;
+        }
+
 
         /// <summary>
         /// Labels - Get for org

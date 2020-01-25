@@ -363,4 +363,13 @@
   <data name="Preprocessor_Title" xml:space="preserve">
     <value>Preprocessor</value>
   </data>
+  <data name="TrainingDataSet_Description" xml:space="preserve">
+    <value>Collection of samples used to build models</value>
+  </data>
+  <data name="TrainingDataSet_Help" xml:space="preserve">
+    <value>Collection of samples used to build models</value>
+  </data>
+  <data name="TrainingDataSet_Title" xml:space="preserve">
+    <value>Training Data Set</value>
+  </data>
 </root>

@@ -9,6 +9,7 @@ using LagoVista.Core.Models;
 using LagoVista.Core.Models.UIMetaData;
 using LagoVista.Core.PlatformSupport;
 using LagoVista.Core.Validation;
+using LagoVista.IoT.Logging.Loggers;
 
 namespace LagoVista.AI.Managers
 {
@@ -16,7 +17,7 @@ namespace LagoVista.AI.Managers
     {
         private readonly ILabelRepo _repo;
 
-        public LabelManager(ILabelRepo labelRepo, ILogger logger, IAppConfig appConfig, IDependencyManager dependencyManager, ISecurity security)
+        public LabelManager(ILabelRepo labelRepo, IAdminLogger logger, IAppConfig appConfig, IDependencyManager dependencyManager, ISecurity security)
                   : base(logger, appConfig, dependencyManager, security)
         {
             _repo = labelRepo ?? throw new NullReferenceException(nameof(labelRepo));

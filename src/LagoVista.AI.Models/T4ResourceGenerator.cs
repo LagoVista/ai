@@ -299,6 +299,15 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:PreprocessorSetting_Value
 
 		public static string PreprocessorSetting_Value { get { return GetResourceString("PreprocessorSetting_Value"); } }
+//Resources:AIResources:TrainingDataSet_Description
+
+		public static string TrainingDataSet_Description { get { return GetResourceString("TrainingDataSet_Description"); } }
+//Resources:AIResources:TrainingDataSet_Help
+
+		public static string TrainingDataSet_Help { get { return GetResourceString("TrainingDataSet_Help"); } }
+//Resources:AIResources:TrainingDataSet_Title
+
+		public static string TrainingDataSet_Title { get { return GetResourceString("TrainingDataSet_Title"); } }
 
 		public static class Names
 		{
@@ -384,6 +393,9 @@ namespace LagoVista.AI.Models.Resources
 			public const string PreprocessorSetting_Help = "PreprocessorSetting_Help";
 			public const string PreprocessorSetting_Title = "PreprocessorSetting_Title";
 			public const string PreprocessorSetting_Value = "PreprocessorSetting_Value";
+			public const string TrainingDataSet_Description = "TrainingDataSet_Description";
+			public const string TrainingDataSet_Help = "TrainingDataSet_Help";
+			public const string TrainingDataSet_Title = "TrainingDataSet_Title";
 		}
 	}
 }

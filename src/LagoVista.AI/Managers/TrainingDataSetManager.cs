@@ -46,17 +46,17 @@ namespace LagoVista.AI.Managers
             return InvokeResult.Success;
         }
 
-        public async Task<ListResponse<TrainingDataSetSummary>> GetForOrgAsync(string id, EntityHeader org, EntityHeader user, ListRequest request)
+        public async Task<ListResponse<TrainingDataSetSummary>> GetForOrgAsync(EntityHeader org, EntityHeader user, ListRequest request)
         {
             await AuthorizeOrgAccessAsync(user, org.Id, typeof(TrainingDataSetSummary));
             return await _repo.GetTrainingDataSetsForOrgAsync(org.Id, request);
         }
 
-        public async Task<InvokeResult<TrainingDataSet>> GetTrainingDataSetAsync(string id, EntityHeader org, EntityHeader user)
+        public async Task<TrainingDataSet> GetTrainingDataSetAsync(string id, EntityHeader org, EntityHeader user)
         {
             var model = await _repo.GetTrainingDataSetAsync(id);
             await AuthorizeAsync(model, AuthorizeResult.AuthorizeActions.Read, user, org);
-            return InvokeResult<TrainingDataSet>.Create(model);
+            return model;
         }
 
         public Task<bool> QueryKeyInUse(string key, EntityHeader org)

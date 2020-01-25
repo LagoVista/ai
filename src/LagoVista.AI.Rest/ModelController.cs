@@ -206,20 +206,7 @@ namespace LagoVista.AI.Rest
             return model;
         }
 
-        /// <summary>
-        /// Model - Create new Label
-        /// </summary>
-        /// <returns></returns>
-        [HttpGet("/api/ml/model/label/factory")]
-        public DetailResponse<Label> CreateNewLabel()
-        {
-            var model = DetailResponse<Label>.Create();
-            model.Model.Enabled = true;
-            model.Model.Visible = true;
-            model.Model.Id = Guid.NewGuid().ToId();
-            return model;
-        }
-
+      
         /// <summary>
         /// Model - Key In Use
         /// </summary>

@@ -9,6 +9,7 @@ using System.Collections.Generic;
 
 namespace LagoVista.AI.Models.TrainingData
 {
+    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.TrainingDataSet_Title, AIResources.Names.TrainingDataSet_Help, AIResources.Names.TrainingDataSet_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources))]
     public class TrainingDataSet : IIDEntity, IKeyedEntity, INamedEntity, IDescriptionEntity, IAuditableEntity, IOwnedEntity, INoSQLEntity, IValidateable
     {
         public string DatabaseName { get; set; }

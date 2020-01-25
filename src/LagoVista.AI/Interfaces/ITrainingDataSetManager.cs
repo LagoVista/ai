@@ -10,9 +10,9 @@ namespace LagoVista.AI
     {
         Task<InvokeResult> AddTrainingDataSetManager(TrainingDataSet dataSet, EntityHeader org, EntityHeader user);
         Task<InvokeResult> UpdateTrainingDataSetManager(TrainingDataSet dataSet, EntityHeader org, EntityHeader user);
-        Task<InvokeResult<TrainingDataSet>> GetTrainingDataSetAsync(string id, EntityHeader org, EntityHeader user);
+        Task<TrainingDataSet> GetTrainingDataSetAsync(string id, EntityHeader org, EntityHeader user);
         Task<InvokeResult> DeleteTrainingDataSetManager(string id, EntityHeader org, EntityHeader user);
-        Task<ListResponse<TrainingDataSetSummary>> GetForOrgAsync(string id, EntityHeader org, EntityHeader user, ListRequest listRequest);
+        Task<ListResponse<TrainingDataSetSummary>> GetForOrgAsync(EntityHeader org, EntityHeader user, ListRequest listRequest);
         Task<bool> QueryKeyInUse(string key, EntityHeader org);
         Task<DependentObjectCheckResult> CheckInUseAsync(string id, EntityHeader org, EntityHeader user);
     }

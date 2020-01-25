@@ -25,16 +25,6 @@ namespace LagoVista.AI.Models
         [FormField(LabelResource: AIResources.Names.Label_Title, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
         public string Title { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.Label_Index, FieldType: FieldTypes.Integer, IsRequired: true, ResourceType: typeof(AIResources))]
-        public int Index { get; set; }
-
-        [FormField(LabelResource: AIResources.Names.Label_Visible, FieldType: FieldTypes.CheckBox, ResourceType: typeof(AIResources))]
-        public bool Visible { get; set; }
-
-        [FormField(LabelResource: AIResources.Names.Label_Enabled, FieldType: FieldTypes.CheckBox, ResourceType: typeof(AIResources))]
-        public bool Enabled { get; set; }
-
-
         [FormField(LabelResource: AIResources.Names.Label_Icon, FieldType: FieldTypes.Text, IsRequired: false, ResourceType: typeof(AIResources))]
         public string Icon { get; set; }
 
