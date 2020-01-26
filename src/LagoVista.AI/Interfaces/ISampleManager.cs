@@ -16,6 +16,6 @@ namespace LagoVista.AI
         Task<SampleDetail> GetSampleDetailAsync(string sampleId, EntityHeader org, EntityHeader user);
         Task<InvokeResult> AddLabelForSampleAsync(string sampleId, string labelId, EntityHeader org, EntityHeader user);
         Task<InvokeResult> RemoveLabelFromSampleAsync(string sampleId, string labelId, EntityHeader org, EntityHeader user);
-        Task<ListResponse<SampleSummary>> GetSamplesForLabelAsync(string labelId, EntityHeader org, EntityHeader user, ListRequest request);
+        Task<ListResponse<SampleSummary>> GetSamplesForLabelAsync(string labelId, string contentType, EntityHeader org, EntityHeader user, ListRequest request);
     }
 }

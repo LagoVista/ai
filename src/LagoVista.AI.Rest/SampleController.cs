@@ -114,7 +114,7 @@ namespace LagoVista.AI.Rest
             var result = await _sampleManager.GetSampleAsync(id, OrgEntityHeader, UserEntityHeader);
 
             var ms = new MemoryStream(result.Result);
-            return new FileStreamResult(ms, "application/octet-stream");
+            return new FileStreamResult(ms, sampleDetail.ContentType);
         }
 
         /// <summary>
@@ -136,7 +136,14 @@ namespace LagoVista.AI.Rest
         [HttpGet("/api/ml/samples/label/{labelid}")]
         public Task<ListResponse<SampleSummary>> GetSamplesForLabelAsync(string labelid)
         {
-            return _sampleManager.GetSamplesForLabelAsync(labelid, OrgEntityHeader, UserEntityHeader, GetListRequestFromHeader());
+            if(!Request.Headers.ContainsKey("Accept"))
+            {
+                throw new ArgumentNullException("must provide content type in accept header.");
+            }
+
+            var contentType = Request.Headers["Accept"];
+
+            return _sampleManager.GetSamplesForLabelAsync(labelid, contentType, OrgEntityHeader, UserEntityHeader, GetListRequestFromHeader());
         }
     }
 }

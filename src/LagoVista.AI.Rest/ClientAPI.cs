@@ -39,19 +39,19 @@ namespace LagoVista.AI.Rest
         }
 
         [HttpPost("/clientapi/ml/sample")]
-        public Task<InvokeResult<Sample>> UploadSampleAsync(IFormFile file, string tagsString)
+        public Task<InvokeResult<Sample>> UploadSampleAsync(IFormFile file, string tags)
         {
             if (file == null)
             {
                 throw new ArgumentNullException(nameof(file));
             }
 
-            if (String.IsNullOrEmpty(tagsString))
+            if (String.IsNullOrEmpty(tags))
             {
                 throw new ArgumentNullException("Must pass in ?tags as a comma delimted set of non empty tags.");
             }
 
-            var tagIds = new List<string>(tagsString.Split(','));
+            var tagIds = new List<string>(tags.Split(','));
             using (var stream = file.OpenReadStream())
             {
                 var sample = new byte[stream.Length];
@@ -62,6 +62,39 @@ namespace LagoVista.AI.Rest
             }
         }
 
+
+        [HttpGet("/clientapi/ml/samples/label/{labelid}")]
+        public Task<ListResponse<SampleSummary>> GetSamplesForLabel(string labelid)
+        {
+            if (!Request.Headers.ContainsKey("Accept"))
+            {
+                throw new ArgumentNullException("must provide content type in accept header.");
+            }
+
+            var contentType = Request.Headers["Accept"];
+
+            if(String.IsNullOrEmpty(contentType))
+            {
+                throw new ArgumentNullException("must provide content type in Accept header.");
+            }
+
+            return _sampleManager.GetSamplesForLabelAsync(labelid, contentType, OrgEntityHeader, UserEntityHeader, GetListRequestFromHeader());
+        }
+
+        /// <summary>
+        /// Sample - Get sample by id.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpGet("/clientapi/ml/sample/{id}")]
+        public async Task<IActionResult> GetSampleAsync(string id)
+        {
+            var sampleDetail = await _sampleManager.GetSampleDetailAsync(id, OrgEntityHeader, UserEntityHeader);
+            var result = await _sampleManager.GetSampleAsync(id, OrgEntityHeader, UserEntityHeader);
+
+            var ms = new MemoryStream(result.Result);
+            return new FileStreamResult(ms, sampleDetail.ContentType);
+        }
 
         /// <summary>
         /// Labels - Get for org

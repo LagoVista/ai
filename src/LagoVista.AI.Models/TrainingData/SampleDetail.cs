@@ -14,6 +14,10 @@ namespace LagoVista.AI.Models.TrainingData
 
         public string FileName { get; set; }
 
+        public string ContentType { get; set; }
+
+        public long ContentSize { get; set; }
+
         public string CreationDate { get; set; }
         public string LastUpdatedDate { get; set; }
 
@@ -34,6 +38,8 @@ namespace LagoVista.AI.Models.TrainingData
                 LastUpdatedBy = EntityHeader.Create(sample.LastUpdatedById, sample.LastUpdatedByName),
                 CreationDate = sample.CreationDate,
                 LastUpdatedDate = sample.LastUpdatedDate,
+                ContentType = sample.ContentType,
+                ContentSize = sample.ContentSize,
                 Id = sample.RowKey,
                 Name = sample.Name,
                 FileName = sample.FileName,

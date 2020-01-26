@@ -47,7 +47,7 @@ namespace LagoVista.AI.Managers
             var label = new SampleLabel()
             {
                 RowKey = $"{sample.RowKey}-{labelId}",
-                PartitionKey = labelId,
+                PartitionKey = $"{labelId}-{sample.ContentType.Replace("/","-")}",
                 SampleId = sample.RowKey,
                 FileName = sample.FileName,
                 ContentSize = sample.ContentSize,
@@ -135,12 +135,12 @@ namespace LagoVista.AI.Managers
             return detail;
         }
 
-        public async Task<ListResponse<SampleSummary>> GetSamplesForLabelAsync(string labelId, EntityHeader org, EntityHeader user, ListRequest request)
+        public async Task<ListResponse<SampleSummary>> GetSamplesForLabelAsync(string labelId, string contentType, EntityHeader org, EntityHeader user, ListRequest request)
         {
             var label = await _labelRepo.GetLabelAsync(labelId);
             await AuthorizeAsync(label, AuthorizeResult.AuthorizeActions.Read, user, org);
 
-            var samples = await _sampleLabelRepo.GetSamplesForLabelAsync(labelId, request);
+            var samples = await _sampleLabelRepo.GetSamplesForLabelAsync(labelId, contentType, request);
 
             return new ListResponse<SampleSummary>()
             {

@@ -2,6 +2,7 @@
 using LagoVista.CloudStorage.Storage;
 using LagoVista.Core.Models.UIMetaData;
 using LagoVista.IoT.Logging.Loggers;
+using System;
 using System.Threading.Tasks;
 
 namespace LagoVista.AI.CloudRepos
@@ -19,9 +20,13 @@ namespace LagoVista.AI.CloudRepos
             return this.InsertAsync(label);
         }
 
-        public Task<ListResponse<SampleLabel>> GetSamplesForLabelAsync(string labelId, ListRequest request)
+        public Task<ListResponse<SampleLabel>> GetSamplesForLabelAsync(string labelId, string contentType, ListRequest request)
         {
-            return GetPagedResultsAsync(labelId, request);
+            var partitionKey = $"{labelId}-{contentType.Replace("/", "-")}";
+
+            Console.WriteLine("Looking for par   key" + partitionKey);
+
+            return GetPagedResultsAsync(partitionKey, request);
         }
 
         public Task RemoveSampleLabelAsync(string labelId, string sampleId)
