@@ -3,7 +3,7 @@ using LagoVista.Core.Models.UIMetaData;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace LagoVista.AI.Interfaces
+namespace LagoVista.AI
 {
     public interface ISampleLabelRepo
     {

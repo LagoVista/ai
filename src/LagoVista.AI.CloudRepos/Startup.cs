@@ -11,6 +11,8 @@ namespace LagoVista.AI.CloudRepos
             services.AddTransient<IModelCategoryRepo, ModelCategoryRepo>();
             services.AddTransient<IModelRepo, ModelRepo>();
             services.AddTransient<ISampleRepo, SampleRepo>();
+            services.AddTransient<ISampleLabelRepo, SampleLabelRepo>();
+            services.AddTransient<ILabelSampleRepo, LabelSampleRepo>();
             services.AddTransient<ISampleMediaRepo, SampleMediaRepo>();
             services.AddTransient<ILabelRepo, LabelRepo>();
             services.AddTransient<ITrainingDataSetRepo, TrainingDataSetRepo>();

@@ -1,4 +1,6 @@
 ﻿using LagoVista.AI.Models;
+using LagoVista.AI.Models.TrainingData;
+using LagoVista.Core.Models.UIMetaData;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.IoT.Web.Common.Controllers;
@@ -21,15 +23,56 @@ namespace LagoVista.AI.Rest
     {
         IExperimentResultManager _experimentResultManager;
         IModelManager _modelManager;
+        ILabelManager _lblManager;
+        ISampleManager _sampleManager;
         IModelCategoryManager _modelCategoryManager;
         
         public ClientAPI(IExperimentResultManager experimentResultManager, IModelManager modelManager, IModelCategoryManager modelCategoryManager,
+            ILabelManager lblManager, ISampleManager sampleMgr,
             UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
         {
-            this._experimentResultManager = experimentResultManager;
-            this._modelManager = modelManager;
-            this._modelCategoryManager = modelCategoryManager;
+            this._experimentResultManager = experimentResultManager ?? throw new ArgumentNullException(nameof(experimentResultManager));
+            this._modelManager = modelManager ?? throw new ArgumentNullException(nameof(modelManager));
+            this._modelCategoryManager = modelCategoryManager ?? throw new ArgumentNullException(nameof(modelCategoryManager));
+            this._lblManager = lblManager ?? throw new ArgumentNullException(nameof(lblManager));
+            this._sampleManager = sampleMgr ?? throw new ArgumentNullException(nameof(sampleMgr));
         }
+
+        [HttpPost("/clientapi/ml/sample")]
+        public Task<InvokeResult<Sample>> UploadSampleAsync(IFormFile file, string tagsString)
+        {
+            if (file == null)
+            {
+                throw new ArgumentNullException(nameof(file));
+            }
+
+            if (String.IsNullOrEmpty(tagsString))
+            {
+                throw new ArgumentNullException("Must pass in ?tags as a comma delimted set of non empty tags.");
+            }
+
+            var tagIds = new List<string>(tagsString.Split(','));
+            using (var stream = file.OpenReadStream())
+            {
+                var sample = new byte[stream.Length];
+                stream.Position = 0;
+                stream.Read(sample, 0, (int)stream.Length);
+
+                return _sampleManager.AddSampleAsync(sample, file.FileName, file.ContentType, tagIds, OrgEntityHeader, UserEntityHeader);
+            }
+        }
+
+
+        /// <summary>
+        /// Labels - Get for org
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("/clientapi/ml/labels")]
+        public Task<ListResponse<LabelSummary>> GetLabelsForOrgAsync()
+        {
+            return _lblManager.GetLabelsForOrgAsync(OrgEntityHeader, UserEntityHeader, GetListRequestFromHeader());
+        }
+
 
         [HttpPost("/clientapi/ml/model/{modelid}/{revision}")]
         public Task<InvokeResult> UploadModel(string modelid, int revision, IFormFile file)
