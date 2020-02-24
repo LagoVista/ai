@@ -54,9 +54,20 @@ namespace LagoVista.AI.Rest
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("/api/ml/trainingdataset/{id}")]
-        public async Task<DetailResponse<TrainingDataSet>> GetLabelAsync(string id)
+        public async Task<DetailResponse<TrainingDataSet>> GetTrainingDataset(string id)
         {
             return DetailResponse<TrainingDataSet>.Create(await _mgr.GetTrainingDataSetAsync(id, OrgEntityHeader, UserEntityHeader));
+        }
+
+        /// <summary>
+        /// Training Dataset - get by id
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpGet("/api/ml/trainingdatasets")]
+        public async Task<ListResponse<TrainingDataSetSummary>> GetTrainingDatasets()
+        {
+            return await _mgr.GetForOrgAsync(OrgEntityHeader, UserEntityHeader, GetListRequestFromHeader());
         }
 
         /// <summary>
@@ -83,16 +94,6 @@ namespace LagoVista.AI.Rest
         public async Task<DetailResponse<TrainingDataSet>> DeleteLabelAsync(string id)
         {
             return DetailResponse<TrainingDataSet>.Create(await _mgr.GetTrainingDataSetAsync(id, OrgEntityHeader, UserEntityHeader));
-        }
-
-        /// <summary>
-        /// Training Datasets - get for org
-        /// </summary>
-        /// <returns></returns>
-        [HttpGet("/api/ml/trainingdatasets")]
-        public Task<ListResponse<TrainingDataSetSummary>> GetLabelsForOrgAsync()
-        {
-            return _mgr.GetForOrgAsync(OrgEntityHeader, UserEntityHeader, GetListRequestFromHeader());
         }
     }
 }
