@@ -43,6 +43,11 @@ namespace LagoVista.AI.Managers
         public async Task<InvokeResult> AddLabelForSampleAsync(Sample sample, string labelId, EntityHeader org, EntityHeader user)
         {
             var labelDetails = await _labelRepo.GetLabelAsync(labelId);
+            var labels = await _labelSampleRepo.GetLabelsForSampleAsync(sample.RowKey);
+            if(labels.Where(lbl=>lbl.LabelId == labelId).Any())
+            {
+                return InvokeResult.FromError("Label already attached.");
+            }
 
             var label = new SampleLabel()
             {

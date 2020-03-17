@@ -180,6 +180,13 @@ namespace LagoVista.AI.Rest
             }
         }
 
+        [HttpGet("/clientapi/ml/samples/{sampleid}/labels/add/{labelid}")]
+        public Task<InvokeResult> AttachLabel(string sampleid, string labelid)
+        {
+            return _sampleManager.AddLabelForSampleAsync(sampleid, labelid, OrgEntityHeader, UserEntityHeader);
+        }
+
+
         [HttpPost("/clientapi/ml/model/{modelid}")]
         public Task<InvokeResult<ModelRevision>> UploadRevision(string modelId, [FromBody] ModelRevision revision)
         {
