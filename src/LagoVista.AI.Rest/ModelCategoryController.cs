@@ -49,6 +49,20 @@ namespace LagoVista.AI.Rest
         }
 
         /// <summary>
+        /// Model Category - Update
+        /// </summary>
+        /// <param name="modelCategory"></param>
+        /// <returns></returns>
+        [HttpGet("/api/ml/modellabel/factory")]
+        public DetailResponse<ModelLabel> CreateLabel()
+        {
+            var lbl = new ModelLabel();
+            lbl.Id = Guid.NewGuid().ToId();
+
+            return DetailResponse<ModelLabel>.Create(lbl);
+        }
+
+        /// <summary>
         /// Model Category - Delete
         /// </summary>
         /// <param name="id"></param>
