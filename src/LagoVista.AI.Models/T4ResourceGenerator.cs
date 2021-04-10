@@ -86,6 +86,12 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:Experiment_Title
 
 		public static string Experiment_Title { get { return GetResourceString("Experiment_Title"); } }
+//Resources:AIResources:InputType_DataPoints
+
+		public static string InputType_DataPoints { get { return GetResourceString("InputType_DataPoints"); } }
+//Resources:AIResources:InputType_Image
+
+		public static string InputType_Image { get { return GetResourceString("InputType_Image"); } }
 //Resources:AIResources:Label_Description
 
 		public static string Label_Description { get { return GetResourceString("Label_Description"); } }
@@ -191,6 +197,18 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:ModelRevision_Help
 
 		public static string ModelRevision_Help { get { return GetResourceString("ModelRevision_Help"); } }
+//Resources:AIResources:ModelRevision_InputShape
+
+		public static string ModelRevision_InputShape { get { return GetResourceString("ModelRevision_InputShape"); } }
+//Resources:AIResources:ModelRevision_InputShape_Help
+
+		public static string ModelRevision_InputShape_Help { get { return GetResourceString("ModelRevision_InputShape_Help"); } }
+//Resources:AIResources:ModelRevision_InputType
+
+		public static string ModelRevision_InputType { get { return GetResourceString("ModelRevision_InputType"); } }
+//Resources:AIResources:ModelRevision_InputType_Select
+
+		public static string ModelRevision_InputType_Select { get { return GetResourceString("ModelRevision_InputType_Select"); } }
 //Resources:AIResources:ModelRevision_Labels
 
 		public static string ModelRevision_Labels { get { return GetResourceString("ModelRevision_Labels"); } }
@@ -322,6 +340,8 @@ namespace LagoVista.AI.Models.Resources
 			public const string Experiment_Description = "Experiment_Description";
 			public const string Experiment_Instructions = "Experiment_Instructions";
 			public const string Experiment_Title = "Experiment_Title";
+			public const string InputType_DataPoints = "InputType_DataPoints";
+			public const string InputType_Image = "InputType_Image";
 			public const string Label_Description = "Label_Description";
 			public const string Label_Enabled = "Label_Enabled";
 			public const string Label_Help = "Label_Help";
@@ -357,6 +377,10 @@ namespace LagoVista.AI.Models.Resources
 			public const string ModelRevision_DateStamp = "ModelRevision_DateStamp";
 			public const string ModelRevision_Description = "ModelRevision_Description";
 			public const string ModelRevision_Help = "ModelRevision_Help";
+			public const string ModelRevision_InputShape = "ModelRevision_InputShape";
+			public const string ModelRevision_InputShape_Help = "ModelRevision_InputShape_Help";
+			public const string ModelRevision_InputType = "ModelRevision_InputType";
+			public const string ModelRevision_InputType_Select = "ModelRevision_InputType_Select";
 			public const string ModelRevision_Labels = "ModelRevision_Labels";
 			public const string ModelRevision_Minor_Version_Number = "ModelRevision_Minor_Version_Number";
 			public const string ModelRevision_Notes = "ModelRevision_Notes";

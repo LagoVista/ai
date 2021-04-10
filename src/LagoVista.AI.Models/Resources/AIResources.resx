@@ -150,6 +150,12 @@
   <data name="Experiment_Title" xml:space="preserve">
     <value>Experiment</value>
   </data>
+  <data name="InputType_DataPoints" xml:space="preserve">
+    <value>Data Points</value>
+  </data>
+  <data name="InputType_Image" xml:space="preserve">
+    <value>Image</value>
+  </data>
   <data name="Label_Description" xml:space="preserve">
     <value>A label is an output of the classifier/ml evaluation engine</value>
   </data>
@@ -209,6 +215,18 @@
   </data>
   <data name="ModelRevision_Help" xml:space="preserve">
     <value>A model revision is an instance of a model used for classification</value>
+  </data>
+  <data name="ModelRevision_InputShape" xml:space="preserve">
+    <value>Input Shape</value>
+  </data>
+  <data name="ModelRevision_InputShape_Help" xml:space="preserve">
+    <value>Please specify the input shape of the model, this should be an array of integers that represent the dimmensions of each layer.</value>
+  </data>
+  <data name="ModelRevision_InputType" xml:space="preserve">
+    <value>Input Type</value>
+  </data>
+  <data name="ModelRevision_InputType_Select" xml:space="preserve">
+    <value>-select input type-</value>
   </data>
   <data name="ModelRevision_Labels" xml:space="preserve">
     <value>Labels</value>

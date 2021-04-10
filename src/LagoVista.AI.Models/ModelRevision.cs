@@ -5,6 +5,8 @@ using Newtonsoft.Json;
 using System;
 using LagoVista.Core;
 using System.Collections.Generic;
+using LagoVista.Core.Validation;
+using System.Text.RegularExpressions;
 
 namespace LagoVista.AI.Models
 {
@@ -38,6 +40,14 @@ namespace LagoVista.AI.Models
         Excellent,
     }
 
+    public enum InputType
+    {
+        [EnumLabel(ModelRevision.InputType_Image, AIResources.Names.InputType_Image, typeof(AIResources))]
+        Image,
+        [EnumLabel(ModelRevision.InputType_DataPoints, AIResources.Names.InputType_DataPoints, typeof(AIResources))]
+        DataPoints,
+    }
+
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.ModelRevision_Title, AIResources.Names.ModelRevision_Help, AIResources.Names.ModelRevision_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources))]
     public class ModelRevision
     {
@@ -53,6 +63,9 @@ namespace LagoVista.AI.Models
         public const string Status_Beta = "beta";
         public const string Status_Production = "production";
         public const string Status_Obsolete = "obsolete";
+
+        public const string InputType_Image = "image";
+        public const string InputType_DataPoints = "datapoints";
 
         public ModelRevision()
         {
@@ -81,6 +94,15 @@ namespace LagoVista.AI.Models
 
         public String Datestamp { get; set; }
 
+        public String FileName { get; set; }
+
+        [FormField(LabelResource: AIResources.Names.ModelRevision_InputShape, HelpResource:AIResources.Names.ModelRevision_InputShape_Help, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
+        public string InputShape { get; set; }
+
+        [FormField(LabelResource: AIResources.Names.ModelRevision_InputType, FieldType: FieldTypes.Picker, EnumType: typeof(InputType), IsRequired: true, WaterMark: AIResources.Names.ModelRevision_InputType_Select, ResourceType: typeof(AIResources))]
+        public EntityHeader<InputType> InputType { get; set; }
+
+
         [FormField(LabelResource: AIResources.Names.ModelRevision_Status, FieldType: FieldTypes.Picker, EnumType: typeof(ModelRevisionStatus), IsRequired: true, WaterMark: AIResources.Names.ModelRevision_Status_Select, ResourceType: typeof(AIResources))]
         public EntityHeader<ModelRevisionStatus> Status { get; set; }
 
@@ -101,6 +123,19 @@ namespace LagoVista.AI.Models
 
         [FormField(LabelResource: AIResources.Names.ModelRevision_Preprocessors, FieldType: FieldTypes.ChildList, ResourceType: typeof(AIResources))]
         public List<Preprocessor> Preprocessors { get; set; }
+
+        [CustomValidator]
+        public void Validate(ValidationResult result)
+        {
+            if(!String.IsNullOrEmpty(InputShape))
+            {
+                var regEx = new Regex(@"^[0-9,]+$");
+                if(!regEx.Match(InputShape).Success)
+                {
+                    result.AddUserError("Please enter a valid input shape, this should be a comma delimited set of integers that represent the dimmensions of the input.");
+                }
+            }
+        }
 
         public ModelRevisionSummary ToSummary()
         {

@@ -51,7 +51,15 @@ namespace LagoVista.AI.Rest
             return _mgr.UpdateModelAsync(model, OrgEntityHeader, UserEntityHeader);
         }
 
+        /// <summary>
+        /// Upload a specific model revision
+        /// </summary>
+        /// <param name="modelid"></param>
+        /// <param name="revision"></param>
+        /// <param name="file"></param>
+        /// <returns></returns>
         [HttpPost("/api/ml/model/{modelid}/{revision}")]
+        [DisableRequestSizeLimit]
         public Task<InvokeResult> UploadModel(string modelid, int revision, IFormFile file)
         {
             if(file == null)
@@ -69,10 +77,20 @@ namespace LagoVista.AI.Rest
             }
         }
 
-        [HttpGet("/api/ml/model/{modelid}/{revisionid}")]
-        public async Task<IActionResult> GetMLModelAsync(string modelid, int revisionid)
+        /// <summary>
+        /// Download a specific modell revision
+        /// </summary>
+        /// <param name="modelid"></param>
+        /// <param name="revision"></param>
+        /// <returns></returns>
+        [HttpGet("/api/ml/model/{modelid}/{revision}")]
+        public async Task<IActionResult> GetMLModelAsync(string modelid, int revision)
         {
-            var result = await _mgr.GetMLModelAsync(modelid, revisionid, OrgEntityHeader, UserEntityHeader);
+            var model = await _mgr.GetModelAsync(modelid, OrgEntityHeader, UserEntityHeader);
+
+           var modelRevision = model.Revisions.First(md => md.VersionNumber == revision);
+
+            var result = await _mgr.GetMLModelAsync(modelid, revision, OrgEntityHeader, UserEntityHeader);
 
             if(!result.Successful)
             {
@@ -80,7 +98,10 @@ namespace LagoVista.AI.Rest
             }
 
             var ms = new MemoryStream(result.Result);
-            return new FileStreamResult(ms, "application/octet-stream");
+            return new FileStreamResult(ms, "application/octet-stream")
+            {
+                FileDownloadName = modelRevision.FileName 
+            };
         }
 
         /// <summary>
