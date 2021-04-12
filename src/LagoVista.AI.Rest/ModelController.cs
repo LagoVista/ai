@@ -78,7 +78,7 @@ namespace LagoVista.AI.Rest
         }
 
         /// <summary>
-        /// Download a specific modell revision
+        /// Download a specific model revision
         /// </summary>
         /// <param name="modelid"></param>
         /// <param name="revision"></param>
