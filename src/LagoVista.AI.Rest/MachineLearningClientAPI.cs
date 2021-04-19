@@ -18,6 +18,9 @@ using System.Threading.Tasks;
 namespace LagoVista.AI.Rest
 {
 
+    /// <summary>
+    /// Client API Class for ML
+    /// </summary>
     [Authorize(AuthenticationSchemes = "APIToken")]
     public class MachineLearningClientAPI : LagoVistaBaseController
     {
@@ -28,6 +31,17 @@ namespace LagoVista.AI.Rest
         IModelCategoryManager _modelCategoryManager;
         ITrainingDataSetManager _trainingDataSetMgr;
 
+        /// <summary>
+        /// Constructor for ML
+        /// </summary>
+        /// <param name="experimentResultManager"></param>
+        /// <param name="modelManager"></param>
+        /// <param name="modelCategoryManager"></param>
+        /// <param name="lblManager"></param>
+        /// <param name="sampleMgr"></param>
+        /// <param name="trainingDataSetMgr"></param>
+        /// <param name="userManager"></param>
+        /// <param name="logger"></param>
         public MachineLearningClientAPI(IExperimentResultManager experimentResultManager, IModelManager modelManager, IModelCategoryManager modelCategoryManager,
             ILabelManager lblManager, ISampleManager sampleMgr, ITrainingDataSetManager trainingDataSetMgr,
             UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
@@ -68,6 +82,7 @@ namespace LagoVista.AI.Rest
         /// Sample - update sample content.
         /// </summary>
         /// <param name="file"></param>
+        /// <param name="sampleid"></param>
         /// <returns></returns>
         [HttpPut("/clientapi/ml/sample/{sampleid}")]
         public Task<InvokeResult> UpdateSampleAsync(IFormFile file, string sampleid)

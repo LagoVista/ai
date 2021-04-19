@@ -16,12 +16,21 @@ using System.IO;
 
 namespace LagoVista.AI.Rest
 {
+    /// <summary>
+    /// REST Class for Uploading Models
+    /// </summary>
     [ConfirmedUser]
     [AppBuilder]
     public class ModelController : LagoVistaBaseController
     {
         readonly IModelManager _mgr;
 
+        /// <summary>
+        /// Construct a REST class for models
+        /// </summary>
+        /// <param name="modelManager"></param>
+        /// <param name="userManager"></param>
+        /// <param name="logger"></param>
         public ModelController(IModelManager modelManager, UserManager<AppUser> userManager, IAdminLogger logger) 
             : base(userManager, logger)
         {
@@ -140,7 +149,6 @@ namespace LagoVista.AI.Rest
         /// <summary>
         /// Model - Create new
         /// </summary>
-        /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("/api/ml/model/factory")]
         public DetailResponse<Model> CreateNewModel()

@@ -13,12 +13,21 @@ using LagoVista.IoT.Web.Common.Attributes;
 
 namespace LagoVista.AI.Rest
 {
+    /// <summary>
+    /// REST Class for ML Categories
+    /// </summary>
     [ConfirmedUser]
     [AppBuilder]
     public class ModelCategoryController : LagoVistaBaseController
     {
         readonly IModelCategoryManager _mgr;
 
+        /// <summary>
+        /// Construct ML Class for Categories
+        /// </summary>
+        /// <param name="mgr"></param>
+        /// <param name="userManager"></param>
+        /// <param name="logger"></param>
         public ModelCategoryController(IModelCategoryManager mgr, UserManager<AppUser> userManager, IAdminLogger logger)
             : base(userManager, logger)
         {
@@ -51,7 +60,6 @@ namespace LagoVista.AI.Rest
         /// <summary>
         /// Model Category - Update
         /// </summary>
-        /// <param name="modelCategory"></param>
         /// <returns></returns>
         [HttpGet("/api/ml/modellabel/factory")]
         public DetailResponse<ModelLabel> CreateLabel()
@@ -98,7 +106,6 @@ namespace LagoVista.AI.Rest
         /// <summary>
         /// Model Category - Create new
         /// </summary>
-        /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("/api/ml/modelcategory/factory")]
         public DetailResponse<ModelCategory> CreateNewModelCategory()

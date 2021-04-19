@@ -14,6 +14,9 @@ using System.Threading.Tasks;
 namespace LagoVista.AI.Rest
 {
 
+    /// <summary>
+    /// REST Class for Labels
+    /// </summary>
     [ConfirmedUser]
     [AppBuilder]
     public class LabelController : LagoVistaBaseController

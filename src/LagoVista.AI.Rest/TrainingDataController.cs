@@ -62,7 +62,6 @@ namespace LagoVista.AI.Rest
         /// <summary>
         /// Training Dataset - get by id
         /// </summary>
-        /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("/api/ml/trainingdatasets")]
         public async Task<ListResponse<TrainingDataSetSummary>> GetTrainingDatasets()
@@ -73,7 +72,6 @@ namespace LagoVista.AI.Rest
         /// <summary>
         /// Training Dataset - get by id
         /// </summary>
-        /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("/api/ml/trainingdataset/factory")]
         public DetailResponse<TrainingDataSet> TrainingSetFactory()

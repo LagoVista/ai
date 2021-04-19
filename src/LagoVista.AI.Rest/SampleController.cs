@@ -59,6 +59,7 @@ namespace LagoVista.AI.Rest
         /// Sample - update sample content.
         /// </summary>
         /// <param name="file"></param>
+        /// <param name="sampleid"></param>
         /// <returns></returns>
         [HttpPut("/api/ml/sample/{sampleid}")]
         public Task<InvokeResult> UpdateSampleAsync(IFormFile file, string sampleid)

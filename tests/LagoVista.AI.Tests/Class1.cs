@@ -37,7 +37,6 @@ namespace LagoVista.AI.Tests
         [TestMethod]
         public async Task GetFiles()
         {
-            return;
             var hubManager = new Mock<IHubManager>();
             var hub = new Hub()
             {
@@ -67,7 +66,6 @@ namespace LagoVista.AI.Tests
         [TestMethod]
         public async Task GetUserToken()
         {
-            return;
             var hub = new Hub()
             {
                 AccessToken = Environment.GetEnvironmentVariable("JPTY_ADMIN_TOKEN"),
