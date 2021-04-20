@@ -8,8 +8,8 @@
 *.user
 *.userosscache
 *.sln.docstates
-#*.bak
-#Package.nuspec.txt
+*.bak
+Package.nuspec.txt
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
