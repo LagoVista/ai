@@ -23,7 +23,7 @@ namespace LagoVista.AI.Managers
             _repo = labelRepo ?? throw new NullReferenceException(nameof(labelRepo));
         }
 
-        public async Task<InvokeResult> AddLabelAsync(Label label, EntityHeader org, EntityHeader user)
+        public async Task<InvokeResult> AddLabelAsync(Models.Label label, EntityHeader org, EntityHeader user)
         {
             ValidationCheck(label, Actions.Create);
             await AuthorizeAsync(label, AuthorizeResult.AuthorizeActions.Create, user, org);
@@ -33,7 +33,7 @@ namespace LagoVista.AI.Managers
             return InvokeResult.Success;
         }
 
-        public async Task<Label> GetLabelAsync(string id, EntityHeader org, EntityHeader user)
+        public async Task<Models.Label> GetLabelAsync(string id, EntityHeader org, EntityHeader user)
         {
             var model = await _repo.GetLabelAsync(id);
             await AuthorizeAsync(model, AuthorizeResult.AuthorizeActions.Read, user, org);
@@ -42,17 +42,17 @@ namespace LagoVista.AI.Managers
 
         public async Task<ListResponse<LabelSummary>> GetLabelsForOrgAsync(EntityHeader org, EntityHeader user, ListRequest request)
         {
-            await AuthorizeOrgAccessAsync(user, org.Id, typeof(Label));
+            await AuthorizeOrgAccessAsync(user, org.Id, typeof(Models.Label));
             return await _repo.GetLabelsForOrgAsync(org.Id, request);
         }
 
         public async Task<ListResponse<LabelSummary>> SearchLabelsAsync(string search, EntityHeader org, EntityHeader user, ListRequest request)
         {
-            await AuthorizeOrgAccessAsync(user, org.Id, typeof(Label));
+            await AuthorizeOrgAccessAsync(user, org.Id, typeof(Models.Label));
             return await _repo.SearchLabelsForOrgAsync(org.Id, search, request);
         }
 
-        public async Task<InvokeResult> UpdateLabelAsync(Label label, EntityHeader org, EntityHeader user)
+        public async Task<InvokeResult> UpdateLabelAsync(Models.Label label, EntityHeader org, EntityHeader user)
         {
             await AuthorizeAsync(label, AuthorizeResult.AuthorizeActions.Update, user, org);
 
