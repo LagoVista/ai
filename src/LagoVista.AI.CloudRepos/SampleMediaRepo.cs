@@ -1,11 +1,9 @@
-﻿using LagoVista.Core.Interfaces;
+﻿using Azure.Storage.Blobs;
+using LagoVista.Core.Interfaces;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
-using Microsoft.WindowsAzure.Storage.Blob;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace LagoVista.AI.CloudRepos
@@ -20,12 +18,20 @@ namespace LagoVista.AI.CloudRepos
             _adminLogger = adminLogger;
         }
 
-        private CloudBlobClient CreateBlobClient()
+        private async Task<BlobContainerClient> CreateBlobContainerClient(String containerName)
         {
-            var baseuri = $"https://{_settings.AccountId}.blob.core.windows.net";
-
-            var uri = new Uri(baseuri);
-            return new CloudBlobClient(uri, new Microsoft.WindowsAzure.Storage.Auth.StorageCredentials(_settings.AccountId, _settings.AccessKey));
+            var connectionString = $"DefaultEndpointsProtocol=https;AccountName={_settings.AccountId};AccountKey={_settings.AccessKey}";
+            var blobClient = new BlobServiceClient(connectionString);
+            try
+            {
+                var blobContainerClient = blobClient.GetBlobContainerClient(containerName);
+                return blobContainerClient;
+            }
+            catch (Exception)
+            {
+                var container = await blobClient.CreateBlobContainerAsync(containerName);
+                return container.Value;
+            }
         }
 
         private string GetContainerName(string orgId)
@@ -41,11 +47,10 @@ namespace LagoVista.AI.CloudRepos
             {
                 try
                 {
-                    var cloudClient = CreateBlobClient();
-                    var primaryContainer = cloudClient.GetContainerReference(GetContainerName(orgId));
-                    await primaryContainer.CreateIfNotExistsAsync();
-                    var blob = primaryContainer.GetBlockBlobReference(sampleId);
-                    await blob.UploadFromByteArrayAsync(sample, 0, sample.Length);
+                    var cloudClient = await CreateBlobContainerClient(GetContainerName(orgId));
+                    var blobClient = cloudClient.GetBlobClient(sampleId);
+                    
+                    await blobClient.UploadAsync(new BinaryData(sample));
                     return InvokeResult.Success;
                 }
                 catch (Exception exc)
@@ -69,18 +74,12 @@ namespace LagoVista.AI.CloudRepos
             {
                 try
                 {
-                    var cloudClient = CreateBlobClient();
-                    var primaryContainer = cloudClient.GetContainerReference(GetContainerName(orgId));
-                    await primaryContainer.CreateIfNotExistsAsync();
+                    var cloudClient = await CreateBlobContainerClient(GetContainerName(orgId));
+                    var blobClient = cloudClient.GetBlobClient(sampleId);
 
-                    var blob = primaryContainer.GetBlobReference(sampleId);
+                    var result = await blobClient.DownloadContentAsync();
 
-                    using (var ms = new MemoryStream())
-                    {
-                        await blob.DownloadToStreamAsync(ms);
-                        ms.Seek(0, SeekOrigin.Begin);
-                        return InvokeResult<byte[]>.Create(ms.ToArray());
-                    }
+                    return InvokeResult<byte[]>.Create(result.Value.Content.ToArray());
                 }
                 catch (Exception exc)
                 {
@@ -102,11 +101,9 @@ namespace LagoVista.AI.CloudRepos
             {
                 try
                 {
-                    var cloudClient = CreateBlobClient();
-                    var primaryContainer = cloudClient.GetContainerReference(GetContainerName(orgId));
-                    await primaryContainer.CreateIfNotExistsAsync();
-                    var blob = primaryContainer.GetBlockBlobReference(sampleId);
-                    await blob.UploadFromByteArrayAsync(sample, 0, sample.Length);
+                    var cloudClient = await CreateBlobContainerClient(GetContainerName(orgId));
+                    var blobClient = cloudClient.GetBlobClient(sampleId);
+                    var result = await blobClient.DownloadContentAsync();
                     return InvokeResult.Success;
                 }
                 catch (Exception exc)

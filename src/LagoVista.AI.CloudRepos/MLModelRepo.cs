@@ -1,9 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using Azure.Storage.Blobs;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
-using Microsoft.WindowsAzure.Storage.Blob;
 
 namespace LagoVista.AI.CloudRepos
 {
@@ -23,12 +23,20 @@ namespace LagoVista.AI.CloudRepos
             return $"mlmodels{orgId}".ToLower();
         }
 
-        private CloudBlobClient CreateBlobClient()
+        private async Task<BlobContainerClient> CreateBlobContainerClient(String containerName)
         {
-            var baseuri = $"https://{_settings.MLBlobStorage.AccountId}.blob.core.windows.net";
-
-            var uri = new Uri(baseuri);
-            return new CloudBlobClient(uri, new Microsoft.WindowsAzure.Storage.Auth.StorageCredentials(_settings.MLBlobStorage.AccountId, _settings.MLBlobStorage.AccessKey));
+            var connectionString = $"DefaultEndpointsProtocol=https;AccountName={_settings.MLBlobStorage.AccountId};AccountKey={_settings.MLBlobStorage.AccessKey}";
+            var blobClient = new BlobServiceClient(connectionString);
+            try
+            {
+                var blobContainerClient = blobClient.GetBlobContainerClient(containerName);
+                return blobContainerClient;
+            }
+            catch (Exception)
+            {
+                var container = await blobClient.CreateBlobContainerAsync(containerName);
+                return container.Value;
+            }
         }
 
         private string GetBlobName(string modelId, int revisionId)
@@ -44,11 +52,9 @@ namespace LagoVista.AI.CloudRepos
             {
                 try
                 {
-                    var cloudClient = CreateBlobClient();
-                    var primaryContainer = cloudClient.GetContainerReference(GetContainerName(orgId));
-                    await primaryContainer.CreateIfNotExistsAsync();
-                    var blob = primaryContainer.GetBlockBlobReference(GetBlobName(modelId, revisionId));
-                    await blob.UploadFromByteArrayAsync(model, 0, model.Length);
+                    var containerClient = await CreateBlobContainerClient(GetContainerName(orgId));
+                    var blob = containerClient.GetBlobClient(GetBlobName(modelId, revisionId));
+                    await blob.UploadAsync(new BinaryData(model));
                     return InvokeResult.Success;
                 }
                 catch (Exception exc)
@@ -71,19 +77,13 @@ namespace LagoVista.AI.CloudRepos
             {
                 try
                 {
-                    var cloudClient = CreateBlobClient();
-                    var primaryContainer = cloudClient.GetContainerReference(GetContainerName(orgId));
-                    await primaryContainer.CreateIfNotExistsAsync();
+                    var containerClient = await CreateBlobContainerClient(GetContainerName(orgId));
+                    var blob = containerClient.GetBlobClient(GetBlobName(modelId, revisionId));
 
-                    var blobName = GetBlobName(modelId, revisionId);
-                    var blob = primaryContainer.GetBlobReference(blobName);
+                    var response = await blob.DownloadContentAsync();
+                    var buffer = response.Value;
 
-                    using (var ms = new MemoryStream())
-                    {
-                        await blob.DownloadToStreamAsync(ms);
-                        ms.Seek(0, SeekOrigin.Begin);
-                        return InvokeResult<byte[]>.Create(ms.ToArray());
-                    }
+                    return InvokeResult<byte[]>.Create(buffer.Content.ToArray());
                 }
                 catch (Exception exc)
                 {

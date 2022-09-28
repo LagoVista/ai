@@ -1,10 +1,6 @@
 ﻿using Microsoft.ML.OnnxRuntime;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace LagoVista.AI.Tests
 {
