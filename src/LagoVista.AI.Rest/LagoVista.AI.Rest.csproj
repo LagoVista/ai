@@ -12,7 +12,7 @@
     <PackageReference Include="LagoVista.IoT.Logging" Version="3.0.1960.0721" />
     <PackageReference Include="LagoVista.IoT.Web.Common" Version="3.0.1960.0721" />
     <PackageReference Include="LagoVista.UserAdmin" Version="3.0.1960.0721" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
   </ItemGroup>
 
   <ItemGroup>
