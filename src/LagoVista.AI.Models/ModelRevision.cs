@@ -99,6 +99,12 @@ namespace LagoVista.AI.Models
         [FormField(LabelResource: AIResources.Names.ModelRevision_InputShape, HelpResource:AIResources.Names.ModelRevision_InputShape_Help, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
         public string InputShape { get; set; }
 
+        [FormField(LabelResource: AIResources.Names.ModelRevision_TrainingAccuracy, FieldType: FieldTypes.Decimal, ResourceType: typeof(AIResources))]
+        public decimal TrainingAccuracy { get; set; }
+
+        [FormField(LabelResource: AIResources.Names.ModelRevision_ValidationAccuracy, FieldType: FieldTypes.Decimal, ResourceType: typeof(AIResources))]
+        public decimal ValidationAccuracy { get; set; }
+
         [FormField(LabelResource: AIResources.Names.ModelRevision_InputType, FieldType: FieldTypes.Picker, EnumType: typeof(InputType), IsRequired: true, WaterMark: AIResources.Names.ModelRevision_InputType_Select, ResourceType: typeof(AIResources))]
         public EntityHeader<InputType> InputType { get; set; }
 

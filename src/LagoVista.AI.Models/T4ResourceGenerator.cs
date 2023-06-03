@@ -272,9 +272,15 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:ModelRevision_Title
 
 		public static string ModelRevision_Title { get { return GetResourceString("ModelRevision_Title"); } }
+//Resources:AIResources:ModelRevision_TrainingAccuracy
+
+		public static string ModelRevision_TrainingAccuracy { get { return GetResourceString("ModelRevision_TrainingAccuracy"); } }
 //Resources:AIResources:ModelRevision_TrainingSettings
 
 		public static string ModelRevision_TrainingSettings { get { return GetResourceString("ModelRevision_TrainingSettings"); } }
+//Resources:AIResources:ModelRevision_ValidationAccuracy
+
+		public static string ModelRevision_ValidationAccuracy { get { return GetResourceString("ModelRevision_ValidationAccuracy"); } }
 //Resources:AIResources:ModelRevision_Version_Number
 
 		public static string ModelRevision_Version_Number { get { return GetResourceString("ModelRevision_Version_Number"); } }
@@ -402,7 +408,9 @@ namespace LagoVista.AI.Models.Resources
 			public const string ModelRevision_Status_Production = "ModelRevision_Status_Production";
 			public const string ModelRevision_Status_Select = "ModelRevision_Status_Select";
 			public const string ModelRevision_Title = "ModelRevision_Title";
+			public const string ModelRevision_TrainingAccuracy = "ModelRevision_TrainingAccuracy";
 			public const string ModelRevision_TrainingSettings = "ModelRevision_TrainingSettings";
+			public const string ModelRevision_ValidationAccuracy = "ModelRevision_ValidationAccuracy";
 			public const string ModelRevision_Version_Number = "ModelRevision_Version_Number";
 			public const string ModelSetting_Description = "ModelSetting_Description";
 			public const string ModelSetting_Help = "ModelSetting_Help";

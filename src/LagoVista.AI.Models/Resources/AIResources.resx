@@ -291,8 +291,14 @@
   <data name="ModelRevision_Title" xml:space="preserve">
     <value>Model Revision</value>
   </data>
+  <data name="ModelRevision_TrainingAccuracy" xml:space="preserve">
+    <value>Training Accuracy</value>
+  </data>
   <data name="ModelRevision_TrainingSettings" xml:space="preserve">
     <value>Training Settings</value>
+  </data>
+  <data name="ModelRevision_ValidationAccuracy" xml:space="preserve">
+    <value>Validation Accuracy</value>
   </data>
   <data name="ModelRevision_Version_Number" xml:space="preserve">
     <value>Version Number</value>
