@@ -5,7 +5,7 @@ using LagoVista.Core.Models;
 namespace LagoVista.AI.Models
 {
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.ModelNotes_Title, AIResources.Names.ModelNotes_Help, AIResources.Names.ModelNotes_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources))]
-    public class ModelNotes
+    public class ModelNotes 
     {
         public string Id { get; set; }
 
@@ -17,5 +17,6 @@ namespace LagoVista.AI.Models
 
         [FormField(LabelResource: AIResources.Names.ModelRevision_Notes, FieldType: FieldTypes.MultiLineText, IsRequired: true, ResourceType: typeof(AIResources))]
         public string Note { get; set; }
+
     }
 }

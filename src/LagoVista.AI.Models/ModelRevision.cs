@@ -7,6 +7,7 @@ using LagoVista.Core;
 using System.Collections.Generic;
 using LagoVista.Core.Validation;
 using System.Text.RegularExpressions;
+using LagoVista.Core.Interfaces;
 
 namespace LagoVista.AI.Models
 {
@@ -49,7 +50,7 @@ namespace LagoVista.AI.Models
     }
 
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.ModelRevision_Title, AIResources.Names.ModelRevision_Help, AIResources.Names.ModelRevision_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources))]
-    public class ModelRevision
+    public class ModelRevision : IFormDescriptor
     {
         public const string ModelQuality_Unknown = "uknown";
         public const string ModelQuality_Poor = "Poor";
@@ -96,7 +97,7 @@ namespace LagoVista.AI.Models
 
         public String FileName { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.ModelRevision_InputShape, HelpResource:AIResources.Names.ModelRevision_InputShape_Help, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
+        [FormField(LabelResource: AIResources.Names.ModelRevision_InputShape, HelpResource: AIResources.Names.ModelRevision_InputShape_Help, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
         public string InputShape { get; set; }
 
         [FormField(LabelResource: AIResources.Names.ModelRevision_TrainingAccuracy, FieldType: FieldTypes.Decimal, ResourceType: typeof(AIResources))]
@@ -118,25 +119,28 @@ namespace LagoVista.AI.Models
         [FormField(LabelResource: AIResources.Names.ModelRevision_TrainingSettings, FieldType: FieldTypes.MultiLineText, ResourceType: typeof(AIResources))]
         public string TrainingSettings { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.ModelRevision_Settings, FieldType: FieldTypes.ChildList, ResourceType: typeof(AIResources))]
+        [FormField(LabelResource: AIResources.Names.ModelRevision_Settings, FieldType: FieldTypes.ChildListInline, ResourceType: typeof(AIResources))]
         public List<ModelSetting> Settings { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.ModelRevision_Labels, FieldType: FieldTypes.ChildList, ResourceType: typeof(AIResources))]
+        [FormField(LabelResource: AIResources.Names.ModelRevision_LabelSet, HelpResource: AIResources.Names.ModelRevision_LabelSet_Help, FieldType: FieldTypes.EntityHeaderPicker, ResourceType: typeof(AIResources))]
+        public EntityHeader LabelSet { get; set; }
+
+        [FormField(LabelResource: AIResources.Names.ModelRevision_Labels, FieldType: FieldTypes.ChildListInline, ResourceType: typeof(AIResources))]
         public List<ModelLabel> Labels { get; set; }
 
         [FormField(LabelResource: AIResources.Names.ModelRevision_Notes, FieldType: FieldTypes.ChildList, ResourceType: typeof(AIResources))]
         public List<ModelNotes> Notes { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.ModelRevision_Preprocessors, FieldType: FieldTypes.ChildList, ResourceType: typeof(AIResources))]
+        [FormField(LabelResource: AIResources.Names.ModelRevision_Preprocessors, FieldType: FieldTypes.ChildListInline, ResourceType: typeof(AIResources))]
         public List<Preprocessor> Preprocessors { get; set; }
 
         [CustomValidator]
         public void Validate(ValidationResult result)
         {
-            if(!String.IsNullOrEmpty(InputShape))
+            if (!String.IsNullOrEmpty(InputShape))
             {
                 var regEx = new Regex(@"^[0-9,]+$");
-                if(!regEx.Match(InputShape).Success)
+                if (!regEx.Match(InputShape).Success)
                 {
                     result.AddUserError("Please enter a valid input shape, this should be a comma delimited set of integers that represent the dimmensions of the input.");
                 }
@@ -155,6 +159,29 @@ namespace LagoVista.AI.Models
                 StatusId = Status.Id,
                 Quality = Quality.Text,
                 QualityId = Quality.Id,
+            };
+        }
+
+        public List<string> GetFormFields()
+        {
+            return new List<string>()
+            {
+              nameof(Name),
+              nameof(Key),
+              nameof(VersionNumber),
+              nameof(MinorVersionNumber),
+              nameof(InputShape),
+              nameof(TrainingAccuracy),
+              nameof(ValidationAccuracy),
+              nameof(InputType),
+              nameof(Status),
+              nameof(Quality),
+              nameof(LabelSet),
+              nameof(TrainingSettings),
+              nameof(Labels),
+              nameof(Settings),
+              nameof(Preprocessors),
+              nameof(Notes),
             };
         }
     }

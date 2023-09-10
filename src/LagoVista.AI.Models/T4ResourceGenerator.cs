@@ -116,6 +116,15 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:Label_Visible
 
 		public static string Label_Visible { get { return GetResourceString("Label_Visible"); } }
+//Resources:AIResources:LabelSet_Help
+
+		public static string LabelSet_Help { get { return GetResourceString("LabelSet_Help"); } }
+//Resources:AIResources:LabelSet_Labels
+
+		public static string LabelSet_Labels { get { return GetResourceString("LabelSet_Labels"); } }
+//Resources:AIResources:LabelSet_Title
+
+		public static string LabelSet_Title { get { return GetResourceString("LabelSet_Title"); } }
 //Resources:AIResources:Model_Description
 
 		public static string Model_Description { get { return GetResourceString("Model_Description"); } }
@@ -125,6 +134,12 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:Model_Help
 
 		public static string Model_Help { get { return GetResourceString("Model_Help"); } }
+//Resources:AIResources:Model_LabelSet
+
+		public static string Model_LabelSet { get { return GetResourceString("Model_LabelSet"); } }
+//Resources:AIResources:Model_LabelSet_Help
+
+		public static string Model_LabelSet_Help { get { return GetResourceString("Model_LabelSet_Help"); } }
 //Resources:AIResources:Model_ModelCategory
 
 		public static string Model_ModelCategory { get { return GetResourceString("Model_ModelCategory"); } }
@@ -212,6 +227,12 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:ModelRevision_Labels
 
 		public static string ModelRevision_Labels { get { return GetResourceString("ModelRevision_Labels"); } }
+//Resources:AIResources:ModelRevision_LabelSet
+
+		public static string ModelRevision_LabelSet { get { return GetResourceString("ModelRevision_LabelSet"); } }
+//Resources:AIResources:ModelRevision_LabelSet_Help
+
+		public static string ModelRevision_LabelSet_Help { get { return GetResourceString("ModelRevision_LabelSet_Help"); } }
 //Resources:AIResources:ModelRevision_Minor_Version_Number
 
 		public static string ModelRevision_Minor_Version_Number { get { return GetResourceString("ModelRevision_Minor_Version_Number"); } }
@@ -281,6 +302,9 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:ModelRevision_ValidationAccuracy
 
 		public static string ModelRevision_ValidationAccuracy { get { return GetResourceString("ModelRevision_ValidationAccuracy"); } }
+//Resources:AIResources:ModelRevision_Version
+
+		public static string ModelRevision_Version { get { return GetResourceString("ModelRevision_Version"); } }
 //Resources:AIResources:ModelRevision_Version_Number
 
 		public static string ModelRevision_Version_Number { get { return GetResourceString("ModelRevision_Version_Number"); } }
@@ -356,9 +380,14 @@ namespace LagoVista.AI.Models.Resources
 			public const string Label_Key = "Label_Key";
 			public const string Label_Title = "Label_Title";
 			public const string Label_Visible = "Label_Visible";
+			public const string LabelSet_Help = "LabelSet_Help";
+			public const string LabelSet_Labels = "LabelSet_Labels";
+			public const string LabelSet_Title = "LabelSet_Title";
 			public const string Model_Description = "Model_Description";
 			public const string Model_Experiments = "Model_Experiments";
 			public const string Model_Help = "Model_Help";
+			public const string Model_LabelSet = "Model_LabelSet";
+			public const string Model_LabelSet_Help = "Model_LabelSet_Help";
 			public const string Model_ModelCategory = "Model_ModelCategory";
 			public const string Model_ModelCategory_Select = "Model_ModelCategory_Select";
 			public const string Model_ModelType = "Model_ModelType";
@@ -388,6 +417,8 @@ namespace LagoVista.AI.Models.Resources
 			public const string ModelRevision_InputType = "ModelRevision_InputType";
 			public const string ModelRevision_InputType_Select = "ModelRevision_InputType_Select";
 			public const string ModelRevision_Labels = "ModelRevision_Labels";
+			public const string ModelRevision_LabelSet = "ModelRevision_LabelSet";
+			public const string ModelRevision_LabelSet_Help = "ModelRevision_LabelSet_Help";
 			public const string ModelRevision_Minor_Version_Number = "ModelRevision_Minor_Version_Number";
 			public const string ModelRevision_Notes = "ModelRevision_Notes";
 			public const string ModelRevision_Preprocessors = "ModelRevision_Preprocessors";
@@ -411,6 +442,7 @@ namespace LagoVista.AI.Models.Resources
 			public const string ModelRevision_TrainingAccuracy = "ModelRevision_TrainingAccuracy";
 			public const string ModelRevision_TrainingSettings = "ModelRevision_TrainingSettings";
 			public const string ModelRevision_ValidationAccuracy = "ModelRevision_ValidationAccuracy";
+			public const string ModelRevision_Version = "ModelRevision_Version";
 			public const string ModelRevision_Version_Number = "ModelRevision_Version_Number";
 			public const string ModelSetting_Description = "ModelSetting_Description";
 			public const string ModelSetting_Help = "ModelSetting_Help";

@@ -1,11 +1,13 @@
 ﻿using LagoVista.AI.Models.Resources;
 using LagoVista.Core.Attributes;
+using LagoVista.Core.Interfaces;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace LagoVista.AI.Models
 {
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.Label_Title, AIResources.Names.Label_Help, AIResources.Names.Label_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources))]
-    public class ModelLabel
+    public class ModelLabel : IFormDescriptor
     {
         [JsonProperty("id")]
         public string Id { get; set; }
@@ -16,7 +18,7 @@ namespace LagoVista.AI.Models
         [FormField(LabelResource: AIResources.Names.Label_Key, FieldType: FieldTypes.Key, IsRequired: true, ResourceType: typeof(AIResources))]
         public string Key { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.Label_Icon, FieldType: FieldTypes.Text, IsRequired: false, ResourceType: typeof(AIResources))]
+        [FormField(LabelResource: AIResources.Names.Label_Icon, FieldType: FieldTypes.Icon, IsRequired: false, ResourceType: typeof(AIResources))]
         public string Icon { get; set; }
 
         [FormField(LabelResource: AIResources.Names.Label_Title, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
@@ -35,5 +37,20 @@ namespace LagoVista.AI.Models
 
         [FormField(LabelResource: AIResources.Names.Label_Enabled, FieldType: FieldTypes.CheckBox, ResourceType: typeof(AIResources))]
         public bool Enabled { get; set; }
+
+        public List<string> GetFormFields()
+        {
+            return new List<string>()
+            {
+                nameof(Name),
+                nameof(Index),
+                nameof(Key),
+                nameof(Icon),
+                nameof(Title),
+                nameof(Description),
+                nameof(Visible),
+                nameof(Enabled)
+            };
+        }
     }
 }

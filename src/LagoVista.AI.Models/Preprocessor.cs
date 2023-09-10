@@ -1,5 +1,6 @@
 ﻿using LagoVista.AI.Models.Resources;
 using LagoVista.Core.Attributes;
+using LagoVista.Core.Interfaces;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -8,7 +9,7 @@ using System.Text;
 namespace LagoVista.AI.Models
 {
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.Preprocessor_Title, AIResources.Names.Preprocessor_Help, AIResources.Names.Preprocessor_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources))]
-    public class Preprocessor
+    public class Preprocessor : IFormDescriptor
     {
         public Preprocessor()
         {
@@ -30,7 +31,19 @@ namespace LagoVista.AI.Models
         [FormField(LabelResource: AIResources.Names.Common_Description, FieldType: FieldTypes.MultiLineText, ResourceType: typeof(AIResources))]
         public string Description { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.Preprocessor_Settings, FieldType: FieldTypes.ChildList, ResourceType: typeof(AIResources))]
+        [FormField(LabelResource: AIResources.Names.Preprocessor_Settings, FieldType: FieldTypes.ChildListInline, ResourceType: typeof(AIResources))]
         public List<PreprocessorSetting> Settings { get; set; }
+
+        public List<string> GetFormFields()
+        {
+            return new List<string>()
+            {
+                nameof(Name),
+                nameof(ClassName),
+                nameof(Key),
+                nameof(Description),
+                nameof(Settings)
+            };
+        }
     }
 }

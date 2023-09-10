@@ -156,6 +156,15 @@
   <data name="InputType_Image" xml:space="preserve">
     <value>Image</value>
   </data>
+  <data name="LabelSet_Help" xml:space="preserve">
+    <value>Lable Sets are used to add labels to identify inferences made from model evaluations</value>
+  </data>
+  <data name="LabelSet_Labels" xml:space="preserve">
+    <value>Labels</value>
+  </data>
+  <data name="LabelSet_Title" xml:space="preserve">
+    <value>Label Set</value>
+  </data>
   <data name="Label_Description" xml:space="preserve">
     <value>A label is an output of the classifier/ml evaluation engine</value>
   </data>
@@ -231,6 +240,12 @@
   <data name="ModelRevision_Labels" xml:space="preserve">
     <value>Labels</value>
   </data>
+  <data name="ModelRevision_LabelSet" xml:space="preserve">
+    <value>Label Set</value>
+  </data>
+  <data name="ModelRevision_LabelSet_Help" xml:space="preserve">
+    <value>You can select a predefined list of labels that will be used to define the output of the model evaluation.</value>
+  </data>
   <data name="ModelRevision_Minor_Version_Number" xml:space="preserve">
     <value>Minor Version Number</value>
   </data>
@@ -300,6 +315,9 @@
   <data name="ModelRevision_ValidationAccuracy" xml:space="preserve">
     <value>Validation Accuracy</value>
   </data>
+  <data name="ModelRevision_Version" xml:space="preserve">
+    <value>Version</value>
+  </data>
   <data name="ModelRevision_Version_Number" xml:space="preserve">
     <value>Version Number</value>
   </data>
@@ -323,6 +341,12 @@
   </data>
   <data name="Model_Help" xml:space="preserve">
     <value>A model is a model type that is used for performing classifications, it consists of revisions that have the actual model.</value>
+  </data>
+  <data name="Model_LabelSet" xml:space="preserve">
+    <value>Label Set</value>
+  </data>
+  <data name="Model_LabelSet_Help" xml:space="preserve">
+    <value>You can select a predefined list of labels that will be used to define the output of the model evaluation.</value>
   </data>
   <data name="Model_ModelCategory" xml:space="preserve">
     <value>Model Category</value>

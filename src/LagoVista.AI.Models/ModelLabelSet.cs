@@ -6,11 +6,12 @@ using LagoVista.Core.Validation;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace LagoVista.AI.Models
 {
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.ModelCategory_Title, AIResources.Names.ModelCategory_Help, AIResources.Names.ModelCategory_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources))]
-    public class ModelCategory : IIDEntity, IKeyedEntity, INamedEntity, IDescriptionEntity, IAuditableEntity, IOwnedEntity, INoSQLEntity, IValidateable, IFormDescriptor
+    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.LabelSet_Title, AIResources.Names.LabelSet_Help, AIResources.Names.LabelSet_Help, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources))]
+    public class ModelLabelSet : IIDEntity, IKeyedEntity, INamedEntity, IDescriptionEntity, IAuditableEntity, IOwnedEntity, INoSQLEntity, IValidateable, IFormDescriptor
     {
         public string DatabaseName { get; set; }
         public string EntityType { get; set; }
@@ -23,13 +24,17 @@ namespace LagoVista.AI.Models
         [FormField(LabelResource: AIResources.Names.Common_Name, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
         public string Name { get; set; }
 
-        
+
         [FormField(LabelResource: AIResources.Names.Common_Description, FieldType: FieldTypes.MultiLineText, IsRequired: false, ResourceType: typeof(AIResources))]
         public string Description { get; set; }
 
 
         [FormField(LabelResource: AIResources.Names.Common_Key, HelpResource: AIResources.Names.Common_Key_Help, FieldType: FieldTypes.Key, RegExValidationMessageResource: AIResources.Names.Common_Key_Validation, ResourceType: typeof(AIResources), IsRequired: true)]
         public String Key { get; set; }
+
+
+        [FormField(LabelResource: AIResources.Names.LabelSet_Labels, FieldType: FieldTypes.ChildListInline, ResourceType: typeof(AIResources))] 
+        public List<ModelLabel> Labels { get; set; }
 
         public string CreationDate { get; set; }
         public string LastUpdatedDate { get; set; }
@@ -39,15 +44,15 @@ namespace LagoVista.AI.Models
         public EntityHeader OwnerOrganization { get; set; }
         public EntityHeader OwnerUser { get; set; }
 
-        public ModelCategorySummary CreateSummary()
+        public ModelLabelSetSummary CreateSummary()
         {
-            return new ModelCategorySummary()
+            return new ModelLabelSetSummary()
             {
                 Description = Description,
                 Id = Id,
-                IsPublic = IsPublic,
                 Key = Key,
-                Name = Name,
+                IsPublic = IsPublic,
+                Name = Name
             };
         }
 
@@ -58,11 +63,12 @@ namespace LagoVista.AI.Models
                 nameof(Name),
                 nameof(Key),
                 nameof(Description),
+                nameof(Labels)
             };
         }
     }
 
-    public class ModelCategorySummary : SummaryData
+    public class ModelLabelSetSummary : SummaryData
     {
 
     }

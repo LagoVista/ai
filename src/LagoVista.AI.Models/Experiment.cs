@@ -1,10 +1,12 @@
 ﻿using LagoVista.AI.Models.Resources;
 using LagoVista.Core.Attributes;
+using LagoVista.Core.Interfaces;
+using System.Collections.Generic;
 
 namespace LagoVista.AI.Models
 {
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.Experiment_Title, AIResources.Names.Experiemnt_Help, AIResources.Names.Experiment_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources))]
-    public class Experiment
+    public class Experiment : IFormDescriptor
     {
         public string Id { get; set; }
 
@@ -21,5 +23,16 @@ namespace LagoVista.AI.Models
 
         [FormField(LabelResource: AIResources.Names.Experiment_Instructions, IsRequired:true, FieldType: FieldTypes.MultiLineText, ResourceType: typeof(AIResources))]
         public string Instructions { get; set; }
+
+        public List<string> GetFormFields()
+        {
+            return new List<string>()
+            {
+                nameof(Name),
+                nameof(Key),
+                nameof(Description),
+                nameof(Instructions)
+            };
+        }
     }
 }

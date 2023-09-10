@@ -30,7 +30,7 @@ namespace LagoVista.AI.Rest
         }
 
         /// <summary>
-        /// Lavel - Add
+        /// Label - Add
         /// </summary>
         /// <param name="label"></param>
         /// <returns></returns>
@@ -66,10 +66,9 @@ namespace LagoVista.AI.Rest
         /// <summary>
         /// Label - Get
         /// </summary>
-        /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("/api/ml/label/factory")]
-        public DetailResponse<Label> CreateLabelAsync(string id)
+        public DetailResponse<Label> CreateLabelAsync()
         {
             var result = DetailResponse<Label>.Create();
             result.Model.Id = Guid.NewGuid().ToId();

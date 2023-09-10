@@ -23,7 +23,7 @@ namespace LagoVista.AI.Models
     }
 
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.Model_Title, AIResources.Names.Model_Help, AIResources.Names.Model_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources))]
-    public class Model : IIDEntity, IKeyedEntity, INamedEntity, IDescriptionEntity, IAuditableEntity, IOwnedEntity, INoSQLEntity, IValidateable
+    public class Model : IIDEntity, IKeyedEntity, INamedEntity, IDescriptionEntity, IAuditableEntity, IOwnedEntity, INoSQLEntity, IValidateable, IFormDescriptor
     {
         public const string ModelType_TF = "tensorflow";
         public const string ModelType_TF_Lite = "tensorflow_lite";
@@ -53,6 +53,9 @@ namespace LagoVista.AI.Models
 
         [FormField(LabelResource: AIResources.Names.Model_ModelCategory, FieldType: FieldTypes.EntityHeaderPicker, IsRequired: true, WaterMark: AIResources.Names.Model_ModelCategory_Select, ResourceType: typeof(AIResources))]
         public EntityHeader ModelCategory { get; set; }
+
+        [FormField(LabelResource: AIResources.Names.Model_LabelSet, HelpResource: AIResources.Names.Model_LabelSet_Help, FieldType: FieldTypes.EntityHeaderPicker, ResourceType: typeof(AIResources))]
+        public EntityHeader LabelSet { get; set; }
 
         [FormField(LabelResource: AIResources.Names.Model_Revisions, FieldType: FieldTypes.ChildList, ResourceType: typeof(AIResources))]
         public List<ModelRevision> Revisions { get; set; }
@@ -96,6 +99,23 @@ namespace LagoVista.AI.Models
                 Key = Key,
                 Name = Name,
                 Revisions = new List<ModelRevisionSummary>(Revisions.Select(rev => rev.ToSummary()))
+            };
+        }
+
+        public List<string> GetFormFields()
+        {
+            return new List<string>()
+            {
+                nameof(Name),
+                nameof(Key),
+                nameof(PreferredRevision),
+                nameof(Description),
+                nameof(ModelCategory),
+                nameof(ModelType),
+                nameof(LabelSet),
+                nameof(Revisions),
+                nameof(Experiments),
+                nameof(Notes)
             };
         }
     }
