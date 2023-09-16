@@ -16,6 +16,10 @@ namespace LagoVista.AI.Models
         public string DatabaseName { get; set; }
         public string EntityType { get; set; }
 
+        public ModelLabelSet()
+        {
+            Labels = new List<ModelLabel>();
+        }
 
         [JsonProperty("id")]
         public string Id { get; set; }

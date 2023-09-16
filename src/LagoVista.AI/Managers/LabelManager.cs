@@ -99,7 +99,7 @@ namespace LagoVista.AI.Managers
             ValidationCheck(labelSet, Actions.Create);
             await AuthorizeAsync(labelSet, AuthorizeResult.AuthorizeActions.Create, user, org);
 
-            await _labelSetRepo.AddLabelAsync(labelSet);
+            await _labelSetRepo.UpdateLabelAsync(labelSet);
 
             return InvokeResult.Success;
         }
