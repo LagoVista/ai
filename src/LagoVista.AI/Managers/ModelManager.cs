@@ -32,15 +32,26 @@ namespace LagoVista.AI.Managers
             ValidationCheck(model, Actions.Create);
             await AuthorizeAsync(model, AuthorizeResult.AuthorizeActions.Create, user, org);
 
+           
+
             await _repo.AddModelAsync(model);
 
             return InvokeResult.Success;
         }
 
-        public async Task<InvokeResult> UploadModelAsync(string modelId, int revision, byte[] model, EntityHeader org, EntityHeader user)
+        public async Task<InvokeResult<ModelRevision>> UploadModelAsync(string modelId, int revisionIndex, byte[] mlModel, EntityHeader org, EntityHeader user)
         {
             await AuthorizeOrgAccessAsync(user, org, typeof(Model), Actions.Update);
-            return await this._modelRepo.AddModelAsync(org.Id, modelId, revision, model);
+            await this._modelRepo.AddModelAsync(org.Id, modelId, revisionIndex, mlModel);
+
+            var model = await this.GetModelAsync(modelId, org, user);
+
+
+
+            var revision = new ModelRevision();
+
+
+            return InvokeResult<ModelRevision>.Create(revision);
         }
 
         public async Task<DependentObjectCheckResult> CheckInUseAsync(string id, EntityHeader org, EntityHeader user)

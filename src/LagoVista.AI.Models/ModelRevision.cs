@@ -70,6 +70,7 @@ namespace LagoVista.AI.Models
 
         public ModelRevision()
         {
+            Id = Guid.NewGuid().ToId();
             Labels = new List<ModelLabel>();
             Notes = new List<ModelNotes>();
             Preprocessors = new List<Preprocessor>();

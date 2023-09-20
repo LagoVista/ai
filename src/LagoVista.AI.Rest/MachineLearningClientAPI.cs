@@ -178,7 +178,7 @@ namespace LagoVista.AI.Rest
         }
 
         [HttpPost("/clientapi/ml/model/{modelid}/{revision}")]
-        public Task<InvokeResult> UploadModel(string modelid, int revision, IFormFile file)
+        public Task<InvokeResult<ModelRevision>> UploadModel(string modelid, int revision, IFormFile file)
         {
             if (file == null)
             {
