@@ -222,6 +222,9 @@
   <data name="ModelRevision_Description" xml:space="preserve">
     <value>A model revision is an instance of a model used for classification</value>
   </data>
+  <data name="ModelRevision_FileName" xml:space="preserve">
+    <value>Model File</value>
+  </data>
   <data name="ModelRevision_Help" xml:space="preserve">
     <value>A model revision is an instance of a model used for classification</value>
   </data>

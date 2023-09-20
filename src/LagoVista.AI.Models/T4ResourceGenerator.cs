@@ -1,5 +1,6 @@
-﻿using System.Globalization;
-using System.Reflection;  
+﻿/*9/18/2023 2:11:43 PM*/
+using System.Globalization;
+using System.Reflection;
 
 //Resources:AIResources:Common_Datestamp
 namespace LagoVista.AI.Models.Resources
@@ -209,6 +210,9 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:ModelRevision_Description
 
 		public static string ModelRevision_Description { get { return GetResourceString("ModelRevision_Description"); } }
+//Resources:AIResources:ModelRevision_FileName
+
+		public static string ModelRevision_FileName { get { return GetResourceString("ModelRevision_FileName"); } }
 //Resources:AIResources:ModelRevision_Help
 
 		public static string ModelRevision_Help { get { return GetResourceString("ModelRevision_Help"); } }
@@ -411,6 +415,7 @@ namespace LagoVista.AI.Models.Resources
 			public const string ModelRevision_Configuration = "ModelRevision_Configuration";
 			public const string ModelRevision_DateStamp = "ModelRevision_DateStamp";
 			public const string ModelRevision_Description = "ModelRevision_Description";
+			public const string ModelRevision_FileName = "ModelRevision_FileName";
 			public const string ModelRevision_Help = "ModelRevision_Help";
 			public const string ModelRevision_InputShape = "ModelRevision_InputShape";
 			public const string ModelRevision_InputShape_Help = "ModelRevision_InputShape_Help";
@@ -463,3 +468,4 @@ namespace LagoVista.AI.Models.Resources
 		}
 	}
 }
+
