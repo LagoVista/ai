@@ -18,7 +18,7 @@ namespace LagoVista.AI
         Task<bool> QueryKeyInUse(string key, EntityHeader org);
         Task<ListResponse<ModelSummary>> GetModelsForOrgAsync(EntityHeader org, EntityHeader user, ListRequest listRequest);
         Task<ListResponse<ModelSummary>> GetModelsForCategoryAsync(string categoryKey, EntityHeader org, EntityHeader user, ListRequest listRequest);
-        Task<InvokeResult> UploadModel(string modelId, int revision, byte[] model, EntityHeader org, EntityHeader user);
+        Task<InvokeResult<ModelRevision>> UploadModelAsync(string modelId, int revision, byte[] model, EntityHeader org, EntityHeader user);
         Task<InvokeResult<Byte[]>> GetMLModelAsync(string id, int revision, EntityHeader org, EntityHeader user);
     }
 }

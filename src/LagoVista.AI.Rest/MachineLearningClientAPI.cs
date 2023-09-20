@@ -191,7 +191,7 @@ namespace LagoVista.AI.Rest
                 stream.Position = 0;
                 stream.Read(model, 0, (int)stream.Length);
 
-                return _modelManager.UploadModel(modelid, revision, model, OrgEntityHeader, UserEntityHeader);
+                return _modelManager.UploadModelAsync(modelid, revision, model, OrgEntityHeader, UserEntityHeader);
             }
         }
 

@@ -37,7 +37,7 @@ namespace LagoVista.AI.Managers
             return InvokeResult.Success;
         }
 
-        public async Task<InvokeResult> UploadModel(string modelId, int revision, byte[] model, EntityHeader org, EntityHeader user)
+        public async Task<InvokeResult> UploadModelAsync(string modelId, int revision, byte[] model, EntityHeader org, EntityHeader user)
         {
             await AuthorizeOrgAccessAsync(user, org, typeof(Model), Actions.Update);
             return await this._modelRepo.AddModelAsync(org.Id, modelId, revision, model);
