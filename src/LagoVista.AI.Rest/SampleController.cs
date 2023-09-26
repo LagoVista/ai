@@ -32,6 +32,7 @@ namespace LagoVista.AI.Rest
         /// <param name="tagsString">query string parameter</param>
         /// <returns></returns>
         [HttpPost("/api/ml/sample")]
+        [DisableRequestSizeLimit]
         public Task<InvokeResult<Sample>> UploadSampleAsync (IFormFile file, string tagsString)
         {
             if (file == null)
