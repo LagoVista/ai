@@ -10,7 +10,8 @@ using System.Text;
 
 namespace LagoVista.AI.Models
 {
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.LabelSet_Title, AIResources.Names.LabelSet_Help, AIResources.Names.LabelSet_Help, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources))]
+    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.LabelSet_Title, AIResources.Names.LabelSet_Help, AIResources.Names.LabelSet_Help, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources),
+        FactoryUrl: "/api/ml/labelset/factory", GetUrl: "/api/ml/labelset/{id}", DeleteUrl: "/api/ml/labelset/{id}", SaveUrl: "/api/ml/labelset", GetListUrl: "/api/ml/labelsets")]
     public class ModelLabelSet : IIDEntity, IKeyedEntity, INamedEntity, IDescriptionEntity, IAuditableEntity, IOwnedEntity, INoSQLEntity, IValidateable, IFormDescriptor
     {
         public string DatabaseName { get; set; }

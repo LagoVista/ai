@@ -8,7 +8,8 @@ using System.Text;
 
 namespace LagoVista.AI.Models
 {
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.Preprocessor_Title, AIResources.Names.Preprocessor_Help, AIResources.Names.Preprocessor_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources))]
+    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.Preprocessor_Title, AIResources.Names.Preprocessor_Help, AIResources.Names.Preprocessor_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources),
+        FactoryUrl: "/api/ml/model/preprocessor/factory")]
     public class Preprocessor : IFormDescriptor
     {
         public Preprocessor()

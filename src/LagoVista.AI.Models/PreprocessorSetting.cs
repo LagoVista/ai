@@ -6,7 +6,8 @@ using System.Collections.Generic;
 
 namespace LagoVista.AI.Models
 {
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.PreprocessorSetting_Title, AIResources.Names.PreprocessorSetting_Help, AIResources.Names.PreprocessorSetting_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources))]
+    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.PreprocessorSetting_Title, AIResources.Names.PreprocessorSetting_Help, AIResources.Names.PreprocessorSetting_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, 
+        typeof(AIResources), FactoryUrl: "/api/ml/model/preprocessor/setting/factory")]
     public class PreprocessorSetting : IFormDescriptor
     {
         [JsonProperty("id")]

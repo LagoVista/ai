@@ -4,7 +4,8 @@ using LagoVista.Core.Models;
 
 namespace LagoVista.AI.Models
 {
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.ModelNotes_Title, AIResources.Names.ModelNotes_Help, AIResources.Names.ModelNotes_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources))]
+    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.ModelNotes_Title, AIResources.Names.ModelNotes_Help, AIResources.Names.ModelNotes_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources),
+        FactoryUrl: "/api/ml/model/note/factory")]
     public class ModelNotes 
     {
         public string Id { get; set; }

@@ -22,7 +22,8 @@ namespace LagoVista.AI.Models
         TensorFlowLite,
     }
 
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.Model_Title, AIResources.Names.Model_Help, AIResources.Names.Model_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources))]
+    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.Model_Title, AIResources.Names.Model_Help, AIResources.Names.Model_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources),
+        GetUrl: "/api/ml/model/{id}", GetListUrl: "/api/ml/models", FactoryUrl: "/api/ml/model/factory", SaveUrl: "/api/ml/model", DeleteUrl: "/api/ml/model/{id}")]
     public class Model : IIDEntity, IKeyedEntity, INamedEntity, IDescriptionEntity, IAuditableEntity, IOwnedEntity, INoSQLEntity, IValidateable, IFormDescriptor
     {
         public const string ModelType_TF = "tensorflow";
