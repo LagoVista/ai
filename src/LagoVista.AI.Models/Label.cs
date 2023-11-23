@@ -10,20 +10,9 @@ namespace LagoVista.AI.Models
 {
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.Label_Title, AIResources.Names.Label_Help, AIResources.Names.Label_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources),
         FactoryUrl: "/api/ml/label/factory")]
-    public class Label : IIDEntity, IKeyedEntity, INamedEntity, IDescriptionEntity, IAuditableEntity, IOwnedEntity, INoSQLEntity, IValidateable, IFormDescriptor
+    public class Label : EntityBase,  IDescriptionEntity, IValidateable, IFormDescriptor, ITitledEntity, IIconEntity
     {
-        public string DatabaseName { get; set; }
-        public string EntityType { get; set; }
-
-        [JsonProperty("id")]
-        public string Id { get; set; }
-
-        [FormField(LabelResource: AIResources.Names.Common_Name, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
-        public string Name { get; set; }
-
-        [FormField(LabelResource: AIResources.Names.Label_Key, FieldType: FieldTypes.Key, IsRequired: true, ResourceType: typeof(AIResources))]
-        public string Key { get; set; }
-
+    
         [FormField(LabelResource: AIResources.Names.Label_Title, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
         public string Title { get; set; }
 
@@ -32,15 +21,7 @@ namespace LagoVista.AI.Models
 
         [FormField(LabelResource: AIResources.Names.Common_Description, FieldType: FieldTypes.MultiLineText, IsRequired: false, ResourceType: typeof(AIResources))]
         public string Description { get; set; }
-
-        public string CreationDate { get; set; }
-        public string LastUpdatedDate { get; set; }
-        public EntityHeader CreatedBy { get; set; }
-        public EntityHeader LastUpdatedBy { get; set; }
-        public bool IsPublic { get; set; }
-        public EntityHeader OwnerOrganization { get; set; }
-        public EntityHeader OwnerUser { get; set; }
-
+   
         public LabelSummary CreateSummary()
         {
             return new LabelSummary()

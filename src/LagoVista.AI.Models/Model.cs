@@ -24,7 +24,7 @@ namespace LagoVista.AI.Models
 
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.Model_Title, AIResources.Names.Model_Help, AIResources.Names.Model_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources),
         GetUrl: "/api/ml/model/{id}", GetListUrl: "/api/ml/models", FactoryUrl: "/api/ml/model/factory", SaveUrl: "/api/ml/model", DeleteUrl: "/api/ml/model/{id}")]
-    public class Model : IIDEntity, IKeyedEntity, INamedEntity, IDescriptionEntity, IAuditableEntity, IOwnedEntity, INoSQLEntity, IValidateable, IFormDescriptor
+    public class Model : EntityBase, IDescriptionEntity, IValidateable, IFormDescriptor
     {
         public const string ModelType_TF = "tensorflow";
         public const string ModelType_TF_Lite = "tensorflow_lite";
@@ -37,17 +37,6 @@ namespace LagoVista.AI.Models
             Notes = new List<ModelNotes>();
         }
 
-        public string DatabaseName { get; set; }
-        public string EntityType { get; set; }
-
-        [JsonProperty("id")]
-        public string Id { get; set; }
-
-        [FormField(LabelResource: AIResources.Names.Common_Name, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
-        public string Name { get; set; }
-
-        [FormField(LabelResource: AIResources.Names.Common_Key, HelpResource: AIResources.Names.Common_Key_Help, FieldType: FieldTypes.Key, RegExValidationMessageResource: AIResources.Names.Common_Key_Validation, ResourceType: typeof(AIResources), IsRequired: true)]
-        public String Key { get; set; }
 
         [FormField(LabelResource: AIResources.Names.Common_Description, FieldType: FieldTypes.MultiLineText, ResourceType: typeof(AIResources))]
         public string Description { get; set; }
@@ -72,14 +61,6 @@ namespace LagoVista.AI.Models
 
         [FormField(LabelResource: AIResources.Names.Model_PreferredRevision, FieldType: FieldTypes.EntityHeaderPicker, IsRequired: false, WaterMark: AIResources.Names.Model_PreferredRevision_Select, ResourceType: typeof(AIResources))]
         public EntityHeader PreferredRevision { get; set; }
-
-        public string CreationDate { get; set; }
-        public string LastUpdatedDate { get; set; }
-        public EntityHeader CreatedBy { get; set; }
-        public EntityHeader LastUpdatedBy { get; set; }
-        public bool IsPublic { get; set; }
-        public EntityHeader OwnerOrganization { get; set; }
-        public EntityHeader OwnerUser { get; set; }
 
         [CustomValidator]
         public void Validate(ValidationResult result)
