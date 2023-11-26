@@ -1,4 +1,4 @@
-﻿/*9/18/2023 2:11:43 PM*/
+﻿/*11/25/2023 10:26:30 AM*/
 using System.Globalization;
 using System.Reflection;
 
@@ -177,6 +177,9 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:Model_Type_TensorFlow_Lite
 
 		public static string Model_Type_TensorFlow_Lite { get { return GetResourceString("Model_Type_TensorFlow_Lite"); } }
+//Resources:AIResources:ModelCategories_Title
+
+		public static string ModelCategories_Title { get { return GetResourceString("ModelCategories_Title"); } }
 //Resources:AIResources:ModelCategory_Description
 
 		public static string ModelCategory_Description { get { return GetResourceString("ModelCategory_Description"); } }
@@ -404,6 +407,7 @@ namespace LagoVista.AI.Models.Resources
 			public const string Model_Type_Select = "Model_Type_Select";
 			public const string Model_Type_TensorFlow = "Model_Type_TensorFlow";
 			public const string Model_Type_TensorFlow_Lite = "Model_Type_TensorFlow_Lite";
+			public const string ModelCategories_Title = "ModelCategories_Title";
 			public const string ModelCategory_Description = "ModelCategory_Description";
 			public const string ModelCategory_Help = "ModelCategory_Help";
 			public const string ModelCategory_Title = "ModelCategory_Title";

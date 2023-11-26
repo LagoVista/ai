@@ -29,6 +29,14 @@ namespace LagoVista.AI.Models.TrainingData
         public bool IsPublic { get; set; }
 
         public List<EntityHeader> Labels { get; set; }
+        public List<EntityChangeSet> AuditHistory { get; set; } = new List<EntityChangeSet>();
+        public bool IsDeprecated { get; set; }
+        public EntityHeader DeprecatedBy { get; set; }
+        public string DeprecationDate { get; set; }
+        public string DeprecationNotes { get; set; }
+        public bool IsDeleted { get; set; }
+        public EntityHeader DeletedBy { get; set; }
+        public string DeletionDate { get; set; }
 
         public static SampleDetail FromSample(Sample sample)
         {

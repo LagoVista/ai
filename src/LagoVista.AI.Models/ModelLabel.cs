@@ -1,14 +1,23 @@
 ﻿using LagoVista.AI.Models.Resources;
+using LagoVista.Core;
 using LagoVista.Core.Attributes;
 using LagoVista.Core.Interfaces;
+using LagoVista.Core.Validation;
 using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 
 namespace LagoVista.AI.Models
 {
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.Label_Title, AIResources.Names.Label_Help, AIResources.Names.Label_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources))]
-    public class ModelLabel : IFormDescriptor
+    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.Label_Title, AIResources.Names.Label_Help, AIResources.Names.Label_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources),
+         FactoryUrl: "/api/ml/modellabel/factory")]
+    public class ModelLabel : IValidateable, IFormDescriptor
     {
+        public ModelLabel()
+        {
+            Id = Guid.NewGuid().ToId();
+        }
+
         [JsonProperty("id")]
         public string Id { get; set; }
 
