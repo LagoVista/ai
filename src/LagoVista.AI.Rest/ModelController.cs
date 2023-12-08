@@ -135,6 +135,18 @@ namespace LagoVista.AI.Rest
         }
 
         /// <summary>
+        /// Model - Get Revisions for a Model.
+        /// </summary>
+        /// <param name="modelid"></param>
+        /// <returns></returns>
+        [HttpGet("/api/ml/model/{modelid}/revisions")]
+        public async Task<ListResponse<ModelRevision>> GetModelRevisionsForModel(string modelid)
+        {
+            var model = await _mgr.GetModelAsync(modelid, OrgEntityHeader, UserEntityHeader);
+            return ListResponse<ModelRevision>.Create(model.Revisions);
+        }
+
+        /// <summary>
         /// Model - Get Model
         /// </summary>
         /// <param name="id"></param>
