@@ -117,11 +117,17 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="Common_Category" xml:space="preserve">
+    <value>Category</value>
+  </data>
   <data name="Common_Datestamp" xml:space="preserve">
     <value>Datestamp</value>
   </data>
   <data name="Common_Description" xml:space="preserve">
     <value>Description</value>
+  </data>
+  <data name="Common_Icon" xml:space="preserve">
+    <value>Icon</value>
   </data>
   <data name="Common_Key" xml:space="preserve">
     <value>Key</value>
@@ -137,6 +143,9 @@
   </data>
   <data name="Common_Notes" xml:space="preserve">
     <value>Notes</value>
+  </data>
+  <data name="Common_SelectCategory" xml:space="preserve">
+    <value>-select category-</value>
   </data>
   <data name="Experiemnt_Help" xml:space="preserve">
     <value>An experiment is a set of test critiera that can be used to validate the model in the real world.  This is used on the execution engine and node the model development environment.</value>
@@ -155,6 +164,9 @@
   </data>
   <data name="InputType_Image" xml:space="preserve">
     <value>Image</value>
+  </data>
+  <data name="LabelSets_Title" xml:space="preserve">
+    <value>Label Sets</value>
   </data>
   <data name="LabelSet_Help" xml:space="preserve">
     <value>Lable Sets are used to add labels to identify inferences made from model evaluations</value>
@@ -335,6 +347,9 @@
   </data>
   <data name="ModelSetting_Value" xml:space="preserve">
     <value>Value</value>
+  </data>
+  <data name="Models_Title" xml:space="preserve">
+    <value>Models</value>
   </data>
   <data name="Model_Description" xml:space="preserve">
     <value>A model is a model type that is used for performing classifications, it consists of revisions that have the actual model.</value>

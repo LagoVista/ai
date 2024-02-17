@@ -3,8 +3,6 @@ using LagoVista.Core.Attributes;
 using LagoVista.Core.Interfaces;
 using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
-using Newtonsoft.Json;
-using System;
 using System.Linq;
 using System.Collections.Generic;
 
@@ -22,9 +20,10 @@ namespace LagoVista.AI.Models
         TensorFlowLite,
     }
 
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.Model_Title, AIResources.Names.Model_Help, AIResources.Names.Model_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources),
-        GetUrl: "/api/ml/model/{id}", GetListUrl: "/api/ml/models", FactoryUrl: "/api/ml/model/factory", SaveUrl: "/api/ml/model", DeleteUrl: "/api/ml/model/{id}")]
-    public class Model : EntityBase, IDescriptionEntity, IValidateable, IFormDescriptor
+    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.Model_Title, AIResources.Names.Model_Help, AIResources.Names.Model_Description, EntityDescriptionAttribute.EntityTypes.CoreIoTModel, typeof(AIResources),
+        GetUrl: "/api/ml/model/{id}", GetListUrl: "/api/ml/models", FactoryUrl: "/api/ml/model/factory", SaveUrl: "/api/ml/model", DeleteUrl: "/api/ml/model/{id}",
+        ListUIUrl: "/mlworkbench/models", EditUIUrl: "/mlworkbench/model/{id}", CreateUIUrl: "/mlworkbench/model/add", Icon: "icon-ae-database-3")]
+    public class Model : EntityBase, IDescriptionEntity, IValidateable, IFormDescriptor, IIconEntity, ICategorized, IFormDescriptorCol2
     {
         public const string ModelType_TF = "tensorflow";
         public const string ModelType_TF_Lite = "tensorflow_lite";
@@ -35,7 +34,15 @@ namespace LagoVista.AI.Models
             Revisions = new List<ModelRevision>();
             Experiments = new List<Experiment>();
             Notes = new List<ModelNotes>();
+            Icon = "icon-ae-database-3";
         }
+
+        [FormField(LabelResource: AIResources.Names.Common_Icon, FieldType: FieldTypes.Icon, ResourceType: typeof(AIResources))]
+        public string Icon { get; set; }
+
+        [FormField(LabelResource: AIResources.Names.Common_Category, FieldType: FieldTypes.Category, WaterMark: AIResources.Names.Common_SelectCategory, ResourceType: typeof(AIResources), IsRequired: true, IsUserEditable: true)]
+        public EntityHeader Category { get; set; }
+
 
 
         [FormField(LabelResource: AIResources.Names.Common_Description, FieldType: FieldTypes.MultiLineText, ResourceType: typeof(AIResources))]
@@ -80,6 +87,7 @@ namespace LagoVista.AI.Models
                 IsPublic = IsPublic,
                 Key = Key,
                 Name = Name,
+                Category = Category,
                 Revisions = new List<ModelRevisionSummary>(Revisions.Select(rev => rev.ToSummary()))
             };
         }
@@ -90,11 +98,19 @@ namespace LagoVista.AI.Models
             {
                 nameof(Name),
                 nameof(Key),
-                nameof(PreferredRevision),
-                nameof(Description),
-                nameof(ModelCategory),
+                nameof(Icon),
+                nameof(Category),
                 nameof(ModelType),
+                nameof(PreferredRevision),
                 nameof(LabelSet),
+                nameof(Description),
+            };
+        }
+
+        public List<string> GetFormFieldsCol2()
+        {
+            return new List<string>()
+            {
                 nameof(Revisions),
                 nameof(Experiments),
                 nameof(Notes)
@@ -102,7 +118,10 @@ namespace LagoVista.AI.Models
         }
     }
 
-    public class ModelSummary : SummaryData
+    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.Models_Title, AIResources.Names.Model_Help, AIResources.Names.Model_Description, EntityDescriptionAttribute.EntityTypes.Summary, typeof(AIResources),
+        GetUrl: "/api/ml/model/{id}", GetListUrl: "/api/ml/models", FactoryUrl: "/api/ml/model/factory", SaveUrl: "/api/ml/model", DeleteUrl: "/api/ml/model/{id}",
+        ListUIUrl: "/mlworkbench/models", EditUIUrl: "/mlworkbench/model/{id}", CreateUIUrl: "/mlworkbench/model/add", Icon: "icon-ae-database-3")]
+    public class ModelSummary : CategorizedSummaryData
     {
 
         public List<ModelRevisionSummary> Revisions { get; set; }

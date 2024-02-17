@@ -1,8 +1,8 @@
-﻿/*9/18/2023 2:11:43 PM*/
+﻿/*2/17/2024 10:19:43 AM*/
 using System.Globalization;
 using System.Reflection;
 
-//Resources:AIResources:Common_Datestamp
+//Resources:AIResources:Common_Category
 namespace LagoVista.AI.Models.Resources
 {
 	public class AIResources
@@ -56,10 +56,16 @@ namespace LagoVista.AI.Models.Resources
 			return new HtmlString(str);
         }*/
 		
+		public static string Common_Category { get { return GetResourceString("Common_Category"); } }
+//Resources:AIResources:Common_Datestamp
+
 		public static string Common_Datestamp { get { return GetResourceString("Common_Datestamp"); } }
 //Resources:AIResources:Common_Description
 
 		public static string Common_Description { get { return GetResourceString("Common_Description"); } }
+//Resources:AIResources:Common_Icon
+
+		public static string Common_Icon { get { return GetResourceString("Common_Icon"); } }
 //Resources:AIResources:Common_Key
 
 		public static string Common_Key { get { return GetResourceString("Common_Key"); } }
@@ -75,6 +81,9 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:Common_Notes
 
 		public static string Common_Notes { get { return GetResourceString("Common_Notes"); } }
+//Resources:AIResources:Common_SelectCategory
+
+		public static string Common_SelectCategory { get { return GetResourceString("Common_SelectCategory"); } }
 //Resources:AIResources:Experiemnt_Help
 
 		public static string Experiemnt_Help { get { return GetResourceString("Experiemnt_Help"); } }
@@ -126,6 +135,9 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:LabelSet_Title
 
 		public static string LabelSet_Title { get { return GetResourceString("LabelSet_Title"); } }
+//Resources:AIResources:LabelSets_Title
+
+		public static string LabelSets_Title { get { return GetResourceString("LabelSets_Title"); } }
 //Resources:AIResources:Model_Description
 
 		public static string Model_Description { get { return GetResourceString("Model_Description"); } }
@@ -312,6 +324,9 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:ModelRevision_Version_Number
 
 		public static string ModelRevision_Version_Number { get { return GetResourceString("ModelRevision_Version_Number"); } }
+//Resources:AIResources:Models_Title
+
+		public static string Models_Title { get { return GetResourceString("Models_Title"); } }
 //Resources:AIResources:ModelSetting_Description
 
 		public static string ModelSetting_Description { get { return GetResourceString("ModelSetting_Description"); } }
@@ -363,13 +378,16 @@ namespace LagoVista.AI.Models.Resources
 
 		public static class Names
 		{
+			public const string Common_Category = "Common_Category";
 			public const string Common_Datestamp = "Common_Datestamp";
 			public const string Common_Description = "Common_Description";
+			public const string Common_Icon = "Common_Icon";
 			public const string Common_Key = "Common_Key";
 			public const string Common_Key_Help = "Common_Key_Help";
 			public const string Common_Key_Validation = "Common_Key_Validation";
 			public const string Common_Name = "Common_Name";
 			public const string Common_Notes = "Common_Notes";
+			public const string Common_SelectCategory = "Common_SelectCategory";
 			public const string Experiemnt_Help = "Experiemnt_Help";
 			public const string Experiment_Description = "Experiment_Description";
 			public const string Experiment_Instructions = "Experiment_Instructions";
@@ -387,6 +405,7 @@ namespace LagoVista.AI.Models.Resources
 			public const string LabelSet_Help = "LabelSet_Help";
 			public const string LabelSet_Labels = "LabelSet_Labels";
 			public const string LabelSet_Title = "LabelSet_Title";
+			public const string LabelSets_Title = "LabelSets_Title";
 			public const string Model_Description = "Model_Description";
 			public const string Model_Experiments = "Model_Experiments";
 			public const string Model_Help = "Model_Help";
@@ -449,6 +468,7 @@ namespace LagoVista.AI.Models.Resources
 			public const string ModelRevision_ValidationAccuracy = "ModelRevision_ValidationAccuracy";
 			public const string ModelRevision_Version = "ModelRevision_Version";
 			public const string ModelRevision_Version_Number = "ModelRevision_Version_Number";
+			public const string Models_Title = "Models_Title";
 			public const string ModelSetting_Description = "ModelSetting_Description";
 			public const string ModelSetting_Help = "ModelSetting_Help";
 			public const string ModelSetting_Title = "ModelSetting_Title";

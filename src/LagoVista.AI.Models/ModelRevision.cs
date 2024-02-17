@@ -49,7 +49,8 @@ namespace LagoVista.AI.Models
         DataPoints,
     }
 
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.ModelRevision_Title, AIResources.Names.ModelRevision_Help, AIResources.Names.ModelRevision_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources))]
+    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.ModelRevision_Title, AIResources.Names.ModelRevision_Help, 
+        AIResources.Names.ModelRevision_Description,EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources))]
     public class ModelRevision : IFormDescriptor
     {
         public const string ModelQuality_Unknown = "uknown";
