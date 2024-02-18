@@ -52,7 +52,9 @@ namespace LagoVista.AI.Models
         }
     }
 
-    public class ModelCategorySummary : CategorizedSummaryData
+    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.ModelCategories_Title, AIResources.Names.ModelCategory_Help, AIResources.Names.ModelCategory_Description, EntityDescriptionAttribute.EntityTypes.Summary, typeof(AIResources),
+         GetListUrl: "/api/ml/modelcategories", GetUrl: "/api/ml/modelcategory/{id}", SaveUrl: "/api/ml/modelcategory", FactoryUrl: "/api/ml/modellabel/factory", DeleteUrl: "/api/ml/modelcategory/{id}")]
+    public class ModelCategorySummary : SummaryData
     {
 
     }

@@ -201,6 +201,9 @@
   <data name="Label_Visible" xml:space="preserve">
     <value>Visible</value>
   </data>
+  <data name="ModelCategories_Title" xml:space="preserve">
+    <value>Model Categories</value>
+  </data>
   <data name="ModelCategory_Description" xml:space="preserve">
     <value>The Model Category is used to organized models of a specific type.</value>
   </data>

@@ -20,6 +20,16 @@ namespace LagoVista.AI.Models.TrainingData
 
         public List<EntityHeader> Labels { get; set; }
 
+        public List<string> GetFormFields()
+        {
+            return new List<string>()
+            {
+                nameof(Name),
+                nameof(Key),
+                nameof(LabelSet),
+                nameof(Description),
+            };
+        }
 
         public TrainingDataSetSummary GetSummary()
         {

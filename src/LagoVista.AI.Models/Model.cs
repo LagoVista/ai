@@ -48,13 +48,13 @@ namespace LagoVista.AI.Models
         [FormField(LabelResource: AIResources.Names.Common_Description, FieldType: FieldTypes.MultiLineText, ResourceType: typeof(AIResources))]
         public string Description { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.Model_ModelCategory, FieldType: FieldTypes.EntityHeaderPicker, IsRequired: true, WaterMark: AIResources.Names.Model_ModelCategory_Select, ResourceType: typeof(AIResources))]
+        [FormField(LabelResource: AIResources.Names.Model_ModelCategory, FieldType: FieldTypes.EntityHeaderPicker, EntityHeaderPickerUrl: "/api/ml/modelcategories", IsRequired: true, WaterMark: AIResources.Names.Model_ModelCategory_Select, ResourceType: typeof(AIResources))]
         public EntityHeader ModelCategory { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.Model_LabelSet, HelpResource: AIResources.Names.Model_LabelSet_Help, FieldType: FieldTypes.EntityHeaderPicker, ResourceType: typeof(AIResources))]
-        public EntityHeader LabelSet { get; set; }
+        [FormField(LabelResource: AIResources.Names.Model_LabelSet, EntityHeaderPickerUrl: "/api/ml/labelsets", HelpResource: AIResources.Names.Model_LabelSet_Help, FieldType: FieldTypes.EntityHeaderPicker, ResourceType: typeof(AIResources))]
+        public EntityHeader ModelLabelSet { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.Model_Revisions, FieldType: FieldTypes.ChildList, ResourceType: typeof(AIResources))]
+        [FormField(LabelResource: AIResources.Names.Model_Revisions, FactoryUrl: "/api/ml/model/revision/factory", FieldType: FieldTypes.ChildList, ResourceType: typeof(AIResources))]
         public List<ModelRevision> Revisions { get; set; }
 
         [FormField(LabelResource: AIResources.Names.Model_ModelType, FieldType: FieldTypes.Picker, EnumType: typeof(ModelType), IsRequired: true, WaterMark: AIResources.Names.Model_Type_Select, ResourceType: typeof(AIResources))]

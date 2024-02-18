@@ -1,7 +1,10 @@
 ﻿using LagoVista.AI.Models.Resources;
+using LagoVista.Core;
 using LagoVista.Core.Attributes;
 using LagoVista.Core.Interfaces;
+using LagoVista.Core.Validation;
 using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 
 namespace LagoVista.AI.Models
