@@ -12,6 +12,11 @@ namespace LagoVista.AI.Models
         FactoryUrl: "/api/ml/label/factory")]
     public class Label : EntityBase,  IDescriptionEntity, IValidateable, IFormDescriptor, ITitledEntity, IIconEntity
     {
+        public Label()
+        {
+
+        }
+
     
         [FormField(LabelResource: AIResources.Names.Label_Title, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
         public string Title { get; set; }

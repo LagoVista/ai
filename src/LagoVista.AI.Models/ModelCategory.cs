@@ -56,6 +56,6 @@ namespace LagoVista.AI.Models
          GetListUrl: "/api/ml/modelcategories", GetUrl: "/api/ml/modelcategory/{id}", SaveUrl: "/api/ml/modelcategory", FactoryUrl: "/api/ml/modellabel/factory", DeleteUrl: "/api/ml/modelcategory/{id}")]
     public class ModelCategorySummary : SummaryData
     {
-
+        public EntityHeader Category { get; set; }
     }
 }

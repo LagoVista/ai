@@ -134,7 +134,7 @@ namespace LagoVista.AI.Models
         [FormField(LabelResource: AIResources.Names.ModelRevision_Notes, FieldType: FieldTypes.ChildList, ResourceType: typeof(AIResources))]
         public List<ModelNotes> Notes { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.ModelRevision_Preprocessors, FieldType: FieldTypes.ChildListInline, ResourceType: typeof(AIResources))]
+        [FormField(LabelResource: AIResources.Names.ModelRevision_Preprocessors, FieldType: FieldTypes.ChildListInline, FactoryUrl: "/api/ml/model/preprocessor/factory", ResourceType: typeof(AIResources))]
         public List<Preprocessor> Preprocessors { get; set; }
 
         [CustomValidator]

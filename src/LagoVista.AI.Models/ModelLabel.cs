@@ -10,9 +10,14 @@ using System.Collections.Generic;
 namespace LagoVista.AI.Models
 {
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.Label_Title, AIResources.Names.Label_Help, AIResources.Names.Label_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources),
-       FactoryUrl: "/api/ml/modellabel/factory")]
+       FactoryUrl: "/api/ml/modellabel/factory", Icon: "icon-fo-nerve")]
     public class ModelLabel : IFormDescriptor
     {
+        public ModelLabel()
+        {
+            Icon = "icon-fo-nerve";
+        }
+
         [JsonProperty("id")]
         public string Id { get; set; }
 

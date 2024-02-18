@@ -16,7 +16,7 @@ namespace LagoVista.AI.Models
         [FormField(LabelResource: AIResources.Names.ModelNotes_AddedBy, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
         public EntityHeader AddedBy { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.ModelRevision_Notes, FieldType: FieldTypes.MultiLineText, IsRequired: true, ResourceType: typeof(AIResources))]
+        [FormField(LabelResource: AIResources.Names.ModelRevision_Notes, FieldType: FieldTypes.HtmlEditor, IsRequired: true, ResourceType: typeof(AIResources))]
         public string Note { get; set; }
 
     }
