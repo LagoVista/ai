@@ -40,7 +40,7 @@ namespace LagoVista.AI.Models
         [FormField(LabelResource: AIResources.Names.Common_Icon, FieldType: FieldTypes.Icon, ResourceType: typeof(AIResources))]
         public string Icon { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.Common_Category, FieldType: FieldTypes.Category, WaterMark: AIResources.Names.Common_SelectCategory, ResourceType: typeof(AIResources), IsRequired: true, IsUserEditable: true)]
+        [FormField(LabelResource: AIResources.Names.Common_Category, FieldType: FieldTypes.Category, WaterMark: AIResources.Names.Common_SelectCategory, ResourceType: typeof(AIResources), IsRequired: false, IsUserEditable: true)]
         public EntityHeader Category { get; set; }
 
 
@@ -123,7 +123,6 @@ namespace LagoVista.AI.Models
         ListUIUrl: "/mlworkbench/models", EditUIUrl: "/mlworkbench/model/{id}", CreateUIUrl: "/mlworkbench/model/add", Icon: "icon-ae-database-3")]
     public class ModelSummary : CategorizedSummaryData
     {
-
         public List<ModelRevisionSummary> Revisions { get; set; }
     }
 }

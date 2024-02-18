@@ -15,7 +15,7 @@ namespace LagoVista.AI.Models
         [FormField(LabelResource: AIResources.Names.Common_Icon, FieldType: FieldTypes.Icon, ResourceType: typeof(AIResources))]
         public string Icon { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.Common_Category, FieldType: FieldTypes.Category, WaterMark: AIResources.Names.Common_SelectCategory, ResourceType: typeof(AIResources), IsRequired: true, IsUserEditable: true)]
+        [FormField(LabelResource: AIResources.Names.Common_Category, FieldType: FieldTypes.Category, WaterMark: AIResources.Names.Common_SelectCategory, ResourceType: typeof(AIResources), IsRequired: false, IsUserEditable: true)]
         public EntityHeader Category { get; set; }
 
         [FormField(LabelResource: AIResources.Names.Common_Description, FieldType: FieldTypes.MultiLineText, IsRequired: false, ResourceType: typeof(AIResources))]
@@ -54,8 +54,7 @@ namespace LagoVista.AI.Models
 
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.ModelCategories_Title, AIResources.Names.ModelCategory_Help, AIResources.Names.ModelCategory_Description, EntityDescriptionAttribute.EntityTypes.Summary, typeof(AIResources),
          GetListUrl: "/api/ml/modelcategories", GetUrl: "/api/ml/modelcategory/{id}", SaveUrl: "/api/ml/modelcategory", FactoryUrl: "/api/ml/modellabel/factory", DeleteUrl: "/api/ml/modelcategory/{id}")]
-    public class ModelCategorySummary : SummaryData
+    public class ModelCategorySummary : CategorizedSummaryData
     {
-        public EntityHeader Category { get; set; }
     }
 }
