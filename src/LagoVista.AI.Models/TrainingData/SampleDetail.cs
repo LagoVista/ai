@@ -5,48 +5,15 @@ using System.Collections.Generic;
 
 namespace LagoVista.AI.Models.TrainingData
 {
-    public class SampleDetail : IIDEntity, IKeyedEntity, IOwnedEntity, IAuditableEntity
+    public class SampleDetail : EntityBase, IIDEntity, IKeyedEntity, IOwnedEntity, IAuditableEntity
     {
-        [JsonProperty("id")]
-        public string Id { get; set; }
-        public string Name { get; set; }
-        public string Key { get; set; }
-
         public string FileName { get; set; }
 
         public string ContentType { get; set; }
 
         public long ContentSize { get; set; }
 
-        public string CreationDate { get; set; }
-        public string LastUpdatedDate { get; set; }
-
-        public EntityHeader OwnerOrganization { get; set; }
-        public EntityHeader OwnerUser { get; set; }
-
-        public EntityHeader CreatedBy { get; set; }
-        public EntityHeader LastUpdatedBy { get; set; }
-        public bool IsPublic { get; set; }
-
-        public List<EntityChangeSet> AuditHistory { get; set; } = new List<EntityChangeSet>();
-
-        public bool IsDeleted { get; set; }
-        public EntityHeader DeletedBy { get; set; }
-        public string DeletionDate { get; set; }
-        public bool IsDeprecated { get; set; }
-        public EntityHeader DeprecatedBy { get; set; }
-        public string DeprecationDate { get; set; }
-        public string DeprecationNotes { get; set; }
-
         public List<EntityHeader> Labels { get; set; }
-        public List<EntityChangeSet> AuditHistory { get; set; } = new List<EntityChangeSet>();
-        public bool IsDeprecated { get; set; }
-        public EntityHeader DeprecatedBy { get; set; }
-        public string DeprecationDate { get; set; }
-        public string DeprecationNotes { get; set; }
-        public bool IsDeleted { get; set; }
-        public EntityHeader DeletedBy { get; set; }
-        public string DeletionDate { get; set; }
 
         public static SampleDetail FromSample(Sample sample)
         {
