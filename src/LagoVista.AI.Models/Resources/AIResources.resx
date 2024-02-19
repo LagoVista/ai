@@ -166,16 +166,16 @@
     <value>Image</value>
   </data>
   <data name="LabelSets_Title" xml:space="preserve">
-    <value>Label Sets</value>
+    <value>AI - Label Sets</value>
   </data>
   <data name="LabelSet_Help" xml:space="preserve">
-    <value>Lable Sets are used to add labels to identify inferences made from model evaluations</value>
+    <value>Label Sets are used to add labels to identify inferences made from model evaluations</value>
   </data>
   <data name="LabelSet_Labels" xml:space="preserve">
     <value>Labels</value>
   </data>
   <data name="LabelSet_Title" xml:space="preserve">
-    <value>Label Set</value>
+    <value>AI - Label Set</value>
   </data>
   <data name="Label_Description" xml:space="preserve">
     <value>A label is an output of the classifier/ml evaluation engine</value>
@@ -388,7 +388,7 @@
     <value>Revisions</value>
   </data>
   <data name="Model_Title" xml:space="preserve">
-    <value>Model</value>
+    <value>AI - Model</value>
   </data>
   <data name="Model_Type" xml:space="preserve">
     <value>Model Type</value>

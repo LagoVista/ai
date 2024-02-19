@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace LagoVista.AI.Models
 {
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.ModelCategory_Title, AIResources.Names.ModelCategory_Help, AIResources.Names.ModelCategory_Description, EntityDescriptionAttribute.EntityTypes.CoreIoTModel, typeof(AIResources),
+    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.ModelCategory_Title, AIResources.Names.ModelCategory_Help, AIResources.Names.ModelCategory_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources),
         FactoryUrl: "/api/ml/modellabel/factory", GetListUrl: "/api/ml/modelcategories", GetUrl: "/api/ml/modelcategory/{id}", SaveUrl: "/api/ml/modelcategory", DeleteUrl: "/api/ml/modelcategory/{id}",
         ListUIUrl: "/mlworkbench/settings/categories", EditUIUrl: "/mlworkbench/settings/category/{id}", CreateUIUrl: "/mlworkbench/settings/category/add")]
     public class ModelCategory : EntityBase, IDescriptionEntity, IValidateable, IFormDescriptor, ISummaryFactory, IIconEntity, ICategorized
