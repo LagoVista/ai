@@ -1,4 +1,5 @@
-﻿using LagoVista.AI.Managers;
+﻿using LagoVista.AI.Interfaces;
+using LagoVista.AI.Managers;
 using LagoVista.Core.Interfaces;
 
 namespace LagoVista.AI
@@ -14,6 +15,7 @@ namespace LagoVista.AI
             services.AddTransient<ISampleManager, SampleManager>();
             services.AddTransient<ILabelManager, LabelManager>();
             services.AddTransient<IExperimentResultManager, ExperimentResultManager>();
+            services.AddTransient<ITextQueryManager, OpenAIManager>();
         }
     }
 }

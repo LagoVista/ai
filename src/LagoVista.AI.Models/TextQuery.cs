@@ -4,8 +4,17 @@ using System.Text;
 
 namespace LagoVista.AI.Models
 {
+    public enum TextQueryType
+    {
+        Query,
+        Reword,
+        CreateContent
+    }
+
     public class TextQuery
     {
+        public TextQueryType QueryType { get; set; }
+
         public string Query { get; set; }
         public string ConversationId { get; set; }
     }

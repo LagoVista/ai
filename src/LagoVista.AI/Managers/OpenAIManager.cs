@@ -1,17 +1,14 @@
 ﻿using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
 using LagoVista.Core.Validation;
-using Rystem.OpenAi;
-using Rystem.OpenAi.Chat;
+//using Rystem.OpenAi;
+//using Rystem.OpenAi.Chat;
 using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace LagoVista.AI.Managers
 {
-    public class OpenAIManager
+    public class OpenAIManager : ITextQueryManager
     {
         IOpenAISettings _settings;
 
@@ -24,16 +21,15 @@ namespace LagoVista.AI.Managers
 
         public async Task<InvokeResult<TextQueuryResponse>> HandlePromptAsync(TextQuery query)
         {
-            OpenAiService.Instance.AddOpenAi((settings) =>
+            /*OpenAiService.Instance.AddOpenAi((settings) =>
             {
                 settings.ApiKey = _settings.OpenAIApiKey;
             }, APIName);
 
-            var openAiApi = OpenAiService.Factory.Create(APIName);
-
-       //     var results = new List<StreamingChatResult>();
-            //await foreach (var x in
-                
+            if (query.QueryType == TextQueryType.Reword)
+                query.Query = "Please reword the following content: " + query.Query;
+            
+            var openAiApi = OpenAiService.Factory.Create(APIName);                
                 
               var results = await openAiApi.Chat
                 .Request(new ChatMessage {
@@ -42,20 +38,23 @@ namespace LagoVista.AI.Managers
                 .WithModel(ChatModelType.Gpt35Turbo)
                 .WithTemperature(1)
                 .ExecuteAsync();
-            {
-
-        //        results.Add(x);
-            }
-
-           // Console.WriteLine("Total Result Count: " + results.Count.ToString());
-
+          
             foreach (var choice in results.Choices)
             {
                 if (choice.Message != null)
-                    Console.Write(choice.Message.Content);
-            }
- 
-            return null;
+                {
+
+                    return new InvokeResult<TextQueuryResponse>()
+                    {
+                        Result = new TextQueuryResponse()
+                        {
+                            Response = choice.Message.Content
+                        }
+                    };
+                }
+            }*/
+
+            return InvokeResult<TextQueuryResponse>.FromError("No respones");
         }
     }
 }
