@@ -16,10 +16,11 @@ namespace LagoVista.AI.Models
         public TextQueryType QueryType { get; set; }
 
         public string Query { get; set; }
+        public string Role { get; set; }
         public string ConversationId { get; set; }
     }
 
-    public class TextQueuryResponse
+    public class TextQueryResponse
     {
         public string Response { get; set; }
         public string ConversationId { get; set; }

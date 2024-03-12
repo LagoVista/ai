@@ -24,7 +24,7 @@ namespace LagoVista.AI.Rest
         }
 
         [HttpPost("/api/ai/textquery")]
-        public  Task<InvokeResult<TextQueuryResponse>> QueryAsync([FromBody] TextQuery query)
+        public  Task<InvokeResult<TextQueryResponse>> QueryAsync([FromBody] TextQuery query)
         {
             return _queryManager.HandlePromptAsync(query);
         }

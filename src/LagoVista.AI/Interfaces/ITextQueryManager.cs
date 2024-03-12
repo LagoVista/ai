@@ -6,6 +6,6 @@ namespace LagoVista.AI.Interfaces
 {
     public interface ITextQueryManager
     {
-        Task<InvokeResult<TextQueuryResponse>> HandlePromptAsync(TextQuery query);
+        Task<InvokeResult<TextQueryResponse>> HandlePromptAsync(TextQuery query);
     }
 }

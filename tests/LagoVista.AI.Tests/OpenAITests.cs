@@ -1,6 +1,7 @@
 ﻿using LagoVista.AI.Interfaces;
 using LagoVista.AI.Managers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,10 +33,12 @@ namespace LagoVista.AI.Tests
         [TestMethod]
         public async Task TestIt()
         {
-           var result = await  _mgr.HandlePromptAsync(new Models.TextQuery()
+            var result = await _mgr.HandlePromptAsync(new Models.TextQuery()            
             {
-                Query = "How can sensors be used in the boating industry?"
+                Query = "How can sensors be used in the pet care industry?"
             });
+
+            Console.WriteLine(JsonConvert.SerializeObject(result));
         }
 
     }
