@@ -45,14 +45,23 @@ namespace LagoVista.AI.Managers
                 var responeJSON = await response.Content.ReadAsStringAsync();
                 var result = JsonConvert.DeserializeObject<OpenAIResponse>(responeJSON);
 
-                var queryResponse = new TextQueryResponse()
+                if (result.choices?.Count > 0)
                 {
-                    ConversationId = result.id,
-                    Response = result.choices.First().message.content
-                };
-                                
-                return InvokeResult<TextQueryResponse>.Create(queryResponse); 
+                    var queryResponse = new TextQueryResponse()
+                    {
+                        ConversationId = result.id,
+                        Response = result.choices.First().message.content
+                    };
 
+                    return InvokeResult<TextQueryResponse>.Create(queryResponse);
+                }
+                else
+                {
+                    return InvokeResult<TextQueryResponse>.Create(new TextQueryResponse()
+                    {
+                        Response = "Please try again."
+                    });
+                }
             }
 
             return InvokeResult<TextQueryResponse>.FromError("No respones");
