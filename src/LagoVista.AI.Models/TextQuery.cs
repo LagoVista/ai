@@ -25,4 +25,5 @@ namespace LagoVista.AI.Models
         public string Response { get; set; }
         public string ConversationId { get; set; }
     }
+    
 }

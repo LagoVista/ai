@@ -41,6 +41,20 @@ namespace LagoVista.AI.Tests
             Console.WriteLine(JsonConvert.SerializeObject(result));
         }
 
+        [TestMethod]
+        public async Task ImageGenerationTest()
+        {
+            var result = await _mgr.GenerateImageAsync(new Models.ImageGenerationRequests()
+            {
+                //AdditionalDetails = "Generate a photo realistic image of someone riding a bike on a trail in Iowa"
+                ImageType = "Photo Realistic",
+                ContentType = "Sensor on a tractor",
+                AdditionalDetails = "The tractor is old"
+            }); ; ;
+
+            Console.WriteLine(JsonConvert.SerializeObject(result));
+        }
+
     }
 
     internal class OpenAISettings : IOpenAISettings

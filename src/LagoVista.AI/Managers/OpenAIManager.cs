@@ -1,9 +1,8 @@
 ﻿using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
 using LagoVista.Core.Validation;
+using LagoVista.MediaServices.Interfaces;
 using Newtonsoft.Json;
-//using Rystem.OpenAi;
-//using Rystem.OpenAi.Chat;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,9 +11,10 @@ using System.Threading.Tasks;
 
 namespace LagoVista.AI.Managers
 {
-    public class OpenAIManager : ITextQueryManager
+    public class OpenAIManager : ITextQueryManager, IImageGeneratorManager
     {
         IOpenAISettings _settings;
+        IMediaServicesManager _mediaServicesManager;
 
         const string APIName = "nuvai";
 
@@ -63,8 +63,107 @@ namespace LagoVista.AI.Managers
                     });
                 }
             }
+        }
 
-            return InvokeResult<TextQueryResponse>.FromError("No respones");
+        public async Task<InvokeResult<ImageGenerationResponse[]>> GenerateImageAsync(ImageGenerationRequests imageRequest)
+        {
+            using (var client = new HttpClient())
+            {
+                var prompt = "Generate a " + (String.IsNullOrEmpty(imageRequest.ImageType) ? "image" : imageRequest.ImageType);
+                prompt += $" {imageRequest.ContentType} {imageRequest.AdditionalDetails}";
+              
+                var request = new GenerateImageRequest()
+                {
+                    Prompt = prompt,
+                    Amount = imageRequest.Quantity,
+                    Size = imageRequest.Size                    
+                };
+
+                var json = JsonConvert.SerializeObject(request);
+                //var stringContent = new StringContent(json, System.Text.Encoding.ASCII, "application/json");
+                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _settings.OpenAIApiKey);
+                var response = await client.PostAsJsonAsync($"{_settings.OpenAIUrl}/v1/images/generations", request);
+                
+                var responeJSON = await response.Content.ReadAsStringAsync();
+                var result = JsonConvert.DeserializeObject<OpenAIImageResponse>(responeJSON);
+
+                var generationResponse = new List<ImageGenerationResponse>();
+
+                foreach(var data in result.data)
+                {
+                    generationResponse.Add(new ImageGenerationResponse()
+                    {
+                         ImageUrl = data.url,
+                         NewResponse = data.revised_prompt
+                    });
+                }
+
+                return InvokeResult<ImageGenerationResponse[]>.Create(generationResponse.ToArray());
+            }
+        }
+
+        internal class GenerateImageRequest
+        {
+            /// <summary>
+            ///     The prompt for the image generation.
+            /// </summary>
+            [JsonProperty("prompt")]
+            public string Prompt { get; set; }
+
+            /// <summary>
+            ///     The name of the model to use for 
+            ///     image generation.
+            /// </summary>
+            [JsonProperty("model")]
+            public string Model { get; } = "dall-e-3";
+
+            /// <summary>
+            ///     The number of images to generate.
+            /// </summary>
+            [JsonProperty("n")]
+            public int Amount { get; set; } = 1;
+
+            /// <summary>
+            ///     The quality of the generated image.
+            /// </summary>
+            [JsonProperty("quality")]
+            public string Quality { get; set; } = "standard";
+
+            /// <summary>
+            ///     The format of the response.
+            /// </summary>
+            [JsonProperty("response_format")]
+            public string ResponseFormat { get; } = "url";
+
+            /// <summary>
+            ///     The size of the generated image.
+            /// </summary>
+            [JsonProperty("size")]
+            public string Size { get; set; } = "1024x1024";
+
+            /// <summary>
+            ///     The style of the generated image.
+            /// </summary>
+            [JsonProperty("style")]
+            public string Style { get; set; } = "vivid";
+
+            /// <summary>
+            ///     The user requesting the image generation.
+            /// </summary>
+            [JsonProperty("user")]
+            public string User { get; set; } = string.Empty;
+        }
+
+        public class OpenAIImageResponse
+        {
+            public long created { get; set; }
+            public List<OpenAIImageResponseData> data { get; set; }
+        }
+
+        public class OpenAIImageResponseData
+        {
+            public string revised_prompt { get; set; }
+            public string url { get; set; }
         }
 
         private class OpenAIRequest
