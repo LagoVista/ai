@@ -16,6 +16,7 @@ namespace LagoVista.AI
             services.AddTransient<ILabelManager, LabelManager>();
             services.AddTransient<IExperimentResultManager, ExperimentResultManager>();
             services.AddTransient<ITextQueryManager, OpenAIManager>();
+            services.AddTransient<IImageGeneratorManager, OpenAIManager>();
         }
     }
 }

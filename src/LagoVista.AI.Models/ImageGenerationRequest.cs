@@ -4,14 +4,13 @@ using System.Text;
 
 namespace LagoVista.AI.Models
 {
-    public class ImageGenerationRequests
+    public class ImageGenerationRequest
     {
         public int NumberGenerated { get; set; } = 1;
         public string ImageType { get; set; }
         public string ContentType { get; set; }
         public string AdditionalDetails { get; set; }
-        public int Quantity { get; set; }
-
+  
         public string Size { get; set; } = "1024x1024";
     }
 

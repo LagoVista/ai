@@ -1,7 +1,6 @@
 ﻿using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
 using LagoVista.Core.Validation;
-using LagoVista.MediaServices.Interfaces;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -14,7 +13,6 @@ namespace LagoVista.AI.Managers
     public class OpenAIManager : ITextQueryManager, IImageGeneratorManager
     {
         IOpenAISettings _settings;
-        IMediaServicesManager _mediaServicesManager;
 
         const string APIName = "nuvai";
 
@@ -65,7 +63,7 @@ namespace LagoVista.AI.Managers
             }
         }
 
-        public async Task<InvokeResult<ImageGenerationResponse[]>> GenerateImageAsync(ImageGenerationRequests imageRequest)
+        public async Task<InvokeResult<ImageGenerationResponse[]>> GenerateImageAsync(ImageGenerationRequest imageRequest)
         {
             using (var client = new HttpClient())
             {
@@ -75,17 +73,21 @@ namespace LagoVista.AI.Managers
                 var request = new GenerateImageRequest()
                 {
                     Prompt = prompt,
-                    Amount = imageRequest.Quantity,
-                    Size = imageRequest.Size                    
+                    Amount = imageRequest.NumberGenerated,
+                    Size = imageRequest.Size       
                 };
 
                 var json = JsonConvert.SerializeObject(request);
-                //var stringContent = new StringContent(json, System.Text.Encoding.ASCII, "application/json");
-                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _settings.OpenAIApiKey);
-                var response = await client.PostAsJsonAsync($"{_settings.OpenAIUrl}/v1/images/generations", request);
+                var stringContent = new StringContent(json, System.Text.Encoding.ASCII, "application/json");
                 
-                var responeJSON = await response.Content.ReadAsStringAsync();
-                var result = JsonConvert.DeserializeObject<OpenAIImageResponse>(responeJSON);
+                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _settings.OpenAIApiKey);
+                var response = await client.PostAsync($"{_settings.OpenAIUrl}/v1/images/generations", stringContent);
+                
+                var responseJSON = await response.Content.ReadAsStringAsync();
+
+                Console.WriteLine(json);
+                Console.WriteLine(responseJSON);
+                var result = JsonConvert.DeserializeObject<OpenAIImageResponse>(responseJSON);
 
                 var generationResponse = new List<ImageGenerationResponse>();
 

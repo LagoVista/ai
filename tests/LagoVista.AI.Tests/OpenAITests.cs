@@ -44,7 +44,7 @@ namespace LagoVista.AI.Tests
         [TestMethod]
         public async Task ImageGenerationTest()
         {
-            var result = await _mgr.GenerateImageAsync(new Models.ImageGenerationRequests()
+            var result = await _mgr.GenerateImageAsync(new Models.ImageGenerationRequest()
             {
                 //AdditionalDetails = "Generate a photo realistic image of someone riding a bike on a trail in Iowa"
                 ImageType = "Photo Realistic",
