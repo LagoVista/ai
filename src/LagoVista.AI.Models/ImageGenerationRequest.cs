@@ -11,6 +11,8 @@ namespace LagoVista.AI.Models
         public string ContentType { get; set; }
         public string AdditionalDetails { get; set; }
   
+        public string FullRequest { get; set; }
+
         public string Size { get; set; } = "1024x1024";
     }
 

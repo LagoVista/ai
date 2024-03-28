@@ -67,8 +67,17 @@ namespace LagoVista.AI.Managers
         {
             using (var client = new HttpClient())
             {
-                var prompt = "Generate a " + (String.IsNullOrEmpty(imageRequest.ImageType) ? "image" : imageRequest.ImageType);
-                prompt += $" {imageRequest.ContentType} {imageRequest.AdditionalDetails}";
+                var prompt = imageRequest.FullRequest;
+                if (String.IsNullOrEmpty(prompt))
+                {
+                    prompt = "Generate a " + (String.IsNullOrEmpty(imageRequest.ImageType) ? "image" : imageRequest.ImageType);
+                    prompt += $" {imageRequest.ContentType} {imageRequest.AdditionalDetails}";
+                }
+
+                if(String.IsNullOrEmpty(prompt))
+                {
+                    return InvokeResult<ImageGenerationResponse[]>.FromError("Missing image request");
+                }
               
                 var request = new GenerateImageRequest()
                 {
