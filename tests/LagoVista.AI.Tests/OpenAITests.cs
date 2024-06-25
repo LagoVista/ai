@@ -35,7 +35,7 @@ namespace LagoVista.AI.Tests
         {
             var result = await _mgr.HandlePromptAsync(new Models.TextQuery()            
             {
-                Query = "How can sensors be used in the pet care industry?"
+                Query = "Generate an image of an upside down car"
             });
 
             Console.WriteLine(JsonConvert.SerializeObject(result));

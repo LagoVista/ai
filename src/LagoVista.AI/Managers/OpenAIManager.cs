@@ -27,7 +27,7 @@ namespace LagoVista.AI.Managers
             {
                 var request = new OpenAIRequest()
                 {
-                    model = "gpt-3.5-turbo",                    
+                    model = "gpt-4",                    
                 };
 
                 request.messages.Add(new OpenAIMessage()
@@ -108,6 +108,11 @@ namespace LagoVista.AI.Managers
                          NewResponse = data.revised_prompt
                     });
                 }
+
+                var genResult = await HandlePromptAsync(new TextQuery()
+                {
+                    Query = "please give me the gen_ids for the most recent generated image"
+                });
 
                 return InvokeResult<ImageGenerationResponse[]>.Create(generationResponse.ToArray());
             }
