@@ -49,7 +49,8 @@ namespace LagoVista.AI.Tests
                 //AdditionalDetails = "Generate a photo realistic image of someone riding a bike on a trail in Iowa"
                 ImageType = "Photo Realistic",
                 ContentType = "Sensor on a tractor",
-                AdditionalDetails = "The tractor is old"
+                AdditionalDetails = "The tractor is old",
+                Size = "1792x102"
             }); ; ;
 
             Console.WriteLine(JsonConvert.SerializeObject(result));
