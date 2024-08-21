@@ -50,7 +50,7 @@ namespace LagoVista.AI.Tests
                 ImageType = "Photo Realistic",
                 ContentType = "Sensor on a tractor",
                 AdditionalDetails = "The tractor is old",
-                Size = "1792x102"
+                Size = "1792x1024"
             }); ; ;
 
             Console.WriteLine(JsonConvert.SerializeObject(result));
