@@ -87,7 +87,10 @@ namespace LagoVista.AI.Models
                 IsPublic = IsPublic,
                 Key = Key,
                 Name = Name,
-                Category = Category,
+                Category = Category?.Text,
+                CategoryId = Category?.Id,
+                CategoryKey = Category?.Key,
+
                 Revisions = new List<ModelRevisionSummary>(Revisions.Select(rev => rev.ToSummary()))
             };
         }
@@ -121,7 +124,7 @@ namespace LagoVista.AI.Models
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.Models_Title, AIResources.Names.Model_Help, AIResources.Names.Model_Description, EntityDescriptionAttribute.EntityTypes.Summary, typeof(AIResources),
         GetUrl: "/api/ml/model/{id}", GetListUrl: "/api/ml/models", FactoryUrl: "/api/ml/model/factory", SaveUrl: "/api/ml/model", DeleteUrl: "/api/ml/model/{id}",
         ListUIUrl: "/mlworkbench/models", EditUIUrl: "/mlworkbench/model/{id}", CreateUIUrl: "/mlworkbench/model/add", Icon: "icon-ae-database-3")]
-    public class ModelSummary : CategorizedSummaryData
+    public class ModelSummary : SummaryData
     {
         public List<ModelRevisionSummary> Revisions { get; set; }
     }

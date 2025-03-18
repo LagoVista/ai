@@ -45,7 +45,9 @@ namespace LagoVista.AI.Models
                 Key = Key,
                 IsPublic = IsPublic,
                 Name = Name,
-                Category = Category                
+                Category = Category?.Text,
+                CategoryId = Category?.Id,
+                CategoryKey = Category?.Key,
             };
         }
 
@@ -67,7 +69,7 @@ namespace LagoVista.AI.Models
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.LabelSets_Title, AIResources.Names.LabelSet_Help, AIResources.Names.LabelSet_Help, EntityDescriptionAttribute.EntityTypes.Summary, typeof(AIResources),
         FactoryUrl: "/api/ml/labelset/factory", GetUrl: "/api/ml/labelset/{id}", DeleteUrl: "/api/ml/labelset/{id}", SaveUrl: "/api/ml/labelset", GetListUrl: "/api/ml/labelsets",
         ListUIUrl: "/mlworkbench/settings/labels", CreateUIUrl: "/mlworkbench/settings/label/add", EditUIUrl: "/mlworkbench/settings/label/{id}", Icon: "icon-pz-text-2")]
-    public class ModelLabelSetSummary : CategorizedSummaryData
+    public class ModelLabelSetSummary : SummaryData
     {
 
     }
