@@ -97,7 +97,7 @@ namespace LagoVista.AI.Models
 
         public String Datestamp { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.ModelRevision_InputShape, HelpResource: AIResources.Names.ModelRevision_FileName, FieldType: FieldTypes.FileUpload, IsRequired: true, ResourceType: typeof(AIResources))]
+        [FormField(LabelResource: AIResources.Names.ModelRevision_ModelFile, IsFileUploadImage:false, FieldType: FieldTypes.FileUpload, IsRequired: true, ResourceType: typeof(AIResources))]
         public String FileName { get; set; }
 
         [FormField(LabelResource: AIResources.Names.ModelRevision_InputShape, HelpResource: AIResources.Names.ModelRevision_InputShape_Help, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]

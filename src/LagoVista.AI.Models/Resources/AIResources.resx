@@ -267,6 +267,9 @@
   <data name="ModelRevision_Minor_Version_Number" xml:space="preserve">
     <value>Minor Version Number</value>
   </data>
+  <data name="ModelRevision_ModelFile" xml:space="preserve">
+    <value>Model File</value>
+  </data>
   <data name="ModelRevision_Notes" xml:space="preserve">
     <value>Notes</value>
   </data>
@@ -392,6 +395,9 @@
   </data>
   <data name="Model_Type" xml:space="preserve">
     <value>Model Type</value>
+  </data>
+  <data name="Model_Type_Onnx" xml:space="preserve">
+    <value>ONNX</value>
   </data>
   <data name="Model_Type_PyTorch" xml:space="preserve">
     <value>PyTorch</value>

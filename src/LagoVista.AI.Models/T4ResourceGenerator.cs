@@ -1,4 +1,4 @@
-﻿/*2/18/2024 5:59:21 AM*/
+﻿/*7/23/2025 7:27:56 AM*/
 using System.Globalization;
 using System.Reflection;
 
@@ -177,6 +177,9 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:Model_Type
 
 		public static string Model_Type { get { return GetResourceString("Model_Type"); } }
+//Resources:AIResources:Model_Type_Onnx
+
+		public static string Model_Type_Onnx { get { return GetResourceString("Model_Type_Onnx"); } }
 //Resources:AIResources:Model_Type_PyTorch
 
 		public static string Model_Type_PyTorch { get { return GetResourceString("Model_Type_PyTorch"); } }
@@ -255,6 +258,9 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:ModelRevision_Minor_Version_Number
 
 		public static string ModelRevision_Minor_Version_Number { get { return GetResourceString("ModelRevision_Minor_Version_Number"); } }
+//Resources:AIResources:ModelRevision_ModelFile
+
+		public static string ModelRevision_ModelFile { get { return GetResourceString("ModelRevision_ModelFile"); } }
 //Resources:AIResources:ModelRevision_Notes
 
 		public static string ModelRevision_Notes { get { return GetResourceString("ModelRevision_Notes"); } }
@@ -422,6 +428,7 @@ namespace LagoVista.AI.Models.Resources
 			public const string Model_Revisions = "Model_Revisions";
 			public const string Model_Title = "Model_Title";
 			public const string Model_Type = "Model_Type";
+			public const string Model_Type_Onnx = "Model_Type_Onnx";
 			public const string Model_Type_PyTorch = "Model_Type_PyTorch";
 			public const string Model_Type_Select = "Model_Type_Select";
 			public const string Model_Type_TensorFlow = "Model_Type_TensorFlow";
@@ -448,6 +455,7 @@ namespace LagoVista.AI.Models.Resources
 			public const string ModelRevision_LabelSet = "ModelRevision_LabelSet";
 			public const string ModelRevision_LabelSet_Help = "ModelRevision_LabelSet_Help";
 			public const string ModelRevision_Minor_Version_Number = "ModelRevision_Minor_Version_Number";
+			public const string ModelRevision_ModelFile = "ModelRevision_ModelFile";
 			public const string ModelRevision_Notes = "ModelRevision_Notes";
 			public const string ModelRevision_Preprocessors = "ModelRevision_Preprocessors";
 			public const string ModelRevision_Quality = "ModelRevision_Quality";

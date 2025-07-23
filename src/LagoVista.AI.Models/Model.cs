@@ -18,6 +18,10 @@ namespace LagoVista.AI.Models
 
         [EnumLabel(Model.ModelType_TF_Lite, AIResources.Names.Model_Type_TensorFlow_Lite, typeof(AIResources))]
         TensorFlowLite,
+
+        [EnumLabel(Model.ModelType_Onnx, AIResources.Names.Model_Type_Onnx, typeof(AIResources))]
+        Onyx,
+
     }
 
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.Model_Title, AIResources.Names.Model_Help, AIResources.Names.Model_Description, EntityDescriptionAttribute.EntityTypes.CoreIoTModel, typeof(AIResources),
@@ -28,6 +32,7 @@ namespace LagoVista.AI.Models
         public const string ModelType_TF = "tensorflow";
         public const string ModelType_TF_Lite = "tensorflow_lite";
         public const string ModelType_PyTorch = "pytorch";
+        public const string ModelType_Onnx = "onnx";
 
         public Model()
         {
@@ -39,10 +44,6 @@ namespace LagoVista.AI.Models
 
         [FormField(LabelResource: AIResources.Names.Common_Icon, FieldType: FieldTypes.Icon, ResourceType: typeof(AIResources))]
         public string Icon { get; set; }
-
-        [FormField(LabelResource: AIResources.Names.Common_Category, FieldType: FieldTypes.Category, WaterMark: AIResources.Names.Common_SelectCategory, ResourceType: typeof(AIResources), IsRequired: false, IsUserEditable: true)]
-        public EntityHeader Category { get; set; }
-
 
 
         [FormField(LabelResource: AIResources.Names.Common_Description, FieldType: FieldTypes.MultiLineText, ResourceType: typeof(AIResources))]
@@ -105,7 +106,6 @@ namespace LagoVista.AI.Models
                 nameof(Category),
                 nameof(ModelType),
                 nameof(PreferredRevision),
-                nameof(LabelSet),
                 nameof(Description),
             };
         }
