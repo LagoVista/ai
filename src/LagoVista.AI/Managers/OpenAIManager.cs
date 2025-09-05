@@ -2,6 +2,7 @@
 using LagoVista.AI.Models;
 using LagoVista.Core.Validation;
 using Newtonsoft.Json;
+using OpenAI.Responses;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -78,36 +79,44 @@ namespace LagoVista.AI.Managers
                 {
                     return InvokeResult<ImageGenerationResponse[]>.FromError("Missing image request");
                 }
-              
-                var request = new GenerateImageRequest()
+
+                var request = new ResponseImageApi()
                 {
-                    Prompt = prompt,
-                    Amount = imageRequest.NumberGenerated,
-                    Size = imageRequest.Size       
+                    Input = prompt,
+                    Model = "gpt-5"
                 };
+
+                request.Tools.Add(new ToolType() { Type = "image_generation" });
 
                 var json = JsonConvert.SerializeObject(request);
                 var stringContent = new StringContent(json, System.Text.Encoding.ASCII, "application/json");
                 
                 client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _settings.OpenAIApiKey);
-                var response = await client.PostAsync($"{_settings.OpenAIUrl}/v1/images/generations", stringContent);
+                var response = await client.PostAsync($"{_settings.OpenAIUrl}/v1/responses", stringContent);
                 
                 var responseJSON = await response.Content.ReadAsStringAsync();
 
-                Console.WriteLine(json);
-                Console.WriteLine(responseJSON);
-                var result = JsonConvert.DeserializeObject<OpenAIImageResponse>(responseJSON);
+                //Console.WriteLine(json);
+                //Console.WriteLine(responseJSON);
+                var result = JsonConvert.DeserializeObject<Root>(responseJSON);
 
                 var generationResponse = new List<ImageGenerationResponse>();
 
-                foreach(var data in result.data)
-                {
-                    generationResponse.Add(new ImageGenerationResponse()
-                    {
-                         ImageUrl = data.url,
-                         NewResponse = data.revised_prompt
-                    });
-                }
+                var imageResult = result.output.Single(res => res.type == "image_generation_call");
+                var b64 = imageResult.result;
+
+                var buffer = Convert.FromBase64String(b64);
+                System.IO.File.WriteAllBytes(@"X:\image.png", buffer);
+                //foreach(var data in result.output)
+                //{
+
+
+                //    generationResponse.Add(new ImageGenerationResponse()
+                //    {
+                //   //      ImageUrl = data.url,
+                //         NewResponse = data.revised_prompt
+                //    });
+                //}
 
                 var genResult = await HandlePromptAsync(new TextQuery()
                 {
@@ -116,6 +125,26 @@ namespace LagoVista.AI.Managers
 
                 return InvokeResult<ImageGenerationResponse[]>.Create(generationResponse.ToArray());
             }
+        }
+
+        internal class ResponseImageApi
+        {
+            [JsonProperty("input")]
+            public string Input { get; set; }
+
+            [JsonProperty("model")]
+            public string Model { get; set; }
+
+            [JsonProperty("tools")]
+            public List<ToolType> Tools { get; set; } = new List<ToolType>();
+
+
+        }
+
+        internal class ToolType
+        {
+            [JsonProperty("type")]
+            public string Type { get; set; }
         }
 
         internal class GenerateImageRequest
@@ -131,8 +160,8 @@ namespace LagoVista.AI.Managers
             ///     image generation.
             /// </summary>
             [JsonProperty("model")]
-            public string Model { get; } = "dall-e-3";
-
+            public string Model { get; set; } = "dall-e-3";
+            
             /// <summary>
             ///     The number of images to generate.
             /// </summary>
@@ -229,7 +258,116 @@ namespace LagoVista.AI.Managers
             public string role { get; set; }
             public string content { get; set; }
         }
-    }    
+    }
+
+    public class Content
+    {
+        public string type { get; set; }
+        public List<object> annotations { get; set; }
+        public List<object> logprobs { get; set; }
+        public string text { get; set; }
+    }
+
+    public class Format
+    {
+        public string type { get; set; }
+    }
+
+    public class InputTokensDetails
+    {
+        public int cached_tokens { get; set; }
+    }
+
+    public class Metadata
+    {
+    }
+
+    public class Output
+    {
+        public string id { get; set; }
+        public string type { get; set; }
+        public List<object> summary { get; set; }
+        public string status { get; set; }
+        public string background { get; set; }
+        public string output_format { get; set; }
+        public string quality { get; set; }
+        public string result { get; set; }
+        public string revised_prompt { get; set; }
+        public string size { get; set; }
+        public List<Content> content { get; set; }
+        public string role { get; set; }
+    }
+
+    public class OutputTokensDetails
+    {
+        public int reasoning_tokens { get; set; }
+    }
+
+    public class Reasoning
+    {
+        public string effort { get; set; }
+        public object summary { get; set; }
+    }
+
+    public class Root
+    {
+        public string id { get; set; }
+        public string @object { get; set; }
+        public int created_at { get; set; }
+        public string status { get; set; }
+        public bool background { get; set; }
+        public object error { get; set; }
+        public object incomplete_details { get; set; }
+        public object instructions { get; set; }
+        public object max_output_tokens { get; set; }
+        public object max_tool_calls { get; set; }
+        public string model { get; set; }
+        public List<Output> output { get; set; }
+        public bool parallel_tool_calls { get; set; }
+        public object previous_response_id { get; set; }
+        public object prompt_cache_key { get; set; }
+        public Reasoning reasoning { get; set; }
+        public object safety_identifier { get; set; }
+        public string service_tier { get; set; }
+        public bool store { get; set; }
+        public double temperature { get; set; }
+        public Text text { get; set; }
+        public string tool_choice { get; set; }
+        public List<Tool> tools { get; set; }
+        public int top_logprobs { get; set; }
+        public double top_p { get; set; }
+        public string truncation { get; set; }
+        public Usage usage { get; set; }
+        public object user { get; set; }
+        public Metadata metadata { get; set; }
+    }
+
+    public class Text
+    {
+        public Format format { get; set; }
+        public string verbosity { get; set; }
+    }
+
+    public class Tool
+    {
+        public string type { get; set; }
+        public string background { get; set; }
+        public string moderation { get; set; }
+        public int n { get; set; }
+        public int output_compression { get; set; }
+        public string output_format { get; set; }
+        public string quality { get; set; }
+        public string size { get; set; }
+    }
+
+    public class Usage
+    {
+        public int input_tokens { get; set; }
+        public InputTokensDetails input_tokens_details { get; set; }
+        public int output_tokens { get; set; }
+        public OutputTokensDetails output_tokens_details { get; set; }
+        public int total_tokens { get; set; }
+    }
 }
 
    

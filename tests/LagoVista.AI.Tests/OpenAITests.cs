@@ -50,7 +50,9 @@ namespace LagoVista.AI.Tests
                 ImageType = "Photo Realistic",
                 ContentType = "Sensor on a tractor",
                 AdditionalDetails = "The tractor is old",
-                Size = "1792x1024"
+                Size = "1792x1024",
+                FullRequest = "Generate an image of gray tabby cat hugging an otter with an orange scarf"
+
             }); ; ;
 
             Console.WriteLine(JsonConvert.SerializeObject(result));
