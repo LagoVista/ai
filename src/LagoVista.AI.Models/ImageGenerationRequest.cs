@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LagoVista.Core.Models;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -6,6 +7,9 @@ namespace LagoVista.AI.Models
 {
     public class ImageGenerationRequest
     {
+        public string ResourceEntityType { get; set; }
+        public string ResourceEntityFieldName { get; set; }
+
         public int NumberGenerated { get; set; } = 1;
         public string ImageType { get; set; }
         public string ContentType { get; set; }
@@ -14,6 +18,10 @@ namespace LagoVista.AI.Models
         public string FullRequest { get; set; }
 
         public string Size { get; set; } = "1024x1024";
+    
+        public string MediaResourceId { get; set; }
+        public string PreviousResponseId { get; set; }
+        public bool IsPublic { get; set; }
     }
 
     public class ImageGenerationResponse

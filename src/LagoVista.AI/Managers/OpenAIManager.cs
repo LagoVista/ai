@@ -1,10 +1,14 @@
 ﻿using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
+using LagoVista.Core;
+using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
+using LagoVista.MediaServices.Interfaces;
+using LagoVista.MediaServices.Models;
 using Newtonsoft.Json;
-using OpenAI.Responses;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -13,13 +17,15 @@ namespace LagoVista.AI.Managers
 {
     public class OpenAIManager : ITextQueryManager, IImageGeneratorManager
     {
-        IOpenAISettings _settings;
+        private readonly IOpenAISettings _settings;
+        private readonly IMediaServicesManager _mediaSerivcesManager;
 
         const string APIName = "nuvai";
 
-        public OpenAIManager(IOpenAISettings settings)
+        public OpenAIManager(IOpenAISettings settings, IMediaServicesManager mediaSerivcesManager)
         {
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+            _mediaSerivcesManager = mediaSerivcesManager ?? throw new ArgumentNullException(nameof(mediaSerivcesManager));
         }
 
         public async Task<InvokeResult<TextQueryResponse>> HandlePromptAsync(TextQuery query)
@@ -64,7 +70,7 @@ namespace LagoVista.AI.Managers
             }
         }
 
-        public async Task<InvokeResult<ImageGenerationResponse[]>> GenerateImageAsync(ImageGenerationRequest imageRequest)
+        public async Task<InvokeResult<MediaResource[]>> GenerateImageAsync(ImageGenerationRequest imageRequest, EntityHeader org, EntityHeader user)
         {
             using (var client = new HttpClient())
             {
@@ -77,53 +83,68 @@ namespace LagoVista.AI.Managers
 
                 if(String.IsNullOrEmpty(prompt))
                 {
-                    return InvokeResult<ImageGenerationResponse[]>.FromError("Missing image request");
+                    return InvokeResult<MediaResource[]>.FromError("Missing image request");
                 }
 
                 var request = new ResponseImageApi()
                 {
                     Input = prompt,
-                    Model = "gpt-5"
+                    ImagesGenerated = imageRequest.NumberGenerated,
+                    PreviousResponse = imageRequest.PreviousResponseId
                 };
-
-                request.Tools.Add(new ToolType() { Type = "image_generation" });
 
                 var json = JsonConvert.SerializeObject(request);
                 var stringContent = new StringContent(json, System.Text.Encoding.ASCII, "application/json");
                 
                 client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _settings.OpenAIApiKey);
                 var response = await client.PostAsync($"{_settings.OpenAIUrl}/v1/responses", stringContent);
-                
+               
                 var responseJSON = await response.Content.ReadAsStringAsync();
-
-                //Console.WriteLine(json);
-                //Console.WriteLine(responseJSON);
                 var result = JsonConvert.DeserializeObject<Root>(responseJSON);
 
                 var generationResponse = new List<ImageGenerationResponse>();
 
-                var imageResult = result.output.Single(res => res.type == "image_generation_call");
-                var b64 = imageResult.result;
+                var imageResults = result.output.Where(res => res.type == "image_generation_call");
+               
+                var resourceRecords = new List<MediaResource>();
 
-                var buffer = Convert.FromBase64String(b64);
-                System.IO.File.WriteAllBytes(@"X:\image.png", buffer);
-                //foreach(var data in result.output)
-                //{
-
-
-                //    generationResponse.Add(new ImageGenerationResponse()
-                //    {
-                //   //      ImageUrl = data.url,
-                //         NewResponse = data.revised_prompt
-                //    });
-                //}
-
-                var genResult = await HandlePromptAsync(new TextQuery()
+                foreach (var imageResult in imageResults)
                 {
-                    Query = "please give me the gen_ids for the most recent generated image"
-                });
 
-                return InvokeResult<ImageGenerationResponse[]>.Create(generationResponse.ToArray());
+                    var b64 = imageResult.result;
+                    var buffer = Convert.FromBase64String(b64);
+                    using (var ms = new MemoryStream(buffer))
+                    {
+                        var resourceResult = await _mediaSerivcesManager.AddResourceMediaAsync(Guid.NewGuid().ToId(), ms, $"generated.{imageResult.output_format}", imageResult.output_format, org, user, false, imageRequest.IsPublic);
+                        if (resourceResult.Successful)
+                        {
+                            var categoryKey = $"{imageRequest.ResourceEntityType.ToLower()}{imageRequest.ResourceEntityFieldName.ToLower()}";
+                            var categoryName = $"{imageRequest.ResourceEntityFieldName} {imageRequest.ResourceEntityFieldName}";
+
+                            var resource = resourceResult.Result;
+                            resource.Category = EntityHeader.Create(categoryKey, categoryKey, categoryName);
+                            resource.Width = imageResult.Width;
+                            resource.Height = imageResult.Height;
+
+                            var history = new MediaResourceHistory()
+                            {
+                                OriginalPrompt = prompt,
+                                ResponseId = imageResult.id,
+                                StorageReferenceName = resource.StorageReferenceName,
+                            };
+
+                            resource.History.Add(history);
+
+                            resourceRecords.Add(resource);
+                        }
+                        else
+                        {
+                            InvokeResult<ImageGenerationResponse[]>.FromInvokeResult(resourceResult.ToInvokeResult());
+                        }
+                    }
+                }
+
+                return InvokeResult<MediaResource[]>.Create(resourceRecords.ToArray());
             }
         }
 
@@ -133,12 +154,16 @@ namespace LagoVista.AI.Managers
             public string Input { get; set; }
 
             [JsonProperty("model")]
-            public string Model { get; set; }
+            public string Model { get; set; } = "gpt-5";
 
             [JsonProperty("tools")]
-            public List<ToolType> Tools { get; set; } = new List<ToolType>();
+            public List<ToolType> Tools { get; set; } = new List<ToolType>() { new ToolType() { Type = "image_generation" } };
 
+            [JsonProperty("n")]
+            public int ImagesGenerated { get; set; } = 1;
 
+            [JsonProperty("previous_response_id")]
+            public string PreviousResponse { get; set; }
         }
 
         internal class ToolType
@@ -296,6 +321,9 @@ namespace LagoVista.AI.Managers
         public string size { get; set; }
         public List<Content> content { get; set; }
         public string role { get; set; }
+
+        public int Width { get => Convert.ToInt32(size.Split('x')[0]);}
+        public int Height { get => Convert.ToInt32(size.Split('x')[1]); }
     }
 
     public class OutputTokensDetails

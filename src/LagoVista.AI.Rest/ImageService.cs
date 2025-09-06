@@ -4,6 +4,7 @@ using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.IoT.Web.Common.Attributes;
 using LagoVista.IoT.Web.Common.Controllers;
+using LagoVista.MediaServices.Models;
 using LagoVista.UserAdmin.Models.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -24,9 +25,9 @@ namespace LagoVista.AI.Rest
         }
 
         [HttpPost("/api/ai/image/generate")]
-        public Task<InvokeResult<ImageGenerationResponse[]>> QueryAsync([FromBody] ImageGenerationRequest request)
+        public Task<InvokeResult<MediaResource[]>> QueryAsync([FromBody] ImageGenerationRequest request)
         {
-            return _queryManager.GenerateImageAsync(request);
+            return _queryManager.GenerateImageAsync(request, OrgEntityHeader, UserEntityHeader);
         }
     }
 }

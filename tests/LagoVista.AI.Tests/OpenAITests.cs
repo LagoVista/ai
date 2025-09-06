@@ -1,6 +1,9 @@
 ﻿using LagoVista.AI.Interfaces;
 using LagoVista.AI.Managers;
+using LagoVista.Core.Models;
+using LagoVista.MediaServices.Interfaces;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -25,9 +28,7 @@ namespace LagoVista.AI.Tests
                 OpenAIUrl = Environment.GetEnvironmentVariable("OPEN_AI_URL")
             };
 
-            _mgr = new OpenAIManager(settings);
-
-       
+            _mgr = new OpenAIManager(settings, new Mock<IMediaServicesManager>().Object);
         }
 
         [TestMethod]
@@ -53,7 +54,7 @@ namespace LagoVista.AI.Tests
                 Size = "1792x1024",
                 FullRequest = "Generate an image of gray tabby cat hugging an otter with an orange scarf"
 
-            }); ; ;
+            }, EntityHeader.Create("id","text"), EntityHeader.Create("id", "text")); 
 
             Console.WriteLine(JsonConvert.SerializeObject(result));
         }

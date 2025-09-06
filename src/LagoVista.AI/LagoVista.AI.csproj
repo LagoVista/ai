@@ -6,11 +6,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LagoVista.AI.Models\LagoVista.AI.Models.csproj" />
-    <PackageReference Include="LagoVista.Core" Version="3.0.3033.1503" />
-    <PackageReference Include="LagoVista.IoT.Logging" Version="3.0.3033.1503" />
+    <PackageReference Include="LagoVista.MediaServices" Version="3.0.3034.0656" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.12.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="OpenAI" Version="2.3.0" />
   </ItemGroup>
 
 </Project>
