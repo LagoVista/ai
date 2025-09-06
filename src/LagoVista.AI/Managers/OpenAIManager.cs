@@ -74,12 +74,15 @@ namespace LagoVista.AI.Managers
         {
             using (var client = new HttpClient())
             {
+                client.Timeout = TimeSpan.FromSeconds(600);
                 var prompt = imageRequest.FullRequest;
                 if (String.IsNullOrEmpty(prompt))
                 {
                     prompt = "Generate a " + (String.IsNullOrEmpty(imageRequest.ImageType) ? "image" : imageRequest.ImageType);
                     prompt += $" {imageRequest.ContentType} {imageRequest.AdditionalDetails}";
                 }
+
+                prompt = imageRequest.AdditionalDetails;
 
                 if(String.IsNullOrEmpty(prompt))
                 {
@@ -89,18 +92,27 @@ namespace LagoVista.AI.Managers
                 var request = new ResponseImageApi()
                 {
                     Input = prompt,
-                    ImagesGenerated = imageRequest.NumberGenerated,
-                    PreviousResponse = imageRequest.PreviousResponseId
+                    PreviousResponse = String.IsNullOrEmpty(imageRequest.PreviousResponseId) ? null : imageRequest.PreviousResponseId,
                 };
 
                 var json = JsonConvert.SerializeObject(request);
+                Console.WriteLine("Request\r\n===================");
+                Console.WriteLine(json);
+                Console.WriteLine("\r\n");
+
                 var stringContent = new StringContent(json, System.Text.Encoding.ASCII, "application/json");
                 
                 client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _settings.OpenAIApiKey);
                 var response = await client.PostAsync($"{_settings.OpenAIUrl}/v1/responses", stringContent);
-               
+
                 var responseJSON = await response.Content.ReadAsStringAsync();
+                Console.WriteLine("Response\r\n===================");
+                Console.WriteLine(responseJSON);
+                Console.WriteLine("\r\n");
+
                 var result = JsonConvert.DeserializeObject<Root>(responseJSON);
+
+                Console.WriteLine(result);
 
                 var generationResponse = new List<ImageGenerationResponse>();
 
@@ -110,31 +122,20 @@ namespace LagoVista.AI.Managers
 
                 foreach (var imageResult in imageResults)
                 {
-
                     var b64 = imageResult.result;
                     var buffer = Convert.FromBase64String(b64);
                     using (var ms = new MemoryStream(buffer))
                     {
-                        var resourceResult = await _mediaSerivcesManager.AddResourceMediaAsync(Guid.NewGuid().ToId(), ms, $"generated.{imageResult.output_format}", imageResult.output_format, org, user, false, imageRequest.IsPublic);
+                        var fileName = $"generated{DateTime.UtcNow.Ticks}.{imageResult.output_format}";
+                        var resourceResult = String.IsNullOrEmpty(imageRequest.MediaResourceId) ?
+                            await _mediaSerivcesManager.AddResourceMediaAsync(Guid.NewGuid().ToId(), ms, fileName, imageResult.output_format, org, user, true, imageRequest.IsPublic,
+                                responseId: result.id, originalPrompt: prompt, revisedPrompt: imageResult.revised_prompt, entityTypeName: imageRequest.EntityTypeName, entityTypeFieldName: imageRequest.EntityFieldName, size: imageResult.size)
+                            :
+                            await _mediaSerivcesManager.AddResourceMediaRevisionAsync(imageRequest.MediaResourceId, ms, fileName, imageResult.output_format, org, user, true, imageRequest.IsPublic,
+                                responseId: result.id, originalPrompt: prompt, revisedPrompt: imageResult.revised_prompt, size: imageResult.size);
                         if (resourceResult.Successful)
                         {
-                            var categoryKey = $"{imageRequest.ResourceEntityType.ToLower()}{imageRequest.ResourceEntityFieldName.ToLower()}";
-                            var categoryName = $"{imageRequest.ResourceEntityFieldName} {imageRequest.ResourceEntityFieldName}";
-
                             var resource = resourceResult.Result;
-                            resource.Category = EntityHeader.Create(categoryKey, categoryKey, categoryName);
-                            resource.Width = imageResult.Width;
-                            resource.Height = imageResult.Height;
-
-                            var history = new MediaResourceHistory()
-                            {
-                                OriginalPrompt = prompt,
-                                ResponseId = imageResult.id,
-                                StorageReferenceName = resource.StorageReferenceName,
-                            };
-
-                            resource.History.Add(history);
-
                             resourceRecords.Add(resource);
                         }
                         else
@@ -159,8 +160,6 @@ namespace LagoVista.AI.Managers
             [JsonProperty("tools")]
             public List<ToolType> Tools { get; set; } = new List<ToolType>() { new ToolType() { Type = "image_generation" } };
 
-            [JsonProperty("n")]
-            public int ImagesGenerated { get; set; } = 1;
 
             [JsonProperty("previous_response_id")]
             public string PreviousResponse { get; set; }
