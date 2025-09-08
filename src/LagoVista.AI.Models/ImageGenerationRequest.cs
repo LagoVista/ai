@@ -7,6 +7,7 @@ namespace LagoVista.AI.Models
 {
     public class ImageGenerationRequest
     {
+        public string ResourceName { get; set; }
         public string EntityTypeName { get; set; }
         public string EntityFieldName { get; set; }
 

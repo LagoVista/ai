@@ -55,7 +55,8 @@ namespace LagoVista.AI.Managers
                     var queryResponse = new TextQueryResponse()
                     {
                         ConversationId = result.id,
-                        Response = result.choices.First().message.content
+                        Response = result.choices.First().message.content,
+                        
                     };
 
                     return InvokeResult<TextQueryResponse>.Create(queryResponse);
@@ -112,6 +113,11 @@ namespace LagoVista.AI.Managers
 
                 var result = JsonConvert.DeserializeObject<Root>(responseJSON);
 
+                if (result.error != null)
+                {
+                    return InvokeResult<MediaResource[]>.FromError(result.error.message);
+                }
+
                 Console.WriteLine(result);
 
                 var generationResponse = new List<ImageGenerationResponse>();
@@ -129,7 +135,7 @@ namespace LagoVista.AI.Managers
                         var fileName = $"generated{DateTime.UtcNow.Ticks}.{imageResult.output_format}";
                         var resourceResult = String.IsNullOrEmpty(imageRequest.MediaResourceId) ?
                             await _mediaSerivcesManager.AddResourceMediaAsync(Guid.NewGuid().ToId(), ms, fileName, imageResult.output_format, org, user, true, imageRequest.IsPublic,
-                                responseId: result.id, originalPrompt: prompt, revisedPrompt: imageResult.revised_prompt, entityTypeName: imageRequest.EntityTypeName, entityTypeFieldName: imageRequest.EntityFieldName, size: imageResult.size)
+                                responseId: result.id, originalPrompt: prompt, revisedPrompt: imageResult.revised_prompt, entityTypeName: imageRequest.EntityTypeName, entityTypeFieldName: imageRequest.EntityFieldName, size: imageResult.size, resourceName: imageRequest.ResourceName)
                             :
                             await _mediaSerivcesManager.AddResourceMediaRevisionAsync(imageRequest.MediaResourceId, ms, fileName, imageResult.output_format, org, user, true, imageRequest.IsPublic,
                                 responseId: result.id, originalPrompt: prompt, revisedPrompt: imageResult.revised_prompt, size: imageResult.size);
@@ -156,6 +162,7 @@ namespace LagoVista.AI.Managers
 
             [JsonProperty("model")]
             public string Model { get; set; } = "gpt-5";
+
 
             [JsonProperty("tools")]
             public List<ToolType> Tools { get; set; } = new List<ToolType>() { new ToolType() { Type = "image_generation" } };
@@ -336,6 +343,14 @@ namespace LagoVista.AI.Managers
         public object summary { get; set; }
     }
 
+    public class OpenAIError
+    {
+        public string message { get; set; }
+        public string type { get; set; }
+        public string param { get; set; }
+        public string code { get; set; }
+    }
+
     public class Root
     {
         public string id { get; set; }
@@ -343,7 +358,7 @@ namespace LagoVista.AI.Managers
         public int created_at { get; set; }
         public string status { get; set; }
         public bool background { get; set; }
-        public object error { get; set; }
+        public OpenAIError error { get; set; }
         public object incomplete_details { get; set; }
         public object instructions { get; set; }
         public object max_output_tokens { get; set; }
