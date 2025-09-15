@@ -6,12 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="Azure.Storage.Blobs" Version="12.13.1" />
-    <PackageReference Include="LagoVista.CloudStorage" Version="3.0.2467.1023" />
-    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.12.1" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.2" />
-    <PackageReference Include="Moq" Version="4.18.2" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.30.1" />
+    <PackageReference Include="LagoVista.CloudStorage" Version="3.0.3043.1839" />
     <ProjectReference Include="..\LagoVista.AI.Models\LagoVista.AI.Models.csproj" />
     <ProjectReference Include="..\LagoVista.AI\LagoVista.AI.csproj" />
   </ItemGroup>

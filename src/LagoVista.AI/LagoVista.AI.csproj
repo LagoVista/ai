@@ -6,7 +6,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LagoVista.AI.Models\LagoVista.AI.Models.csproj" />
-    <PackageReference Include="LagoVista.MediaServices" Version="3.0.3034.0656" />
+    <PackageReference Include="LagoVista.MediaServices" Version="3.0.3043.1839" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.12.1" />
   </ItemGroup>
 
