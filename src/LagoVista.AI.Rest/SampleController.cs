@@ -50,7 +50,7 @@ namespace LagoVista.AI.Rest
             {
                 var sample = new byte[stream.Length];
                 stream.Position = 0;
-                stream.Read(sample, 0, (int)stream.Length);
+                stream.ReadExactly(sample, 0, (int)stream.Length);
 
                 return _sampleManager.AddSampleAsync(sample, file.FileName, file.ContentType, tagIds, OrgEntityHeader, UserEntityHeader);
             }
@@ -74,7 +74,7 @@ namespace LagoVista.AI.Rest
             {
                 var sample = new byte[stream.Length];
                 stream.Position = 0;
-                stream.Read(sample, 0, (int)stream.Length);
+                stream.ReadExactly(sample, 0, (int)stream.Length);
 
                 return _sampleManager.UpdateSampleAsync(sampleid, sample, OrgEntityHeader, UserEntityHeader);
             }

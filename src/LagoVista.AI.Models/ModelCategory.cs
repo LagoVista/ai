@@ -15,9 +15,6 @@ namespace LagoVista.AI.Models
         [FormField(LabelResource: AIResources.Names.Common_Icon, FieldType: FieldTypes.Icon, ResourceType: typeof(AIResources))]
         public string Icon { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.Common_Category, FieldType: FieldTypes.Category, WaterMark: AIResources.Names.Common_SelectCategory, ResourceType: typeof(AIResources), IsRequired: false, IsUserEditable: true)]
-        public EntityHeader Category { get; set; }
-
         [FormField(LabelResource: AIResources.Names.Common_Description, FieldType: FieldTypes.MultiLineText, IsRequired: false, ResourceType: typeof(AIResources))]
         public string Description { get; set; }
 

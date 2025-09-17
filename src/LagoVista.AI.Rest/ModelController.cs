@@ -80,7 +80,7 @@ namespace LagoVista.AI.Rest
             {
                 var model = new byte[stream.Length];
                 stream.Position = 0;
-                stream.Read(model, 0, (int)stream.Length);
+                stream.ReadExactly(model, 0, (int)stream.Length);
 
                 return _mgr.UploadModelAsync(modelid, revision, model, OrgEntityHeader, UserEntityHeader);
             }
