@@ -20,7 +20,8 @@
     {
         public int MaxTokensPerChunk { get; set; }
         public int OverlapLines { get; set; }
-        public List<string> RootPaths { get; set; } = new();
+        public string SourceRoot { get; set; } = String.Empty;
+        public List<string> Repositories { get; set; } = new();
         public List<string> Include { get; set; } = new();
         public List<string> Exclude { get; set; } = new();
     }

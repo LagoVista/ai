@@ -48,19 +48,20 @@ namespace LagoVista.AI.RagConsole
             var chunker = new RoslynCSharpChunker(cfg.Ingestion.MaxTokensPerChunk, cfg.Ingestion.OverlapLines);
             IEmbedder embedder = new OpenAIEmbedder(settings, new AdminLogger(new ConsoleLogWriter()));
 
-            foreach (var root in cfg.Ingestion.RootPaths)
+            foreach (var repo in cfg.Ingestion.Repositories)
             {
-                var registry = new IndexRegistry(root);
+                var fullRoot = Path.Combine(cfg.Ingestion.SourceRoot, repo);
 
-                var files = FileWalker.EnumerateFiles(root, cfg.Ingestion.Include, cfg.Ingestion.Exclude);
+                var registry = new IndexRegistry(fullRoot);
+
+                var files = FileWalker.EnumerateFiles(fullRoot, cfg.Ingestion.Include, cfg.Ingestion.Exclude);
                 var removeIds = registry.RemoveMissing(files);
 
-
-                var toIndex = inline.GetFilesNeedingIndex(files.Select(p => Path.Combine(root, p)));
+                var toIndex = inline.GetFilesNeedingIndex(files.Select(p => Path.Combine(fullRoot, p)));
 
                 foreach (var file in toIndex)
                 {
-                    var relPath = Path.GetRelativePath(root, file);
+                    var relPath = Path.GetRelativePath(repo, file);
                     var text = await File.ReadAllTextAsync(file);
                     var chunks = chunker.Chunk(text, relPath);
 
@@ -74,7 +75,7 @@ namespace LagoVista.AI.RagConsole
                             Vector = vec,
                             Payload = new Dictionary<string, object?>
                             {
-                                ["repo"] = Path.GetFileName(root),
+                                ["repo"] = Path.GetFileName(repo),
                                 ["path"] = relPath,
                                 ["language"] = LanguageGuesser.FromPath(relPath),
                                 ["symbol"] = ch.Symbol,
@@ -85,7 +86,6 @@ namespace LagoVista.AI.RagConsole
                         });
 
                         Console.WriteLine($"\t  Chunk: {relPath} {ch.Kind} [{ch.StartLine}-{ch.EndLine}] symbol={ch.Symbol} vec_len={vec.Length}");
-
                     }
 
                     if (points.Count > 0)
