@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Text;
+using LagoVista.AI.Services;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;

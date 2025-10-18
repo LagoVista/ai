@@ -255,7 +255,7 @@ namespace LagoVista.AI.Managers
             public string content { get; set; }
         }
 
-        private class OpenAIResponse
+        public class OpenAIResponse
         {
             public string id { get; set; }
             public string @object { get; set; }        

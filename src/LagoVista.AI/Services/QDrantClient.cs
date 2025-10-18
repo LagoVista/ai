@@ -1,19 +1,21 @@
-﻿using System.Net.Http.Json;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using RagCli.Types;
+﻿using LagoVista.AI.Interfaces;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
 
-namespace RagCli.Services
+namespace LagoVista.AI.Services
 {
-    public class QdrantClient
+    public class QdrantClient : IQdrantClient
     {
         private readonly HttpClient _http;
 
-        public QdrantClient(string endpoint, string apiKey)
+        public QdrantClient(IQdrantSettings settings)
         {
-            _http = new HttpClient { BaseAddress = new Uri(endpoint) };
-            if (!string.IsNullOrWhiteSpace(apiKey))
-                _http.DefaultRequestHeaders.Add("api-key", apiKey);
+            _http = new HttpClient { BaseAddress = new Uri(settings.QdrantEndpoint) };
+            _http.DefaultRequestHeaders.Add("api-key", settings.QdrantApiKey);
         }
 
         public async Task EnsureCollectionAsync(QdrantCollectionConfig cfg)
@@ -41,8 +43,8 @@ namespace RagCli.Services
         {
             var resp = await _http.PostAsJsonAsync($"/collections/{collection}/points/search", req);
             resp.EnsureSuccessStatusCode();
-            var json = await resp.Content.ReadFromJsonAsync<QdrantSearchResponse>();
-            return json!.Result ?? new();
+            var json = await resp.Content.ReadAsAsync<QdrantSearchResponse>();
+            return json!.Result ?? new List<QdrantScoredPoint>();
         }
 
         public async Task DeleteByIdsAsync(string collection, IEnumerable<string> ids)
@@ -75,48 +77,49 @@ namespace RagCli.Services
         public string Id { get; set; } = Guid.NewGuid().ToString("N");
         public static string NewId() => Guid.NewGuid().ToString("N");
         public float[] Vector { get; set; } = Array.Empty<float>();
-        public Dictionary<string, object?> Payload { get; set; } = new();
+        public Dictionary<string, object?> Payload { get; set; } = new Dictionary<string, object?>();
     }
 
     public class QdrantSearchRequest
     {
-        [JsonPropertyName("vector")] public float[] Vector { get; set; } = Array.Empty<float>();
-        [JsonPropertyName("limit")] public int Limit { get; set; } = 8;
-        [JsonPropertyName("with_payload")] public bool WithPayload { get; set; } = true;
-        [JsonPropertyName("filter")] public QdrantFilter? Filter { get; set; }
+        [JsonProperty("vector")] public float[] Vector { get; set; } = Array.Empty<float>();
+        [JsonProperty("limit")] public int Limit { get; set; } = 8;
+        [JsonProperty("with_payload")] public bool WithPayload { get; set; } = true;
+        [JsonProperty("filter")] public QdrantFilter? Filter { get; set; }
     }
 
     public class QdrantFilter
     {
-        [JsonPropertyName("must")] public List<QdrantCondition> Must { get; set; } = new();
-        [JsonPropertyName("should")] public List<QdrantCondition>? Should { get; set; }
-        [JsonPropertyName("must_not")] public List<QdrantCondition>? MustNot { get; set; }
+        [JsonProperty("must")] public List<QdrantCondition> Must { get; set; } = new List<QdrantCondition>();
+        [JsonProperty("should")] public List<QdrantCondition>? Should { get; set; }
+        [JsonProperty("must_not")] public List<QdrantCondition>? MustNot { get; set; }
     }
 
     public class QdrantCondition
     {
-        [JsonPropertyName("key")] public string Key { get; set; } = string.Empty;
-        [JsonPropertyName("match")] public QdrantMatch? Match { get; set; }
-        [JsonPropertyName("range")] public QdrantRange? Range { get; set; }
+        [JsonProperty("key")] public string Key { get; set; } = string.Empty;
+        [JsonProperty("match")] public QdrantMatch? Match { get; set; }
+        [JsonProperty("range")] public QdrantRange? Range { get; set; }
     }
 
-    public class QdrantMatch { [JsonPropertyName("value")] public object? Value { get; set; } }
+    public class QdrantMatch { [JsonProperty("value")] public object? Value { get; set; } }
 
     public class QdrantRange
     {
-        [JsonPropertyName("gte")] public double? Gte { get; set; }
-        [JsonPropertyName("lte")] public double? Lte { get; set; }
+        [JsonProperty("gte")] public double? Gte { get; set; }
+        [JsonProperty("lte")] public double? Lte { get; set; }
     }
 
     public class QdrantSearchResponse
     {
-        [JsonPropertyName("result")] public List<QdrantScoredPoint>? Result { get; set; }
+        [JsonProperty("result")] public List<QdrantScoredPoint>? Result { get; set; }
     }
 
     public class QdrantScoredPoint
     {
-        [JsonPropertyName("id")] public string Id { get; set; } = string.Empty;
-        [JsonPropertyName("score")] public double Score { get; set; }
-        [JsonPropertyName("payload")] public Dictionary<string, object>? Payload { get; set; }
+        [JsonProperty("id")] public string Id { get; set; } = string.Empty;
+        [JsonProperty("score")] public double Score { get; set; }
+        [JsonProperty("payload")] public Dictionary<string, object>? Payload { get; set; }
     }
 }
+

@@ -1,30 +1,41 @@
-﻿using System.Net.Http.Headers;
-using System.Net.Http.Json;
-using System.Text;
-using System.Text.Json;
+﻿using LagoVista.AI.Interfaces;
+using LagoVista.IoT.Logging.Loggers;
+using Newtonsoft.Json;
+using System;
+using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
 
 
-namespace RagCli.Services
+namespace LagoVista.AI.Services
 {
-    /// <summary>
-    /// OpenAI Embeddings client for models like text-embedding-3-large (3072 dims) or -small (1536).
-    /// </summary>
     public class OpenAIEmbedder : IEmbedder
     {
         private readonly HttpClient _http;
         private readonly string _model;
         private readonly int _expectedDims;
 
-
-        public OpenAIEmbedder(string apiKey, string model = "text-embedding-3-large", string baseUrl = "https://api.openai.com", int expectedDims = 3072)
+        private class EmbeddingResponse
         {
-            _model = model;
-            _expectedDims = expectedDims;
-            _http = new HttpClient { BaseAddress = new Uri(baseUrl) };
-            _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
-            _http.Timeout = TimeSpan.FromSeconds(120);
+            [JsonProperty("data")]
+            public EmbeddingData[] Data { get; set; }
         }
 
+        private class EmbeddingData
+        {
+            [JsonProperty("embedding")]
+            public float[] Embedding { get; set; }
+        }
+
+        public OpenAIEmbedder(IOpenAISettings aiSettings, IAdminLogger adminLogger)
+        {
+            _model = "text-embedding-3-large";
+            _expectedDims = 3072;
+            _http = new HttpClient { BaseAddress = new Uri(aiSettings.OpenAIUrl) };
+            _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", aiSettings.OpenAIApiKey);
+            _http.Timeout = TimeSpan.FromSeconds(120);
+        }
 
         public async Task<float[]> EmbedAsync(string text)
         {
@@ -32,17 +43,12 @@ namespace RagCli.Services
             // Here we keep it simple; callers should chunk long files before embedding.
             var payload = new { model = _model, input = text };
 
-
             var resp = await PostWithRetryAsync("/v1/embeddings", payload);
-            var json = await resp.Content.ReadFromJsonAsync<JsonElement>();
-            var arr = json.GetProperty("data")[0].GetProperty("embedding");
-            var vec = new float[arr.GetArrayLength()];
-            int i = 0; foreach (var v in arr.EnumerateArray()) vec[i++] = (float)v.GetDouble();
-
-
+            var er = await resp.Content.ReadAsAsync<EmbeddingResponse>();
+            var vec = er.Data.FirstOrDefault().Embedding;
+          
             if (_expectedDims > 0 && vec.Length != _expectedDims)
                 throw new InvalidOperationException($"Embedding dims {vec.Length} != expected {_expectedDims}. Check model + Qdrant.VectorSize.");
-
 
             return vec;
         }

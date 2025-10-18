@@ -1,5 +1,6 @@
 ﻿using LagoVista.AI.Interfaces;
 using LagoVista.AI.Managers;
+using LagoVista.AI.Services;
 using LagoVista.Core.Interfaces;
 
 namespace LagoVista.AI
@@ -17,6 +18,9 @@ namespace LagoVista.AI
             services.AddTransient<IExperimentResultManager, ExperimentResultManager>();
             services.AddTransient<ITextQueryManager, OpenAIManager>();
             services.AddTransient<IImageGeneratorManager, OpenAIManager>();
+            services.AddTransient<ICodeRagAnswerService, CodeRagAnswerService>();
+            services.AddTransient<IQdrantClient, QdrantClient>();
+            services.AddSingleton<IEmbedder, OpenAIEmbedder>(); ;
         }
     }
 }

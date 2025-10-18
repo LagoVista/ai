@@ -1,4 +1,8 @@
-﻿using RagCli.Services;
+﻿using LagoVista.AI.Interfaces;
+using LagoVista.AI.Services;
+using LagoVista.IoT.Logging.Loggers;
+using LagoVista.IoT.Logging.Utils;
+using RagCli.Services;
 using RagCli.Types;
 using System;
 using System.Collections.Generic;
@@ -11,11 +15,17 @@ namespace LagoVista.AI.RagConsole
 {
     public static class Ingestor
     {
-       public static async Task Ingest()
+        public static async Task Ingest()
         {
 
             var cfg = JsonSerializer.Deserialize<Config>(File.ReadAllText("appsettings.json"))!;
-            var qdrant = new QdrantClient(cfg.Qdrant.Endpoint, cfg.Qdrant.ApiKey);
+            var qcfg = new QdrantConfig()
+            {
+                QdrantApiKey = Env.Get("QDRANT_API_KEY", cfg.Qdrant.ApiKey),
+                QdrantEndpoint = Env.Get("QDRANT_ENDPOINT", cfg.Qdrant.Endpoint)
+            };
+
+            var qdrant = new QdrantClient(qcfg);
             var collectionName = cfg.Qdrant.Collection;
 
             // 1) Ensure collection exists
@@ -26,18 +36,17 @@ namespace LagoVista.AI.RagConsole
                 Distance = cfg.Qdrant.Distance
             });
 
+            var settings = new OpenAiConfig()
+            {
+                OpenAIApiKey = Env.Get("OPENAI_API_KEY", cfg.Embeddings.ApiKey),
+                OpenAIUrl = string.IsNullOrWhiteSpace(cfg.Embeddings.BaseUrl) ? "https://api.openai.com" : cfg.Embeddings.BaseUrl
+            };
 
             var inline = new FileManifestTrackerInline();
 
             // 2) Ingest & index
             var chunker = new RoslynCSharpChunker(cfg.Ingestion.MaxTokensPerChunk, cfg.Ingestion.OverlapLines);
-            IEmbedder embedder = cfg.Embeddings.Provider?.ToLowerInvariant() == "openai"
-            ? new OpenAIEmbedder(
-            apiKey: Env.Get("OPENAI_API_KEY", cfg.Embeddings.ApiKey),
-            model: cfg.Embeddings.Model,
-            baseUrl: string.IsNullOrWhiteSpace(cfg.Embeddings.BaseUrl) ? "https://api.openai.com/v1" : cfg.Embeddings.BaseUrl,
-            expectedDims: cfg.Qdrant.VectorSize)
-            : new StubEmbedder(cfg.Qdrant.VectorSize);
+            IEmbedder embedder = new OpenAIEmbedder(settings, new AdminLogger(new ConsoleLogWriter()));
 
             foreach (var root in cfg.Ingestion.RootPaths)
             {
@@ -137,6 +146,19 @@ namespace LagoVista.AI.RagConsole
             }
 
         }
+    }
 
+    class OpenAiConfig : IOpenAISettings
+    {
+        public string OpenAIUrl { get; set; }
+
+        public string OpenAIApiKey { get; set; }
+    }
+
+    class QdrantConfig : IQdrantSettings
+    {
+        public string QdrantEndpoint { get; set; }
+
+        public string QdrantApiKey { get; set; }
     }
 }
