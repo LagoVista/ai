@@ -4,6 +4,7 @@
     {
         public QdrantConfig Qdrant { get; set; } = new();
         public IngestionConfig Ingestion { get; set; } = new();
+        public EmbeddingsConfig Embeddings { get; set; } = new();
     }
 
     public class QdrantConfig
@@ -17,9 +18,19 @@
 
     public class IngestionConfig
     {
+        public int MaxTokensPerChunk { get; set; }
+        public int OverlapLines { get; set; }
         public List<string> RootPaths { get; set; } = new();
         public List<string> Include { get; set; } = new();
         public List<string> Exclude { get; set; } = new();
+    }
+
+    public class EmbeddingsConfig
+    {
+        public string Provider { get; set; } = "OpenAI"; // OpenAI | Stub
+        public string ApiKey { get; set; } = string.Empty; // Recommend env var injection
+        public string Model { get; set; } = "text-embedding-3-large";
+        public string? BaseUrl { get; set; } // Use Azure-compatible endpoint if needed
     }
 }
 

@@ -44,6 +44,23 @@ namespace RagCli.Services
             var json = await resp.Content.ReadFromJsonAsync<QdrantSearchResponse>();
             return json!.Result ?? new();
         }
+
+        public async Task DeleteByIdsAsync(string collection, IEnumerable<string> ids)
+        {
+            var idArray = ids.ToArray();
+            if (idArray.Length == 0) return;
+
+            var payload = new
+            {
+                points = idArray.Select(id => new { id })
+            };
+
+            var resp = await _http.PostAsJsonAsync(
+                $"collections/{collection}/points/delete",
+                new { points = idArray });
+
+            resp.EnsureSuccessStatusCode();
+        }
     }
 
     public class QdrantCollectionConfig
