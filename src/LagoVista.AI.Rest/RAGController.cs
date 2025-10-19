@@ -24,11 +24,16 @@ namespace LagoVista.AI.Rest
             _answerService = answerService ?? throw new ArgumentNullException(nameof(answerService));
         }
 
-        [HttpGet("/api/ai/codebase/query")]
-        public async Task<InvokeResult<AnswerResult>> GetCodeAnswerAsync([FromQuery] string question)
+        [HttpGet("/api/ai/llm/query")]
+        public Task<InvokeResult<AnswerResult>> GetCodeAnswerAsync([FromQuery] string question)
         {
-            var answer = await _answerService.AnswerAsync(question);
-            return InvokeResult<AnswerResult>.Create(answer); 
+            return _answerService.AnswerAsync(question);
+        }
+
+        [HttpGet("/api/ai/llm/content")]
+        public Task<InvokeResult<string>> GetContent([FromQuery] string path, [FromQuery] string fileName, [FromQuery]int start, [FromQuery]int end)
+        {
+            return _answerService.GetContentAsync(path, fileName, start, end);
         }
     }
 }
