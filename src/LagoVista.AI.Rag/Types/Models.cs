@@ -1,4 +1,6 @@
-﻿namespace RagCli.Types
+﻿using System.IO;
+
+namespace LagoVista.AI.Rag.Types
 {
     public static class LanguageGuesser
     {

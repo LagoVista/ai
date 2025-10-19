@@ -1,7 +1,11 @@
-﻿using System.Text.Json;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace RagCli.Services
+namespace LagoVista.AI.Rag.Services
 {
     /// <summary>
     /// Maintains a small registry file at the repository root that maps
@@ -18,7 +22,7 @@ namespace RagCli.Services
         private readonly string _repoRoot;
         private readonly string _registryPath;
         private IndexRegistryData _data;
-        private readonly JsonSerializerOptions _jsonOpts = new()
+        private readonly JsonSerializerOptions _jsonOpts = new JsonSerializerOptions()
         {
             WriteIndented = true,
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
@@ -67,7 +71,7 @@ namespace RagCli.Services
             var toDelete = _data.Files.Keys.Where(k => !current.Contains(k)).ToList();
             foreach (var key in toDelete)
             {
-                if (_data.Files.TryGetValue(key, out var entry) && entry.PointIds is not null)
+                if (_data.Files.TryGetValue(key, out var entry) && entry.PointIds != null)
                 {
                     removedPointIds.AddRange(entry.PointIds);
                 }
@@ -88,8 +92,8 @@ namespace RagCli.Services
         public IReadOnlyList<string> GetPointIds(string repoRelativePath)
         {
             repoRelativePath = Normalize(repoRelativePath);
-            return _data.Files.TryGetValue(repoRelativePath, out var e) && e.PointIds is not null
-                ? e.PointIds
+            return _data.Files.TryGetValue(repoRelativePath, out var e) && e.PointIds != null
+                ? e.PointIds.ToArray()
                 : Array.Empty<string>();
         }
 
@@ -117,7 +121,7 @@ namespace RagCli.Services
                 {
                     var json = File.ReadAllText(path);
                     var data = JsonSerializer.Deserialize<IndexRegistryData>(json);
-                    if (data is not null) return data;
+                    if (data != null) return data;
                 }
             }
             catch
@@ -154,12 +158,12 @@ namespace RagCli.Services
         /// Example key: "src/Services/AuthService.cs"
         /// </summary>
         [JsonPropertyName("files")]
-        public Dictionary<string, IndexRegistryEntry> Files { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<string, IndexRegistryEntry> Files { get; set; } = new Dictionary<string, IndexRegistryEntry>(StringComparer.OrdinalIgnoreCase);
     }
 
     public sealed class IndexRegistryEntry
     {
         [JsonPropertyName("pointIds")]
-        public List<string> PointIds { get; set; } = new();
+        public List<string> PointIds { get; set; } = new List<string>();
     }
 }

@@ -1,7 +1,11 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
 
 
-namespace RagCli.Services
+namespace LagoVista.AI.Rag.Services
 {
     public static class FileWalker
     {
@@ -84,18 +88,15 @@ namespace RagCli.Services
         }
 
 
-        private static bool IsLikelyBinary(string relPath)
-        {
-            var ext = Path.GetExtension(relPath).ToLowerInvariant();
-            return ext switch
-            {
-                ".png" or ".jpg" or ".jpeg" or ".gif" or ".bmp" or ".ico" or
-                ".pdf" or ".zip" or ".gz" or ".tgz" or ".7z" or ".rar" or
-                ".dll" or ".exe" or ".so" or ".dylib" or ".a" or ".lib" or
-                ".mp3" or ".mp4" or ".mov" or ".wav" or ".avi" or ".mkv" or
-                ".woff" or ".woff2" or ".eot" or ".ttf" or ".otf" => true,
-                _ => false
-            };
-        }
+        private static readonly HashSet<string> AllowedExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+{
+    ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".ico",
+    ".pdf", ".zip", ".gz", ".tgz", ".7z", ".rar",
+    ".dll", ".exe", ".so", ".dylib", ".a", ".lib",
+    ".mp3", ".mp4", ".mov", ".wav", ".avi", ".mkv",
+    ".woff", ".woff2", ".eot", ".ttf", ".otf"
+};
+
+        private static bool IsLikelyBinary(string extension) => AllowedExtensions.Contains(extension);
     }
 }

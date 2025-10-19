@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace RagCli.Services
+namespace LagoVista.AI.Rag.Services
 {
     public static class Env
     {
-        public static string Get(string name, string? fallback = null)
+        public static string Get(string name, string fallback = null)
         {
             var val = Environment.GetEnvironmentVariable(name);
             if (string.IsNullOrWhiteSpace(val))

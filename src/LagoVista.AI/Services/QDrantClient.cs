@@ -12,6 +12,7 @@ namespace LagoVista.AI.Services
     {
         private readonly HttpClient _http;
 
+
         public QdrantClient(IQdrantSettings settings)
         {
             _http = new HttpClient { BaseAddress = new Uri(settings.QdrantEndpoint) };
@@ -77,7 +78,7 @@ namespace LagoVista.AI.Services
         public string Id { get; set; } = Guid.NewGuid().ToString("N");
         public static string NewId() => Guid.NewGuid().ToString("N");
         public float[] Vector { get; set; } = Array.Empty<float>();
-        public Dictionary<string, object?> Payload { get; set; } = new Dictionary<string, object?>();
+        public Dictionary<string, object> Payload { get; set; } = new Dictionary<string, object>();
     }
 
     public class QdrantSearchRequest
@@ -85,41 +86,41 @@ namespace LagoVista.AI.Services
         [JsonProperty("vector")] public float[] Vector { get; set; } = Array.Empty<float>();
         [JsonProperty("limit")] public int Limit { get; set; } = 8;
         [JsonProperty("with_payload")] public bool WithPayload { get; set; } = true;
-        [JsonProperty("filter")] public QdrantFilter? Filter { get; set; }
+        [JsonProperty("filter")] public QdrantFilter Filter { get; set; }
     }
 
     public class QdrantFilter
     {
         [JsonProperty("must")] public List<QdrantCondition> Must { get; set; } = new List<QdrantCondition>();
-        [JsonProperty("should")] public List<QdrantCondition>? Should { get; set; }
-        [JsonProperty("must_not")] public List<QdrantCondition>? MustNot { get; set; }
+        [JsonProperty("should")] public List<QdrantCondition> Should { get; set; }
+        [JsonProperty("must_not")] public List<QdrantCondition> MustNot { get; set; }
     }
 
     public class QdrantCondition
     {
         [JsonProperty("key")] public string Key { get; set; } = string.Empty;
-        [JsonProperty("match")] public QdrantMatch? Match { get; set; }
-        [JsonProperty("range")] public QdrantRange? Range { get; set; }
+        [JsonProperty("match")] public QdrantMatch Match { get; set; }
+        [JsonProperty("range")] public QdrantRange Range { get; set; }
     }
 
-    public class QdrantMatch { [JsonProperty("value")] public object? Value { get; set; } }
+    public class QdrantMatch { [JsonProperty("value")] public object Value { get; set; } }
 
     public class QdrantRange
     {
-        [JsonProperty("gte")] public double? Gte { get; set; }
-        [JsonProperty("lte")] public double? Lte { get; set; }
+        [JsonProperty("gte")] public double Gte { get; set; }
+        [JsonProperty("lte")] public double Lte { get; set; }
     }
 
     public class QdrantSearchResponse
     {
-        [JsonProperty("result")] public List<QdrantScoredPoint>? Result { get; set; }
+        [JsonProperty("result")] public List<QdrantScoredPoint> Result { get; set; }
     }
 
     public class QdrantScoredPoint
     {
         [JsonProperty("id")] public string Id { get; set; } = string.Empty;
         [JsonProperty("score")] public double Score { get; set; }
-        [JsonProperty("payload")] public Dictionary<string, object>? Payload { get; set; }
+        [JsonProperty("payload")] public Dictionary<string, object> Payload { get; set; }
     }
 }
 

@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <package>
   <metadata>
-    <id>LagoVista.AI</id>
+    <id>LagoVista.AI.rag</id>
     <version>3.0.3076.1541</version>
     <authors>Software Logistics, LLC</authors>
     <owners>Software Logistics, LLC</owners>
@@ -16,15 +16,14 @@
     <repository url="https://www.github.com/lagovista" type="git" branch="master"></repository>
     <dependencies>
       <group targetFramework="netstandard2.1">
-        <dependency id="LagoVista.MediaServices" version="3.0.3076.1206" />
-        <dependency id="Microsoft.ML.OnnxRuntime" version="1.22.1" />
-        <dependency id="LagoVista.AI.Models" version="3.0.3076.1541" />
+        <dependency id="Microsoft.CodeAnalysis.CSharp" version="4.14.0" />
+        <dependency id="LagoVista.AI.CloudRepos" version="3.0.3076.1541" />
       </group>
     </dependencies>
   </metadata>
   <files>
     <file src="LagoVistaIcon.png" target="LagoVistaIcon.png" />
-    <file src="bin\release\netstandard2.1\LagoVista.AI.dll" target="lib\netstandard2.1\LagoVista.AI.dll" />
-    <file src="bin\release\netstandard2.1\LagoVista.AI.pdb" target="lib\netstandard2.1\LagoVista.AI.pdb" />
+    <file src="bin\release\netstandard2.1\LagoVista.AI.rag.dll" target="lib\netstandard2.1\LagoVista.AI.rag.dll" />
+    <file src="bin\release\netstandard2.1\LagoVista.AI.rag.pdb" target="lib\netstandard2.1\LagoVista.AI.rag.pdb" />
   </files>
 </package>

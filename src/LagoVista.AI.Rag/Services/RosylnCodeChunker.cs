@@ -1,12 +1,15 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Text;
+using LagoVista.AI.Rag.Types;
 using LagoVista.AI.Services;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using RagCli.Types;
 
-namespace RagCli.Services
+namespace LagoVista.AI.Rag.Services
 {
     /// <summary>
     /// Symbol-aware C# chunker using Roslyn. Produces chunks for types and members
@@ -112,7 +115,8 @@ namespace RagCli.Services
             }
         }
 
-        private IEnumerable<CodeChunk> BuildNodeChunks(SyntaxTree tree, string[] lines, string relPath, SyntaxNode node, string kind)
+        private IEnumerable<CodeChunk> BuildNodeChunks(
+            SyntaxTree tree, string[] lines, string relPath, SyntaxNode node, string kind)
         {
             // Prefer mapped span (accounts for directives) if available
             var mapped = tree.GetMappedLineSpan(node.Span);
@@ -121,12 +125,10 @@ namespace RagCli.Services
             int startLine = Math.Max(1, span.StartLinePosition.Line + 1);
             int endLine = Math.Max(startLine, span.EndLinePosition.Line + 1);
 
-            // Expand to include XML docs and attributes that lead the node
+            // Expand to include XML docs and attributes that precede the node
             var leading = node.GetLeadingTrivia().ToFullString();
             if (!string.IsNullOrEmpty(leading))
-            {
                 startLine = Math.Max(1, startLine - CountLines(leading));
-            }
 
             // Clamp to file bounds
             startLine = Math.Min(startLine, lines.Length > 0 ? lines.Length : 1);
@@ -134,37 +136,45 @@ namespace RagCli.Services
 
             int cursor = startLine - 1;
             int safety = 0;
-            const int safetyCap = 1_000_000; // hard guard against pathological loops
+            const int safetyCap = 1_000_000;
 
             while (cursor < endLine && cursor < lines.Length)
             {
-                if (safety++ > safetyCap) yield break; // emergency stop
+                if (safety++ > safetyCap) yield break;
 
                 int estTokens = 0;
                 int localStart = cursor;
                 int localEnd = cursor;
 
-                // Grow window until token budget is exceeded or end reached
                 while (localEnd < endLine && localEnd < lines.Length)
                 {
-                    estTokens += TokenEstimator.EstimateTokens(lines[localEnd]) + 1; // +1 for newline
+                    estTokens += TokenEstimator.EstimateTokens(lines[localEnd]) + 1; // +1 newline
                     if (estTokens > _maxTokensPerChunk)
                     {
+                        // If a single line already exceeds the budget, slice it safely
                         if (localEnd == localStart)
-                            localEnd++; // ensure progress for huge single lines
+                        {
+                            foreach (var sl in SliceVeryLongLine(
+                                lines[localEnd],
+                                relPath,
+                                kind,
+                                GetBestSymbolName(node),
+                                localEnd + 1))
+                            {
+                                yield return sl;
+                            }
+
+                            // Advance cursor past this very long line
+                            cursor = localEnd + 1;
+                            goto nextIteration;
+                        }
                         break;
                     }
                     localEnd++;
                 }
 
-                // Emit chunk
+                // Emit normal chunk
                 var slice = string.Join('\n', lines[localStart..Math.Min(localEnd, lines.Length)]);
-                //if (slice.Length > (0x7fff / 2))
-                //{
-                //    Debugger.Break();
-                //    slice = $"//INCOMPLETE FILE - TOTAL LENGTH {slice.Length}\r\n\r\n" + slice.Substring(0, (0x7fff / 2));
-                //}
-
                 yield return new CodeChunk
                 {
                     Text = slice,
@@ -175,13 +185,83 @@ namespace RagCli.Services
                     Symbol = GetBestSymbolName(node)
                 };
 
-                // Advance cursor with overlap but ensure forward progress
+                // Advance with overlap; ensure forward progress
                 int nextCursor = localEnd - _overlapLines;
                 if (nextCursor <= cursor) nextCursor = localEnd;
-                if (nextCursor <= cursor) nextCursor = cursor + 1; // absolute safety
+                if (nextCursor <= cursor) nextCursor = cursor + 1;
                 cursor = nextCursor;
+
+            nextIteration:;
             }
         }
+
+        /// <summary>
+        /// Slices an extremely long single line into multiple safe chunks,
+        /// keeping each segment well under the token budget.
+        /// We report the same StartLine/EndLine for all segments (the original line),
+        /// so consumers can still locate the source reliably.
+        /// </summary>
+        private IEnumerable<CodeChunk> SliceVeryLongLine(
+            string line,
+            string relPath,
+            string kind,
+            string symbol,
+            int lineNumber)
+        {
+            // Rough char window derived from token budget (tokens ≈ bytes/4 ≈ chars for ASCII-ish)
+            // Keep it conservative and leave headroom.
+            int windowChars = Math.Max(512, _maxTokensPerChunk * 3); // 3x is a safe heuristic
+            int idx = 0;
+            int seg = 1;
+
+            // Try to break at natural boundaries inside each window
+            while (idx < line.Length)
+            {
+                int remaining = line.Length - idx;
+                int take = Math.Min(windowChars, remaining);
+
+                // Look for a soft break near the end of the window to avoid cutting identifiers
+                int softBreak = FindSoftBreak(line, idx, take);
+                if (softBreak > 0) take = softBreak;
+
+                var piece = line.AsSpan(idx, take).ToString();
+                yield return new CodeChunk
+                {
+                    Text = piece,
+                    Path = relPath,
+                    StartLine = lineNumber,
+                    EndLine = lineNumber,
+                    Kind = kind,              // you may append "(segment)" if you want
+                    Symbol = symbol             // same symbol; UI can show "(continued)" if needed
+                };
+
+                idx += take;
+                seg++;
+            }
+        }
+
+        /// <summary>
+        /// Try to find a nicer split point near the window end: whitespace, comma, semicolon, brace, or bracket.
+        /// Searches backwards up to ~80 chars from the window end. Returns number of chars to take if found; else 0.
+        /// </summary>
+        private static int FindSoftBreak(string s, int start, int window)
+        {
+            int end = Math.Min(start + window, s.Length);
+            int scanFrom = Math.Max(start, end - 80); // look back a bit
+
+            for (int i = end - 1; i >= scanFrom; i--)
+            {
+                var endLimitChars = new List<char>() { ',', ';', ')', ']', '}' };
+
+                char c = s[i];
+                if (char.IsWhiteSpace(c) || endLimitChars.Contains(c)) 
+                {
+                    return (i + 1) - start;
+                }
+            }
+            return 0;
+        }
+
 
         private static int CountLines(string s)
         {

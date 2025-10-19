@@ -32,7 +32,7 @@ namespace LagoVista.AI.Services
             _llm.Timeout = TimeSpan.FromSeconds(60);
         }
 
-        public async Task<AnswerResult> AnswerAsync(string question, string? repo = null, string? language = "csharp", int topK = 8)
+        public async Task<AnswerResult> AnswerAsync(string question, string repo = null, string language = "csharp", int topK = 8)
         {
             // 1) Embed the user question
             var qvec = await _embedder.EmbedAsync(question);
@@ -67,7 +67,7 @@ namespace LagoVista.AI.Services
                 var end = Convert.ToInt32(p["end_line"]);
                 var tag = $"S{idx + 1}";
 
-                string? text = p.ContainsKey("text") ? p["text"]?.ToString() : null;
+                string text = p.ContainsKey("text") ? p["text"].ToString() : null;
                 if (string.IsNullOrEmpty(text) && !string.IsNullOrEmpty(path) && end >= start)
                 {
                     text = ReadLines(Path.Combine(_repoRoot, path), start, end);

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.12.35527.113 d17.12
+VisualStudioVersion = 17.12.35527.113
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LagoVista.AI.Models", "src\LagoVista.AI.Models\LagoVista.AI.Models.csproj", "{DBCD2830-19A4-48C2-A904-53BA41FF51CA}"
 EndProject
@@ -20,6 +20,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Apps", "Apps", "{A7E7FEBA-8F2E-410F-BC32-C1CA2D0D4888}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LagoVista.AI.RagConsole", "Apps\LagoVista.AI.RagConsole\LagoVista.AI.RagConsole.csproj", "{FC74C33E-02EB-4921-914A-A8B3B80E61F3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LagoVista.AI.Rag", "src\LagoVista.AI.Rag\LagoVista.AI.Rag.csproj", "{B458F7F8-8ED6-4763-98D2-FAD65A96214E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -51,6 +53,10 @@ Global
 		{FC74C33E-02EB-4921-914A-A8B3B80E61F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FC74C33E-02EB-4921-914A-A8B3B80E61F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FC74C33E-02EB-4921-914A-A8B3B80E61F3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B458F7F8-8ED6-4763-98D2-FAD65A96214E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B458F7F8-8ED6-4763-98D2-FAD65A96214E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B458F7F8-8ED6-4763-98D2-FAD65A96214E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B458F7F8-8ED6-4763-98D2-FAD65A96214E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -62,6 +68,7 @@ Global
 		{92E31462-FE30-4B55-9AF7-3CB12483B5FC} = {0C3AF45F-896E-44A6-9A2A-E62A8609B5D4}
 		{37E4D64F-3441-4448-B134-B91DC811BE23} = {374F4C7F-619C-4B41-AAAC-0F9B3B259F07}
 		{FC74C33E-02EB-4921-914A-A8B3B80E61F3} = {A7E7FEBA-8F2E-410F-BC32-C1CA2D0D4888}
+		{B458F7F8-8ED6-4763-98D2-FAD65A96214E} = {374F4C7F-619C-4B41-AAAC-0F9B3B259F07}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {29D4F79F-3C1A-46CA-BA14-25CEA87D4B71}

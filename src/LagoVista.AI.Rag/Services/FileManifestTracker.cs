@@ -1,8 +1,11 @@
-﻿using System.Security.Cryptography;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace RagCli.Services
+namespace LagoVista.AI.Rag.Services
 {
     /// <summary>
     /// Inline manifest tracker that stores ONLY the content hash in a header comment
@@ -16,7 +19,7 @@ namespace RagCli.Services
     {
         public const string BeginMarker = "// --- BEGIN CODE INDEX META (do not edit) ---";
         public const string EndMarker = "// --- END CODE INDEX META ---";
-        public const int IndexVersion = 1;
+        //public const int IndexVersion = 1;
 
         private static readonly Regex HeaderRegex = new Regex(
             @"^\/\/\s---\sBEGIN\sCODE\sINDEX\sMETA\s\(do\snot\sedit\)\s---\s*\r?\n" +
@@ -31,21 +34,21 @@ namespace RagCli.Services
         ///  - it has no header, or
         ///  - the stored hash != current hash of the body (header excluded, CRLF normalized).
         /// </summary>
-        public IEnumerable<string> GetFilesNeedingIndex(IEnumerable<string> csharpFiles)
+        public IEnumerable<string> GetFilesNeedingIndex(IEnumerable<string> csharpFiles, int currentVersion)
         {
             foreach (var file in csharpFiles)
             {
                 if (!File.Exists(file)) continue;
 
                 var textRaw = File.ReadAllText(file);
-                var hasHeader = TryReadStoredHash(textRaw, out var storedHash, out var _);
+                var hasHeader = TryReadStoredHash(textRaw, out var storedHash, out var version);
 
                 // Compute current body hash on CRLF-normalized body WITHOUT header
                 var bodyText = StripHeader(textRaw, out _);
                 var bodyCrlf = NormalizeToCrlf(bodyText);
                 var currentHash = ComputeHash(bodyCrlf);
 
-                if (!hasHeader || !string.Equals(storedHash, currentHash, StringComparison.OrdinalIgnoreCase))
+                if (!hasHeader || !string.Equals(storedHash, currentHash, StringComparison.OrdinalIgnoreCase) || currentVersion != version)
                 {
                     yield return file;
                 }
@@ -56,7 +59,7 @@ namespace RagCli.Services
         /// After successful (re)indexing of a file, write/update the inline header
         /// using the body hash (header excluded), and rewrite the whole file with CRLF line endings.
         /// </summary>
-        public void UpsertInlineHeader(string filePath)
+        public void UpsertInlineHeader(string filePath, int version)
         {
             var textRaw = File.ReadAllText(filePath);
 
@@ -70,7 +73,7 @@ namespace RagCli.Services
             var hash = ComputeHash(bodyCrlf);
 
             // 4) Build header (CRLF newlines)
-            var header = BuildHeader(hash);
+            var header = BuildHeader(hash, version);
 
             // 5) Recompose file: header + body (both CRLF)
             var finalText = header + bodyCrlf;
@@ -139,13 +142,13 @@ namespace RagCli.Services
         /// <summary>
         /// Build the header string with CRLF line endings.
         /// </summary>
-        private static string BuildHeader(string hash)
+        private static string BuildHeader(string hash, int version)
         {
             var nl = "\r\n";
             var sb = new StringBuilder();
             sb.Append(BeginMarker).Append(nl);
             sb.Append("// ContentHash: ").Append(hash).Append(nl);
-            sb.Append("// IndexVersion: ").Append(IndexVersion).Append(nl);
+            sb.Append("// IndexVersion: ").Append(version).Append(nl);
             sb.Append(EndMarker).Append(nl);
             return sb.ToString();
         }
