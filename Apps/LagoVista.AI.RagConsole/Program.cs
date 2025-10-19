@@ -13,7 +13,7 @@ if (String.IsNullOrEmpty(cfg.ContentRepo.AccessKey)) cfg.ContentRepo.AccessKey =
 
 var ingestor = new Ingestor(cfg);
 
-await ingestor.IngestAsync();
+await ingestor.IngestAsync("backend");
 
 
 //await WebHost.Start(args);
