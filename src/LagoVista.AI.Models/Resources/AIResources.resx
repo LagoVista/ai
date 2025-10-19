@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="VectorDatabase_ApiKey" xml:space="preserve">
+    <value>Vector Database API Key</value>
+  </data>
   <data name="Common_Category" xml:space="preserve">
     <value>Category</value>
   </data>
@@ -446,5 +449,38 @@
   </data>
   <data name="TrainingDataSet_Title" xml:space="preserve">
     <value>Training Data Set</value>
+  </data>
+  <data name="VectorDatabase_Description" xml:space="preserve">
+    <value>A vector database contains vectors used by LLM to support RAG (Retrieval-Augmented Generation) it also contains a reference to azure blob storage used to contain the raw content that was indexed to come up with those vectors.</value>
+  </data>
+  <data name="VectorDatabase_Title" xml:space="preserve">
+    <value>Vector Database</value>
+  </data>
+  <data name="VectorDatabase_Uri" xml:space="preserve">
+    <value>Vector Database Uri</value>
+  </data>
+  <data name="VectorDatabase_CollectionName" xml:space="preserve">
+    <value>Collection Name</value>
+  </data>
+  <data name="VectorDatabase_AzureAccountId" xml:space="preserve">
+    <value>Azure Storage Account Id</value>
+  </data>
+  <data name="VectorDatabase_AzureAccountId_Help" xml:space="preserve">
+    <value>Account Id of the Storage Account used to storage raw content that was indexed.</value>
+  </data>
+  <data name="VectorDatabase_AzureApiToken" xml:space="preserve">
+    <value>Azure Storage API Token</value>
+  </data>
+  <data name="VectorDatabase_AzureApiToken_Help" xml:space="preserve">
+    <value>Shared access key for the storage account, this is encrypted on the server.</value>
+  </data>
+  <data name="VectorDatabase_OpenAPI_Token" xml:space="preserve">
+    <value>Open API Token</value>
+  </data>
+  <data name="VectorDatabase_OpenAPI_Token_Help" xml:space="preserve">
+    <value>Open API Token used to create embeddings and query LLM</value>
+  </data>
+  <data name="VectorDatabases_Title" xml:space="preserve">
+    <value>Vector Databases</value>
   </data>
 </root>

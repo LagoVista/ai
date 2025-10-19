@@ -20,7 +20,8 @@ namespace LagoVista.AI
             services.AddTransient<IImageGeneratorManager, OpenAIManager>();
             services.AddTransient<ICodeRagAnswerService, CodeRagAnswerService>();
             services.AddTransient<IQdrantClient, QdrantClient>();
-            services.AddSingleton<IEmbedder, OpenAIEmbedder>(); ;
+            services.AddSingleton<IEmbedder, OpenAIEmbedder>();
+            services.AddSingleton<IVectorDatabaseManager, VectorDatabaseManager>();
         }
     }
 }

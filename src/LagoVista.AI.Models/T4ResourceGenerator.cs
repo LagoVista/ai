@@ -1,4 +1,4 @@
-﻿/*7/23/2025 7:27:56 AM*/
+﻿/*10/19/2025 10:09:02 AM*/
 using System.Globalization;
 using System.Reflection;
 
@@ -384,6 +384,42 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:TrainingDataSet_Title
 
 		public static string TrainingDataSet_Title { get { return GetResourceString("TrainingDataSet_Title"); } }
+//Resources:AIResources:VectorDatabase_ApiKey
+
+		public static string VectorDatabase_ApiKey { get { return GetResourceString("VectorDatabase_ApiKey"); } }
+//Resources:AIResources:VectorDatabase_AzureAccountId
+
+		public static string VectorDatabase_AzureAccountId { get { return GetResourceString("VectorDatabase_AzureAccountId"); } }
+//Resources:AIResources:VectorDatabase_AzureAccountId_Help
+
+		public static string VectorDatabase_AzureAccountId_Help { get { return GetResourceString("VectorDatabase_AzureAccountId_Help"); } }
+//Resources:AIResources:VectorDatabase_AzureApiToken
+
+		public static string VectorDatabase_AzureApiToken { get { return GetResourceString("VectorDatabase_AzureApiToken"); } }
+//Resources:AIResources:VectorDatabase_AzureApiToken_Help
+
+		public static string VectorDatabase_AzureApiToken_Help { get { return GetResourceString("VectorDatabase_AzureApiToken_Help"); } }
+//Resources:AIResources:VectorDatabase_CollectionName
+
+		public static string VectorDatabase_CollectionName { get { return GetResourceString("VectorDatabase_CollectionName"); } }
+//Resources:AIResources:VectorDatabase_Description
+
+		public static string VectorDatabase_Description { get { return GetResourceString("VectorDatabase_Description"); } }
+//Resources:AIResources:VectorDatabase_OpenAPI_Token
+
+		public static string VectorDatabase_OpenAPI_Token { get { return GetResourceString("VectorDatabase_OpenAPI_Token"); } }
+//Resources:AIResources:VectorDatabase_OpenAPI_Token_Help
+
+		public static string VectorDatabase_OpenAPI_Token_Help { get { return GetResourceString("VectorDatabase_OpenAPI_Token_Help"); } }
+//Resources:AIResources:VectorDatabase_Title
+
+		public static string VectorDatabase_Title { get { return GetResourceString("VectorDatabase_Title"); } }
+//Resources:AIResources:VectorDatabase_Uri
+
+		public static string VectorDatabase_Uri { get { return GetResourceString("VectorDatabase_Uri"); } }
+//Resources:AIResources:VectorDatabases_Title
+
+		public static string VectorDatabases_Title { get { return GetResourceString("VectorDatabases_Title"); } }
 
 		public static class Names
 		{
@@ -497,6 +533,18 @@ namespace LagoVista.AI.Models.Resources
 			public const string TrainingDataSet_Description = "TrainingDataSet_Description";
 			public const string TrainingDataSet_Help = "TrainingDataSet_Help";
 			public const string TrainingDataSet_Title = "TrainingDataSet_Title";
+			public const string VectorDatabase_ApiKey = "VectorDatabase_ApiKey";
+			public const string VectorDatabase_AzureAccountId = "VectorDatabase_AzureAccountId";
+			public const string VectorDatabase_AzureAccountId_Help = "VectorDatabase_AzureAccountId_Help";
+			public const string VectorDatabase_AzureApiToken = "VectorDatabase_AzureApiToken";
+			public const string VectorDatabase_AzureApiToken_Help = "VectorDatabase_AzureApiToken_Help";
+			public const string VectorDatabase_CollectionName = "VectorDatabase_CollectionName";
+			public const string VectorDatabase_Description = "VectorDatabase_Description";
+			public const string VectorDatabase_OpenAPI_Token = "VectorDatabase_OpenAPI_Token";
+			public const string VectorDatabase_OpenAPI_Token_Help = "VectorDatabase_OpenAPI_Token_Help";
+			public const string VectorDatabase_Title = "VectorDatabase_Title";
+			public const string VectorDatabase_Uri = "VectorDatabase_Uri";
+			public const string VectorDatabases_Title = "VectorDatabases_Title";
 		}
 	}
 }
