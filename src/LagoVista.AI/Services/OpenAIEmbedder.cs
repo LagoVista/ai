@@ -3,6 +3,7 @@ using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json;
 using System;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
@@ -34,7 +35,7 @@ namespace LagoVista.AI.Services
             _expectedDims = 3072;
             _http = new HttpClient { BaseAddress = new Uri(aiSettings.OpenAIUrl) };
             _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", aiSettings.OpenAIApiKey);
-            _http.Timeout = TimeSpan.FromSeconds(120);
+            _http.Timeout = TimeSpan.FromSeconds(30);
         }
 
         public async Task<float[]> EmbedAsync(string text)
@@ -43,14 +44,16 @@ namespace LagoVista.AI.Services
             // Here we keep it simple; callers should chunk long files before embedding.
             var payload = new { model = _model, input = text };
 
-            var resp = await PostWithRetryAsync("/v1/embeddings", payload);
-            var er = await resp.Content.ReadAsAsync<EmbeddingResponse>();
-            var vec = er.Data.FirstOrDefault().Embedding;
-          
-            if (_expectedDims > 0 && vec.Length != _expectedDims)
-                throw new InvalidOperationException($"Embedding dims {vec.Length} != expected {_expectedDims}. Check model + Qdrant.VectorSize.");
+            using (var resp = await PostWithRetryAsync("/v1/embeddings", payload))
+            {
+                var er = await resp.Content.ReadAsAsync<EmbeddingResponse>();
+                var vec = er.Data.FirstOrDefault().Embedding;
 
-            return vec;
+                if (_expectedDims > 0 && vec.Length != _expectedDims)
+                    throw new InvalidOperationException($"Embedding dims {vec.Length} != expected {_expectedDims}. Check model + Qdrant.VectorSize.");
+
+                return vec;
+            }
         }
 
 
@@ -62,21 +65,33 @@ namespace LagoVista.AI.Services
 
             for (int attempt = 0; attempt < maxRetries; attempt++)
             {
-                var resp = await _http.PostAsJsonAsync(path, body);
-                if ((int)resp.StatusCode < 500 && resp.StatusCode != System.Net.HttpStatusCode.TooManyRequests)
+                try
                 {
-                    if (resp.IsSuccessStatusCode)
-                        return resp;
+                    var resp = await _http.PostAsJsonAsync(path, body);
+                    if ((int)resp.StatusCode < 500 && resp.StatusCode != System.Net.HttpStatusCode.TooManyRequests)
+                    {
+                        if (resp.IsSuccessStatusCode)
+                        {
+                            return resp;
+                        }
+                        var errorContent = await resp.Content.ReadAsStringAsync();
 
-                    var errorContent = await resp.Content.ReadAsStringAsync();
+                        Console.WriteLine(errorContent);
+                        throw new InvalidOperationException($"OpenAI API error {resp.StatusCode}: {errorContent}");
+                    }
 
-                    Console.WriteLine(errorContent);
-                    throw new InvalidOperationException($"OpenAI API error {resp.StatusCode}: {errorContent}");
+                    resp.Dispose();
                 }
+                catch (TaskCanceledException ex)
+                {
+                    Console.WriteLine("[OpenAIEmbedder__PostWithRetryAsync] - Timeout Exception");
+                }
+                finally
+                {
                     // Retry on 429/5xx with backoff
-                resp.Dispose();
-                await Task.Delay(delay);
-                delay = TimeSpan.FromMilliseconds(delay.TotalMilliseconds * 2);
+                    await Task.Delay(delay);
+                    delay = TimeSpan.FromMilliseconds(delay.TotalMilliseconds * 2);
+                }
             }
 
             // Last try (let it throw if fails)
