@@ -8,7 +8,8 @@ namespace LagoVista.AI.CloudRepos
 {
     public class LLMContentRepo : CloudFileStorage, ILLMContentRepo
     {
-        public LLMContentRepo(IMLRepoSettings settings, IAdminLogger adminLogger) : base(settings.MLBlobStorage.AccountId, settings.MLBlobStorage.AccessKey, adminLogger)
+        public LLMContentRepo(IMLRepoSettings settings, IAdminLogger adminLogger) :// base(settings.MLBlobStorage.AccountId, settings.MLBlobStorage.AccessKey, adminLogger)
+        base(System.Environment.GetEnvironmentVariable("PROD_TS_STORAGE_ACCOUNT_ID"), System.Environment.GetEnvironmentVariable("PROD_TS_STORAGE_ACCOUNT_ACCESS_KEY"), adminLogger)
         {
         }
 

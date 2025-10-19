@@ -13,6 +13,5 @@ namespace LagoVista.AI
         Task<ListResponse<LabelSummary>> SearchLabelsForOrgAsync(string orgId, string searchString, ListRequest listRequest);
         Task<ListResponse<LabelSummary>> GetLabelsForOrgAsync(string orgId, ListRequest listRequest);
         Task<bool> QueryKeyInUseAsync(string key, string org);
-
     }
 }

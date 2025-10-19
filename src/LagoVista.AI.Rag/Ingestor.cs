@@ -25,7 +25,7 @@ namespace LagoVista.AI.Rag
             _config = config ?? throw new ArgumentNullException(nameof(config)); 
         }
 
-        public async Task IngestAsync()
+        public async Task IngestAsync(string subModmain)
         {
             var adminLogger = new AdminLogger(new ConsoleLogWriter());
 
@@ -114,6 +114,8 @@ namespace LagoVista.AI.Rag
                                 ["repo"] = Path.GetFileName(repo),
                                 ["fileName"] = fileInfo.Name,
                                 ["path"] = pathInProject,
+                                ["domain"] = "sourcecode",
+                                ["subdomain"] = subModmain,
                                 ["language"] = LanguageGuesser.FromPath(relPath),
                                 ["symbol"] = ch.Symbol,
                                 ["start_line"] = ch.StartLine,

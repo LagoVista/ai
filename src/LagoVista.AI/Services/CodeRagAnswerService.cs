@@ -8,7 +8,9 @@ using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Services;
 using System.Linq;
-using static LagoVista.AI.Managers.OpenAIManager;    // your types (if any)
+using static LagoVista.AI.Managers.OpenAIManager;
+using LagoVista.Core.Validation;
+using RingCentral;    // your types (if any)
 
 namespace LagoVista.AI.Services
 {
@@ -17,22 +19,23 @@ namespace LagoVista.AI.Services
         private readonly IQdrantClient _qdrant;
         private readonly IEmbedder _embedder;
         private readonly string _collection;
-        private readonly string _repoRoot;
         private readonly HttpClient _llm;
+        private readonly string _orgId = "AA2C78499D0140A5A9CE4B7581EF9691";
+        private readonly ILLMContentRepo _contentRepo;
 
-        public CodeRagAnswerService(IOpenAISettings openAiSettings, IQdrantClient qdrant, IEmbedder embedder)
+        public CodeRagAnswerService(IOpenAISettings openAiSettings, IQdrantClient qdrant, IEmbedder embedder, ILLMContentRepo contentRepo )
         {
             _qdrant = qdrant;
             _embedder = embedder;
-            _collection = "code_chunks_v2";
-            _repoRoot = "D:\\Nuviot\\co.core";
+            _collection = "slappcontent";
+            _contentRepo = contentRepo ?? throw new ArgumentNullException(nameof(contentRepo));
 
             _llm = new HttpClient { BaseAddress = new Uri(openAiSettings.OpenAIUrl) };
             _llm.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", openAiSettings.OpenAIApiKey);
             _llm.Timeout = TimeSpan.FromSeconds(60);
         }
 
-        public async Task<AnswerResult> AnswerAsync(string question, string repo = null, string language = "csharp", int topK = 8)
+        public async Task<InvokeResult<AnswerResult>> AnswerAsync(string question, string repo = null, string language = "csharp", int topK = 8)
         {
             // 1) Embed the user question
             var qvec = await _embedder.EmbedAsync(question);
@@ -65,20 +68,25 @@ namespace LagoVista.AI.Services
                 var path = p["path"]?.ToString() ?? "";
                 var start = Convert.ToInt32(p["start_line"]);
                 var end = Convert.ToInt32(p["end_line"]);
+                var fileName = Convert.ToString(p["fileName"]);
+                var symbolType = Convert.ToString(p["kind"]);
+                var symbol = Convert.ToString(p["symbol"]);
+
                 var tag = $"S{idx + 1}";
 
                 string text = p.ContainsKey("text") ? p["text"].ToString() : null;
                 if (string.IsNullOrEmpty(text) && !string.IsNullOrEmpty(path) && end >= start)
                 {
-                    text = ReadLines(Path.Combine(_repoRoot, path), start, end);
+                    var response = await GetContentAsync(path, fileName, start, end);
+                    if (response.Successful)
+                        text = response.Result;
                 }
 
                 Console.WriteLine($"MATCH: {tag}: {path} [{start}-{end}] (score={hit.Score:F3})");
 
-
                 if (!string.IsNullOrEmpty(text))
                 {
-                    snippets.Add(new Snippet(tag, path, start, end, text));
+                    snippets.Add(new Snippet(tag, path, fileName, start, end, text, symbol, symbolType));
                 }
             }
 
@@ -104,11 +112,11 @@ namespace LagoVista.AI.Services
             var oaiResponse = await resp.Content.ReadAsAsync<OpenAIResponse>();
             var content = oaiResponse.choices.First().message.content ?? "";
 
-            return new AnswerResult
+            return InvokeResult<AnswerResult>.Create(new AnswerResult
             {
                 Text = content.Trim(),
-                Sources = snippets.Select(s => new SourceRef { Tag = s.Tag, Path = s.Path, Start = s.Start, End = s.End }).ToList()
-            };
+                Sources = snippets.Select(s => new SourceRef { Tag = s.Tag, Path = s.Path, FileName=s.FileName, Start = s.Start, End = s.End, Excerpt = s.Text, Symbol = s.Symbol, SymbolType = s.SymbolType }).ToList()
+            });
         }
 
         private static List<QdrantScoredPoint> SelectDiverse(List<QdrantScoredPoint> hits, int topK)
@@ -125,22 +133,24 @@ namespace LagoVista.AI.Services
             return byKey.Values.ToList();
         }
 
-        private static string ReadLines(string fullPath, int start, int end)
+        public async Task<InvokeResult<string>> GetContentAsync(string path, string fileName, int start, int end)
         {
-            if (!File.Exists(fullPath))
+            var response = await _contentRepo.GetTextContentAsync(_orgId, path, fileName);
+            if(!response.Successful)
             {
-                Console.WriteLine("Could not find file: " + fullPath);
-                return string.Empty;
+                return InvokeResult<string>.FromError(response.ErrorMessage);
             }
-            var all = File.ReadAllLines(fullPath);
+
+            var text = response.Result.Split("\n");
             start = Math.Max(1, start);
-            end = Math.Min(all.Length, end);
-            if (end < start) return string.Empty;
+            end = Math.Min(text.Length, end);
+            if (end < start) return InvokeResult<string>.FromError("End is less than start");
 
             var sb = new StringBuilder();
             for (int i = start - 1; i <= end - 1; i++)
-                sb.AppendLine(all[i]);
-            return sb.ToString();
+                sb.AppendLine(text[i]);
+
+            return InvokeResult<string>.Create(sb.ToString());
         }
     }
 
@@ -154,26 +164,37 @@ namespace LagoVista.AI.Services
     {
         public string Tag { get; set; } = "";
         public string Path { get; set; } = "";
+        public string FileName { get; set; } = "";
         public int Start { get; set; }
         public int End { get; set; }
+        public string Excerpt { get; set; }
+        public string Symbol { get; set; }
+        public string SymbolType { get; set; }
     }
 
     public sealed class Snippet
     {
-        public Snippet(string tag, string path, int start, int end, string text)
+        public Snippet(string tag, string path, string fileName, int start, int end, string text, string symbol, string symbolType)
         {
             Tag = tag;
             Path = path;
+            FileName = fileName;
             Start = start;
             End = end;
             Text = text;
+            Symbol = symbol;
+            SymbolType = symbolType;
         }
 
         public string Tag { get; }
         public string Path { get; }
+        public string FileName { get; }
         public int Start { get; }
         public int End { get; }
         public string Text { get; }
+        public string Symbol { get; }
+        public string SymbolType { get; }
+
     }
 
 
@@ -201,7 +222,13 @@ namespace LagoVista.AI.Services
 @"You are a senior software engineer assistant.
 Use only the provided context when applicable.
 If the answer is not in the context, say so.
-Always cite sources using [S#] tags.";
+Always cite sources using [S#] tags.  
+Format the output as html that can be included
+in another web page, only include the content 
+within the body tag, do not include the HTML or header.
+The color of the text should look good on a dark background 
+and the syntax of the code should be highlighted appropriately
+for the language";
 
             var user = question;
             var context = "Context snippets (cite with [S#]):\n\n" + sb.ToString();
