@@ -1,4 +1,5 @@
 ﻿using LagoVista.AI.Interfaces;
+using LagoVista.AI.Models;
 using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json;
 using System;
@@ -6,6 +7,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Runtime;
 using System.Threading.Tasks;
 
 
@@ -13,7 +15,7 @@ namespace LagoVista.AI.Services
 {
     public class OpenAIEmbedder : IEmbedder
     {
-        private readonly HttpClient _http;
+        private HttpClient _http;
         private readonly string _model;
         private readonly int _expectedDims;
 
@@ -35,6 +37,12 @@ namespace LagoVista.AI.Services
             _expectedDims = 3072;
             _http = new HttpClient { BaseAddress = new Uri(aiSettings.OpenAIUrl) };
             _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", aiSettings.OpenAIApiKey);
+            _http.Timeout = TimeSpan.FromSeconds(30);
+        }
+
+        public void Init(VectorDatabase db)
+        {
+            _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", db.OpenAIApiKey);
             _http.Timeout = TimeSpan.FromSeconds(30);
         }
 

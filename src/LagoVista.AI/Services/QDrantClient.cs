@@ -1,4 +1,5 @@
 ﻿using LagoVista.AI.Interfaces;
+using LagoVista.AI.Models;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -11,7 +12,7 @@ namespace LagoVista.AI.Services
 {
     public partial class QdrantClient : IQdrantClient
     {
-        private readonly HttpClient _http;
+        private  HttpClient _http;
 
 
         public QdrantClient(IQdrantSettings settings)
@@ -20,9 +21,16 @@ namespace LagoVista.AI.Services
             _http.DefaultRequestHeaders.Add("api-key", settings.QdrantApiKey);
         }
 
-        public async Task EnsureCollectionAsync(QdrantCollectionConfig cfg)
+        public void Init(VectorDatabase db)
         {
-            var name = cfg.Name;
+            _http.Dispose();
+
+            _http = new HttpClient { BaseAddress = new Uri(db.VectorDatabaseUri) };
+            _http.DefaultRequestHeaders.Add("api-key", db.VectorDatabaseApiKey);
+        }
+
+        public async Task EnsureCollectionAsync(QdrantCollectionConfig cfg, string name)
+        {
             var exists = await _http.GetAsync($"/collections/{name}");
             if (exists.IsSuccessStatusCode) return;
 
@@ -40,7 +48,6 @@ namespace LagoVista.AI.Services
             var resp = await _http.PutAsJsonAsync($"/collections/{collection}/points?wait=true", req, ct);
             resp.EnsureSuccessStatusCode();
         }
-
 
         public async Task<List<QdrantScoredPoint>> SearchAsync(string collection, QdrantSearchRequest req)
         {

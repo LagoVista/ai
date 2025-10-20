@@ -1,5 +1,6 @@
 ﻿using LagoVista.AI.CloudRepos;
 using LagoVista.AI.Interfaces;
+using LagoVista.AI.Models;
 using LagoVista.AI.Rag.Services;
 using LagoVista.AI.Rag.Types;
 using LagoVista.AI.Services;
@@ -19,37 +20,39 @@ namespace LagoVista.AI.Rag
 {
     public class Ingestor
     {
+        private readonly VectorDatabase _vectoDb;
         private readonly IngestionConfig _config;
 
-        public Ingestor(IngestionConfig config)
+        public Ingestor(IngestionConfig config, VectorDatabase vectorDb)
         {
-            _config = config ?? throw new ArgumentNullException(nameof(config)); 
+            _config = config ?? throw new ArgumentNullException(nameof(config));
+            _vectoDb = vectorDb;
         }
 
         public async Task IngestAsync(string subModmain)
         {
             var adminLogger = new AdminLogger(new ConsoleLogWriter());
 
+            var collectionName = _vectoDb.CollectionName;
+
             var qcfg = new QdrantConfig()
             {
-                QdrantApiKey =  Env.Get("QDRANT_API_KEY", _config.Qdrant.ApiKey),
-                QdrantEndpoint = Env.Get("QDRANT_ENDPOINT", _config.Qdrant.Endpoint)
+                QdrantApiKey = _vectoDb.VectorDatabaseApiKey,
+                QdrantEndpoint = _vectoDb.VectorDatabaseUri
             };
 
             var qdrant = new QdrantClient(qcfg);
-            var collectionName = _config.Qdrant.Collection;
 
             // 1) Ensure collection exists
             await qdrant.EnsureCollectionAsync(new QdrantCollectionConfig
             {
-                Name = collectionName,
                 VectorSize = _config.Qdrant.VectorSize,
                 Distance = _config.Qdrant.Distance
-            });
+            }, collectionName);
 
             var settings = new OpenAiConfig()
             {
-                OpenAIApiKey = _config.Embeddings.ApiKey,
+                OpenAIApiKey = _vectoDb.OpenAIApiKey,
                 OpenAIUrl = _config.Embeddings.BaseUrl
             };
 
@@ -58,8 +61,8 @@ namespace LagoVista.AI.Rag
             {
                 MLBlobStorage = new ConnectionSettings()
                 {
-                    AccountId = _config.ContentRepo.AccountId,
-                    AccessKey = _config.ContentRepo.AccessKey
+                    AccountId = _vectoDb.AzureAccountId,
+                    AccessKey = _vectoDb.AzureApiToken
                 }
             }, adminLogger);
 
