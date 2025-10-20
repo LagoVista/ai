@@ -16,7 +16,7 @@ namespace LagoVista.AI.Models
     public class VectorDatabase : EntityBase, IFormDescriptor, ISummaryFactory, IFormConditionalFields, IValidateable
     {
         [FormField(LabelResource: AIResources.Names.Common_Icon, FieldType: FieldTypes.Icon, ResourceType: typeof(AIResources))]
-        public string Icon { get; set; }
+        public string Icon { get; set; } = "icon-ae-database-3";
 
         [FormField(LabelResource: AIResources.Names.Common_Description, FieldType: FieldTypes.MultiLineText, ResourceType: typeof(AIResources))]
         public string Description { get; set; }
@@ -45,7 +45,7 @@ namespace LagoVista.AI.Models
         [FormField(LabelResource: AIResources.Names.VectorDatabase_OpenAPI_Token, HelpResource: AIResources.Names.VectorDatabase_OpenAPI_Token_Help, SecureIdFieldName:nameof(OpenAIApiKeySecretId), FieldType: FieldTypes.Secret, ResourceType: typeof(AIResources))]
         public string OpenAIApiKey { get; set; }
 
-        public ISummaryData CreateSummary()
+        ISummaryData ISummaryFactory.CreateSummary()
         {
             return this.CreateSummary();
         }
@@ -59,6 +59,7 @@ namespace LagoVista.AI.Models
                     new FormConditional()
                     {
                         ForCreate = true,
+                        ForUpdate = false,
                         RequiredFields = new List<string>() { nameof(VectorDatabaseApiKey), nameof(AzureApiToken), nameof(OpenAIApiKey) } }
                 }
             };
@@ -75,13 +76,13 @@ namespace LagoVista.AI.Models
                 nameof(VectorDatabaseUri),
                 nameof(VectorDatabaseApiKey),
                 nameof(AzureAccountId),
-                nameof(AzureApiTokenSecretid),
+                nameof(AzureApiToken),
                 nameof(OpenAIApiKey),
                 nameof(Description)
             };
         }
 
-        public VectorDatabaseSummary ToSummary()
+        public VectorDatabaseSummary CreateSummary()
         {
             var db = new VectorDatabaseSummary();
             db.Populate(this);

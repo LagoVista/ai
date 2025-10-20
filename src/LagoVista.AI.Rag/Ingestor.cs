@@ -12,6 +12,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace LagoVista.AI.Rag
@@ -137,7 +138,7 @@ namespace LagoVista.AI.Rag
                         {
                             try
                             {
-                                await qdrant.UpsertAsync(collectionName, points);
+                                await qdrant.UpsertInBatchesAsync(collectionName, points, vectorDims:3072);
                                 adminLogger.Trace($"[Ingestor__IngestAsync] {fileInfo.Name} uploaded {points.Count} points to qdrant in {sw.Elapsed.TotalMilliseconds}ms");
 
                                 inline.UpsertInlineHeader(file, _config.IndexVersion);

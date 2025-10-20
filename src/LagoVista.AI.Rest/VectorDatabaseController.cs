@@ -31,20 +31,25 @@ namespace LagoVista.AI.Rest
         public async Task<DetailResponse<VectorDatabase>> GetVectorDatabase(string id)
         {
             var db = await _vectorDbManager.GetVectorDatabaseAsync(id, OrgEntityHeader, UserEntityHeader);
-            var result = DetailResponse<VectorDatabase>.Create(db);
+            return DetailResponse<VectorDatabase>.Create(db);
+        }
 
+        [HttpGet("/api/ml/vectordb/factory")]
+        public async Task<DetailResponse<VectorDatabase>> CreateVectorDb()
+        {
+            var result = DetailResponse<VectorDatabase>.Create();
+            SetAuditProperties(result.Model);
+            SetOwnedProperties(result.Model);
             return result;
         }
+
 
 
         [HttpGet("/api/ml/vectordb/{id}/secrets")]
         public async Task<DetailResponse<VectorDatabase>> GetVectorDatabaseWithSecrets(string id)
         {
             var db = await _vectorDbManager.GetVectorDatabaseWithSecretsAsync(id, OrgEntityHeader, UserEntityHeader);
-            var result = DetailResponse<VectorDatabase>.Create(db);
-            SetAuditProperties(result.Model);
-            SetOwnedProperties(result.Model);
-            return result;
+            return DetailResponse<VectorDatabase>.Create(db);
         }
 
         [HttpGet("/api/ml/vectordbs")]
@@ -60,13 +65,13 @@ namespace LagoVista.AI.Rest
         }
 
         [HttpPost("/api/ml/vectordb")]
-        public Task AddVectorDb(VectorDatabase db)
+        public Task AddVectorDb([FromBody] VectorDatabase db)
         {
             return _vectorDbManager.AddVectorDatabaseAsync(db, OrgEntityHeader, UserEntityHeader);
         }
 
         [HttpPut("/api/ml/vectordb")]
-        public Task UpdateVectorDb(VectorDatabase db)
+        public Task UpdateVectorDb([FromBody] VectorDatabase db)
         {
             SetUpdatedProperties(db);
             return _vectorDbManager.UpdateVectorDatabaseAsync(db, OrgEntityHeader, UserEntityHeader);

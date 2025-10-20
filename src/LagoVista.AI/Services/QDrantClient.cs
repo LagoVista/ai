@@ -4,11 +4,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace LagoVista.AI.Services
 {
-    public class QdrantClient : IQdrantClient
+    public partial class QdrantClient : IQdrantClient
     {
         private readonly HttpClient _http;
 
@@ -33,12 +34,13 @@ namespace LagoVista.AI.Services
             resp.EnsureSuccessStatusCode();
         }
 
-        public async Task UpsertAsync(string collection, IEnumerable<QdrantPoint> points)
+        public async Task UpsertAsync(string collection, IEnumerable<QdrantPoint> points, CancellationToken ct)
         {
             var req = new { points = points.Select(p => new { id = p.Id, vector = p.Vector, payload = p.Payload }) };
-            var resp = await _http.PutAsJsonAsync($"/collections/{collection}/points?wait=true", req);
+            var resp = await _http.PutAsJsonAsync($"/collections/{collection}/points?wait=true", req, ct);
             resp.EnsureSuccessStatusCode();
         }
+
 
         public async Task<List<QdrantScoredPoint>> SearchAsync(string collection, QdrantSearchRequest req)
         {
