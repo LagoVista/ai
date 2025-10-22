@@ -18,7 +18,7 @@ namespace LagoVista.AI.CloudRepos
             services.AddTransient<ILabelRepo, LabelRepo>();
             services.AddTransient<ITrainingDataSetRepo, TrainingDataSetRepo>();
             services.AddTransient<IMLModelRepo, MLModelRepo>();
-            services.AddTransient<ILLMContentRepo, LLMContentRepo>();
+            services.AddTransient<ILLMContentRepo, LLMContentRepo>(); //Note this is not thread safe, needs to be a transient.
             services.AddSingleton<IVectorDatabaseRepo, VectorDatabaseRepo>();
         }
     }

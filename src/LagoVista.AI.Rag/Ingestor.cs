@@ -129,7 +129,7 @@ namespace LagoVista.AI.Rag
                         });
                     }
                      
-                    var result = await contentRepo.AddTextContentAsync(_config.OrgId, pathInProject, fileInfo.Name, text, "text/plain");
+                    var result = await contentRepo.AddTextContentAsync(_vectoDb, pathInProject, fileInfo.Name, text, "text/plain");
                    
                     if (result.Successful && points.Count > 0)
                     {

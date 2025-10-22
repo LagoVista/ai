@@ -40,11 +40,15 @@ namespace LagoVista.AI.Services
             _http.Timeout = TimeSpan.FromSeconds(30);
         }
 
-        public void Init(VectorDatabase db)
+        public OpenAIEmbedder(VectorDatabase vectorDb, IOpenAISettings aiSettings, IAdminLogger adminLogger)
         {
-            _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", db.OpenAIApiKey);
+            _model = "text-embedding-3-large";
+            _expectedDims = 3072;
+            _http = new HttpClient { BaseAddress = new Uri(aiSettings.OpenAIUrl) };
+            _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", vectorDb.OpenAIApiKey);
             _http.Timeout = TimeSpan.FromSeconds(30);
         }
+
 
         public async Task<float[]> EmbedAsync(string text)
         {

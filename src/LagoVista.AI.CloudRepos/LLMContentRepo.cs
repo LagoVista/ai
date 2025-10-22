@@ -23,34 +23,36 @@ namespace LagoVista.AI.CloudRepos
             return $"{path.Replace('\\','/')}/{fileName}";
         }
 
-        public async Task<InvokeResult> AddImageContentAsync(string orgId, string path, string fileName, byte[] model, string contentType)
+        public async Task<InvokeResult> AddImageContentAsync(VectorDatabase vectorDb, string path, string fileName, byte[] model, string contentType)
         {
             var blobName = GetBlobName(path, fileName);
-            var containerName = GetContainerName(orgId);
+            var containerName = GetContainerName(vectorDb.OwnerOrganization.Id);
             var result = await AddFileAsync(containerName, blobName, model);
             return result.ToInvokeResult();
         }
 
-        public async Task<InvokeResult<byte[]>> GetImageContentAsync(string orgId, string path, string fileName)
+        public async Task<InvokeResult<byte[]>> GetImageContentAsync(VectorDatabase vectorDb, string path, string fileName)
         {
             var blobName = GetBlobName(path, fileName);
-            var containerName = GetContainerName(orgId);
+            var containerName = GetContainerName(vectorDb.OwnerOrganization.Id);
             return await GetFileAsync(containerName, blobName);
         }
 
 
-        public async Task<InvokeResult> AddTextContentAsync(string orgId, string path, string fileName, string content, string contentType)
+        public async Task<InvokeResult> AddTextContentAsync(VectorDatabase vectorDb, string path, string fileName, string content, string contentType)
         {
             var blobName = GetBlobName(path, fileName);
-            var containerName = GetContainerName(orgId);
+            var containerName = GetContainerName(vectorDb.OwnerOrganization.Id);
             var result = await AddFileAsync(containerName, blobName, content);
             return result.ToInvokeResult();
         }
 
-        public async Task<InvokeResult<string>> GetTextContentAsync(string orgId, string path, string fileName)
+        public async Task<InvokeResult<string>> GetTextContentAsync(VectorDatabase vectorDb, string path, string fileName)
         {
+            InitConnectionSettings(vectorDb.AzureAccountId, vectorDb.AzureApiToken);
+            
             var blobName = GetBlobName(path, fileName);
-            var containerName = GetContainerName(orgId);
+            var containerName = GetContainerName(vectorDb.OwnerOrganization.Id);
             var result = await GetFileAsync(containerName, blobName);
             return InvokeResult<string>.Create(System.Text.ASCIIEncoding.ASCII.GetString(result.Result));
         }

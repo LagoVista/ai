@@ -1,10 +1,11 @@
 ﻿using LagoVista.AI.Models;
 using LagoVista.AI.Rag;
 using LagoVista.AI.Rag.Types;
+using LagoVista.Core.Models;
 using Newtonsoft.Json;
 
 
-var jsonConfig = File.ReadAllText("appsettings.json");
+var jsonConfig = System.IO.File.ReadAllText("appsettings.json");
 
 var cfg = JsonConvert.DeserializeObject<IngestionConfig>(jsonConfig);
 
@@ -19,7 +20,12 @@ var vectoDb = new VectorDatabase()
     VectorDatabaseUri = cfg.Qdrant.Endpoint,
     OpenAIApiKey = cfg.Embeddings.ApiKey,
     AzureAccountId = cfg.ContentRepo.AccountId,
-    AzureApiToken = cfg.ContentRepo.AccessKey
+    AzureApiToken = cfg.ContentRepo.AccessKey,
+    OwnerOrganization = new EntityHeader()
+    {
+        Id = cfg.OrgId,
+    }
+
 };
 
 var ingestor = new Ingestor(cfg, vectoDb);
