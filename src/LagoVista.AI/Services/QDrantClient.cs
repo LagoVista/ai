@@ -1,8 +1,10 @@
 ﻿using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
+using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -13,12 +15,14 @@ namespace LagoVista.AI.Services
     public partial class QdrantClient : IQdrantClient
     {
         private  HttpClient _http;
+        private IAdminLogger _adminLogger;
 
 
-        public QdrantClient(IQdrantSettings settings)
+        public QdrantClient(IQdrantSettings settings, IAdminLogger adminLogger)
         {
             _http = new HttpClient { BaseAddress = new Uri(settings.QdrantEndpoint) };
             _http.DefaultRequestHeaders.Add("api-key", settings.QdrantApiKey);
+            _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
         }
 
         public void Init(VectorDatabase db)
@@ -44,9 +48,18 @@ namespace LagoVista.AI.Services
 
         public async Task UpsertAsync(string collection, IEnumerable<QdrantPoint> points, CancellationToken ct)
         {
+            var sw = Stopwatch.StartNew();
             var req = new { points = points.Select(p => new { id = p.Id, vector = p.Vector, payload = p.Payload }) };
             var resp = await _http.PutAsJsonAsync($"/collections/{collection}/points?wait=true", req, ct);
-            resp.EnsureSuccessStatusCode();
+            if (!resp.IsSuccessStatusCode)
+            {
+                var body = await resp.Content.ReadAsStringAsync();
+                _adminLogger.AddError("[QdrantClient__UpsertAsync]", $"[QdrantClient__UpsertAsync] error uploading batch of {points.Count()} HTTP Code {resp.StatusCode} - {body}");
+
+                throw new QdrantHttpException("Could not upload", resp.StatusCode, body);
+            }
+            else
+                _adminLogger.Trace($"[QdrantClient__UpsertAsync] Uploaded batch of {points.Count()} in {sw.Elapsed.TotalMilliseconds}ms");
         }
 
         public async Task<List<QdrantScoredPoint>> SearchAsync(string collection, QdrantSearchRequest req)

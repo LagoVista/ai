@@ -66,7 +66,8 @@ namespace LagoVista.AI.Services
 				var batch = points.Skip(i).Take(take).ToList();
 				try
 				{
-					await UpsertJsonGzipAsync(collection, batch, ct).ConfigureAwait(false);
+					await UpsertAsync(collection, batch, ct);
+					//await UpsertJsonGzipAsync(collection, batch, ct).ConfigureAwait(false);
 					i += take;
 				}
 				catch (QdrantHttpException ex) when (ex.StatusCode == HttpStatusCode.RequestEntityTooLarge)

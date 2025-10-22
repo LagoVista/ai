@@ -41,7 +41,7 @@ namespace LagoVista.AI.Rag
                 QdrantEndpoint = _vectoDb.VectorDatabaseUri
             };
 
-            var qdrant = new QdrantClient(qcfg);
+            var qdrant = new QdrantClient(qcfg, adminLogger);
 
             // 1) Ensure collection exists
             await qdrant.EnsureCollectionAsync(new QdrantCollectionConfig
