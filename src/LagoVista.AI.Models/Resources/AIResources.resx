@@ -483,4 +483,10 @@
   <data name="VectorDatabases_Title" xml:space="preserve">
     <value>Vector Databases</value>
   </data>
+  <data name="VectorDatabase_AzureBlobContainerName" xml:space="preserve">
+    <value>Blob Container Name</value>
+  </data>
+  <data name="VectorDatabase_AzureBlobContainerName_Help" xml:space="preserve">
+    <value>Within Azure Storage you need to create a Blob Container that will be used to contain content. </value>
+  </data>
 </root>

@@ -83,7 +83,6 @@ namespace LagoVista.AI.Managers
 
             secret = await _secureStorage.GetSecretAsync(org, model.VectorDatabaseApiKeySecretId, user);
             model.VectorDatabaseApiKey = secret.Successful ? secret.Result : throw new RecordNotFoundException(nameof(VectorDatabase.VectorDatabaseApiKeySecretId), "N/A");
-
             return model;
         }
 

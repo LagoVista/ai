@@ -39,6 +39,9 @@ namespace LagoVista.AI.Models
         [FormField(LabelResource: AIResources.Names.VectorDatabase_AzureApiToken, HelpResource: AIResources.Names.VectorDatabase_AzureApiToken_Help, SecureIdFieldName:nameof(AzureApiTokenSecretid), FieldType: FieldTypes.Secret, ResourceType: typeof(AIResources))]
         public string AzureApiToken { get; set; }
 
+        [FormField(LabelResource: AIResources.Names.VectorDatabase_AzureBlobContainerName, HelpResource: AIResources.Names.VectorDatabase_AzureBlobContainerName_Help, IsRequired:true, ResourceType: typeof(AIResources))]
+        public string BlobContainerName { get; set; }
+
         public string OpenAIApiKeySecretId { get; set; }
 
 
@@ -77,6 +80,7 @@ namespace LagoVista.AI.Models
                 nameof(VectorDatabaseApiKey),
                 nameof(AzureAccountId),
                 nameof(AzureApiToken),
+                nameof(BlobContainerName),
                 nameof(OpenAIApiKey),
                 nameof(Description)
             };

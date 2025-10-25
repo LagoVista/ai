@@ -30,21 +30,22 @@ namespace LagoVista.AI.Services
         private readonly IAdminLogger _adminLogger;
         private readonly IOrganizationRepo _orgRepo;
 
-        public CodeRagAnswerService(IAdminLogger adminLogger, IOrganizationRepo orgRepo, IOpenAISettings openAiSettings, ILLMContentRepo contentRepo )
+        public CodeRagAnswerService(IAdminLogger adminLogger, IVectorDatabaseManager vectorDbManager, IOrganizationRepo orgRepo, IOpenAISettings openAiSettings, ILLMContentRepo contentRepo )
         {
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
             _contentRepo = contentRepo ?? throw new ArgumentNullException(nameof(contentRepo));
             _openAiSettings = openAiSettings ?? throw new ArgumentNullException(nameof(openAiSettings));
             _orgRepo = orgRepo ?? throw new ArgumentNullException(nameof(orgRepo));
+            _vectorDbManager = vectorDbManager ?? throw new ArgumentNullException(nameof(vectorDbManager));
         }
 
         public async Task<InvokeResult<AnswerResult>> AnswerAsync(string vectorDatabaseId, string question, EntityHeader org, EntityHeader user, string repo = null, string language = "csharp", int topK = 8)
         {
+            if (String.IsNullOrEmpty(vectorDatabaseId)) throw new ArgumentNullException(nameof(vectorDatabaseId));
             var vectorDb = await _vectorDbManager.GetVectorDatabaseWithSecretsAsync(vectorDatabaseId, org, user);
 
             _embedder = new OpenAIEmbedder(vectorDb, _openAiSettings, _adminLogger);
             _qdrant = new QdrantClient(vectorDb, _adminLogger);
-
 
             // 1) Embed the user question
             var qvec = await _embedder.EmbedAsync(question);

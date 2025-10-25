@@ -1,4 +1,4 @@
-﻿/*10/19/2025 10:09:02 AM*/
+﻿/*10/22/2025 11:10:30 AM*/
 using System.Globalization;
 using System.Reflection;
 
@@ -399,6 +399,12 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:VectorDatabase_AzureApiToken_Help
 
 		public static string VectorDatabase_AzureApiToken_Help { get { return GetResourceString("VectorDatabase_AzureApiToken_Help"); } }
+//Resources:AIResources:VectorDatabase_AzureBlobContainerName
+
+		public static string VectorDatabase_AzureBlobContainerName { get { return GetResourceString("VectorDatabase_AzureBlobContainerName"); } }
+//Resources:AIResources:VectorDatabase_AzureBlobContainerName_Help
+
+		public static string VectorDatabase_AzureBlobContainerName_Help { get { return GetResourceString("VectorDatabase_AzureBlobContainerName_Help"); } }
 //Resources:AIResources:VectorDatabase_CollectionName
 
 		public static string VectorDatabase_CollectionName { get { return GetResourceString("VectorDatabase_CollectionName"); } }
@@ -538,6 +544,8 @@ namespace LagoVista.AI.Models.Resources
 			public const string VectorDatabase_AzureAccountId_Help = "VectorDatabase_AzureAccountId_Help";
 			public const string VectorDatabase_AzureApiToken = "VectorDatabase_AzureApiToken";
 			public const string VectorDatabase_AzureApiToken_Help = "VectorDatabase_AzureApiToken_Help";
+			public const string VectorDatabase_AzureBlobContainerName = "VectorDatabase_AzureBlobContainerName";
+			public const string VectorDatabase_AzureBlobContainerName_Help = "VectorDatabase_AzureBlobContainerName_Help";
 			public const string VectorDatabase_CollectionName = "VectorDatabase_CollectionName";
 			public const string VectorDatabase_Description = "VectorDatabase_Description";
 			public const string VectorDatabase_OpenAPI_Token = "VectorDatabase_OpenAPI_Token";

@@ -2,14 +2,14 @@
 using LagoVista.CloudStorage.Storage;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
+using System;
 using System.Threading.Tasks;
 
 namespace LagoVista.AI.CloudRepos
 {
     public class LLMContentRepo : CloudFileStorage, ILLMContentRepo
     {
-        public LLMContentRepo(IMLRepoSettings settings, IAdminLogger adminLogger) :// base(settings.MLBlobStorage.AccountId, settings.MLBlobStorage.AccessKey, adminLogger)
-        base(System.Environment.GetEnvironmentVariable("PROD_TS_STORAGE_ACCOUNT_ID"), System.Environment.GetEnvironmentVariable("PROD_TS_STORAGE_ACCOUNT_ACCESS_KEY"), adminLogger)
+        public LLMContentRepo(IMLRepoSettings settings, IAdminLogger adminLogger) : base(settings.MLBlobStorage.AccountId, settings.MLBlobStorage.AccessKey, adminLogger)
         {
         }
 
@@ -53,7 +53,7 @@ namespace LagoVista.AI.CloudRepos
             
             var blobName = GetBlobName(path, fileName);
             var containerName = GetContainerName(vectorDb.OwnerOrganization.Id);
-            var result = await GetFileAsync(containerName, blobName);
+            var result = await GetFileAsync(vectorDb.BlobContainerName, blobName);
             return InvokeResult<string>.Create(System.Text.ASCIIEncoding.ASCII.GetString(result.Result));
         }
     }
