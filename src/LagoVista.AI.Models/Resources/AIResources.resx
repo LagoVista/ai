@@ -489,4 +489,67 @@
   <data name="VectorDatabase_AzureBlobContainerName_Help" xml:space="preserve">
     <value>Within Azure Storage you need to create a Blob Container that will be used to contain content. </value>
   </data>
+  <data name="AiConversation_Title" xml:space="preserve">
+    <value>Conversation</value>
+  </data>
+  <data name="AIConversation_Description" xml:space="preserve">
+    <value>A conversation is a collection of interactions between a user and an artificial intelligence agent.</value>
+  </data>
+  <data name="AiConversation_Interaction_Title" xml:space="preserve">
+    <value>Interaction</value>
+  </data>
+  <data name="AiConversation_Interaction_Description" xml:space="preserve">
+    <value>An interaction is a prompt or question provided by a user and the response from the agent..</value>
+  </data>
+  <data name="AiConversations_Title" xml:space="preserve">
+    <value>Conversations</value>
+  </data>
+  <data name="AiAgentContext_Title" xml:space="preserve">
+    <value>Agent Context</value>
+  </data>
+  <data name="AiAgentContext_Description" xml:space="preserve">
+    <value>An agent context is how a generative AI should be implemented to answer questions and create context.  It consists of a vector database, a content database, LLM provide and model as well as basic information about how prompts should be created such as user, role and system contexts. </value>
+  </data>
+  <data name="LlmProvider_OpenAI" xml:space="preserve">
+    <value>OpenAI</value>
+  </data>
+  <data name="AgentContext_LlmProvider" xml:space="preserve">
+    <value>LLM Provider</value>
+  </data>
+  <data name="AgentContext_LlmProvider_Select" xml:space="preserve">
+    <value>-select llm provider-</value>
+  </data>
+  <data name="AgentContext_ConversationContext_Title" xml:space="preserve">
+    <value>Conversation Context</value>
+  </data>
+  <data name="AgentContext_ConversationContext_Description" xml:space="preserve">
+    <value>A conversation context is a specification for how a large language model should be used to interact with user prompts.  It will include things such as role, user, temperature and model</value>
+  </data>
+  <data name="AgentContext_ConversationContext_ModelName" xml:space="preserve">
+    <value>Model Name</value>
+  </data>
+  <data name="AgentContext_ConversationContext_Temperature" xml:space="preserve">
+    <value>Temperature</value>
+  </data>
+  <data name="AgentContext_ConversationContext_System" xml:space="preserve">
+    <value>System</value>
+  </data>
+  <data name="AgentContext_ConversationContext_System_Help" xml:space="preserve">
+    <value>The system is used to instruct the LLM on how to generate the context.  This defines the AI’s identity, role, and behavioral rules before any user input is considered.  It is the “governing policy” for the model. </value>
+  </data>
+  <data name=" AgentContext_ConversationContext_Temperature_Help" xml:space="preserve">
+    <value>Temperature controls how random or deterministic a language model is when generating responses. It affects how “creative” the model’s word choices are.</value>
+  </data>
+  <data name="AgentContext_ConversationContexts" xml:space="preserve">
+    <value>Conversation Contexts</value>
+  </data>
+  <data name="AgentContext_DefaultConversationContext" xml:space="preserve">
+    <value>Default Conversation Context</value>
+  </data>
+  <data name="AgentContext_DefaultConversationContext_Select" xml:space="preserve">
+    <value>-select default conversation context-</value>
+  </data>
+  <data name="AiAgentContexts_Title" xml:space="preserve">
+    <value>Agent Contexts</value>
+  </data>
 </root>

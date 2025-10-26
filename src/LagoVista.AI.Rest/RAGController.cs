@@ -18,9 +18,9 @@ namespace LagoVista.AI.Rest
     [ConfirmedUser]
     public class RAGController : LagoVistaBaseController
     {
-        private readonly ICodeRagAnswerService _answerService;
+        private readonly IRagAnswerService _answerService;
 
-        public RAGController(ICodeRagAnswerService answerService, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
+        public RAGController(IRagAnswerService answerService, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
         {
             _answerService = answerService ?? throw new ArgumentNullException(nameof(answerService));
         }

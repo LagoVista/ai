@@ -1,92 +1,44 @@
-﻿//using Logzio.DotNet.Core.Shipping;
-//using System.Collections.Generic;
-//using System.Text;
+﻿using System.Collections.Generic;
+using System.Text;
 
-//namespace RagCli.Rag
-//{
-//    public static class PromptBuilder
-//    {
-//        public static ChatPrompt Build(string question, List<Snippet> snippets, int maxContextTokens = 6000)
-//        {
-//            var sb = new StringBuilder();
-//            int budget = 0;
+namespace LagoVista.AI.Services
+{
+    public static class PromptBuilder
+    {
+        public static ChatPrompt Build(string question, List<Snippet> snippets, int maxContextTokens = 6000)
+        {
+            var sb = new StringBuilder();
+            int budget = 0;
 
-//            foreach (var s in snippets)
-//            {
-//                var est = RagCli.Types.TokenEstimator.EstimateTokens(s.Text);
-//                if (budget + est > maxContextTokens) break;
-//                budget += est;
+            foreach (var s in snippets)
+            {
+                var est = TokenEstimator.EstimateTokens(s.Text);
+                if (budget + est > maxContextTokens) break;
+                budget += est;
 
-//                sb.AppendLine($"[{s.Tag}] {s.Path}:{s.Start}-{s.End}");
-//                sb.AppendLine("```");
-//                sb.AppendLine(s.Text.TrimEnd());
-//                sb.AppendLine("```");
-//                sb.AppendLine();
-//            }
+                sb.AppendLine($"[{s.Tag}] {s.Path}:{s.Start}-{s.End}");
+                sb.AppendLine("```");
+                sb.AppendLine(s.Text.TrimEnd());
+                sb.AppendLine("```");
+                sb.AppendLine();
+            }
 
-//            var system =
-//@"You are a senior software engineer assistant.
-//Use only the provided context when applicable.
-//If the answer is not in the context, say so.
-//Always cite sources using [S#] tags.";
+            var system =
+@"You are a senior software engineer assistant.
+Use only the provided context when applicable.
+If the answer is not in the context, say so.
+Always cite sources using [S#] tags.  
+Format the output as html that can be included
+in another web page, only include the content 
+within the body tag, do not include the HTML or header.
+The color of the text should look good on a dark background 
+and the syntax of the code should be highlighted appropriately
+for the language";
 
-//            var user = question;
-//            var context = "Context snippets (cite with [S#]):\n\n" + sb.ToString();
+            var user = question;
+            var context = "Context snippets (cite with [S#]):\n\n" + sb.ToString();
 
-//            return new ChatPrompt(system, user, context);
-//        }
-//    }
-
-//    public sealed record ChatPrompt(string System, string User, string Context);
-//    }
-
-
-//using Microsoft.AspNetCore.Builder;
-//using Microsoft.Extensions.DependencyInjection;
-//using Microsoft.Extensions.Hosting;
-//using System.Text.Json;
-//using RagCli.Services;
-//using RagCli.Rag;
-//using Newtonsoft.Json;
-//using System.IO;
-
-//var builder = WebApplication.CreateBuilder(args);
-
-//// Load your existing config (or inline constants)
-//var cfg = JsonSerializer.Deserialize<Config>(File.ReadAllText("appsettings.json"))!;
-//Env.ApplyOverrides(cfg); // if you added env support earlier
-
-//// Qdrant & Embedder from your existing starter
-//builder.Services.AddSingleton(new QdrantClient(cfg.Qdrant.Endpoint, cfg.Qdrant.ApiKey));
-//IEmbedder embedder = (Env.Get("EMBEDDINGS_PROVIDER", cfg.Embeddings.Provider)?.ToLowerInvariant() == "openai")
-//    ? new OpenAIEmbedder(
-//        apiKey: Env.Get("OPENAI_API_KEY", cfg.Embeddings.ApiKey),
-//        model: Env.Get("OPENAI_EMBEDDINGS_MODEL", cfg.Embeddings.Model),
-//        baseUrl: Env.Get("OPENAI_BASE_URL", "https://api.openai.com/v1"),
-//        expectedDims: cfg.Qdrant.VectorSize)
-//    : new StubEmbedder(cfg.Qdrant.VectorSize);
-//builder.Services.AddSingleton(embedder);
-
-//// RAG Answer service
-//builder.Services.AddSingleton(sp =>
-//{
-//    var qdrant = sp.GetRequiredService<QdrantClient>();
-//    var repoRoot = Env.Get("REPO_ROOT", Directory.GetCurrentDirectory());
-//    var llmBaseUrl = Env.Get("LLM_BASE_URL", "https://api.openai.com/v1");
-//    var llmApiKey = Env.Get("LLM_API_KEY", Env.Get("OPENAI_API_KEY", cfg.Embeddings.ApiKey));
-//    return new CodeRagAnswerService(qdrant, embedder, cfg.Qdrant.Collection, repoRoot, llmBaseUrl, llmApiKey);
-//});
-
-//var app = builder.Build();
-
-//app.MapGet("/health", () => new { ok = true });
-
-//app.MapPost("/answer", async (CodeRagAnswerService svc, AnswerRequest req) =>
-//{
-//    var result = await svc.AnswerAsync(req.Question, req.Repo, req.Language, req.TopK);
-//    return Results.Ok(result);
-//});
-
-//app.Run();
-
-//public record AnswerRequest(string Question, string? Repo, string? Language = "csharp", int TopK = 8);
+            return new ChatPrompt(system, user, context);
+        }
+    }
+}

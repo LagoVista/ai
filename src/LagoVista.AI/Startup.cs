@@ -18,10 +18,11 @@ namespace LagoVista.AI
             services.AddTransient<IExperimentResultManager, ExperimentResultManager>();
             services.AddTransient<ITextQueryManager, OpenAIManager>();
             services.AddTransient<IImageGeneratorManager, OpenAIManager>();
-            services.AddTransient<ICodeRagAnswerService, CodeRagAnswerService>();
+            services.AddTransient<IRagAnswerService, RagAnswerService>();
             services.AddTransient<IQdrantClient, QdrantClient>();
             services.AddSingleton<IEmbedder, OpenAIEmbedder>();
-            services.AddSingleton<IVectorDatabaseManager, VectorDatabaseManager>();
+            services.AddSingleton<IAgentContextManager, AgentContextManager>();
+            services.AddTransient<IAiConversationManager, AiConversationManager>();
         }
     }
 }

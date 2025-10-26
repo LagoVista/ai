@@ -8,7 +8,7 @@ using System.Collections.Generic;
 namespace LagoVista.AI.Models
 {
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.ModelCategory_Title, AIResources.Names.ModelCategory_Help, AIResources.Names.ModelCategory_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources),
-        FactoryUrl: "/api/ml/modellabel/factory", GetListUrl: "/api/ml/modelcategories", GetUrl: "/api/ml/modelcategory/{id}", SaveUrl: "/api/ml/modelcategory", DeleteUrl: "/api/ml/modelcategory/{id}",
+        FactoryUrl: "/api/ml/modelcategory/factory", GetListUrl: "/api/ml/modelcategories", GetUrl: "/api/ml/modelcategory/{id}", SaveUrl: "/api/ml/modelcategory", DeleteUrl: "/api/ml/modelcategory/{id}",
         ListUIUrl: "/mlworkbench/settings/categories", EditUIUrl: "/mlworkbench/settings/category/{id}", CreateUIUrl: "/mlworkbench/settings/category/add")]
     public class ModelCategory : EntityBase, IDescriptionEntity, IValidateable, IFormDescriptor, ISummaryFactory, IIconEntity, ICategorized
     {
@@ -20,17 +20,9 @@ namespace LagoVista.AI.Models
 
         public ModelCategorySummary CreateSummary()
         {
-            return new ModelCategorySummary()
-            {
-                Description = Description,
-                Id = Id,
-                IsPublic = IsPublic,
-                Key = Key,
-                Name = Name,
-                Category = Category?.Text,
-                CategoryId = Category?.Id,
-                CategoryKey = Category?.Key,
-            };
+            var summary = new ModelCategorySummary();
+            summary.Populate(this);
+            return summary;
         }
 
         public List<string> GetFormFields()
@@ -47,7 +39,7 @@ namespace LagoVista.AI.Models
 
         ISummaryData ISummaryFactory.CreateSummary()
         {
-            return CreateSummary();
+            return this.CreateSummary();
         }
     }
 

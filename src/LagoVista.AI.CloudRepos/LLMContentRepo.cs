@@ -23,7 +23,7 @@ namespace LagoVista.AI.CloudRepos
             return $"{path.Replace('\\','/')}/{fileName}";
         }
 
-        public async Task<InvokeResult> AddImageContentAsync(VectorDatabase vectorDb, string path, string fileName, byte[] model, string contentType)
+        public async Task<InvokeResult> AddImageContentAsync(AgentContext vectorDb, string path, string fileName, byte[] model, string contentType)
         {
             var blobName = GetBlobName(path, fileName);
             var containerName = GetContainerName(vectorDb.OwnerOrganization.Id);
@@ -31,7 +31,7 @@ namespace LagoVista.AI.CloudRepos
             return result.ToInvokeResult();
         }
 
-        public async Task<InvokeResult<byte[]>> GetImageContentAsync(VectorDatabase vectorDb, string path, string fileName)
+        public async Task<InvokeResult<byte[]>> GetImageContentAsync(AgentContext vectorDb, string path, string fileName)
         {
             var blobName = GetBlobName(path, fileName);
             var containerName = GetContainerName(vectorDb.OwnerOrganization.Id);
@@ -39,7 +39,7 @@ namespace LagoVista.AI.CloudRepos
         }
 
 
-        public async Task<InvokeResult> AddTextContentAsync(VectorDatabase vectorDb, string path, string fileName, string content, string contentType)
+        public async Task<InvokeResult> AddTextContentAsync(AgentContext vectorDb, string path, string fileName, string content, string contentType)
         {
             var blobName = GetBlobName(path, fileName);
             var containerName = GetContainerName(vectorDb.OwnerOrganization.Id);
@@ -47,7 +47,7 @@ namespace LagoVista.AI.CloudRepos
             return result.ToInvokeResult();
         }
 
-        public async Task<InvokeResult<string>> GetTextContentAsync(VectorDatabase vectorDb, string path, string fileName)
+        public async Task<InvokeResult<string>> GetTextContentAsync(AgentContext vectorDb, string path, string fileName)
         {
             InitConnectionSettings(vectorDb.AzureAccountId, vectorDb.AzureApiToken);
             

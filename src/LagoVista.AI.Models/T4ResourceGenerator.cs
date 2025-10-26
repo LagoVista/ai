@@ -1,8 +1,8 @@
-﻿/*10/22/2025 11:10:30 AM*/
+﻿/*10/26/2025 9:09:36 AM*/
 using System.Globalization;
 using System.Reflection;
 
-//Resources:AIResources:Common_Category
+//Resources:AIResources:AgentContext_ConversationContext_Description
 namespace LagoVista.AI.Models.Resources
 {
 	public class AIResources
@@ -56,6 +56,66 @@ namespace LagoVista.AI.Models.Resources
 			return new HtmlString(str);
         }*/
 		
+		public static string AgentContext_ConversationContext_Description { get { return GetResourceString("AgentContext_ConversationContext_Description"); } }
+//Resources:AIResources:AgentContext_ConversationContext_ModelName
+
+		public static string AgentContext_ConversationContext_ModelName { get { return GetResourceString("AgentContext_ConversationContext_ModelName"); } }
+//Resources:AIResources:AgentContext_ConversationContext_System
+
+		public static string AgentContext_ConversationContext_System { get { return GetResourceString("AgentContext_ConversationContext_System"); } }
+//Resources:AIResources:AgentContext_ConversationContext_System_Help
+
+		public static string AgentContext_ConversationContext_System_Help { get { return GetResourceString("AgentContext_ConversationContext_System_Help"); } }
+//Resources:AIResources:AgentContext_ConversationContext_Temperature
+
+		public static string AgentContext_ConversationContext_Temperature { get { return GetResourceString("AgentContext_ConversationContext_Temperature"); } }
+//Resources:AIResources:AgentContext_ConversationContext_Temperature_Help
+
+		public static string AgentContext_ConversationContext_Temperature_Help { get { return GetResourceString("AgentContext_ConversationContext_Temperature_Help"); } }
+//Resources:AIResources:AgentContext_ConversationContext_Title
+
+		public static string AgentContext_ConversationContext_Title { get { return GetResourceString("AgentContext_ConversationContext_Title"); } }
+//Resources:AIResources:AgentContext_ConversationContexts
+
+		public static string AgentContext_ConversationContexts { get { return GetResourceString("AgentContext_ConversationContexts"); } }
+//Resources:AIResources:AgentContext_DefaultConversationContext
+
+		public static string AgentContext_DefaultConversationContext { get { return GetResourceString("AgentContext_DefaultConversationContext"); } }
+//Resources:AIResources:AgentContext_DefaultConversationContext_Select
+
+		public static string AgentContext_DefaultConversationContext_Select { get { return GetResourceString("AgentContext_DefaultConversationContext_Select"); } }
+//Resources:AIResources:AgentContext_LlmProvider
+
+		public static string AgentContext_LlmProvider { get { return GetResourceString("AgentContext_LlmProvider"); } }
+//Resources:AIResources:AgentContext_LlmProvider_Select
+
+		public static string AgentContext_LlmProvider_Select { get { return GetResourceString("AgentContext_LlmProvider_Select"); } }
+//Resources:AIResources:AiAgentContext_Description
+
+		public static string AiAgentContext_Description { get { return GetResourceString("AiAgentContext_Description"); } }
+//Resources:AIResources:AiAgentContext_Title
+
+		public static string AiAgentContext_Title { get { return GetResourceString("AiAgentContext_Title"); } }
+//Resources:AIResources:AiAgentContexts_Title
+
+		public static string AiAgentContexts_Title { get { return GetResourceString("AiAgentContexts_Title"); } }
+//Resources:AIResources:AIConversation_Description
+
+		public static string AIConversation_Description { get { return GetResourceString("AIConversation_Description"); } }
+//Resources:AIResources:AiConversation_Interaction_Description
+
+		public static string AiConversation_Interaction_Description { get { return GetResourceString("AiConversation_Interaction_Description"); } }
+//Resources:AIResources:AiConversation_Interaction_Title
+
+		public static string AiConversation_Interaction_Title { get { return GetResourceString("AiConversation_Interaction_Title"); } }
+//Resources:AIResources:AiConversation_Title
+
+		public static string AiConversation_Title { get { return GetResourceString("AiConversation_Title"); } }
+//Resources:AIResources:AiConversations_Title
+
+		public static string AiConversations_Title { get { return GetResourceString("AiConversations_Title"); } }
+//Resources:AIResources:Common_Category
+
 		public static string Common_Category { get { return GetResourceString("Common_Category"); } }
 //Resources:AIResources:Common_Datestamp
 
@@ -138,6 +198,9 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:LabelSets_Title
 
 		public static string LabelSets_Title { get { return GetResourceString("LabelSets_Title"); } }
+//Resources:AIResources:LlmProvider_OpenAI
+
+		public static string LlmProvider_OpenAI { get { return GetResourceString("LlmProvider_OpenAI"); } }
 //Resources:AIResources:Model_Description
 
 		public static string Model_Description { get { return GetResourceString("Model_Description"); } }
@@ -429,6 +492,26 @@ namespace LagoVista.AI.Models.Resources
 
 		public static class Names
 		{
+			public const string AgentContext_ConversationContext_Description = "AgentContext_ConversationContext_Description";
+			public const string AgentContext_ConversationContext_ModelName = "AgentContext_ConversationContext_ModelName";
+			public const string AgentContext_ConversationContext_System = "AgentContext_ConversationContext_System";
+			public const string AgentContext_ConversationContext_System_Help = "AgentContext_ConversationContext_System_Help";
+			public const string AgentContext_ConversationContext_Temperature = "AgentContext_ConversationContext_Temperature";
+			public const string AgentContext_ConversationContext_Temperature_Help = "AgentContext_ConversationContext_Temperature_Help";
+			public const string AgentContext_ConversationContext_Title = "AgentContext_ConversationContext_Title";
+			public const string AgentContext_ConversationContexts = "AgentContext_ConversationContexts";
+			public const string AgentContext_DefaultConversationContext = "AgentContext_DefaultConversationContext";
+			public const string AgentContext_DefaultConversationContext_Select = "AgentContext_DefaultConversationContext_Select";
+			public const string AgentContext_LlmProvider = "AgentContext_LlmProvider";
+			public const string AgentContext_LlmProvider_Select = "AgentContext_LlmProvider_Select";
+			public const string AiAgentContext_Description = "AiAgentContext_Description";
+			public const string AiAgentContext_Title = "AiAgentContext_Title";
+			public const string AiAgentContexts_Title = "AiAgentContexts_Title";
+			public const string AIConversation_Description = "AIConversation_Description";
+			public const string AiConversation_Interaction_Description = "AiConversation_Interaction_Description";
+			public const string AiConversation_Interaction_Title = "AiConversation_Interaction_Title";
+			public const string AiConversation_Title = "AiConversation_Title";
+			public const string AiConversations_Title = "AiConversations_Title";
 			public const string Common_Category = "Common_Category";
 			public const string Common_Datestamp = "Common_Datestamp";
 			public const string Common_Description = "Common_Description";
@@ -457,6 +540,7 @@ namespace LagoVista.AI.Models.Resources
 			public const string LabelSet_Labels = "LabelSet_Labels";
 			public const string LabelSet_Title = "LabelSet_Title";
 			public const string LabelSets_Title = "LabelSets_Title";
+			public const string LlmProvider_OpenAI = "LlmProvider_OpenAI";
 			public const string Model_Description = "Model_Description";
 			public const string Model_Experiments = "Model_Experiments";
 			public const string Model_Help = "Model_Help";

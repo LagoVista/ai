@@ -25,7 +25,7 @@ namespace LagoVista.AI.Services
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
         }
 
-        public QdrantClient(VectorDatabase vectorDb, IAdminLogger adminLogger)
+        public QdrantClient(AgentContext vectorDb, IAdminLogger adminLogger)
         {
             _http = new HttpClient { BaseAddress = new Uri(vectorDb.VectorDatabaseUri) };
             _http.DefaultRequestHeaders.Add("api-key", vectorDb.VectorDatabaseApiKey);

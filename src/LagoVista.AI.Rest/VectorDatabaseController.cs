@@ -19,62 +19,61 @@ namespace LagoVista.AI.Rest
     [AppBuilder]
     public class VectorDatabaseController : LagoVistaBaseController
     {
-        private readonly IVectorDatabaseManager _vectorDbManager;
+        private readonly IAgentContextManager _agentContextManager;
 
-        public VectorDatabaseController(IVectorDatabaseManager vectorDbMgr, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
+        public VectorDatabaseController(IAgentContextManager AgentContextMgr, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
         {
-            this._vectorDbManager = vectorDbMgr;
+            this._agentContextManager = AgentContextMgr;
         }
 
 
-        [HttpGet("/api/ml/vectordb/{id}")]
-        public async Task<DetailResponse<VectorDatabase>> GetVectorDatabase(string id)
+        [HttpGet("/api/ai/agentcontext/{id}")]
+        public async Task<DetailResponse<AgentContext>> GetVectorDatabase(string id)
         {
-            var db = await _vectorDbManager.GetVectorDatabaseAsync(id, OrgEntityHeader, UserEntityHeader);
-            return DetailResponse<VectorDatabase>.Create(db);
+            var db = await _agentContextManager.GetAgentContextAsync(id, OrgEntityHeader, UserEntityHeader);
+            return DetailResponse<AgentContext>.Create(db);
         }
 
-        [HttpGet("/api/ml/vectordb/factory")]
-        public async Task<DetailResponse<VectorDatabase>> CreateVectorDb()
+        [HttpGet("/api/ai/agentcontext/factory")]
+        public DetailResponse<AgentContext> CreateAgentContext()
         {
-            var result = DetailResponse<VectorDatabase>.Create();
+            var result = DetailResponse<AgentContext>.Create();
             SetAuditProperties(result.Model);
             SetOwnedProperties(result.Model);
             return result;
         }
 
 
-
-        [HttpGet("/api/ml/vectordb/{id}/secrets")]
-        public async Task<DetailResponse<VectorDatabase>> GetVectorDatabaseWithSecrets(string id)
+        [HttpGet("/api/ai/agentcontext/{id}/secrets")]
+        public async Task<DetailResponse<AgentContext>> GetVectorDatabaseWithSecrets(string id)
         {
-            var db = await _vectorDbManager.GetVectorDatabaseWithSecretsAsync(id, OrgEntityHeader, UserEntityHeader);
-            return DetailResponse<VectorDatabase>.Create(db);
+            var db = await _agentContextManager.GetAgentContextWithSecretsAsync(id, OrgEntityHeader, UserEntityHeader);
+            return DetailResponse<AgentContext>.Create(db);
         }
 
-        [HttpGet("/api/ml/vectordbs")]
-        public Task<ListResponse<VectorDatabaseSummary>> GetVectorDatabases()
+        [HttpGet("/api/ai/agentcontexts")]
+        public Task<ListResponse<AgentContextSummary>> GetVectorDatabases()
         {
-            return _vectorDbManager.GetVectorDatabasesForOrgAsync(OrgEntityHeader, UserEntityHeader, GetListRequestFromHeader());
+            return _agentContextManager.GetAgentContextsForOrgAsync(OrgEntityHeader, UserEntityHeader, GetListRequestFromHeader());
         }
 
-        [HttpDelete("/api/ml/vectordb/{id}")]
-        public Task<InvokeResult> DeleteVectorDbAsync(string id)
+        [HttpDelete("/api/ai/agentcontext/{id}")]
+        public Task<InvokeResult> DeleteAgentContextAsync(string id)
         {
-            return _vectorDbManager.DeleteVectorDatabaseAsync(id, OrgEntityHeader, UserEntityHeader);
+            return _agentContextManager.DeleteAgentContextAsync(id, OrgEntityHeader, UserEntityHeader);
         }
 
-        [HttpPost("/api/ml/vectordb")]
-        public Task AddVectorDb([FromBody] VectorDatabase db)
+        [HttpPost("/api/ai/agentcontext")]
+        public Task AddAgentContext([FromBody] AgentContext ctx)
         {
-            return _vectorDbManager.AddVectorDatabaseAsync(db, OrgEntityHeader, UserEntityHeader);
+            return _agentContextManager.AddAgentContextAsync(ctx, OrgEntityHeader, UserEntityHeader);
         }
 
-        [HttpPut("/api/ml/vectordb")]
-        public Task UpdateVectorDb([FromBody] VectorDatabase db)
+        [HttpPut("/api/ai/agentcontext")]
+        public Task UpdateAgentContext([FromBody] AgentContext ctx)
         {
-            SetUpdatedProperties(db);
-            return _vectorDbManager.UpdateVectorDatabaseAsync(db, OrgEntityHeader, UserEntityHeader);
+            SetUpdatedProperties(ctx);
+            return _agentContextManager.UpdateAgentContextAsync(ctx, OrgEntityHeader, UserEntityHeader);
         }
 
 

@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 
 namespace LagoVista.AI.CloudRepos
 {
-    public class VectorDatabaseRepo : DocumentDBRepoBase<VectorDatabase>, IVectorDatabaseRepo
+    public class AgentContextRepo : DocumentDBRepoBase<AgentContext>, IAgentConextRepo
     {
         private readonly bool _shouldConsolidateCollections;
 
-        public VectorDatabaseRepo(IMLRepoSettings settings, IAdminLogger logger) :
+        public AgentContextRepo(IMLRepoSettings settings, IAdminLogger logger) :
             base(settings.MLDocDbStorage.Uri, settings.MLDocDbStorage.AccessKey, settings.MLDocDbStorage.ResourceName, logger)
         {
             _shouldConsolidateCollections = settings.ShouldConsolidateCollections;
@@ -20,24 +20,24 @@ namespace LagoVista.AI.CloudRepos
 
         protected override bool ShouldConsolidateCollections => _shouldConsolidateCollections;
 
-        public Task AddVectorDatabaseAsync(VectorDatabase VectorDatabase)
+        public Task AddAgentContextAsync(AgentContext VectorDatabase)
         {
             return this.CreateDocumentAsync(VectorDatabase);
         }
 
-        public Task DeleteVectorDatabaseAsync(string id)
+        public Task DeleteAgentContextAsync(string id)
         {
             return this.DeleteDocumentAsync(id);  
         }
 
-        public Task<VectorDatabase> GetVectorDatabaseAsync(string id)
+        public Task<AgentContext> GetAgentContextAsync(string id)
         {
             return this.GetDocumentAsync(id);
         }
 
-        public  Task<ListResponse<VectorDatabaseSummary>> GetVectorDatabasesForOrgAsync(string orgId, ListRequest request)
+        public  Task<ListResponse<AgentContextSummary>> GetAgentContextSummariesForOrgAsync(string orgId, ListRequest request)
         {
-            return QuerySummaryAsync<VectorDatabaseSummary, VectorDatabase>(vc => vc.OwnerOrganization.Id == orgId, vdb => vdb.Name, request);
+            return QuerySummaryAsync<AgentContextSummary, AgentContext>(vc => vc.OwnerOrganization.Id == orgId, vdb => vdb.Name, request);
         }
 
         public async Task<bool> QueryKeyInUseAsync(string key, string orgId)
@@ -47,7 +47,7 @@ namespace LagoVista.AI.CloudRepos
         }
 
         
-        public Task UpdateVectorDatabaseAsync(VectorDatabase VectorDatabase)
+        public Task UpdateAgentContextAsync(AgentContext VectorDatabase)
         {
             return this.UpsertDocumentAsync(VectorDatabase);
         }

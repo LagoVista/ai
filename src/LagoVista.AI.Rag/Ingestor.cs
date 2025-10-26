@@ -20,10 +20,10 @@ namespace LagoVista.AI.Rag
 {
     public class Ingestor
     {
-        private readonly VectorDatabase _vectoDb;
+        private readonly AgentContext _vectoDb;
         private readonly IngestionConfig _config;
 
-        public Ingestor(IngestionConfig config, VectorDatabase vectorDb)
+        public Ingestor(IngestionConfig config, AgentContext vectorDb)
         {
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _vectoDb = vectorDb;
@@ -33,7 +33,7 @@ namespace LagoVista.AI.Rag
         {
             var adminLogger = new AdminLogger(new ConsoleLogWriter());
 
-            var collectionName = _vectoDb.CollectionName;
+            var collectionName = _vectoDb.VectorDatabaseCollectionName;
 
             var qcfg = new QdrantConfig()
             {
@@ -52,7 +52,7 @@ namespace LagoVista.AI.Rag
 
             var settings = new OpenAiConfig()
             {
-                OpenAIApiKey = _vectoDb.OpenAIApiKey,
+                OpenAIApiKey = _vectoDb.LlmApiKey,
                 OpenAIUrl = _config.Embeddings.BaseUrl
             };
 
