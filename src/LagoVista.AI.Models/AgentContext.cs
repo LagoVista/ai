@@ -1,9 +1,11 @@
 ﻿using LagoVista.AI.Models.Resources;
+using LagoVista.Core;
 using LagoVista.Core.Attributes;
 using LagoVista.Core.Interfaces;
 using LagoVista.Core.Models;
 using LagoVista.Core.Models.UIMetaData;
 using LagoVista.Core.Validation;
+using System;
 using System.Collections.Generic;
 
 namespace LagoVista.AI.Models
@@ -57,11 +59,11 @@ namespace LagoVista.AI.Models
         [FormField(LabelResource: AIResources.Names.VectorDatabase_OpenAPI_Token, HelpResource: AIResources.Names.VectorDatabase_OpenAPI_Token_Help, SecureIdFieldName:nameof(LlmApiKeySecretId), FieldType: FieldTypes.Secret, ResourceType: typeof(AIResources))]
         public string LlmApiKey { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.AgentContext_DefaultConversationContext, WaterMark:AIResources.Names.AgentContext_DefaultConversationContext_Select, FieldType: FieldTypes.EntityHeaderPicker,
+        [FormField(LabelResource: AIResources.Names.AgentContext_DefaultConversationContext, PickerProviderFieldName:nameof(ConversationContexts),  WaterMark:AIResources.Names.AgentContext_DefaultConversationContext_Select, FieldType: FieldTypes.EntityHeaderPicker,
             ResourceType: typeof(AIResources))]
         public EntityHeader DefaultConversationContext { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.AgentContext_ConversationContexts, HelpResource: AIResources.Names.AgentContext_ConversationContext_Description, FieldType: FieldTypes.ChildListInline, FactoryUrl: "/api/ai/agent/conversation/context", 
+        [FormField(LabelResource: AIResources.Names.AgentContext_ConversationContexts, HelpResource: AIResources.Names.AgentContext_ConversationContext_Description, FieldType: FieldTypes.ChildListInline, FactoryUrl: "/api/ai/agent/conversation/context/factory", 
             ResourceType: typeof(AIResources))]
         public List<ConversationContext> ConversationContexts { get; set; } = new List<ConversationContext>();
 
@@ -130,26 +132,30 @@ namespace LagoVista.AI.Models
     }
 
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.AgentContext_ConversationContext_Title, AIResources.Names.AgentContext_ConversationContext_Description, AIResources.Names.AgentContext_ConversationContext_Description, EntityDescriptionAttribute.EntityTypes.ChildObject, typeof(AIResources),
-    FactoryUrl:"/api/ai/agent/conversation/context")]
+    FactoryUrl:"/api/ai/agent/conversation/context/factory")]
     public class ConversationContext : IFormDescriptor, IValidateable
     {
-        public string Id { get; set; }
+        public string Id { get; set; } = Guid.NewGuid().ToId();
 
-        [FormField(LabelResource: AIResources.Names.AgentContext_ConversationContext_ModelName,  FieldType:FieldTypes.Text,  IsRequired: true, ResourceType: typeof(AIResources))]
-        public string ModelName { get; set; }
+        [FormField(LabelResource: AIResources.Names.Common_Name, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
+        public string Name { get; set; }
+
+        [FormField(LabelResource: AIResources.Names.AgentContext_ConversationContext_ModelName, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
+        public string ModelName { get; set; } = "gpt-5";
 
         [FormField(LabelResource: AIResources.Names.AgentContext_ConversationContext_System, HelpResource:AIResources.Names.AgentContext_ConversationContext_System_Help, 
-            FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
+            FieldType: FieldTypes.MultiLineText, IsRequired: true, ResourceType: typeof(AIResources))]
         public string System { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.AgentContext_ConversationContext_System, HelpResource: AIResources.Names.AgentContext_ConversationContext_Temperature_Help,
+        [FormField(LabelResource: AIResources.Names.AgentContext_ConversationContext_Temperature, HelpResource: AIResources.Names.AgentContext_ConversationContext_Temperature_Help,
             FieldType: FieldTypes.Decimal, IsRequired: true, ResourceType: typeof(AIResources))]
-        public float Temperature { get; set; }
+        public float Temperature { get; set; } = 0.5f;
 
         public List<string> GetFormFields()
         {
             return new List<string>()
             {
+                nameof(Name),
                 nameof(ModelName),
                 nameof(System),
                 nameof(Temperature),

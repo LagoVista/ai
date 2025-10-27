@@ -64,18 +64,23 @@ namespace LagoVista.AI.Rest
         }
 
         [HttpPost("/api/ai/agentcontext")]
-        public Task AddAgentContext([FromBody] AgentContext ctx)
+        public Task<InvokeResult> AddAgentContext([FromBody] AgentContext ctx)
         {
             return _agentContextManager.AddAgentContextAsync(ctx, OrgEntityHeader, UserEntityHeader);
         }
 
         [HttpPut("/api/ai/agentcontext")]
-        public Task UpdateAgentContext([FromBody] AgentContext ctx)
+        public Task<InvokeResult> UpdateAgentContext([FromBody] AgentContext ctx)
         {
             SetUpdatedProperties(ctx);
             return _agentContextManager.UpdateAgentContextAsync(ctx, OrgEntityHeader, UserEntityHeader);
         }
 
-
+        [HttpGet("/api/ai/agent/conversation/context/factory")]
+        public DetailResponse<ConversationContext> CreateConversationContext()
+        {
+            var result = DetailResponse<ConversationContext>.Create();
+            return result;
+        }
     }
 }
