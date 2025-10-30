@@ -11,6 +11,10 @@
 *.bak
 Package.nuspec.txt
 
+SitePuller/site_dump
+SitePuller/.crawler/Lib
+SitePuller/.crawler/Include
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
