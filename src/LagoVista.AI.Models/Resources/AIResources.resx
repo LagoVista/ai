@@ -552,4 +552,82 @@
   <data name="AiAgentContexts_Title" xml:space="preserve">
     <value>Agent Contexts</value>
   </data>
+  <data name="SourceOrganization_Help" xml:space="preserve">
+    <value>A source organization is the organization within a source management system such as GItHub that contains a number of repositories.</value>
+  </data>
+  <data name="SourceOrganization_Title" xml:space="preserve">
+    <value>Source Organization</value>
+  </data>
+  <data name="SourceOrganizationRepository_Help" xml:space="preserve">
+    <value>A source organization repository is a repository within an organization of a source code repository.  Typically this contains source code, but does not have ot.</value>
+  </data>
+  <data name="SourceOrganizationRepository_Title" xml:space="preserve">
+    <value>Source Organization Repository</value>
+  </data>
+  <data name="SourceOrganization_InstallationId" xml:space="preserve">
+    <value>Installation Id</value>
+  </data>
+  <data name="SourceOrganization_InstallationId_Help" xml:space="preserve">
+    <value>ID of a specific installation of your app (one per org/repo install)</value>
+  </data>
+  <data name="SourceOrganization_AppId" xml:space="preserve">
+    <value>App Id</value>
+  </data>
+  <data name="SourceOrganization_AppId_Help" xml:space="preserve">
+    <value>ID of your GitHub App (single value for the app)</value>
+  </data>
+  <data name="SourceOrganization_ProductName" xml:space="preserve">
+    <value>Product Name</value>
+  </data>
+  <data name="SourceOrganization_ProductName_Help" xml:space="preserve">
+    <value>This is a short name that is unique enough to identify your integration in API logs,  It can only contains letters, numbers and underscore.</value>
+  </data>
+  <data name="SourceOrganization_WebHookSecret" xml:space="preserve">
+    <value>Web Hook Secret</value>
+  </data>
+  <data name="SourceOrganization_PrivateKey" xml:space="preserve">
+    <value>Private Key</value>
+  </data>
+  <data name="SourceOrganization_PrivateKey_Help" xml:space="preserve">
+    <value>Go to GitHub, Settings → Developer settings → GitHub Apps, Click your App, Private Keys Section, Generate a Private Key</value>
+  </data>
+  <data name="SourceOrganization_WebHookSecret_Help" xml:space="preserve">
+    <value>The Webhook Secret is also created in your GitHub App settings, and it's used to verify that incoming webhook requests truly came from GitHub.  </value>
+  </data>
+  <data name="SourceOrganization_Name" xml:space="preserve">
+    <value>Source Organization Name</value>
+  </data>
+  <data name="SourceOrganization_Name_Help" xml:space="preserve">
+    <value>This is the name of the organization as set in the source control system.  It should match exactly in that it will be used to build up the path to identify the repository.</value>
+  </data>
+  <data name="MergeMethod_Merge" xml:space="preserve">
+    <value>Merge</value>
+  </data>
+  <data name="MergeMethod_Squash" xml:space="preserve">
+    <value>Squash</value>
+  </data>
+  <data name="MergeMethod_Rebase" xml:space="preserve">
+    <value>Rebase</value>
+  </data>
+  <data name="SourceOrganizationRepository_RepoPath" xml:space="preserve">
+    <value>Repository Path</value>
+  </data>
+  <data name="SourceOrganizationRepository_RepoPath_Help" xml:space="preserve">
+    <value>This is the exact name of the repository that will be used to build up the full path </value>
+  </data>
+  <data name="SourceOrganizationRepository_MergeMethod" xml:space="preserve">
+    <value>Merge Method</value>
+  </data>
+  <data name="SourceOrganizationRepository_MergeMethod_Select" xml:space="preserve">
+    <value>-select merge method-</value>
+  </data>
+  <data name="SourceOrganizationRepository_DeleteOnMerge" xml:space="preserve">
+    <value>Delete on Merge</value>
+  </data>
+  <data name="SourceOrganizationRepository_DeleteOnMerge_Help" xml:space="preserve">
+    <value>After merging the PR into the source repository, should the branch it came from be removed?</value>
+  </data>
+  <data name="SourceOrganization_Repositories" xml:space="preserve">
+    <value>Repositories</value>
+  </data>
 </root>

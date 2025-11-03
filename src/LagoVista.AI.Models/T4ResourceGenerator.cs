@@ -1,4 +1,4 @@
-﻿/*10/26/2025 9:09:36 AM*/
+﻿/*11/2/2025 9:33:40 AM*/
 using System.Globalization;
 using System.Reflection;
 
@@ -201,6 +201,15 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:LlmProvider_OpenAI
 
 		public static string LlmProvider_OpenAI { get { return GetResourceString("LlmProvider_OpenAI"); } }
+//Resources:AIResources:MergeMethod_Merge
+
+		public static string MergeMethod_Merge { get { return GetResourceString("MergeMethod_Merge"); } }
+//Resources:AIResources:MergeMethod_Rebase
+
+		public static string MergeMethod_Rebase { get { return GetResourceString("MergeMethod_Rebase"); } }
+//Resources:AIResources:MergeMethod_Squash
+
+		public static string MergeMethod_Squash { get { return GetResourceString("MergeMethod_Squash"); } }
 //Resources:AIResources:Model_Description
 
 		public static string Model_Description { get { return GetResourceString("Model_Description"); } }
@@ -438,6 +447,75 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:PreprocessorSetting_Value
 
 		public static string PreprocessorSetting_Value { get { return GetResourceString("PreprocessorSetting_Value"); } }
+//Resources:AIResources:SourceOrganization_AppId
+
+		public static string SourceOrganization_AppId { get { return GetResourceString("SourceOrganization_AppId"); } }
+//Resources:AIResources:SourceOrganization_AppId_Help
+
+		public static string SourceOrganization_AppId_Help { get { return GetResourceString("SourceOrganization_AppId_Help"); } }
+//Resources:AIResources:SourceOrganization_Help
+
+		public static string SourceOrganization_Help { get { return GetResourceString("SourceOrganization_Help"); } }
+//Resources:AIResources:SourceOrganization_InstallationId
+
+		public static string SourceOrganization_InstallationId { get { return GetResourceString("SourceOrganization_InstallationId"); } }
+//Resources:AIResources:SourceOrganization_InstallationId_Help
+
+		public static string SourceOrganization_InstallationId_Help { get { return GetResourceString("SourceOrganization_InstallationId_Help"); } }
+//Resources:AIResources:SourceOrganization_Name
+
+		public static string SourceOrganization_Name { get { return GetResourceString("SourceOrganization_Name"); } }
+//Resources:AIResources:SourceOrganization_Name_Help
+
+		public static string SourceOrganization_Name_Help { get { return GetResourceString("SourceOrganization_Name_Help"); } }
+//Resources:AIResources:SourceOrganization_PrivateKey
+
+		public static string SourceOrganization_PrivateKey { get { return GetResourceString("SourceOrganization_PrivateKey"); } }
+//Resources:AIResources:SourceOrganization_PrivateKey_Help
+
+		public static string SourceOrganization_PrivateKey_Help { get { return GetResourceString("SourceOrganization_PrivateKey_Help"); } }
+//Resources:AIResources:SourceOrganization_ProductName
+
+		public static string SourceOrganization_ProductName { get { return GetResourceString("SourceOrganization_ProductName"); } }
+//Resources:AIResources:SourceOrganization_ProductName_Help
+
+		public static string SourceOrganization_ProductName_Help { get { return GetResourceString("SourceOrganization_ProductName_Help"); } }
+//Resources:AIResources:SourceOrganization_Repositories
+
+		public static string SourceOrganization_Repositories { get { return GetResourceString("SourceOrganization_Repositories"); } }
+//Resources:AIResources:SourceOrganization_Title
+
+		public static string SourceOrganization_Title { get { return GetResourceString("SourceOrganization_Title"); } }
+//Resources:AIResources:SourceOrganization_WebHookSecret
+
+		public static string SourceOrganization_WebHookSecret { get { return GetResourceString("SourceOrganization_WebHookSecret"); } }
+//Resources:AIResources:SourceOrganization_WebHookSecret_Help
+
+		public static string SourceOrganization_WebHookSecret_Help { get { return GetResourceString("SourceOrganization_WebHookSecret_Help"); } }
+//Resources:AIResources:SourceOrganizationRepository_DeleteOnMerge
+
+		public static string SourceOrganizationRepository_DeleteOnMerge { get { return GetResourceString("SourceOrganizationRepository_DeleteOnMerge"); } }
+//Resources:AIResources:SourceOrganizationRepository_DeleteOnMerge_Help
+
+		public static string SourceOrganizationRepository_DeleteOnMerge_Help { get { return GetResourceString("SourceOrganizationRepository_DeleteOnMerge_Help"); } }
+//Resources:AIResources:SourceOrganizationRepository_Help
+
+		public static string SourceOrganizationRepository_Help { get { return GetResourceString("SourceOrganizationRepository_Help"); } }
+//Resources:AIResources:SourceOrganizationRepository_MergeMethod
+
+		public static string SourceOrganizationRepository_MergeMethod { get { return GetResourceString("SourceOrganizationRepository_MergeMethod"); } }
+//Resources:AIResources:SourceOrganizationRepository_MergeMethod_Select
+
+		public static string SourceOrganizationRepository_MergeMethod_Select { get { return GetResourceString("SourceOrganizationRepository_MergeMethod_Select"); } }
+//Resources:AIResources:SourceOrganizationRepository_RepoPath
+
+		public static string SourceOrganizationRepository_RepoPath { get { return GetResourceString("SourceOrganizationRepository_RepoPath"); } }
+//Resources:AIResources:SourceOrganizationRepository_RepoPath_Help
+
+		public static string SourceOrganizationRepository_RepoPath_Help { get { return GetResourceString("SourceOrganizationRepository_RepoPath_Help"); } }
+//Resources:AIResources:SourceOrganizationRepository_Title
+
+		public static string SourceOrganizationRepository_Title { get { return GetResourceString("SourceOrganizationRepository_Title"); } }
 //Resources:AIResources:TrainingDataSet_Description
 
 		public static string TrainingDataSet_Description { get { return GetResourceString("TrainingDataSet_Description"); } }
@@ -541,6 +619,9 @@ namespace LagoVista.AI.Models.Resources
 			public const string LabelSet_Title = "LabelSet_Title";
 			public const string LabelSets_Title = "LabelSets_Title";
 			public const string LlmProvider_OpenAI = "LlmProvider_OpenAI";
+			public const string MergeMethod_Merge = "MergeMethod_Merge";
+			public const string MergeMethod_Rebase = "MergeMethod_Rebase";
+			public const string MergeMethod_Squash = "MergeMethod_Squash";
 			public const string Model_Description = "Model_Description";
 			public const string Model_Experiments = "Model_Experiments";
 			public const string Model_Help = "Model_Help";
@@ -620,6 +701,29 @@ namespace LagoVista.AI.Models.Resources
 			public const string PreprocessorSetting_Help = "PreprocessorSetting_Help";
 			public const string PreprocessorSetting_Title = "PreprocessorSetting_Title";
 			public const string PreprocessorSetting_Value = "PreprocessorSetting_Value";
+			public const string SourceOrganization_AppId = "SourceOrganization_AppId";
+			public const string SourceOrganization_AppId_Help = "SourceOrganization_AppId_Help";
+			public const string SourceOrganization_Help = "SourceOrganization_Help";
+			public const string SourceOrganization_InstallationId = "SourceOrganization_InstallationId";
+			public const string SourceOrganization_InstallationId_Help = "SourceOrganization_InstallationId_Help";
+			public const string SourceOrganization_Name = "SourceOrganization_Name";
+			public const string SourceOrganization_Name_Help = "SourceOrganization_Name_Help";
+			public const string SourceOrganization_PrivateKey = "SourceOrganization_PrivateKey";
+			public const string SourceOrganization_PrivateKey_Help = "SourceOrganization_PrivateKey_Help";
+			public const string SourceOrganization_ProductName = "SourceOrganization_ProductName";
+			public const string SourceOrganization_ProductName_Help = "SourceOrganization_ProductName_Help";
+			public const string SourceOrganization_Repositories = "SourceOrganization_Repositories";
+			public const string SourceOrganization_Title = "SourceOrganization_Title";
+			public const string SourceOrganization_WebHookSecret = "SourceOrganization_WebHookSecret";
+			public const string SourceOrganization_WebHookSecret_Help = "SourceOrganization_WebHookSecret_Help";
+			public const string SourceOrganizationRepository_DeleteOnMerge = "SourceOrganizationRepository_DeleteOnMerge";
+			public const string SourceOrganizationRepository_DeleteOnMerge_Help = "SourceOrganizationRepository_DeleteOnMerge_Help";
+			public const string SourceOrganizationRepository_Help = "SourceOrganizationRepository_Help";
+			public const string SourceOrganizationRepository_MergeMethod = "SourceOrganizationRepository_MergeMethod";
+			public const string SourceOrganizationRepository_MergeMethod_Select = "SourceOrganizationRepository_MergeMethod_Select";
+			public const string SourceOrganizationRepository_RepoPath = "SourceOrganizationRepository_RepoPath";
+			public const string SourceOrganizationRepository_RepoPath_Help = "SourceOrganizationRepository_RepoPath_Help";
+			public const string SourceOrganizationRepository_Title = "SourceOrganizationRepository_Title";
 			public const string TrainingDataSet_Description = "TrainingDataSet_Description";
 			public const string TrainingDataSet_Help = "TrainingDataSet_Help";
 			public const string TrainingDataSet_Title = "TrainingDataSet_Title";
