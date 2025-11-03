@@ -20,25 +20,25 @@ namespace LagoVista.AI.Rag
 {
     public class Ingestor
     {
-        private readonly AgentContext _vectoDb;
+        private readonly AgentContext _agentContext;
         private readonly IngestionConfig _config;
 
-        public Ingestor(IngestionConfig config, AgentContext vectorDb)
+        public Ingestor(IngestionConfig config, AgentContext agentContext)
         {
             _config = config ?? throw new ArgumentNullException(nameof(config));
-            _vectoDb = vectorDb;
+            _agentContext = agentContext;
         }
 
         public async Task IngestAsync(string subModmain)
         {
             var adminLogger = new AdminLogger(new ConsoleLogWriter());
 
-            var collectionName = _vectoDb.VectorDatabaseCollectionName;
+            var collectionName = _agentContext.VectorDatabaseCollectionName;
 
             var qcfg = new QdrantConfig()
             {
-                QdrantApiKey = _vectoDb.VectorDatabaseApiKey,
-                QdrantEndpoint = _vectoDb.VectorDatabaseUri
+                QdrantApiKey = _agentContext.VectorDatabaseApiKey,
+                QdrantEndpoint = _agentContext.VectorDatabaseUri
             };
 
             var qdrant = new QdrantClient(qcfg, adminLogger);
@@ -52,7 +52,7 @@ namespace LagoVista.AI.Rag
 
             var settings = new OpenAiConfig()
             {
-                OpenAIApiKey = _vectoDb.LlmApiKey,
+                OpenAIApiKey = _agentContext.LlmApiKey,
                 OpenAIUrl = _config.Embeddings.BaseUrl
             };
 
@@ -61,8 +61,8 @@ namespace LagoVista.AI.Rag
             {
                 MLBlobStorage = new ConnectionSettings()
                 {
-                    AccountId = _vectoDb.AzureAccountId,
-                    AccessKey = _vectoDb.AzureApiToken
+                    AccountId = _agentContext.AzureAccountId,
+                    AccessKey = _agentContext.AzureApiToken
                 }
             }, adminLogger);
 
@@ -129,7 +129,7 @@ namespace LagoVista.AI.Rag
                         });
                     }
                      
-                    var result = await contentRepo.AddTextContentAsync(_vectoDb, pathInProject, fileInfo.Name, text, "text/plain");
+                    var result = await contentRepo.AddTextContentAsync(_agentContext, pathInProject, fileInfo.Name, text, "text/plain");
                    
                     if (result.Successful && points.Count > 0)
                     {
