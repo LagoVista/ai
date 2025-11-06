@@ -27,4 +27,5 @@ namespace LagoVista.AI.Rag.Types
         public string Kind { get; set; } = "block";   // class/function/method/block
         public string Symbol { get; set; } = string.Empty;
     }
+
 }

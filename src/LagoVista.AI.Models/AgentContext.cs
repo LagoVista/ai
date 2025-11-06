@@ -27,9 +27,6 @@ namespace LagoVista.AI.Models
         [FormField(LabelResource: AIResources.Names.Common_Icon, FieldType: FieldTypes.Icon, ResourceType: typeof(AIResources))]
         public string Icon { get; set; } = "icon-ae-database-3";
 
-        [FormField(LabelResource: AIResources.Names.Common_Description, FieldType: FieldTypes.MultiLineText, ResourceType: typeof(AIResources))]
-        public string Description { get; set; }
-
         [FormField(LabelResource: AIResources.Names.VectorDatabase_CollectionName, FieldType: FieldTypes.Text, IsRequired:true, ResourceType: typeof(AIResources))]
         public string VectorDatabaseCollectionName { get; set; }
 

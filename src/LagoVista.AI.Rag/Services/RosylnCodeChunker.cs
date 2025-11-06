@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using LagoVista.AI.Rag.Types;
 using LagoVista.AI.Services;
+using LagoVista.Core.Utils;
+using LagoVista.Core.Utils.Types;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -31,14 +33,16 @@ namespace LagoVista.AI.Rag.Services
         /// <summary>
         /// Chunk a C# file into symbol-aligned, token-budgeted chunks.
         /// </summary>
-        public IEnumerable<CodeChunk> Chunk(string text, string relPath)
+        public RagChunkPlan Chunk(string text, string relPath)
         {
             var tree = CSharpSyntaxTree.ParseText(text, new CSharpParseOptions(LanguageVersion.Preview));
             var root = tree.GetRoot();
             var lines = text.Split('\n');
+            var chunks = new List<RagChunk>();
 
             foreach (var summary in BuildFileSummaryChunk(tree, relPath, lines))
-                yield return summary;
+                chunks.Add(summary);
+
 
             // Walk declarations and emit symbol-level chunks
             foreach (var node in root.DescendantNodes())
@@ -47,33 +51,45 @@ namespace LagoVista.AI.Rag.Services
                 {
                     case BaseMethodDeclarationSyntax m: // method, ctor, destructor, operator
                         foreach (var ch in BuildNodeChunks(tree, lines, relPath, m, kind: "method"))
-                            yield return ch;
+                            chunks.Add(ch);
                         break;
 
                     case PropertyDeclarationSyntax p:
                         foreach (var ch in BuildNodeChunks(tree, lines, relPath, p, kind: "property"))
-                            yield return ch;
+                            chunks.Add(ch);
                         break;
 
                     case FieldDeclarationSyntax f when f.Parent is TypeDeclarationSyntax:
                         foreach (var ch in BuildNodeChunks(tree, lines, relPath, f, kind: "field"))
-                            yield return ch;
+                            chunks.Add(ch);
                         break;
 
                     case EventDeclarationSyntax e:
                         foreach (var ch in BuildNodeChunks(tree, lines, relPath, e, kind: "event"))
-                            yield return ch;
+                            chunks.Add(ch);
                         break;
 
                     case TypeDeclarationSyntax t: // class/record/struct/interface
                         foreach (var ch in BuildNodeChunks(tree, lines, relPath, t, kind: t.Keyword.ValueText))
-                            yield return ch;
+                            chunks.Add(ch);
                         break;
                 }
             }
+
+            return new RagChunkPlan()
+            {
+                Chunks = chunks,
+                Raw = new RawArtifact()
+                {
+                    IsText = true,
+                    MimeType = "text/x-csharp",
+                    SuggestedBlobPath = relPath,
+                    Text = text,
+                },
+            };
         }
 
-        private IEnumerable<CodeChunk> BuildFileSummaryChunk(SyntaxTree tree, string relPath, string[] lines)
+        private IEnumerable<RagChunk> BuildFileSummaryChunk(SyntaxTree tree, string relPath, string[] lines)
         {
             var root = tree.GetRoot();
             var sb = new StringBuilder();
@@ -103,19 +119,18 @@ namespace LagoVista.AI.Rag.Services
 
             if (!string.IsNullOrWhiteSpace(text))
             {
-                yield return new CodeChunk
-                {
+                yield return new RagChunk
+                { 
                     Text = text,
-                    Path = relPath,
-                    StartLine = 1,
-                    EndLine = Math.Min(lines.Length, 200),
-                    Kind = "file",
-                    Symbol = System.IO.Path.GetFileName(relPath)
+                    LineStart = 1,
+                    LineEnd = Math.Min(lines.Length, 200),
+                    Symbol = System.IO.Path.GetFileName(relPath),
+                    SymbolType = "file",
                 };
             }
         }
 
-        private IEnumerable<CodeChunk> BuildNodeChunks(
+        private IEnumerable<RagChunk> BuildNodeChunks(
             SyntaxTree tree, string[] lines, string relPath, SyntaxNode node, string kind)
         {
             // Prefer mapped span (accounts for directives) if available
@@ -175,14 +190,13 @@ namespace LagoVista.AI.Rag.Services
 
                 // Emit normal chunk
                 var slice = string.Join('\n', lines[localStart..Math.Min(localEnd, lines.Length)]);
-                yield return new CodeChunk
+                yield return new RagChunk
                 {
                     Text = slice,
-                    Path = relPath,
-                    StartLine = localStart + 1,
-                    EndLine = Math.Min(localEnd, lines.Length),
-                    Kind = kind,
-                    Symbol = GetBestSymbolName(node)
+                    LineStart = localStart + 1,
+                    LineEnd = Math.Min(localEnd, lines.Length),
+                    Symbol = GetBestSymbolName(node),
+                    SymbolType = "node"
                 };
 
                 // Advance with overlap; ensure forward progress
@@ -201,7 +215,7 @@ namespace LagoVista.AI.Rag.Services
         /// We report the same StartLine/EndLine for all segments (the original line),
         /// so consumers can still locate the source reliably.
         /// </summary>
-        private IEnumerable<CodeChunk> SliceVeryLongLine(
+        private IEnumerable<RagChunk> SliceVeryLongLine(
             string line,
             string relPath,
             string kind,
@@ -225,14 +239,14 @@ namespace LagoVista.AI.Rag.Services
                 if (softBreak > 0) take = softBreak;
 
                 var piece = line.AsSpan(idx, take).ToString();
-                yield return new CodeChunk
+                yield return new RagChunk
                 {
                     Text = piece,
-                    Path = relPath,
-                    StartLine = lineNumber,
-                    EndLine = lineNumber,
-                    Kind = kind,              // you may append "(segment)" if you want
-                    Symbol = symbol             // same symbol; UI can show "(continued)" if needed
+                    LineStart = lineNumber,
+                    LineEnd = lineNumber,
+                    Symbol = symbol,
+                    SymbolType = kind,// same symbol; UI can show "(continued)" if needed
+
                 };
 
                 idx += take;

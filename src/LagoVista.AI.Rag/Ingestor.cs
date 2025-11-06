@@ -5,6 +5,7 @@ using LagoVista.AI.Rag.Services;
 using LagoVista.AI.Rag.Types;
 using LagoVista.AI.Services;
 using LagoVista.Core.Models;
+using LagoVista.Core.Utils;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.IoT.Logging.Utils;
 using System;
@@ -100,40 +101,32 @@ namespace LagoVista.AI.Rag
                     pathInProject = pathInProject.Replace(fileInfo.Name, String.Empty);
                     pathInProject = pathInProject.TrimEnd(Path.DirectorySeparatorChar);
 
-                    var chunks = chunker.Chunk(text, relPath);
-                    adminLogger.Trace($"[Ingestor__IngestAsync] {fileInfo.Name} - found {chunks} in {sw.Elapsed.TotalMilliseconds}ms");
+                    var plan = chunker.Chunk(text, relPath);
+                    adminLogger.Trace($"[Ingestor__IngestAsync] {fileInfo.Name} - found {plan.Chunks.Count} in {sw.Elapsed.TotalMilliseconds}ms");
 
-                    var points = new List<QdrantPoint>();
-                    foreach (var ch in chunks)
+                    var payloads = RagPayloadFactory.FromCodePlan(plan, new Core.Utils.Types.IngestContext()
                     {
-                        sw.Restart();
-                        var vec = await embedder.EmbedAsync(ch.Text);
-                        adminLogger.Trace($"[Ingestor__IngestAsync] {fileInfo.Name} - embedded {ch.Kind} [{ch.StartLine}-{ch.EndLine}] symbol={ch.Symbol} vec_len={vec.Length} in {sw.Elapsed.TotalMilliseconds}ms");
-                        points.Add(new QdrantPoint
-                        {
-                            Id = QdrantPoint.NewId(),
-                            Vector = vec,
-                            Payload = new Dictionary<string, object>
-                            {
-                                ["repo"] = Path.GetFileName(repo),
-                                ["fileName"] = fileInfo.Name,
-                                ["path"] = pathInProject,
-                                ["domain"] = "sourcecode",
-                                ["subdomain"] = subModmain,
-                                ["language"] = LanguageGuesser.FromPath(relPath),
-                                ["symbol"] = ch.Symbol,
-                                ["start_line"] = ch.StartLine,
-                                ["end_line"] = ch.EndLine,
-                                ["kind"] = ch.Kind
-                            }
-                        });
-                    }
+                         EmbeddingModel = _config.Embeddings.Model,
+                        IndexVersion = _config.IndexVersion,
+                        OrgId = _config.OrgId,
+                        ProjectId = repo
+                    }, new Core.Utils.Types.CodeArtifactContext()
+                    {
+                         Language = "C#",
+                         Path = file,
+                         Repo = repo,
+                        RepoBranch = "main",
+                        Subtype = "sourcecode"
+                    });
+
+                    
+
                      
                     var result = await contentRepo.AddTextContentAsync(_agentContext, pathInProject, fileInfo.Name, text, "text/plain");
                    
-                    if (result.Successful && points.Count > 0)
+                    if (result.Successful && payloads.Count > 0)
                     {
-                        registry.Upsert(relPath, points.Select(p => p.Id));
+                        registry.Upsert(relPath, payloads.Select(p => p.PointId));
                         registry.Save();
                         
                         int retryCount = 0;

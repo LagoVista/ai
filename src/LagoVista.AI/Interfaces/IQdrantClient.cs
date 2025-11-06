@@ -1,5 +1,6 @@
 ﻿using LagoVista.AI.Models;
 using LagoVista.AI.Services;
+using LagoVista.Core.Utils.Types;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
