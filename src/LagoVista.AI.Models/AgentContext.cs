@@ -11,11 +11,7 @@ using System.Collections.Generic;
 namespace LagoVista.AI.Models
 {
 
-    public enum LlmProviders
-    {
-        [EnumLabel(AgentContext.LlmProvider_OpenAI, AIResources.Names.LlmProvider_OpenAI, typeof(AIResources))]
-        OpenAI
-    }
+    
 
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.AiAgentContext_Title, AIResources.Names.AiAgentContext_Description, AIResources.Names.AiAgentContext_Description, EntityDescriptionAttribute.EntityTypes.CoreIoTModel, typeof(AIResources),
         GetUrl: "/api/ai/agentcontext/{id}", GetListUrl: "/api/ai/agentcontexts", FactoryUrl: "/api/ai/agentcontext/factory", SaveUrl: "/api/ai/agentcontext", DeleteUrl: "/api/ai/agentcontext/{id}",
@@ -27,40 +23,43 @@ namespace LagoVista.AI.Models
         [FormField(LabelResource: AIResources.Names.Common_Icon, FieldType: FieldTypes.Icon, ResourceType: typeof(AIResources))]
         public string Icon { get; set; } = "icon-ae-database-3";
 
-        [FormField(LabelResource: AIResources.Names.VectorDatabase_CollectionName, FieldType: FieldTypes.Text, IsRequired:true, ResourceType: typeof(AIResources))]
+        [FormField(LabelResource: AIResources.Names.VectorDatabase_CollectionName, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
         public string VectorDatabaseCollectionName { get; set; }
 
         public string VectorDatabaseApiKeySecretId { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.VectorDatabase_ApiKey, FieldType: FieldTypes.Secret, SecureIdFieldName:nameof(VectorDatabaseApiKeySecretId), ResourceType: typeof(AIResources))]
+        [FormField(LabelResource: AIResources.Names.VectorDatabase_ApiKey, FieldType: FieldTypes.Secret, SecureIdFieldName: nameof(VectorDatabaseApiKeySecretId), ResourceType: typeof(AIResources))]
         public string VectorDatabaseApiKey { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.VectorDatabase_Uri, IsRequired: true, FieldType: FieldTypes.WebLink,  ResourceType: typeof(AIResources))]
+        [FormField(LabelResource: AIResources.Names.VectorDatabase_Uri, IsRequired: true, FieldType: FieldTypes.WebLink, ResourceType: typeof(AIResources))]
         public string VectorDatabaseUri { get; set; }
 
         [FormField(LabelResource: AIResources.Names.VectorDatabase_AzureAccountId, HelpResource: AIResources.Names.VectorDatabase_AzureAccountId_Help, IsRequired: true, FieldType: FieldTypes.Text, ResourceType: typeof(AIResources))]
         public string AzureAccountId { get; set; }
 
         public string AzureApiTokenSecretId { get; set; }
-        [FormField(LabelResource: AIResources.Names.VectorDatabase_AzureApiToken, HelpResource: AIResources.Names.VectorDatabase_AzureApiToken_Help, SecureIdFieldName:nameof(AzureApiTokenSecretId), FieldType: FieldTypes.Secret, ResourceType: typeof(AIResources))]
+        [FormField(LabelResource: AIResources.Names.VectorDatabase_AzureApiToken, HelpResource: AIResources.Names.VectorDatabase_AzureApiToken_Help, SecureIdFieldName: nameof(AzureApiTokenSecretId), FieldType: FieldTypes.Secret, ResourceType: typeof(AIResources))]
         public string AzureApiToken { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.VectorDatabase_AzureBlobContainerName, HelpResource: AIResources.Names.VectorDatabase_AzureBlobContainerName_Help, IsRequired:true, ResourceType: typeof(AIResources))]
+        [FormField(LabelResource: AIResources.Names.VectorDatabase_AzureBlobContainerName, HelpResource: AIResources.Names.VectorDatabase_AzureBlobContainerName_Help, IsRequired: true, ResourceType: typeof(AIResources))]
         public string BlobContainerName { get; set; }
 
         public string LlmApiKeySecretId { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.AgentContext_LlmProvider, WaterMark: AIResources.Names.AgentContext_LlmProvider_Select, FieldType:FieldTypes.Picker, EnumType: typeof(LlmProviders), IsRequired: true, ResourceType: typeof(AIResources))]
+        [FormField(LabelResource: AIResources.Names.VectorDB_LLMEmbeddingModelName, FieldType: FieldTypes.Text, ResourceType: typeof(AIResources))]
+        public string EmbeddingModel { get; set; } = "text-embedding-3-large";
+
+        [FormField(LabelResource: AIResources.Names.AgentContext_LlmProvider, WaterMark: AIResources.Names.AgentContext_LlmProvider_Select, FieldType: FieldTypes.Picker, EnumType: typeof(LlmProviders), IsRequired: true, ResourceType: typeof(AIResources))]
         public EntityHeader<LlmProviders> LlmProvider { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.VectorDatabase_OpenAPI_Token, HelpResource: AIResources.Names.VectorDatabase_OpenAPI_Token_Help, SecureIdFieldName:nameof(LlmApiKeySecretId), FieldType: FieldTypes.Secret, ResourceType: typeof(AIResources))]
+        [FormField(LabelResource: AIResources.Names.VectorDatabase_OpenAPI_Token, HelpResource: AIResources.Names.VectorDatabase_OpenAPI_Token_Help, SecureIdFieldName: nameof(LlmApiKeySecretId), FieldType: FieldTypes.Secret, ResourceType: typeof(AIResources))]
         public string LlmApiKey { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.AgentContext_DefaultConversationContext, PickerProviderFieldName:nameof(ConversationContexts),  WaterMark:AIResources.Names.AgentContext_DefaultConversationContext_Select, FieldType: FieldTypes.EntityHeaderPicker,
+        [FormField(LabelResource: AIResources.Names.AgentContext_DefaultConversationContext, PickerProviderFieldName: nameof(ConversationContexts), WaterMark: AIResources.Names.AgentContext_DefaultConversationContext_Select, FieldType: FieldTypes.EntityHeaderPicker,
             ResourceType: typeof(AIResources))]
         public EntityHeader DefaultConversationContext { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.AgentContext_ConversationContexts, HelpResource: AIResources.Names.AgentContext_ConversationContext_Description, FieldType: FieldTypes.ChildListInline, FactoryUrl: "/api/ai/agent/conversation/context/factory", 
+        [FormField(LabelResource: AIResources.Names.AgentContext_ConversationContexts, HelpResource: AIResources.Names.AgentContext_ConversationContext_Description, FieldType: FieldTypes.ChildListInline, FactoryUrl: "/api/ai/agent/conversation/context/factory",
             ResourceType: typeof(AIResources))]
         public List<ConversationContext> ConversationContexts { get; set; } = new List<ConversationContext>();
 
@@ -114,6 +113,7 @@ namespace LagoVista.AI.Models
             {
                 nameof(LlmProvider),
                 nameof(LlmApiKey),
+                nameof(EmbeddingModel),
                 nameof(DefaultConversationContext),
                 nameof(ConversationContexts),
             };
@@ -129,8 +129,8 @@ namespace LagoVista.AI.Models
     }
 
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.AgentContext_ConversationContext_Title, AIResources.Names.AgentContext_ConversationContext_Description, AIResources.Names.AgentContext_ConversationContext_Description, EntityDescriptionAttribute.EntityTypes.ChildObject, typeof(AIResources),
-    FactoryUrl:"/api/ai/agent/conversation/context/factory")]
-    public class ConversationContext : IFormDescriptor, IValidateable
+    FactoryUrl: "/api/ai/agent/conversation/context/factory")]
+    public class ConversationContext : IFormDescriptor, IValidateable, IConversationContext
     {
         public string Id { get; set; } = Guid.NewGuid().ToId();
 
@@ -140,7 +140,7 @@ namespace LagoVista.AI.Models
         [FormField(LabelResource: AIResources.Names.AgentContext_ConversationContext_ModelName, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
         public string ModelName { get; set; } = "gpt-5";
 
-        [FormField(LabelResource: AIResources.Names.AgentContext_ConversationContext_System, HelpResource:AIResources.Names.AgentContext_ConversationContext_System_Help, 
+        [FormField(LabelResource: AIResources.Names.AgentContext_ConversationContext_System, HelpResource: AIResources.Names.AgentContext_ConversationContext_System_Help,
             FieldType: FieldTypes.MultiLineText, IsRequired: true, ResourceType: typeof(AIResources))]
         public string System { get; set; }
 

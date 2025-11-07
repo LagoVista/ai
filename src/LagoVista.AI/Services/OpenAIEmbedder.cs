@@ -18,6 +18,7 @@ namespace LagoVista.AI.Services
         private HttpClient _http;
         private readonly string _model;
         private readonly int _expectedDims;
+        private readonly IAdminLogger _adminLogger;    
 
         private class EmbeddingResponse
         {
@@ -31,8 +32,15 @@ namespace LagoVista.AI.Services
             public float[] Embedding { get; set; }
         }
 
+        public OpenAIEmbedder(IAdminLogger adminLogger)
+        {
+            _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
+        }
+
         public OpenAIEmbedder(IOpenAISettings aiSettings, IAdminLogger adminLogger)
         {
+            _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
+
             _model = "text-embedding-3-large";
             _expectedDims = 3072;
             _http = new HttpClient { BaseAddress = new Uri(aiSettings.OpenAIUrl) };
@@ -42,6 +50,8 @@ namespace LagoVista.AI.Services
 
         public OpenAIEmbedder(AgentContext vectorDb, IOpenAISettings aiSettings, IAdminLogger adminLogger)
         {
+            _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
+
             _model = "text-embedding-3-large";
             _expectedDims = 3072;
             _http = new HttpClient { BaseAddress = new Uri(aiSettings.OpenAIUrl) };
@@ -52,8 +62,6 @@ namespace LagoVista.AI.Services
 
         public async Task<float[]> EmbedAsync(string text)
         {
-            // Defensive clamp for very long inputs: OpenAI models support long inputs, but you can trim if needed.
-            // Here we keep it simple; callers should chunk long files before embedding.
             var payload = new { model = _model, input = text };
 
             using (var resp = await PostWithRetryAsync("/v1/embeddings", payload))
@@ -96,7 +104,7 @@ namespace LagoVista.AI.Services
                 }
                 catch (TaskCanceledException ex)
                 {
-                    Console.WriteLine("[OpenAIEmbedder__PostWithRetryAsync] - Timeout Exception");
+                    _adminLogger.AddError("[OpenAIEmbedder__PostWithRetryAsync]", $"[OpenAIEmbedder__PostWithRetryAsync] - Timeout Exception - Attempt {attempt} of 5, will retry");
                 }
                 finally
                 {
@@ -105,6 +113,9 @@ namespace LagoVista.AI.Services
                     delay = TimeSpan.FromMilliseconds(delay.TotalMilliseconds * 2);
                 }
             }
+
+
+            _adminLogger.AddError("[OpenAIEmbedder__PostWithRetryAsync]", $"[OpenAIEmbedder__PostWithRetryAsync] - Timeout Exception - final attempt before giving up and throwing exception");
 
             // Last try (let it throw if fails)
             var final = await _http.PostAsJsonAsync(path, body);

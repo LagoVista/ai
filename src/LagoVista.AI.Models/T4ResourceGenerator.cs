@@ -1,4 +1,4 @@
-﻿/*11/2/2025 9:33:40 AM*/
+﻿/*11/7/2025 7:20:48 AM*/
 using System.Globalization;
 using System.Reflection;
 
@@ -567,6 +567,9 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:VectorDatabases_Title
 
 		public static string VectorDatabases_Title { get { return GetResourceString("VectorDatabases_Title"); } }
+//Resources:AIResources:VectorDB_LLMEmbeddingModelName
+
+		public static string VectorDB_LLMEmbeddingModelName { get { return GetResourceString("VectorDB_LLMEmbeddingModelName"); } }
 
 		public static class Names
 		{
@@ -741,6 +744,7 @@ namespace LagoVista.AI.Models.Resources
 			public const string VectorDatabase_Title = "VectorDatabase_Title";
 			public const string VectorDatabase_Uri = "VectorDatabase_Uri";
 			public const string VectorDatabases_Title = "VectorDatabases_Title";
+			public const string VectorDB_LLMEmbeddingModelName = "VectorDB_LLMEmbeddingModelName";
 		}
 	}
 }

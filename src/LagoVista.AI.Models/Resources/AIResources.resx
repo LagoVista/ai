@@ -630,4 +630,7 @@
   <data name="SourceOrganization_Repositories" xml:space="preserve">
     <value>Repositories</value>
   </data>
+  <data name="VectorDB_LLMEmbeddingModelName" xml:space="preserve">
+    <value>Embedding Model Name</value>
+  </data>
 </root>

@@ -49,10 +49,10 @@ namespace LagoVista.AI.Services
             resp.EnsureSuccessStatusCode();
         }
 
-        public async Task UpsertAsync(string collection, IEnumerable<QdrantPoint> points, CancellationToken ct)
+        public async Task UpsertAsync(string collection, IEnumerable<PayloadBuildResult> points, CancellationToken ct)
         {
             var sw = Stopwatch.StartNew();
-            var req = new { points = points.Select(p => new { id = p.Id, vector = p.Vector, payload = p.Payload }) };
+            var req = new { points = points.Select(p => new { id = p.PointId, vector = p.Vector, payload = p.Payload }) };
             var resp = await _http.PutAsJsonAsync($"/collections/{collection}/points?wait=true", req, ct);
             if (!resp.IsSuccessStatusCode)
             {
@@ -119,7 +119,7 @@ namespace LagoVista.AI.Services
         /// </summary>
         public async Task UpsertInBatchesAsync(
             string collection,
-            IReadOnlyList<QdrantPoint> points,
+            IReadOnlyList<PayloadBuildResult> points,
             int vectorDims,
             int? maxPerBatch = null,
             CancellationToken ct = default)
@@ -161,7 +161,7 @@ namespace LagoVista.AI.Services
         /// Posts an upsert using gzip-compressed JSON body for smaller request payloads.
         /// Compatible with .NET Standard 2.1 (Newtonsoft.Json version).
         /// </summary>
-        private async Task UpsertJsonGzipAsync(string collection, List<QdrantPoint> batch, CancellationToken ct)
+        private async Task UpsertJsonGzipAsync(string collection, List<PayloadBuildResult> batch, CancellationToken ct)
         {
             var url = $"collections/{collection}/points?wait=true";
             var payload = new { points = batch };

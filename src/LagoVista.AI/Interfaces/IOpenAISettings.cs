@@ -6,7 +6,7 @@ namespace LagoVista.AI.Interfaces
 {
     public interface IOpenAISettings
     {
-         public string OpenAIUrl { get;  }
-         public string OpenAIApiKey { get; }
+        public string OpenAIUrl { get; }
+        public string OpenAIApiKey { get; }
     }
 }

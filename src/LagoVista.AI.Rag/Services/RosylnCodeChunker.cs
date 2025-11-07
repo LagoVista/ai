@@ -76,6 +76,13 @@ namespace LagoVista.AI.Rag.Services
                 }
             }
 
+            var idx = 1;
+            foreach(var chunk in chunks)
+            {
+                chunk.PartIndex = idx++;
+                chunk.PartTotal = chunks.Count;
+            }
+
             return new RagChunkPlan()
             {
                 Chunks = chunks,
@@ -121,11 +128,12 @@ namespace LagoVista.AI.Rag.Services
             {
                 yield return new RagChunk
                 { 
-                    Text = text,
+                    TextNormalized = text,
                     LineStart = 1,
                     LineEnd = Math.Min(lines.Length, 200),
                     Symbol = System.IO.Path.GetFileName(relPath),
                     SymbolType = "file",
+                    SectionKey = "file",
                 };
             }
         }
@@ -192,11 +200,12 @@ namespace LagoVista.AI.Rag.Services
                 var slice = string.Join('\n', lines[localStart..Math.Min(localEnd, lines.Length)]);
                 yield return new RagChunk
                 {
-                    Text = slice,
+                    TextNormalized = slice,
                     LineStart = localStart + 1,
                     LineEnd = Math.Min(localEnd, lines.Length),
                     Symbol = GetBestSymbolName(node),
-                    SymbolType = "node"
+                    SymbolType = kind,
+                    SectionKey = kind,
                 };
 
                 // Advance with overlap; ensure forward progress
@@ -241,10 +250,11 @@ namespace LagoVista.AI.Rag.Services
                 var piece = line.AsSpan(idx, take).ToString();
                 yield return new RagChunk
                 {
-                    Text = piece,
+                    TextNormalized = piece,
                     LineStart = lineNumber,
                     LineEnd = lineNumber,
                     Symbol = symbol,
+                    SectionKey = kind,
                     SymbolType = kind,// same symbol; UI can show "(continued)" if needed
 
                 };

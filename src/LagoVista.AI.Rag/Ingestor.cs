@@ -6,6 +6,7 @@ using LagoVista.AI.Rag.Types;
 using LagoVista.AI.Services;
 using LagoVista.Core.Models;
 using LagoVista.Core.Utils;
+using LagoVista.IoT.Logging;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.IoT.Logging.Utils;
 using System;
@@ -69,21 +70,23 @@ namespace LagoVista.AI.Rag
 
             // 2) Ingest & index
             var chunker = new RoslynCSharpChunker(_config.Ingestion.MaxTokensPerChunk, _config.Ingestion.OverlapLines);
-            IEmbedder embedder = new OpenAIEmbedder(settings, new AdminLogger(new ConsoleLogWriter()));
+            var embedder = new OpenAIEmbedder(settings, new AdminLogger(new ConsoleLogWriter()));
 
             var repositoryIndex = 1;
             foreach (var repo in _config.Ingestion.Repositories)
             {
-
                 var fullRoot = Path.Combine(_config.Ingestion.SourceRoot, repo);
+
+                if (!GitRepoInspector.TryGetRepoInfo(fullRoot, out RepoInfo info, out string error))
+                    throw new Exception($"Could not get repo information: {error}");
 
                 var registry = new IndexRegistry(fullRoot);
 
                 var files = FileWalker.EnumerateFiles(fullRoot, _config.Ingestion.Include, _config.Ingestion.Exclude);
                 var removeIds = registry.RemoveMissing(files);
 
-                var toIndex = inline.GetFilesNeedingIndex(files.Select(p => Path.Combine(fullRoot, p)), _config.IndexVersion);
-
+                //  var toIndex = inline.GetFilesNeedingIndex(files.Select(p => Path.Combine(fullRoot, p)), _config.IndexVersion);
+                var toIndex = files;
                 var fileIndex = 1;
 
                 var totalFileCount = toIndex.Count();
@@ -101,27 +104,37 @@ namespace LagoVista.AI.Rag
                     pathInProject = pathInProject.Replace(fileInfo.Name, String.Empty);
                     pathInProject = pathInProject.TrimEnd(Path.DirectorySeparatorChar);
 
+                    var pathInRepo = pathInProject.Replace(repo, "").Replace('\\', '/') + $"/{fileInfo.Name}";
+
                     var plan = chunker.Chunk(text, relPath);
                     adminLogger.Trace($"[Ingestor__IngestAsync] {fileInfo.Name} - found {plan.Chunks.Count} in {sw.Elapsed.TotalMilliseconds}ms");
 
+                    var idx = 0;
+
+                    foreach (var chunk in plan.Chunks)
+                    {
+                        sw.Restart();
+                        chunk.Vector = await embedder.EmbedAsync(chunk.TextNormalized);
+                        adminLogger.Trace($"[Ingestor__IngestAsync] {fileInfo.Name} {chunk.Symbol}/{chunk.SymbolType} - chunk {idx++} of {plan.Chunks.Count} in {sw.Elapsed.TotalMilliseconds}ms, {Math.Round((idx * 100.0f/plan.Chunks.Count))}% ");
+                    }
+
                     var payloads = RagPayloadFactory.FromCodePlan(plan, new Core.Utils.Types.IngestContext()
                     {
-                         EmbeddingModel = _config.Embeddings.Model,
+                        EmbeddingModel = _config.Embeddings.Model,
                         IndexVersion = _config.IndexVersion,
                         OrgId = _config.OrgId,
                         ProjectId = repo
                     }, new Core.Utils.Types.CodeArtifactContext()
                     {
                          Language = "C#",
-                         Path = file,
-                         Repo = repo,
-                        RepoBranch = "main",
-                        Subtype = "sourcecode"
+                         CommitSha = info.CommitSha,
+                         Path = pathInRepo,
+                         Repo = info.RemoteUrl,
+                         RepoBranch = "main",
+                         Subtype = "sourcecode"
                     });
 
-                    
 
-                     
                     var result = await contentRepo.AddTextContentAsync(_agentContext, pathInProject, fileInfo.Name, text, "text/plain");
                    
                     if (result.Successful && payloads.Count > 0)
@@ -134,8 +147,8 @@ namespace LagoVista.AI.Rag
                         {
                             try
                             {
-                                await qdrant.UpsertInBatchesAsync(collectionName, points, vectorDims:3072);
-                                adminLogger.Trace($"[Ingestor__IngestAsync] {fileInfo.Name} uploaded {points.Count} points to qdrant in {sw.Elapsed.TotalMilliseconds}ms");
+                                await qdrant.UpsertInBatchesAsync(collectionName, payloads, vectorDims:3072);
+                                adminLogger.Trace($"[Ingestor__IngestAsync] {fileInfo.Name} uploaded {payloads.Count} points to qdrant in {sw.Elapsed.TotalMilliseconds}ms");
 
                                 inline.UpsertInlineHeader(file, _config.IndexVersion);
                                 break;
@@ -159,39 +172,6 @@ namespace LagoVista.AI.Rag
 
                 repositoryIndex++;
             }
-
-            Console.WriteLine("Ingestion complete.\n");
-
-            // 3) Query loop
-            while (true)
-            {
-                Console.Write("Query> ");
-                var q = Console.ReadLine();
-                if (string.IsNullOrWhiteSpace(q)) break;
-
-                var qVec = await embedder.EmbedAsync(q);
-
-                var results = await qdrant.SearchAsync(collectionName, new QdrantSearchRequest
-                {
-                    Vector = qVec,
-                    Limit = 8,
-                    WithPayload = true,
-                    Filter = new QdrantFilter
-                    {
-                        Must = new List<QdrantCondition>()
-                        {
-                            new QdrantCondition { Key = "language", Match = new QdrantMatch() { Value = "csharp" } }
-                        }
-                    }
-                });
-
-                foreach (var r in results)
-                {
-                    var pl = r.Payload!;
-                    Console.WriteLine($"score={r.Score:F3} {pl["repo"]}\\{pl["path"]} [{pl["start_line"]}-{pl["end_line"]}] symbol={pl.GetValueOrDefault("symbol", "-")}");
-                }
-            }
-
         }
     }
 
