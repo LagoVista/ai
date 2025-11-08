@@ -1,6 +1,7 @@
 ﻿using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
 using LagoVista.Core.Utils.Types;
+using LagoVista.Core.Utils.Types.Nuviot.RagIndexing;
 using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json;
 using System;
@@ -68,9 +69,18 @@ namespace LagoVista.AI.Services
         public async Task<List<QdrantScoredPoint>> SearchAsync(string collection, QdrantSearchRequest req)
         {
             var resp = await _http.PostAsJsonAsync($"/collections/{collection}/points/search", req);
-            resp.EnsureSuccessStatusCode();
-            var json = await resp.Content.ReadAsAsync<QdrantSearchResponse>();
-            return json!.Result ?? new List<QdrantScoredPoint>();
+
+            if (resp.IsSuccessStatusCode)
+            {
+                resp.EnsureSuccessStatusCode();
+                var json = await resp.Content.ReadAsAsync<QdrantSearchResponse>();
+                return json!.Result ?? new List<QdrantScoredPoint>();
+            }
+            else
+            {
+                var response = await resp.Content.ReadAsStringAsync();
+                throw new QdrantHttpException("Qdrant search failed", resp.StatusCode, response);
+            }
         }
 
         public async Task DeleteByIdsAsync(string collection, IEnumerable<string> ids)
@@ -111,6 +121,7 @@ namespace LagoVista.AI.Services
                 }
             }
         }
+
 
         /// <summary>
         /// Upsert in smaller batches to avoid 413 Payload Too Large. Adaptive:
@@ -187,6 +198,21 @@ namespace LagoVista.AI.Services
         {
             try { return await resp.Content.ReadAsStringAsync().ConfigureAwait(false); }
             catch { return string.Empty; }
+        }
+
+
+
+        private static object KvMatch(string key, object value)
+            => new { key = key, match = new { value = value } };
+
+        private static HttpRequestMessage BuildJsonPost(string url, object body, string apiKey)
+        {
+            var json = Newtonsoft.Json.JsonConvert.SerializeObject(body);
+            var req = new HttpRequestMessage(HttpMethod.Post, url);
+            req.Content = new StringContent(json, Encoding.UTF8, "application/json");
+            if (!string.IsNullOrWhiteSpace(apiKey))
+                req.Headers.TryAddWithoutValidation("api-key", apiKey);
+            return req;
         }
     }
 

@@ -33,7 +33,7 @@ namespace LagoVista.AI.Rag.Services
         /// <summary>
         /// Chunk a C# file into symbol-aligned, token-budgeted chunks.
         /// </summary>
-        public RagChunkPlan Chunk(string text, string relPath)
+        public RagChunkPlan Chunk(string text, string relPath, string blobPath)
         {
             var tree = CSharpSyntaxTree.ParseText(text, new CSharpParseOptions(LanguageVersion.Preview));
             var root = tree.GetRoot();
@@ -90,7 +90,7 @@ namespace LagoVista.AI.Rag.Services
                 {
                     IsText = true,
                     MimeType = "text/x-csharp",
-                    SuggestedBlobPath = relPath,
+                    SuggestedBlobPath = blobPath,
                     Text = text,
                 },
             };
@@ -196,6 +196,7 @@ namespace LagoVista.AI.Rag.Services
                     localEnd++;
                 }
 
+              
                 // Emit normal chunk
                 var slice = string.Join('\n', lines[localStart..Math.Min(localEnd, lines.Length)]);
                 yield return new RagChunk
@@ -206,6 +207,7 @@ namespace LagoVista.AI.Rag.Services
                     Symbol = GetBestSymbolName(node),
                     SymbolType = kind,
                     SectionKey = kind,
+                    
                 };
 
                 // Advance with overlap; ensure forward progress

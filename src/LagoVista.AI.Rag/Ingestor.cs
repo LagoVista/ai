@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -36,6 +37,8 @@ namespace LagoVista.AI.Rag
             var adminLogger = new AdminLogger(new ConsoleLogWriter());
 
             var collectionName = _agentContext.VectorDatabaseCollectionName;
+
+            collectionName += "2";
 
             var qcfg = new QdrantConfig()
             {
@@ -85,11 +88,12 @@ namespace LagoVista.AI.Rag
                 var files = FileWalker.EnumerateFiles(fullRoot, _config.Ingestion.Include, _config.Ingestion.Exclude);
                 var removeIds = registry.RemoveMissing(files);
 
-                //  var toIndex = inline.GetFilesNeedingIndex(files.Select(p => Path.Combine(fullRoot, p)), _config.IndexVersion);
-                var toIndex = files;
+                var toIndex = inline.GetFilesNeedingIndex(files.Select(p => Path.Combine(fullRoot, p)), _config.IndexVersion);
+                //var toIndex = files;
                 var fileIndex = 1;
 
                 var totalFileCount = toIndex.Count();
+
 
                 foreach (var file in toIndex)
                 {
@@ -101,12 +105,14 @@ namespace LagoVista.AI.Rag
                     adminLogger.Trace($"[Ingestor__IngestAsync] {fileInfo.Name} - starting repository {repositoryIndex} of {_config.Ingestion.Repositories.Count} repositories, file {fileIndex} of {totalFileCount} files");
 
                     var pathInProject = relPath.Substring(relPath.IndexOf(repo));
+                    var blobUri = $"/{pathInProject.Replace('\\','/')}".ToLower();
+
                     pathInProject = pathInProject.Replace(fileInfo.Name, String.Empty);
                     pathInProject = pathInProject.TrimEnd(Path.DirectorySeparatorChar);
 
                     var pathInRepo = pathInProject.Replace(repo, "").Replace('\\', '/') + $"/{fileInfo.Name}";
 
-                    var plan = chunker.Chunk(text, relPath);
+                    var plan = chunker.Chunk(text, relPath, blobUri);
                     adminLogger.Trace($"[Ingestor__IngestAsync] {fileInfo.Name} - found {plan.Chunks.Count} in {sw.Elapsed.TotalMilliseconds}ms");
 
                     var idx = 0;
@@ -130,10 +136,35 @@ namespace LagoVista.AI.Rag
                          CommitSha = info.CommitSha,
                          Path = pathInRepo,
                          Repo = info.RemoteUrl,
-                         RepoBranch = "main",
-                         Subtype = "sourcecode"
+                         RepoBranch = info.BranchRef,
+                         Subtype = "server"
                     });
 
+                    sw.Restart();
+                    await qdrant.DeleteByFilterAsync(collectionName, new QdrantFilter()
+                    {
+                        Must = new List<QdrantCondition>()
+                        {
+                            new QdrantCondition()
+                            {
+                                Key = "Repo",
+                                Match = new QdrantMatch()
+                                {
+                                    Value = info.RemoteUrl
+                                }
+                            },
+                            new QdrantCondition()
+                            {
+                                Key = "Path",
+                                Match = new QdrantMatch()
+                                {
+                                    Value = pathInRepo
+                                }
+                            }
+                        }
+                    });
+
+                    adminLogger.Trace($"[Ingestor__IngestAsync] Removed Old Vectors for {info.RemoteUrl} {pathInRepo} in {sw.Elapsed.TotalMilliseconds}ms.");
 
                     var result = await contentRepo.AddTextContentAsync(_agentContext, pathInProject, fileInfo.Name, text, "text/plain");
                    

@@ -78,7 +78,7 @@ namespace LagoVista.AI.Services
             {
                 KvMatch("repo", repo),
                 KvMatch("path", path),
-                KvMatch("content_type", RagContentType.Code.ToString())
+                KvMatch("content_type", RagContentType.SourceCode.ToString())
             };
             if (!string.IsNullOrWhiteSpace(orgId)) must.Add(KvMatch("org_id", orgId));
             if (!string.IsNullOrWhiteSpace(projectId)) must.Add(KvMatch("project_id", projectId));

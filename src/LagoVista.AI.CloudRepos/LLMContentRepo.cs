@@ -20,7 +20,7 @@ namespace LagoVista.AI.CloudRepos
 
         private string GetBlobName(string path, string fileName)
         {
-            return $"{path.Replace('\\','/')}/{fileName}";
+            return $"{path.Replace('\\','/')}/{fileName}".ToLower();
         }
 
         public async Task<InvokeResult> AddImageContentAsync(AgentContext vectorDb, string path, string fileName, byte[] model, string contentType)

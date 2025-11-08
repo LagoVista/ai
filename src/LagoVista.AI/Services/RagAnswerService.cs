@@ -72,7 +72,6 @@ namespace LagoVista.AI.Services
                 Filter = filter
             });
 
-
             // 3) Pick a diverse, small set for the prompt
             var selected = SelectDiverse(hits, topK);
 
