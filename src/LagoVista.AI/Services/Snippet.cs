@@ -1,4 +1,8 @@
-﻿namespace LagoVista.AI.Services
+// --- BEGIN CODE INDEX META (do not edit) ---
+// ContentHash: bcb24283dfde843f56775a76b23a654ed6da1310b57c5d16bef9ab51f9a681c4
+// IndexVersion: 2
+// --- END CODE INDEX META ---
+namespace LagoVista.AI.Services
 {
     public sealed class Snippet
     {

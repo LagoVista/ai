@@ -1,4 +1,8 @@
-﻿using System.Linq;
+// --- BEGIN CODE INDEX META (do not edit) ---
+// ContentHash: 28b6f10874e9e1c8ec362e4eada95c3f57ee7eda5ef79ccf2bc21533bfcb63dc
+// IndexVersion: 2
+// --- END CODE INDEX META ---
+using System.Linq;
 using System.Threading.Tasks;
 using LagoVista.AI.Models.TrainingData;
 using LagoVista.CloudStorage.DocumentDB;

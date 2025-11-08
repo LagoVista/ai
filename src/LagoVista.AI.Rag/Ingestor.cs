@@ -1,4 +1,8 @@
-﻿using LagoVista.AI.CloudRepos;
+// --- BEGIN CODE INDEX META (do not edit) ---
+// ContentHash: 54030daa60435440890428f2fa15e236b2ac9fb6efc46847526952c3946ebfec
+// IndexVersion: 2
+// --- END CODE INDEX META ---
+using LagoVista.AI.CloudRepos;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
 using LagoVista.AI.Rag.Services;
@@ -104,7 +108,12 @@ namespace LagoVista.AI.Rag
                     var fileInfo = new FileInfo(file);
                     adminLogger.Trace($"[Ingestor__IngestAsync] {fileInfo.Name} - starting repository {repositoryIndex} of {_config.Ingestion.Repositories.Count} repositories, file {fileIndex} of {totalFileCount} files");
 
-                    var pathInProject = relPath.Substring(relPath.IndexOf(repo));
+
+                    var indexRepo = file.IndexOf(repo);
+                    if (indexRepo == -1)
+                        Debugger.Break();
+
+                    var pathInProject = file.Substring(indexRepo);
                     var blobUri = $"/{pathInProject.Replace('\\','/')}".ToLower();
 
                     pathInProject = pathInProject.Replace(fileInfo.Name, String.Empty);

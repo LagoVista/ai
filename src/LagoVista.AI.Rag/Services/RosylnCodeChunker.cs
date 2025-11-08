@@ -24,7 +24,7 @@ namespace LagoVista.AI.Rag.Services
         private readonly int _maxTokensPerChunk;
         private readonly int _overlapLines;
 
-        public RoslynCSharpChunker(int maxTokensPerChunk = 7000, int overlapLines = 6)
+        public RoslynCSharpChunker(int maxTokensPerChunk = 6500, int overlapLines = 6)
         {
             _maxTokensPerChunk = Math.Max(128, maxTokensPerChunk);
             _overlapLines = Math.Max(0, overlapLines);

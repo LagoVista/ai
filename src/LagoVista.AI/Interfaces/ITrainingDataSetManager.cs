@@ -1,4 +1,8 @@
-﻿using LagoVista.AI.Models.TrainingData;
+// --- BEGIN CODE INDEX META (do not edit) ---
+// ContentHash: 295d16664fdf1cf1a49ff956cbd717e56738fe6e4b60103838328c075c78a620
+// IndexVersion: 2
+// --- END CODE INDEX META ---
+using LagoVista.AI.Models.TrainingData;
 using LagoVista.Core.Models;
 using LagoVista.Core.Models.UIMetaData;
 using LagoVista.Core.Validation;

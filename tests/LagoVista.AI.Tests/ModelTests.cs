@@ -1,4 +1,8 @@
-﻿using Microsoft.ML.OnnxRuntime;
+// --- BEGIN CODE INDEX META (do not edit) ---
+// ContentHash: 64b688f0f86204310868ff5bbeebc1fb5eb6139a4924695003b8379e46260a98
+// IndexVersion: 2
+// --- END CODE INDEX META ---
+using Microsoft.ML.OnnxRuntime;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 

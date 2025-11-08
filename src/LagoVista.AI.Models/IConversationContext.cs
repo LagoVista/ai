@@ -1,4 +1,8 @@
-﻿using System.Collections.Generic;
+// --- BEGIN CODE INDEX META (do not edit) ---
+// ContentHash: 5e6c41b82e825d6111b6019ecd32f6afa47b37d64fe6258362dfa279aa8c8571
+// IndexVersion: 2
+// --- END CODE INDEX META ---
+using System.Collections.Generic;
 
 namespace LagoVista.AI.Models
 {

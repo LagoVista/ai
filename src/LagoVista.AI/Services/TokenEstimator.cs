@@ -1,4 +1,8 @@
-﻿using System;
+// --- BEGIN CODE INDEX META (do not edit) ---
+// ContentHash: d86bfc93e9033dd57e3d60df129715439754a37e98e2bbcfe9784576ce7fb6a7
+// IndexVersion: 2
+// --- END CODE INDEX META ---
+using System;
 
 namespace LagoVista.AI.Services
 {

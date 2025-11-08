@@ -1,4 +1,8 @@
-﻿/*11/7/2025 7:20:48 AM*/
+// --- BEGIN CODE INDEX META (do not edit) ---
+// ContentHash: 5e1b51ab8a8f1105996599fa3f658500da6c59f4630a244491a1fbe7015f721b
+// IndexVersion: 2
+// --- END CODE INDEX META ---
+/*11/7/2025 7:20:48 AM*/
 using System.Globalization;
 using System.Reflection;
 

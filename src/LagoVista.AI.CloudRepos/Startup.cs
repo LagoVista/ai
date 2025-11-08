@@ -1,4 +1,8 @@
-﻿using LagoVista.Core.Interfaces;
+// --- BEGIN CODE INDEX META (do not edit) ---
+// ContentHash: a27eb1c13ec36c494606c61641bc0faf9a49475edbd635b2b55772bd73be8e95
+// IndexVersion: 2
+// --- END CODE INDEX META ---
+using LagoVista.Core.Interfaces;
 using System;
 
 namespace LagoVista.AI.CloudRepos

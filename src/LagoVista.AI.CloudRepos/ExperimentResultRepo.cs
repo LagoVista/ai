@@ -1,4 +1,8 @@
-﻿using LagoVista.AI.CloudRepos.Models;
+// --- BEGIN CODE INDEX META (do not edit) ---
+// ContentHash: 8c065e6959bb00d0eb3f98f56e0251c40695497ac9dd0249e8529476be7547c9
+// IndexVersion: 2
+// --- END CODE INDEX META ---
+using LagoVista.AI.CloudRepos.Models;
 using LagoVista.AI.Models;
 using LagoVista.CloudStorage.Storage;
 using LagoVista.Core.Models.UIMetaData;

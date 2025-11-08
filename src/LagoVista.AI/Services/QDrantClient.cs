@@ -1,4 +1,8 @@
-﻿using LagoVista.AI.Interfaces;
+// --- BEGIN CODE INDEX META (do not edit) ---
+// ContentHash: 3dd7bc397d00e26abf16b7ab9f823ee154a27604c67d83190d46507289cffa64
+// IndexVersion: 2
+// --- END CODE INDEX META ---
+using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
 using LagoVista.Core.Utils.Types;
 using LagoVista.Core.Utils.Types.Nuviot.RagIndexing;
