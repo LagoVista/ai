@@ -1,7 +1,7 @@
 {
   "version": 1,
   "createdAtUtc": "2025-11-08T23:13:20.2097641Z",
-  "updatedAtUtc": "2025-11-08T23:40:00.5904432Z",
+  "updatedAtUtc": "2025-11-08T23:42:22.4020847Z",
   "files": {
     "../../../../Program.cs": {
       "pointIds": [
@@ -2408,6 +2408,217 @@
         "e6e590be-ebf7-4d5c-931a-fd041a97da54",
         "f7c415a6-cb2e-4c50-999a-938408a5c6e6",
         "fba5ebf6-a95f-4613-ac0d-ec0e743ab8d3"
+      ]
+    },
+    "../../../../../../src/LagoVista.AI.Models/TrainingData/TrainingDataSet.cs": {
+      "pointIds": [
+        "28f1e046-b1bc-435b-8116-45c43aec48b1",
+        "412b695f-afda-43f2-b603-b1bff823590c",
+        "42f09f35-afcf-4915-9f64-0fbaad212ff5",
+        "4c665c75-5ebf-4967-be55-77670b170a47",
+        "5bc6320b-3c0d-40fa-b550-c7645dfc17ca",
+        "81731e79-d720-444b-b71b-b7c12bd312dc",
+        "baa377e9-52e2-41de-8055-06e00e95bb04",
+        "c3496e54-a21d-41bc-8dd1-9ee7cab1b9a6",
+        "d474be4a-e5c7-4f7d-8155-bf6d61c25417",
+        "d624ba86-3fae-4aef-9b1a-3343b35e80e2",
+        "db168752-c156-4053-803a-c56673c087f8"
+      ]
+    },
+    "../../../../../../src/LagoVista.AI.Rag/Services/Env.cs": {
+      "pointIds": [
+        "11469d46-c68e-48ea-a9b1-3f186532f5e3",
+        "7a212aa3-d55d-49c5-95f5-1292bbed0787",
+        "9fce37f3-86b8-414e-bce6-9c5ae4ccfa6f",
+        "ad6fd39d-9728-4417-bec8-cf8c07725707",
+        "b9831e90-ac1b-4924-9ab9-a8dd103f04b4"
+      ]
+    },
+    "../../../../../../src/LagoVista.AI.Rag/Services/FileManifestTracker.cs": {
+      "pointIds": [
+        "11a5dc43-cf0a-4a56-bd77-921df556ebf1",
+        "177c6fb7-d244-4188-a080-9deff64f2289",
+        "180371bf-59f1-4b02-9b43-0d5064ccb122",
+        "2dbe5ef5-7120-42f8-aa67-fb07d9ddec05",
+        "3051aae4-baaa-4c29-97ab-48a668d13160",
+        "3c0f4952-7ca5-437b-970c-a61d21ae81cf",
+        "50d6b30d-b503-49af-9d48-5da382a5519b",
+        "6001de6f-57b5-4a1d-bd0d-b6c932d95cfa",
+        "648c2101-43b6-4a7b-b06f-fc69cb4434ce",
+        "746272fc-acb0-4d90-b00f-e7d1dd09dcb1",
+        "7cff9e6d-5cd7-4703-bb21-7440dfae66a7",
+        "7ef3efab-1a17-4d2d-beea-cce421b025af",
+        "87e37698-822a-4803-bc95-d0180917b0fb",
+        "8fbf55fd-3d72-4409-b3e1-1110dc755760",
+        "93996eac-dec2-42b9-8277-b88858f58b65",
+        "aa700814-754e-4018-99e2-bceeb2c9318b",
+        "c3be80ae-3210-4015-af95-577f27a918b6",
+        "db7fe1c6-0097-4bdd-adb3-d03e2b7fd0c0",
+        "ea86e0e7-5317-432a-a915-0eeffdabce11",
+        "fa0c3453-90b4-4f62-b38b-8c54af3833af"
+      ]
+    },
+    "../../../../../../src/LagoVista.AI.Rag/Services/FileWalker.cs": {
+      "pointIds": [
+        "34b28766-4cfd-4c42-8942-45d3b980d483",
+        "4809de7d-03ae-4f80-8e59-4405aec9459a",
+        "4c4a1570-7420-470e-9859-28041e98e807",
+        "515d9863-2ed4-4826-8829-29e8530405a4",
+        "5b1e3555-0c57-40b9-a850-7f4ed6502fb5",
+        "795ae0a2-75ea-4613-880c-be8240d70c89",
+        "7fb01399-484a-461d-9629-60cada4e1151",
+        "88ddb430-641c-4b04-8aa9-59e285ed0c61",
+        "cdbc35f9-fb46-4fba-8cbc-26a10fc84fea",
+        "f337fa36-56bd-4894-bc94-533947ed872f",
+        "ffe08cbd-9aa5-44e7-90a9-e0393bd0425d"
+      ]
+    },
+    "../../../../../../src/LagoVista.AI.Rag/Services/GitServices.cs": {
+      "pointIds": [
+        "0c15d36a-aac6-44f6-a5eb-3ed7963a0452",
+        "0e38b70f-4278-4aa9-83a6-e0f848982493",
+        "25d39b8a-9f85-4d4a-ac8d-3c320e36a289",
+        "315a7029-fc7f-44f7-8b28-b901bdae0533",
+        "46eb1355-0608-473c-b706-3990b55a6833",
+        "46ff1609-2c0a-4b9a-8d4e-6d31a043fabb",
+        "4a9bf236-32de-4e69-b4a7-a0475266f0d3",
+        "500e0247-0fb2-4982-99c6-213c68d4c851",
+        "55782bec-01bc-4d77-83d2-7efed0eadf25",
+        "55a7ced7-557c-4a73-98c1-addd646c8e5e",
+        "569526f7-6478-4f85-892f-413a3bc0ff0f",
+        "67acfcb0-7561-4a6b-b4ef-1a149a56e95c",
+        "6cae9568-cde4-44dc-9195-10eddaf631ff",
+        "90eeb96b-27da-421e-a8d5-1ad2a105dd44",
+        "a2defb01-4f5d-45c6-b3be-a1ab3794d790",
+        "a8fce132-ee65-4d2a-9dd5-6ef5b0224470",
+        "ab4f1885-27ab-46c8-b798-34a334932919",
+        "c6f43a7b-2b0e-424c-a5e9-69c6ebc463d8",
+        "c9d64228-35c7-4d24-8f18-44e4e58f9a25",
+        "d45650eb-7264-4a40-a656-a62f2621a2bf",
+        "d95e3add-a874-4fdb-ab9f-8d4d163ea816",
+        "dd53a7df-1002-4f88-ba82-80cbab359c88",
+        "f44c2588-3c69-4eef-bd36-eac8011d3b3d",
+        "f8dd8c46-1bb8-4443-b497-1b80d9b24566"
+      ]
+    },
+    "../../../../../../src/LagoVista.AI.Rag/Services/IndexRegistry.cs": {
+      "pointIds": [
+        "008e21ba-db86-4004-beb5-56d25215db69",
+        "073b50a5-dcb7-43c3-ac12-402e788e554b",
+        "0a1540ee-b1f3-44c0-be38-fc08aa129011",
+        "0bbd773b-ac41-41a2-b7a0-0e09c863df12",
+        "28d22445-4452-43cf-a2d7-7fbaa3e1ef7b",
+        "2b185fb7-1479-4de5-b160-bc63eace61c3",
+        "35f3038e-07ce-42c9-8af1-e86990b02e7a",
+        "3bc14226-fcb0-44aa-94fb-79285947a022",
+        "42208e4d-c4ab-487c-b088-f9cc4d99534e",
+        "498fe8db-31db-46c1-91bb-ede63844b02b",
+        "5d4860bd-3765-452a-b7c0-3fb770d45862",
+        "61f54f30-b203-4069-ac76-42a52cbfee28",
+        "64f961a4-d849-41ad-80b4-4d945da387ac",
+        "70f32ab9-507e-4b73-8caf-7c78728fd282",
+        "7103983e-f057-4e35-853a-c16838d7a8f1",
+        "7252fc78-3be1-408d-9db9-4a73c079169c",
+        "7592d1d9-768b-4ae4-8da2-067112495039",
+        "846f0196-fab8-4b6d-bd6d-9c205d514c93",
+        "8ada5029-8954-48c8-a248-5e16c5ea7692",
+        "a1f0a566-6d5a-475b-bf09-5f531a6a5d03",
+        "aa7f718b-2b46-4774-b775-df441f4f7a40",
+        "bd238bfd-2f4d-4e8a-a402-7d4063714ce6",
+        "c3fa48e4-d38f-448b-8c7d-3b03cf1abe7a",
+        "cae860e5-b61f-4463-a881-adbc62683641",
+        "cd1826ed-6fe0-450a-bf1d-915e41cd259b",
+        "d492d725-0ab1-4b8d-9873-218f6ecc2ecf",
+        "d4b32f46-cba5-472a-b184-6d8723951578",
+        "d4b9c827-a7a1-4020-9dad-1a14b87764d7",
+        "e7b33756-ef51-4fdc-9e2b-734d68bddd87",
+        "f9f21077-6a0a-4f90-bb75-a3de40e99328",
+        "fa09b40b-1af8-412e-915b-b58c4ed9aac8"
+      ]
+    },
+    "../../../../../../src/LagoVista.AI.Rag/Services/RosylnCodeChunker.cs": {
+      "pointIds": [
+        "054a90b9-8295-4d09-90fa-494e827e8d58",
+        "34eb74a9-d109-44ab-8457-5b2021e05fa1",
+        "4d4ae7af-d87d-4840-9ec8-a7f19e88c920",
+        "4f147058-bac3-4740-8c7a-08012806209a",
+        "5e1ab705-1f78-4d3f-949f-5552e3e87185",
+        "5e633e79-8d61-4a0d-a968-bea6e14532b1",
+        "61281c92-ecca-4677-9fd3-4aa83dcecb0e",
+        "63a64454-8499-46c2-98b9-0c4aa7044e22",
+        "7341d7f6-db16-48a0-b6e4-c0d9bb46b8ca",
+        "8793f05a-4f9c-4204-ad25-304ed1c5f77e",
+        "8926f553-5671-4174-95ee-a8c1af4175b1",
+        "b1523a35-e755-427b-8ea9-ac4cb9958bff",
+        "b63efebe-6c41-45dd-9a33-6828331cb23d",
+        "b9934b8c-7f1a-43d7-b69a-0dbc5c3e2434",
+        "e0b213e8-d0ca-4777-913b-58684700e593",
+        "e8f43c90-20f5-4461-876e-52f5505932c6",
+        "e98894a0-ee90-4c51-8971-30a0495018a1",
+        "ec5b34b5-4176-4f4d-b5e4-af48a1fd7598",
+        "ef2f9bb8-1260-4607-bf0b-77f3d7ac1392",
+        "f26389e4-e0ef-4830-a604-9dfd3205e6a5"
+      ]
+    },
+    "../../../../../../src/LagoVista.AI.Rag/Types/Config.cs": {
+      "pointIds": [
+        "0659ef83-e6c9-41a8-9974-a28d2a39f003",
+        "06ebc298-c9d2-4beb-921e-c834a0059d9d",
+        "0d3ddce7-7e1f-4110-8b78-dff70b3c4f2c",
+        "0dbb2f02-9870-4bea-9abb-6dcdf8005361",
+        "133f5ef0-a61e-48ab-84dd-c0b540ac4884",
+        "180818df-f041-4066-b568-afc689ef5067",
+        "265eb336-368f-4592-8109-4fe3f08eed1e",
+        "3af1df3e-d258-4e52-b781-33b9902a0721",
+        "3d781fa9-6ff8-48e2-9404-7fccfd55c5d7",
+        "402d39c8-4739-4959-8fef-7692196202f8",
+        "425e60ac-c4c6-4db4-abd3-cd59827eafaf",
+        "45d1e1ef-3669-40b5-8bad-46cd48be9e53",
+        "4d61311e-6073-4c11-89b9-cb4580ee4153",
+        "50551a8b-c870-4fa8-8bea-356ccf2ed1a2",
+        "5283ace4-11c0-40fa-8b85-850896e43302",
+        "544e1e6f-d108-4ab3-a72a-b13ceab96ceb",
+        "5e1efef0-0d1c-429c-a5b3-1ea50383e066",
+        "61018278-b754-47bf-adf9-f13175918bed",
+        "61757290-229d-41bb-9984-33d682799860",
+        "68476c9a-15d7-46f9-a9f8-323fb2ac3365",
+        "6ad44631-a796-4e93-8ae9-10aea1417dd5",
+        "6c270c16-a7f0-4d7c-8a8a-3e15f173e2f3",
+        "6ddc464d-6b00-43f8-8bd4-ba1cc2421081",
+        "7cb422c6-cae5-4a4e-a4e7-87682db0a505",
+        "94fa62fd-8f51-44b6-93a3-48f25d71997e",
+        "9fda13f9-7f35-4a97-8c0d-0fe3e1dadaf6",
+        "a241b91b-be36-4ec5-8e2c-7582e7ccc89c",
+        "aacf382a-d48d-4798-a65c-13feab1e0851",
+        "adf1e311-ba76-432c-aa09-73902cf6e978",
+        "aff856e2-206c-4b83-aa72-f199a2e0e2c7",
+        "b72c8b36-5b39-4152-9f77-3610d3b0b8d7",
+        "b8b4f957-f53f-48c2-b4e2-b255349cdaf6",
+        "ba65279c-3ba0-4f78-97e5-41b3bdd60a42",
+        "bd1263f7-64e4-42c0-b4dc-d9f45c95d2b2",
+        "bd8c67a0-e4e5-4907-8d6e-98caec33b5eb",
+        "c41caee5-df27-4244-a76d-9f5b7af584d5",
+        "c9cf43b3-2c2c-4ca7-b109-a6e48d3a6222",
+        "ded57b52-7b13-4c7f-a8be-e2a8d3bc1a5f",
+        "e38c6916-2679-40b1-8774-595ef311b455",
+        "ee9a30e4-e745-4a43-9eb5-d87d0fd99554"
+      ]
+    },
+    "../../../../../../src/LagoVista.AI.Rag/Types/Models.cs": {
+      "pointIds": [
+        "032b4a23-1fb9-4c08-b374-818da32003c4",
+        "4a8cf8d4-58c5-4382-9925-f8260a2e86c9",
+        "6dc2ccc4-d79a-44b5-ac77-ca844755509b",
+        "83e94fa0-ba2b-46d4-8977-4e3f2049221c",
+        "88589735-40ce-4994-be9d-a5871e1792a8",
+        "8a6db150-74bb-4fdb-98f5-f09ed327bbd5",
+        "8a91f786-1164-41fa-9203-6f59b2f432b3",
+        "9bde1de3-e118-4f58-9e64-05c27a82f3a6",
+        "af340715-4ee9-4172-b361-bc062cf24d7d",
+        "cf4a42ff-6cbe-4aae-866f-f4c6813ef748",
+        "d64aae1c-0ce6-472c-b1ac-bc5c35c0854e",
+        "f2b89cc7-45c1-4b52-a8ca-3be36441cb37",
+        "fe66f2c0-c25f-4354-837c-caeb500e497f"
       ]
     }
   }

@@ -1,4 +1,8 @@
-﻿using System.IO;
+// --- BEGIN CODE INDEX META (do not edit) ---
+// ContentHash: 7335a95b713dc120951347c43b98d7614d4d55e0dec3f1f734ea6c8ba6f0b923
+// IndexVersion: 2
+// --- END CODE INDEX META ---
+using System.IO;
 
 namespace LagoVista.AI.Rag.Types
 {
