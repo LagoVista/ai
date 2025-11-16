@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.Core;
@@ -10,6 +11,7 @@ using LagoVista.Core.AI.Models;
 using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
+using Newtonsoft.Json;
 
 namespace LagoVista.AI.AgentClient
 {
@@ -47,19 +49,47 @@ namespace LagoVista.AI.AgentClient
 
                 _adminLogger?.AddError(
                     "[AgentExecutionClient_ExecuteAsync__HttpFailure]",
-                    $"HTTP error calling /api/ai/agent/execute: {response.StatusCode}",
+                    $"HTTP error calling /api/ai/agent/execute: {response.StatusCode}.",
                     response.StatusCode.ToString().ToKVP("statusCode"),
                     correlationId.ToKVP("correlationId"));
+
+                if (!String.IsNullOrWhiteSpace(errorBody))
+                {
+                    _adminLogger?.AddError(
+                        "[AgentExecutionClient_ExecuteAsync__HttpFailure]",
+                        $"HTTP error body: {errorBody}",
+                        correlationId.ToKVP("correlationId"));
+                }
 
                 return new AgentExecuteResponse
                 {
                     Kind = "error",
                     ErrorCode = "HTTP_ERROR",
-                    ErrorMessage = $"HTTP error calling /api/ai/agent/execute: {response.StatusCode}"
+                    ErrorMessage = String.IsNullOrWhiteSpace(errorBody)
+                        ? $"HTTP error calling /api/ai/agent/execute: {response.StatusCode}"
+                        : $"HTTP error calling /api/ai/agent/execute: {response.StatusCode}. Body: {errorBody}"
                 };
             }
 
-            var invokeResult = await response.Content.ReadFromJsonAsync<InvokeResult<AgentExecuteResponse>>(cancellationToken: cancellationToken);
+            
+            var json = await response.Content.ReadAsStringAsync(cancellationToken);
+            if(json == null)
+            {
+                _adminLogger?.AddError(
+        "[AgentExecutionClient_ExecuteAsync__DeserializeError]",
+        $"Failed to deserialize InvokeResult<AgentExecuteResponse>: null string response",
+        correlationId.ToKVP("correlationId"));
+
+                return new AgentExecuteResponse
+                {
+                    Kind = "error",
+                    ErrorCode = "DESERIALIZATION_ERROR",
+                    ErrorMessage = "Unable to parse agent execution response JSON, NULL response String"
+                };
+
+            }
+
+            var invokeResult = JsonConvert.DeserializeObject<InvokeResult<AgentExecuteResponse>>(json);    
             if (invokeResult == null)
             {
                 _adminLogger?.AddError(
@@ -91,10 +121,25 @@ namespace LagoVista.AI.AgentClient
                 };
             }
 
+            if (invokeResult.Result == null)
+            {
+                _adminLogger?.AddError(
+                    "[AgentExecutionClient_ExecuteAsync__NullResult]",
+                    "Agent execution endpoint reported success but Result was null.",
+                    correlationId.ToKVP("correlationId"));
+
+                return new AgentExecuteResponse
+                {
+                    Kind = "error",
+                    ErrorCode = "MISSING_RESULT",
+                    ErrorMessage = "Agent execution completed but did not return a result payload."
+                };
+            }
+
             _adminLogger?.Trace(
                 "[AgentExecutionClient_ExecuteAsync] Execute request completed successfully.",
                 correlationId.ToKVP("correlationId"),
-                (invokeResult.Result?.Kind ?? string.Empty).ToKVP("resultKind"));
+                (invokeResult.Result.Kind ?? string.Empty).ToKVP("resultKind"));
 
             return invokeResult.Result;
         }
@@ -125,7 +170,9 @@ namespace LagoVista.AI.AgentClient
                 Repo = repo,
                 Language = language,
                 RagScope = ragScope,
-                ActiveFiles = activeFiles != null ? new List<ActiveFile>(activeFiles) : new List<ActiveFile>()
+                ActiveFiles = activeFiles != null
+                    ? new List<ActiveFile>(activeFiles)
+                    : new List<ActiveFile>()
             };
 
             return ExecuteAsync(request, cancellationToken);

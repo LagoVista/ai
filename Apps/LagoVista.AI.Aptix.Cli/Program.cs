@@ -36,11 +36,15 @@ namespace LagoVista.AI.Aptix.Cli
                 return -1;
             }
 
-            var baseUrl = isLocal ? "https://localhost:5001" : (isDev ? "https://dev-api.nuviot.com" : "https://api.nuviot.com");
+            var baseUrl = isLocal
+                ? "https://localhost:5001"
+                : (isDev ? "https://dev-api.nuviot.com" : "https://api.nuviot.com");
 
             // --- ClientId resolution ---
             var inlineClientId = ParseInlineClientId(args);
-            var clientId = !String.IsNullOrWhiteSpace(inlineClientId) ? inlineClientId : config.ClientAppId;
+            var clientId = !String.IsNullOrWhiteSpace(inlineClientId)
+                ? inlineClientId
+                : config.ClientAppId;
 
             if (String.IsNullOrWhiteSpace(clientId))
             {
@@ -74,8 +78,11 @@ namespace LagoVista.AI.Aptix.Cli
                 BaseAddress = new Uri(baseUrl)
             };
 
-            // Final Authorization header: ClientId:Token
+            // Final Authorization header: APIToken ClientId:Token
             httpClient.DefaultRequestHeaders.Add("Authorization", $"APIToken {clientId}:{token}");
+
+            // Banner / eye candy
+            PrintBanner(baseUrl, isLocal, isDev);
 
             var agentClient = new AgentExecutionClient(httpClient);
 
@@ -101,7 +108,8 @@ namespace LagoVista.AI.Aptix.Cli
         {
             for (var i = 0; i < args.Length; i++)
             {
-                if (args[i].Equals("--token", StringComparison.OrdinalIgnoreCase) || args[i].Equals("-t", StringComparison.OrdinalIgnoreCase))
+                if (args[i].Equals("--token", StringComparison.OrdinalIgnoreCase)
+                    || args[i].Equals("-t", StringComparison.OrdinalIgnoreCase))
                 {
                     if (i + 1 < args.Length)
                     {
@@ -144,7 +152,8 @@ namespace LagoVista.AI.Aptix.Cli
                     return true;
                 }
 
-                if (!String.IsNullOrWhiteSpace(shortName) && args[i].Equals(shortName, StringComparison.OrdinalIgnoreCase))
+                if (!String.IsNullOrWhiteSpace(shortName)
+                    && args[i].Equals(shortName, StringComparison.OrdinalIgnoreCase))
                 {
                     return true;
                 }
@@ -153,30 +162,47 @@ namespace LagoVista.AI.Aptix.Cli
             return false;
         }
 
+        private static void PrintBanner(string baseUrl, bool isLocal, bool isDev)
+        {
+            var env = isLocal ? "LOCAL" : (isDev ? "DEV" : "PROD");
+
+            Console.WriteLine("========================================");
+            Console.WriteLine("  Aptix CLI — AI Dev Companion");
+            Console.WriteLine($"  Environment : {env}");
+            Console.WriteLine($"  Base URL    : {baseUrl}");
+            Console.WriteLine("========================================");
+            Console.WriteLine();
+        }
+
         private static void PrintUsage()
         {
             Console.WriteLine("Aptix CLI");
             Console.WriteLine();
             Console.WriteLine("Usage:");
-            Console.WriteLine("  aptix ask  [--dev|--local] [--clientid <id>] [--token <token>] [--verbose] \"your question\"");
-            Console.WriteLine("  aptix ping [--dev|--local] [--clientid <id>] [--token <token>] [--verbose]");
+            Console.WriteLine(
+                "  aptix ask  [--dev|--local] [--clientid <id>] [--token <token>] [--verbose] \"your question\"");
+            Console.WriteLine(
+                "  aptix ping [--dev|--local] [--clientid <id>] [--token <token>] [--verbose]");
             Console.WriteLine();
             Console.WriteLine("Environment variables:");
             Console.WriteLine("  APTIX_AI_TOKEN    If set, used as the token.");
             Console.WriteLine();
             Console.WriteLine("Flags:");
             Console.WriteLine("  --dev             Use https://dev-api.nuviot.com");
-            Console.WriteLine("  --local           Use http://localhost:5001 (Make sure API server, Not Portal is running locally)");
+            Console.WriteLine(
+                "  --local           Use https://localhost:5001 (Make sure API server, Not Portal is running locally)");
             Console.WriteLine("  --clientid        Override client app id used in Authorization header");
             Console.WriteLine("  --token, -t       Override token used in Authorization header");
             Console.WriteLine("  --verbose, -v     Print raw JSON / raw responses");
             Console.WriteLine();
             Console.WriteLine("Examples:");
             Console.WriteLine("  aptix ping --dev");
-            Console.WriteLine("  APTIX_AI_TOKEN=Secret123 aptix ask --clientid MyApp \"Show me repo layout.\"");
+            Console.WriteLine(
+                "  APTIX_AI_TOKEN=Secret123 aptix ask --clientid MyApp \"Show me repo layout.\"");
         }
 
-        private static async Task<int> HandleAskAsync(string[] args, AptixConfig config, AgentExecutionClient agentClient, bool verbose)
+        private static async Task<int> HandleAskAsync(string[] args, AptixConfig config,
+            AgentExecutionClient agentClient, bool verbose)
         {
             // Remove flags and their values from the question
             var cleanedArgs = new List<string>();
@@ -185,16 +211,18 @@ namespace LagoVista.AI.Aptix.Cli
             {
                 var arg = args[i];
 
-                if (arg.Equals("--token", StringComparison.OrdinalIgnoreCase) || arg.Equals("-t", StringComparison.OrdinalIgnoreCase) || arg.Equals("--clientid", StringComparison.OrdinalIgnoreCase))
+                if (arg.Equals("--token", StringComparison.OrdinalIgnoreCase)
+                    || arg.Equals("-t", StringComparison.OrdinalIgnoreCase)
+                    || arg.Equals("--clientid", StringComparison.OrdinalIgnoreCase))
                 {
                     i++; // skip value
                     continue;
                 }
 
-                if (arg.Equals("--dev", StringComparison.OrdinalIgnoreCase) ||
-                    arg.Equals("--local", StringComparison.OrdinalIgnoreCase) ||
-                    arg.Equals("--verbose", StringComparison.OrdinalIgnoreCase) ||
-                    arg.Equals("-v", StringComparison.OrdinalIgnoreCase))
+                if (arg.Equals("--dev", StringComparison.OrdinalIgnoreCase)
+                    || arg.Equals("--local", StringComparison.OrdinalIgnoreCase)
+                    || arg.Equals("--verbose", StringComparison.OrdinalIgnoreCase)
+                    || arg.Equals("-v", StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
                 }
@@ -211,7 +239,8 @@ namespace LagoVista.AI.Aptix.Cli
             var question = string.Join(" ", cleanedArgs);
 
             var agentContext = EntityHeader.Create(config.AgentContextId, config.AgentContextName);
-            var conversationContext = EntityHeader.Create(config.ConversationContextId, config.ConversationContextName);
+            var conversationContext = EntityHeader.Create(config.ConversationContextId,
+                config.ConversationContextName);
 
             var response = await agentClient.AskAsync(
                 agentContext,
@@ -224,6 +253,7 @@ namespace LagoVista.AI.Aptix.Cli
                 activeFiles: new List<ActiveFile>(),
                 cancellationToken: CancellationToken.None);
 
+           
             if (response == null)
             {
                 Console.WriteLine("No response from agent.");
