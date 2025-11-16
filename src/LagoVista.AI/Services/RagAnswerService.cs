@@ -1,5 +1,5 @@
 // --- BEGIN CODE INDEX META (do not edit) ---
-// ContentHash: 38775eab39964afb495f92ff860853d15acbc60a4b7631704ca5b90f3d8f49b6
+// ContentHash: ce4acfcee6a4021f0d967d95c54e97475fe820d9193577afc6f33af02dc79149
 // IndexVersion: 2
 // --- END CODE INDEX META ---
 using System.Collections.Generic;
@@ -56,7 +56,7 @@ namespace LagoVista.AI.Services
             _qdrant = new QdrantClient(vectorDb, _adminLogger);
 
             // 1) Embed the user question
-            var qvec = await _embedder.EmbedAsync(question);
+            var qvec = await _embedder.EmbedAsync(question, -1);
             _llm = new HttpClient { BaseAddress = new Uri(_openAiSettings.OpenAIUrl) };
             _llm.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", vectorDb.LlmApiKey);
             _llm.Timeout = TimeSpan.FromSeconds(60);

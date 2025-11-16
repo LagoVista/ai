@@ -1,5 +1,5 @@
 // --- BEGIN CODE INDEX META (do not edit) ---
-// ContentHash: 74273714f2ab7b165dfbd250f545925bc65cbf5c0542bb2e8e7e7bb8ba3ee42a
+// ContentHash: e2715344877f20e3b8b306407c333245532a20da111cfc09aad0a6df82d4e3b3
 // IndexVersion: 2
 // --- END CODE INDEX META ---
 using LagoVista.AI.Interfaces;
@@ -64,11 +64,11 @@ namespace LagoVista.AI.Services
         }
 
 
-        public async Task<float[]> EmbedAsync(string text)
+        public async Task<float[]> EmbedAsync(string text, int estimatedTokens)
         {
             var payload = new { model = _model, input = text };
 
-            using (var resp = await PostWithRetryAsync("/v1/embeddings", payload))
+            using (var resp = await PostWithRetryAsync("/v1/embeddings", payload, estimatedTokens))
             {
                 var er = await resp.Content.ReadAsAsync<EmbeddingResponse>();
                 var vec = er.Data.FirstOrDefault().Embedding;
@@ -81,7 +81,7 @@ namespace LagoVista.AI.Services
         }
 
 
-        private async Task<HttpResponseMessage> PostWithRetryAsync(string path, object body)
+        private async Task<HttpResponseMessage> PostWithRetryAsync(string path, object body, int estimatedTokens)
         {
             const int maxRetries = 4;
             var delay = TimeSpan.FromMilliseconds(400);
@@ -100,7 +100,7 @@ namespace LagoVista.AI.Services
                         }
                         var errorContent = await resp.Content.ReadAsStringAsync();
 
-                        Console.WriteLine(errorContent);
+                        Console.WriteLine( $"Estimated Tokens: {estimatedTokens} {errorContent} ");
                         throw new InvalidOperationException($"OpenAI API error {resp.StatusCode}: {errorContent}");
                     }
 

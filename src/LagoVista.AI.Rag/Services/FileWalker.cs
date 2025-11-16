@@ -1,5 +1,5 @@
 // --- BEGIN CODE INDEX META (do not edit) ---
-// ContentHash: 3e73585babc3c038d22172507240845e4408d37d7dfe48876c65bd51f54bce15
+// ContentHash: 9263a50851f6e9b5226e66041ca60d510be05929c86a5a5dbe5d61b737cb7228
 // IndexVersion: 2
 // --- END CODE INDEX META ---
 using System;
@@ -53,6 +53,9 @@ namespace LagoVista.AI.Rag.Services
                 // Skip obvious binary files by extension (can be extended)
                 if (IsLikelyBinary(relNorm)) continue;
 
+                var fileInfo = new FileInfo(file);
+                if (fileInfo.Length > 50 * 1024)
+                    continue;
 
                 yield return file;
             }

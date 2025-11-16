@@ -1,8 +1,9 @@
 // --- BEGIN CODE INDEX META (do not edit) ---
-// ContentHash: f0caa9c0a35c69fbc60ae63f7e59c99764579f94fe2836d3afbb9474ce9ce1cd
+// ContentHash: d547928dc5275c3b29c18066bb0e2212056574ff2af14ccdcec8f71354b4cf31
 // IndexVersion: 2
 // --- END CODE INDEX META ---
 using LagoVista.AI.Models;
+using LagoVista.AI.Rag.Services;
 using LagoVista.AI.Services;
 using LagoVista.Core.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -77,7 +78,7 @@ namespace LagoVista.AI.Tests
         //        AccessToken = Environment.GetEnvironmentVariable("JPTY_ADMIN_TOKEN"),
         //        Url = "ai-dev.iothost.net",
         //        IsSecure = true
-               
+
         //    };
 
         //    var hubManager = new Mock<IHubManager>();
@@ -97,5 +98,19 @@ namespace LagoVista.AI.Tests
         //    }
 
         //}
+
+        [TestMethod]
+        public void TestChunker()
+        {
+            var content = System.IO.File.ReadAllText("DocumentTemplateManager.cs");
+            var chunker = new RoslynCSharpChunker();
+            var chunks = chunker.Chunk(content, "whocares", "whocares");
+            foreach(var chunk in chunks.Chunks)
+            {
+                Console.WriteLine($"{chunk.SymbolType}/{chunk.Symbol} - {chunk.EstimatedTokens} {chunk.LineStart}, {chunk.LineEnd}, {chunk.CharStart}, {chunk.CharEnd}");
+            }
+
+
+        }
     }
-}
+   }

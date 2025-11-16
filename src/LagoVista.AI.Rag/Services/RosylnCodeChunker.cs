@@ -1,5 +1,5 @@
 // --- BEGIN CODE INDEX META (do not edit) ---
-// ContentHash: eeef9b4412a5c1b0175fcd6e7b3391b3de5d027022b00f699620e6f1e6b55bbc
+// ContentHash: 8d79e3d886d46838a4a7e390cc8157c2c560b3df43e20a7c800b856a151c2979
 // IndexVersion: 2
 // --- END CODE INDEX META ---
 using System;
@@ -96,6 +96,7 @@ namespace LagoVista.AI.Rag.Services
                     MimeType = "text/x-csharp",
                     SuggestedBlobPath = blobPath,
                     Text = text,
+
                 },
             };
         }
@@ -130,8 +131,16 @@ namespace LagoVista.AI.Rag.Services
 
             if (!string.IsNullOrWhiteSpace(text))
             {
+                var estTokens = TokenEstimator.EstimateTokens(text); // +1 newline
+                while(estTokens > _maxTokensPerChunk)
+                {
+                    text = text.Substring(0, Convert.ToInt32(text.Length * 0.90));    
+                    estTokens = TokenEstimator.EstimateTokens(text); // +1 newline
+                }
+
                 yield return new RagChunk
                 { 
+                    EstimatedTokens = TokenEstimator.EstimateTokens(text),
                     TextNormalized = text,
                     LineStart = 1,
                     LineEnd = Math.Min(lines.Length, 200),
@@ -175,18 +184,22 @@ namespace LagoVista.AI.Rag.Services
 
                 while (localEnd < endLine && localEnd < lines.Length)
                 {
-                    estTokens += TokenEstimator.EstimateTokens(lines[localEnd]) + 1; // +1 newline
+                    var line = lines[localEnd];
+
+                    estTokens += TokenEstimator.EstimateTokens(line) + 1; // +1 newline
                     if (estTokens > _maxTokensPerChunk)
                     {
                         // If a single line already exceeds the budget, slice it safely
                         if (localEnd == localStart)
                         {
-                            foreach (var sl in SliceVeryLongLine(
+                            var parts = SliceVeryLongLine(
                                 lines[localEnd],
                                 relPath,
                                 kind,
                                 GetBestSymbolName(node),
-                                localEnd + 1))
+                                localEnd + 1);
+
+                            foreach (var sl in parts)
                             {
                                 yield return sl;
                             }
@@ -205,6 +218,7 @@ namespace LagoVista.AI.Rag.Services
                 var slice = string.Join('\n', lines[localStart..Math.Min(localEnd, lines.Length)]);
                 yield return new RagChunk
                 {
+                    EstimatedTokens = TokenEstimator.EstimateTokens(slice),
                     TextNormalized = slice,
                     LineStart = localStart + 1,
                     LineEnd = Math.Min(localEnd, lines.Length),
@@ -256,6 +270,7 @@ namespace LagoVista.AI.Rag.Services
                 var piece = line.AsSpan(idx, take).ToString();
                 yield return new RagChunk
                 {
+                    EstimatedTokens = TokenEstimator.EstimateTokens(piece),
                     TextNormalized = piece,
                     LineStart = lineNumber,
                     LineEnd = lineNumber,

@@ -9,15 +9,21 @@
     <RootNamespace>LagoVista.AI.Tests</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="DocumentTemplateManager.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <None Remove="resnet50-v2-7.onnx" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="DocumentTemplateManager.cs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="resnet50-v2-7.onnx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="LagoVista.Core.TestBase" Version="3.0.3097.0925" />
+    <PackageReference Include="LagoVista.Core.TestBase" Version="3.0.3099.1426" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.22.1" />
   </ItemGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'net461' ">
@@ -31,6 +37,7 @@
     <Folder Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\src\LagoVista.AI.Rag\LagoVista.AI.Rag.csproj" />
     <ProjectReference Include="..\..\src\LagoVista.AI\LagoVista.AI.csproj" />
   </ItemGroup>
 </Project>

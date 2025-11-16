@@ -1,5 +1,5 @@
 // --- BEGIN CODE INDEX META (do not edit) ---
-// ContentHash: 54030daa60435440890428f2fa15e236b2ac9fb6efc46847526952c3946ebfec
+// ContentHash: 1621ff7de0f4af2130ba69788a09d979f4aa17785bfa044f3ac9c44abcdeba00
 // IndexVersion: 2
 // --- END CODE INDEX META ---
 using LagoVista.AI.CloudRepos;
@@ -84,6 +84,9 @@ namespace LagoVista.AI.Rag
             {
                 var fullRoot = Path.Combine(_config.Ingestion.SourceRoot, repo);
 
+                if (!System.IO.Directory.Exists(fullRoot))
+                    throw new Exception("Could not open directory: " + fullRoot);
+                
                 if (!GitRepoInspector.TryGetRepoInfo(fullRoot, out RepoInfo info, out string error))
                     throw new Exception($"Could not get repo information: {error}");
 
@@ -129,7 +132,7 @@ namespace LagoVista.AI.Rag
                     foreach (var chunk in plan.Chunks)
                     {
                         sw.Restart();
-                        chunk.Vector = await embedder.EmbedAsync(chunk.TextNormalized);
+                        chunk.Vector = await embedder.EmbedAsync(chunk.TextNormalized, chunk.EstimatedTokens);
                         adminLogger.Trace($"[Ingestor__IngestAsync] {fileInfo.Name} {chunk.Symbol}/{chunk.SymbolType} - chunk {idx++} of {plan.Chunks.Count} in {sw.Elapsed.TotalMilliseconds}ms, {Math.Round((idx * 100.0f/plan.Chunks.Count))}% ");
                     }
 
