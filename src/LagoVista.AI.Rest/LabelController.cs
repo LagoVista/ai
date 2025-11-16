@@ -67,6 +67,7 @@ namespace LagoVista.AI.Rest
             return DetailResponse<Label>.Create(await _labelManager.GetLabelAsync(id, OrgEntityHeader, UserEntityHeader));
         }
 
+
         /// <summary>
         /// Label - Get
         /// </summary>

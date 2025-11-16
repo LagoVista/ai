@@ -15,7 +15,8 @@ using LagoVista.Core.Validation;
 using LagoVista.AI.Models;
 using LagoVista.Core.Models;
 using LagoVista.IoT.Logging.Loggers;
-using LagoVista.UserAdmin.Interfaces.Repos.Orgs;   
+using LagoVista.UserAdmin.Interfaces.Repos.Orgs;
+using LagoVista.Core.AI.Models;
 
 namespace LagoVista.AI.Services
 {

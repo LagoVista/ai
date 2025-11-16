@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- Adjust to whatever you're actually using -->
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+
+    <!-- Single-file publish defaults -->
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+
+    <!-- Default runtime; can be overridden with -r on the CLI -->
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+
+    <!-- Optional: makes startup a bit faster but slightly bigger exe -->
+    <PublishReadyToRun>false</PublishReadyToRun>
+
+    <!-- Do NOT enable trimming yet (reflection-heavy libs can break) -->
+    <PublishTrimmed>false</PublishTrimmed>
+ 
+    <PublishDir>$(SolutionDir)</PublishDir>
+ 
+    <AssemblyName>aptix</AssemblyName>
+  </PropertyGroup>
+ 
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\LagoVista.AI.AgentClient\LagoVista.AI.AgentClient.csproj" />
+  </ItemGroup>
+</Project>

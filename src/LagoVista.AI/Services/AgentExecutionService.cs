@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
+using LagoVista.Core;
 using LagoVista.Core.AI.Interfaces;
 using LagoVista.Core.AI.Models;
 using LagoVista.Core.Models;
@@ -19,54 +20,80 @@ namespace LagoVista.AI.Services
         public AgentExecutionService(IAgentContextManager agentContextManager, IRagAnswerService ragAnswerService,
             IAdminLogger adminLogger)
         {
-            _agentContextManager = agentContextManager ?? throw new ArgumentNullException(nameof(agentContextManager));
-            _ragAnswerService = ragAnswerService ?? throw new ArgumentNullException(nameof(ragAnswerService));
-            _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
+            _agentContextManager = agentContextManager
+                ?? throw new ArgumentNullException(nameof(agentContextManager));
+            _ragAnswerService = ragAnswerService
+                ?? throw new ArgumentNullException(nameof(ragAnswerService));
+            _adminLogger = adminLogger
+                ?? throw new ArgumentNullException(nameof(adminLogger));
         }
 
         public async Task<InvokeResult<AgentExecuteResponse>> ExecuteAsync(AgentExecuteRequest request,
             EntityHeader org, EntityHeader user, CancellationToken cancellationToken = default)
         {
+            var correlationId = Guid.NewGuid().ToId();
+
+            _adminLogger.Trace(
+                $"[AgentExecutionService_ExecuteAsync] Starting execution. CorrelationId={correlationId}, " +
+                $"Org={org?.Id}, User={user?.Id}, Mode={request?.Mode}, AgentContext={request?.AgentContext?.Id}");
+
             if (request == null)
             {
-                return InvokeResult<AgentExecuteResponse>.FromError("AgentExecuteRequest cannot be null.");
+                const string msg = "AgentExecuteRequest cannot be null.";
+                _adminLogger.AddError("[AgentExecutionService_ExecuteAsync__ValidateRequest]", msg);
+                return InvokeResult<AgentExecuteResponse>.FromError(msg);
             }
 
             if (request.AgentContext == null || EntityHeader.IsNullOrEmpty(request.AgentContext))
             {
-                return InvokeResult<AgentExecuteResponse>.FromError("AgentContext is required.");
+                const string msg = "AgentContext is required.";
+                _adminLogger.AddError("[AgentExecutionService_ExecuteAsync__ValidateRequest]", msg);
+                return InvokeResult<AgentExecuteResponse>.FromError(msg);
             }
 
             if (String.IsNullOrWhiteSpace(request.Mode))
             {
-                return InvokeResult<AgentExecuteResponse>.FromError("Mode is required (e.g. 'ask' or 'edit').");
+                const string msg = "Mode is required (e.g. 'ask' or 'edit').";
+                _adminLogger.AddError("[AgentExecutionService_ExecuteAsync__ValidateRequest]", msg);
+                return InvokeResult<AgentExecuteResponse>.FromError(msg);
             }
 
             var mode = request.Mode.Trim().ToLowerInvariant();
 
+            _adminLogger.Trace(
+                $"[AgentExecutionService_ExecuteAsync] Routing mode. CorrelationId={correlationId}, Mode={mode}");
+
             switch (mode)
             {
                 case "ask":
-                    return await HandleAskAsync(request, org, user, cancellationToken);
+                    return await HandleAskAsync(request, org, user, correlationId, cancellationToken);
 
                 case "edit":
-                    return HandleEditNotImplemented();
+                    return HandleEditNotImplemented(correlationId);
 
                 default:
-                    _adminLogger.AddError("AgentExecutionService_ExecuteAsync",
-                        $"Unsupported mode '{request.Mode}' in AgentExecuteRequest.");
-                    return InvokeResult<AgentExecuteResponse>.FromError($"Unsupported mode '{request.Mode}'.");
+                    var errorMsg = $"Unsupported mode '{request.Mode}'.";
+                    _adminLogger.AddError("[AgentExecutionService_ExecuteAsync__UnsupportedMode]",
+                        $"{errorMsg} CorrelationId={correlationId}");
+                    return InvokeResult<AgentExecuteResponse>.FromError(errorMsg);
             }
         }
 
         private async Task<InvokeResult<AgentExecuteResponse>> HandleAskAsync(AgentExecuteRequest request,
-            EntityHeader org, EntityHeader user, CancellationToken cancellationToken)
+            EntityHeader org, EntityHeader user, string correlationId,
+            CancellationToken cancellationToken)
         {
-            // Load the agent context (Agent Profile) with secrets.
-            var agentContext = await _agentContextManager.GetAgentContextWithSecretsAsync(request.AgentContext.Id,
-                org, user);
+            _adminLogger.Trace(
+                $"[AgentExecutionService_ExecuteAsync__HandleAsk] Loading AgentContext. " +
+                $"CorrelationId={correlationId}, AgentContextId={request.AgentContext.Id}");
 
-            // Resolve conversation context (Behavior Profile).
+            var agentContext = await _agentContextManager.GetAgentContextWithSecretsAsync(
+                request.AgentContext.Id, org, user);
+
+            _adminLogger.Trace(
+                $"[AgentExecutionService_ExecuteAsync__SelectBehavior] Resolving ConversationContext. " +
+                $"CorrelationId={correlationId}");
+
             var conversationContextId = string.Empty;
             if (request.ConversationContext != null && !EntityHeader.IsNullOrEmpty(request.ConversationContext))
             {
@@ -77,19 +104,33 @@ namespace LagoVista.AI.Services
                 conversationContextId = agentContext.DefaultConversationContext.Id;
             }
 
-            // TODO: Hook real conversation store here; for now, just ensure we have an ID.
+            _adminLogger.Trace(
+                $"[AgentExecutionService_ExecuteAsync__ConversationId] Resolving ConversationId. " +
+                $"CorrelationId={correlationId}, RequestConversationId={request.ConversationId}");
+
             var conversationId = String.IsNullOrWhiteSpace(request.ConversationId)
-                ? Guid.NewGuid().ToString()
+                ? Guid.NewGuid().ToId()
                 : request.ConversationId;
 
-            // Delegate to existing RAG pipeline for answer mode.
+            _adminLogger.Trace(
+                $"[AgentExecutionService_ExecuteAsync__RAG] Invoking RAG pipeline. CorrelationId={correlationId}, " +
+                $"ConversationId={conversationId}, Repo={request.Repo}, Language={request.Language ?? "csharp"}");
+
             var answerResult = await _ragAnswerService.AnswerAsync(agentContext.Id, request.Instruction,
                 conversationContextId, org, user, request.Repo, request.Language ?? "csharp");
 
             if (!answerResult.Successful)
             {
-                return InvokeResult<AgentExecuteResponse>.FromError(answerResult.ErrorMessage);
+                var errorMsg = answerResult.ErrorMessage ?? "Unknown RAG error.";
+                _adminLogger.AddError("[AgentExecutionService_ExecuteAsync__RAGError]",
+                    $"RAG pipeline failed. CorrelationId={correlationId}, Error={errorMsg}");
+
+                return InvokeResult<AgentExecuteResponse>.FromError(errorMsg);
             }
+
+            _adminLogger.Trace(
+                $"[AgentExecutionService_ExecuteAsync__BuildResponse] Building answer response. " +
+                $"CorrelationId={correlationId}, ConversationId={conversationId}");
 
             var response = new AgentExecuteResponse
             {
@@ -102,16 +143,25 @@ namespace LagoVista.AI.Services
                 Sources = answerResult.Result.Sources
             };
 
+            _adminLogger.Trace(
+                $"[AgentExecutionService_ExecuteAsync__HandleAsk] Completed successfully. " +
+                $"CorrelationId={correlationId}, ConversationId={conversationId}");
+
             return InvokeResult<AgentExecuteResponse>.Create(response);
         }
 
-        private InvokeResult<AgentExecuteResponse> HandleEditNotImplemented()
+        private InvokeResult<AgentExecuteResponse> HandleEditNotImplemented(string correlationId)
         {
+            const string msg = "Edit mode is not implemented yet.";
+
+            _adminLogger.AddError("[AgentExecutionService_ExecuteAsync__EditNotImplemented]",
+                $"{msg} CorrelationId={correlationId}");
+
             var response = new AgentExecuteResponse
             {
                 Kind = "error",
                 ErrorCode = "NOT_IMPLEMENTED",
-                ErrorMessage = "Edit mode is not implemented yet."
+                ErrorMessage = msg
             };
 
             return InvokeResult<AgentExecuteResponse>.Create(response);

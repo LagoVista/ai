@@ -1,0 +1,12 @@
+{
+  "apiBaseUrl": "https://api.nuviot.com",
+  "agentContextId": "aptix-dev",
+  "agentContextName": "Aptix Dev Agent",
+  "conversationContextId": "aptix-dev-ask",
+  "conversationContextName": "Aptix Dev Ask Behavior",
+  "defaultWorkspaceId": "business",
+  "defaultRepo": "BusinessSolution",
+  "defaultLanguage": "csharp",
+  "defaultRagScope": "deps",
+  "clientAppId": "49D27E3FA2C248CCA4AFC41C8597B7BB"
+}
