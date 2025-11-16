@@ -15,7 +15,10 @@ using LagoVista.Core.Validation;
 using LagoVista.AI.Models;
 using LagoVista.Core.Models;
 using LagoVista.IoT.Logging.Loggers;
-using LagoVista.UserAdmin.Interfaces.Repos.Orgs;   
+using LagoVista.UserAdmin.Interfaces.Repos.Orgs;
+using LagoVista.Core.AI.Models;
+using LagoVista.Core;
+using Newtonsoft.Json;
 
 namespace LagoVista.AI.Services
 {
@@ -128,10 +131,49 @@ namespace LagoVista.AI.Services
             };
 
             var resp = await _llm.PostAsJsonAsync("/v1/chat/completions", req);
-            resp.EnsureSuccessStatusCode();
-            var oaiResponse = await resp.Content.ReadAsAsync<OpenAIResponse>();
-            var content = oaiResponse.choices.First().message.content ?? "";
+            var body = await resp.Content.ReadAsStringAsync();
 
+            if (!resp.IsSuccessStatusCode)
+            {
+                // Try to extract a nice error message from the body
+                string errorMessage = $"LLM call failed with HTTP {(int)resp.StatusCode} ({resp.ReasonPhrase}).";
+
+                try
+                {
+                    var errorWrapper = Newtonsoft.Json.JsonConvert.DeserializeObject<OpenAIErrorResponse>(body);
+                    if (errorWrapper?.Error != null && !String.IsNullOrWhiteSpace(errorWrapper.Error.Message))
+                    {
+                        errorMessage = errorWrapper.Error.Message;
+                    }
+                }
+                catch
+                {
+                    // ignore JSON parse errors, keep generic message
+                }
+
+                _adminLogger.AddError(
+                    "[RagAnswerService_AnswerAsync__LLM]",
+                    "LLM request failed.",
+                    ((int)resp.StatusCode).ToString().ToKVP("statusCode"));
+
+                _adminLogger.AddError(
+                    "[RagAnswerService_AnswerAsync__LLM]",
+                    $"LLM response body: {body}");
+
+                return InvokeResult<AnswerResult>.FromError(errorMessage);
+            }
+
+            var oaiResponse = Newtonsoft.Json.JsonConvert.DeserializeObject<OpenAIResponse>(body);
+            if (oaiResponse == null || oaiResponse.choices == null || !oaiResponse.choices.Any())
+            {
+                _adminLogger.AddError(
+                    "[RagAnswerService_AnswerAsync__LLM]",
+                    "LLM response did not contain any choices.");
+
+                return InvokeResult<AnswerResult>.FromError("LLM response did not contain any choices.");
+            }
+
+            var content = oaiResponse.choices.First().message.content ?? "";
             return InvokeResult<AnswerResult>.Create(new AnswerResult
             {
                 Text = content.Trim(),
@@ -201,4 +243,23 @@ namespace LagoVista.AI.Services
             return await AnswerAsync(orgInfo.DefaultVectorDatabase.Id, question, org, user, repo, language, topK);
         }
     }
+
+    public sealed class OpenAIErrorResponse
+    {
+        [JsonProperty("error")]
+        public OpenAIError Error { get; set; }
+    }
+
+    public sealed class OpenAIError
+    {
+        [JsonProperty("message")]
+        public string Message { get; set; }
+
+        [JsonProperty("type")]
+        public string Type { get; set; }
+
+        [JsonProperty("code")]
+        public string Code { get; set; }
+    }
+
 }
