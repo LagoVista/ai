@@ -18,6 +18,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LagoVista.AI.CloudRepos", "src\LagoVista.AI.CloudRepos\LagoVista.AI.CloudRepos.csproj", "{37E4D64F-3441-4448-B134-B91DC811BE23}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Apps", "Apps", "{A7E7FEBA-8F2E-410F-BC32-C1CA2D0D4888}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LagoVista.AI.RagConsole", "Apps\LagoVista.AI.RagConsole\LagoVista.AI.RagConsole.csproj", "{FC74C33E-02EB-4921-914A-A8B3B80E61F3}"
 EndProject
