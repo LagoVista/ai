@@ -18,6 +18,9 @@ namespace LagoVista.AI.Models
         [EnumLabel(AgentSessionTurn.AgentSessionTurnStatuses_Completed, AIResources.Names.Common_Status_Completed, typeof(AIResources))]
         Completed,
 
+        [EnumLabel(AgentSessionTurn.AgentSessionTurnStatuses_Aborted, AIResources.Names.Common_Status_Aborted, typeof(AIResources))]
+        Aborted,
+
         [EnumLabel(AgentSessionTurn.AgentSessionTurnStatuses_Failed, AIResources.Names.Common_Status_Failed, typeof(AIResources))]
         Failed,
     }
@@ -67,6 +70,7 @@ namespace LagoVista.AI.Models
         public const string AgentSessionTurnStatuses_Pending = "pending";
         public const string AgentSessionTurnStatuses_Completed = "completed";
         public const string AgentSessionTurnStatuses_Failed = "failed";
+        public const string AgentSessionTurnStatuses_Aborted = "aborted";
 
         public string Id { get; set; } = Guid.NewGuid().ToId();
 

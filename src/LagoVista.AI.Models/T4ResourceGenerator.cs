@@ -1,4 +1,4 @@
-﻿/*11/17/2025 10:39:08 AM*/
+﻿/*11/17/2025 6:25:28 PM*/
 using System.Globalization;
 using System.Reflection;
 
@@ -144,6 +144,9 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:Common_SelectCategory
 
 		public static string Common_SelectCategory { get { return GetResourceString("Common_SelectCategory"); } }
+//Resources:AIResources:Common_Status_Aborted
+
+		public static string Common_Status_Aborted { get { return GetResourceString("Common_Status_Aborted"); } }
 //Resources:AIResources:Common_Status_Completed
 
 		public static string Common_Status_Completed { get { return GetResourceString("Common_Status_Completed"); } }
@@ -612,6 +615,7 @@ namespace LagoVista.AI.Models.Resources
 			public const string Common_Name = "Common_Name";
 			public const string Common_Notes = "Common_Notes";
 			public const string Common_SelectCategory = "Common_SelectCategory";
+			public const string Common_Status_Aborted = "Common_Status_Aborted";
 			public const string Common_Status_Completed = "Common_Status_Completed";
 			public const string Common_Status_Failed = "Common_Status_Failed";
 			public const string Common_Status_Pending = "Common_Status_Pending";

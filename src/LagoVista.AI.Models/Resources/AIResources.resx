@@ -642,4 +642,7 @@
   <data name="Common_Status_Failed" xml:space="preserve">
     <value>Failed</value>
   </data>
+  <data name="Common_Status_Aborted" xml:space="preserve">
+    <value>Aborted</value>
+  </data>
 </root>
