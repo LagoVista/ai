@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Aptix File Bundle",
+  "type": "object",
+  "required": [
+    "root",
+    "files"
+  ],
+  "properties": {
+    "root": {
+      "type": "string",
+      "description": "Workspace root directory, typically '.'."
+    },
+    "files": {
+      "type": "array",
+      "description": "List of file operations.",
+      "items": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Relative path from the workspace root."
+          },
+          "operation": {
+            "type": "string",
+            "description": "Operation type for this file entry.",
+            "enum": [
+              "create",
+              "replace",
+              "delete",
+              "patch",
+              "gitPatch"
+            ]
+          },
+          "content": {
+            "type": "string",
+            "description": "Full file content for create/replace or git patch body."
+          },
+          "patches": {
+            "type": "array",
+            "description": "Structured patches if operation is 'patch'.",
+            "items": {
+              "type": "object",
+              "required": [
+                "find",
+                "replace"
+              ],
+              "properties": {
+                "find": {
+                  "type": "string",
+                  "description": "Literal substring to find."
+                },
+                "replace": {
+                  "type": "string",
+                  "description": "Replacement text."
+                },
+                "limit": {
+                  "type": "string",
+                  "description": "Replacement limit.",
+                  "enum": [
+                    "once",
+                    "all"
+                  ],
+                  "default": "once"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Aptix Structured Patch Bundle",
+  "type": "object",
+  "required": [
+    "root",
+    "patches"
+  ],
+  "properties": {
+    "root": {
+      "type": "string",
+      "description": "Workspace root directory, typically '.'."
+    },
+    "patches": {
+      "type": "array",
+      "description": "List of per-file patches.",
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "replacements"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Relative path of the file to patch."
+          },
+          "replacements": {
+            "type": "array",
+            "description": "Literal replacements to apply.",
+            "items": {
+              "type": "object",
+              "required": [
+                "find",
+                "replace"
+              ],
+              "properties": {
+                "find": {
+                  "type": "string",
+                  "description": "Literal substring to search for."
+                },
+                "replace": {
+                  "type": "string",
+                  "description": "Replacement text."
+                },
+                "limit": {
+                  "type": "string",
+                  "description": "Replacement limit.",
+                  "enum": [
+                    "once",
+                    "all"
+                  ],
+                  "default": "once"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

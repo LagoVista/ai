@@ -1,8 +1,4 @@
-// --- BEGIN CODE INDEX META (do not edit) ---
-// ContentHash: 5e1b51ab8a8f1105996599fa3f658500da6c59f4630a244491a1fbe7015f721b
-// IndexVersion: 2
-// --- END CODE INDEX META ---
-/*11/7/2025 7:20:48 AM*/
+﻿/*11/17/2025 10:39:08 AM*/
 using System.Globalization;
 using System.Reflection;
 
@@ -148,6 +144,15 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:Common_SelectCategory
 
 		public static string Common_SelectCategory { get { return GetResourceString("Common_SelectCategory"); } }
+//Resources:AIResources:Common_Status_Completed
+
+		public static string Common_Status_Completed { get { return GetResourceString("Common_Status_Completed"); } }
+//Resources:AIResources:Common_Status_Failed
+
+		public static string Common_Status_Failed { get { return GetResourceString("Common_Status_Failed"); } }
+//Resources:AIResources:Common_Status_Pending
+
+		public static string Common_Status_Pending { get { return GetResourceString("Common_Status_Pending"); } }
 //Resources:AIResources:Experiemnt_Help
 
 		public static string Experiemnt_Help { get { return GetResourceString("Experiemnt_Help"); } }
@@ -607,6 +612,9 @@ namespace LagoVista.AI.Models.Resources
 			public const string Common_Name = "Common_Name";
 			public const string Common_Notes = "Common_Notes";
 			public const string Common_SelectCategory = "Common_SelectCategory";
+			public const string Common_Status_Completed = "Common_Status_Completed";
+			public const string Common_Status_Failed = "Common_Status_Failed";
+			public const string Common_Status_Pending = "Common_Status_Pending";
 			public const string Experiemnt_Help = "Experiemnt_Help";
 			public const string Experiment_Description = "Experiment_Description";
 			public const string Experiment_Instructions = "Experiment_Instructions";

@@ -151,7 +151,7 @@
     <value>-select category-</value>
   </data>
   <data name="Experiemnt_Help" xml:space="preserve">
-    <value>An experiment is a set of test critiera that can be used to validate the model in the real world.  This is used on the execution engine and node the model development environment.</value>
+    <value>sAn experiment is a set of test critiera that can be used to validate the model in the real world.  This is used on the execution engine and node the model development environment.</value>
   </data>
   <data name="Experiment_Description" xml:space="preserve">
     <value>An experiment is a set of test critiera that can be used to validate the model in the real world.  This is used on the execution engine and node the model development environment.</value>
@@ -632,5 +632,14 @@
   </data>
   <data name="VectorDB_LLMEmbeddingModelName" xml:space="preserve">
     <value>Embedding Model Name</value>
+  </data>
+  <data name="Common_Status_Pending" xml:space="preserve">
+    <value>Pending</value>
+  </data>
+  <data name="Common_Status_Completed" xml:space="preserve">
+    <value>Completed</value>
+  </data>
+  <data name="Common_Status_Failed" xml:space="preserve">
+    <value>Failed</value>
   </data>
 </root>

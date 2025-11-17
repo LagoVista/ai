@@ -1,0 +1,32 @@
+{
+  "version": "1.0.0",
+  "description": "Machine-readable description of Aptix file delivery modes and their required fenced block formats.",
+  "modes": {
+    "fileBundle": {
+      "name": "Aptix File Bundle",
+      "codeFenceLanguage": "json",
+      "jsonSchema": "aptix_file_bundle.schema.json",
+      "topLevelType": "object",
+      "requiredKeys": [
+        "root",
+        "files"
+      ]
+    },
+    "structuredPatch": {
+      "name": "Aptix Structured Patch Bundle",
+      "codeFenceLanguage": "json",
+      "jsonSchema": "aptix_structured_patch.schema.json",
+      "topLevelType": "object",
+      "requiredKeys": [
+        "root",
+        "patches"
+      ]
+    },
+    "gitPatch": {
+      "name": "Aptix Git Patch",
+      "codeFenceLanguage": "patch",
+      "bodyType": "unified-diff",
+      "requiredPrefix": "diff --git"
+    }
+  }
+}
