@@ -33,7 +33,7 @@ namespace LagoVista.AI.Services
         private readonly IAdminLogger _adminLogger;
         private readonly IOrganizationRepo _orgRepo;
 
-        public RagAnswerService(IAdminLogger adminLogger, IAgentContextManager vectorDbManager, IOrganizationRepo orgRepo, IOpenAISettings openAiSettings, ILLMContentRepo contentRepo )
+        public RagAnswerService(IAdminLogger adminLogger, IAgentContextManager vectorDbManager, IOrganizationRepo orgRepo, IOpenAISettings openAiSettings, ILLMContentRepo contentRepo)
         {
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
             _contentRepo = contentRepo ?? throw new ArgumentNullException(nameof(contentRepo));
@@ -47,13 +47,20 @@ namespace LagoVista.AI.Services
             return AnswerAsync(vectorDatabaseId, question, null, org, user, repo, language, topK);
         }
 
+        public Task<InvokeResult<AnswerResult>> AnswerAsync(string vectorDatabaseId, string question, string conversationContextId, EntityHeader org, EntityHeader user, string repo, string language, int topK, string ragScope, string workspaceId, List<ActiveFile> activeFiles)
+        {
+            // Step 2.1: wiring only, ignore ragScope/workspaceId/activeFiles for now
+            return AnswerAsync(vectorDatabaseId, question, conversationContextId, org, user, repo, language, topK);
+        }
+
         public async Task<InvokeResult<AnswerResult>> AnswerAsync(string vectorDatabaseId, string question, string conversationContextId, EntityHeader org, EntityHeader user, string repo = null, string language = "csharp", int topK = 8)
         {
             if (String.IsNullOrEmpty(vectorDatabaseId)) throw new ArgumentNullException(nameof(vectorDatabaseId));
             var vectorDb = await _vectorDbManager.GetAgentContextWithSecretsAsync(vectorDatabaseId, org, user);
 
-            var conversationContext = string.IsNullOrEmpty(conversationContextId) ? vectorDb.ConversationContexts.Single(ctx => ctx.Id == vectorDb.DefaultConversationContext.Id) :
-                                        vectorDb.ConversationContexts.Single(ctx => ctx.Id == conversationContextId);
+            var conversationContext = string.IsNullOrEmpty(conversationContextId)
+                ? vectorDb.ConversationContexts.Single(ctx => ctx.Id == vectorDb.DefaultConversationContext.Id)
+                : vectorDb.ConversationContexts.Single(ctx => ctx.Id == conversationContextId);
 
             _embedder = new OpenAIEmbedder(vectorDb, _openAiSettings, _adminLogger);
             _qdrant = new QdrantClient(vectorDb, _adminLogger);
@@ -67,14 +74,19 @@ namespace LagoVista.AI.Services
             // 2) Retrieve candidates from Qdrant
             var filter = new QdrantFilter { Must = new List<QdrantCondition>() };
             if (!string.IsNullOrWhiteSpace(language))
-                filter.Must.Add(new QdrantCondition { Key = "language", Match = new QdrantMatch() { Value = language } });
+            {
+                filter.Must.Add(new QdrantCondition { Key = "language", Match = new QdrantMatch { Value = language } });
+            }
+
             if (!string.IsNullOrWhiteSpace(repo))
-                filter.Must.Add(new QdrantCondition { Key = "repo", Match = new QdrantMatch() { Value = repo } });
+            {
+                filter.Must.Add(new QdrantCondition { Key = "repo", Match = new QdrantMatch { Value = repo } });
+            }
 
             var hits = await _qdrant.SearchAsync(vectorDb.VectorDatabaseCollectionName, new QdrantSearchRequest
             {
                 Vector = qvec,
-                Limit = Math.Clamp(topK * 3, 12, 50), // over-retrieve
+                Limit = Math.Clamp(topK * 3, 12, 50),
                 WithPayload = true,
                 Filter = filter
             });
@@ -82,12 +94,12 @@ namespace LagoVista.AI.Services
             // 3) Pick a diverse, small set for the prompt
             var selected = SelectDiverse(hits, topK);
 
-           // 4) Resolve snippet text: prefer payload["text"], else read file slice
+            // 4) Resolve snippet text: prefer payload["text"], else read file slice
             var snippets = new List<Snippet>();
             foreach (var (hit, idx) in selected.Select((h, i) => (h, i)))
             {
                 var p = hit.Payload!;
-                var path = p["path"]?.ToString() ?? "";
+                var path = p["path"]?.ToString() ?? string.Empty;
                 var start = Convert.ToInt32(p["start_line"]);
                 var end = Convert.ToInt32(p["end_line"]);
                 var fileName = Convert.ToString(p["fileName"]);
@@ -96,12 +108,14 @@ namespace LagoVista.AI.Services
 
                 var tag = $"S{idx + 1}";
 
-                string text = p.ContainsKey("text") ? p["text"].ToString() : null;
+                var text = p.ContainsKey("text") ? p["text"].ToString() : null;
                 if (string.IsNullOrEmpty(text) && !string.IsNullOrEmpty(path) && end >= start)
                 {
                     var response = await GetContentAsync(vectorDb, path, fileName, start, end, org, user);
                     if (response.Successful)
+                    {
                         text = response.Result;
+                    }
                 }
 
                 Console.WriteLine($"MATCH: {tag}: {path} [{start}-{end}] (score={hit.Score:F3})");
@@ -111,7 +125,6 @@ namespace LagoVista.AI.Services
                     snippets.Add(new Snippet(tag, path, fileName, start, end, text, symbol, symbolType));
                 }
             }
-
 
             // 5) Build prompt
             var prompt = PromptBuilder.Build(question, snippets);
@@ -125,7 +138,7 @@ namespace LagoVista.AI.Services
                 messages = new[]
                 {
                     new { role = "system", content = conversationContext.System },
-                    new { role = "user",   content = prompt.User },
+                    new { role = "user", content = prompt.User },
                     new { role = "assistant", content = prompt.Context }
                 }
             };
@@ -135,49 +148,51 @@ namespace LagoVista.AI.Services
 
             if (!resp.IsSuccessStatusCode)
             {
-                // Try to extract a nice error message from the body
-                string errorMessage = $"LLM call failed with HTTP {(int)resp.StatusCode} ({resp.ReasonPhrase}).";
+                var errorMessage = $"LLM call failed with HTTP {(int)resp.StatusCode} ({resp.ReasonPhrase}).";
 
                 try
                 {
-                    var errorWrapper = Newtonsoft.Json.JsonConvert.DeserializeObject<OpenAIErrorResponse>(body);
-                    if (errorWrapper?.Error != null && !String.IsNullOrWhiteSpace(errorWrapper.Error.Message))
+                    var errorWrapper = JsonConvert.DeserializeObject<OpenAIErrorResponse>(body);
+                    if (errorWrapper?.Error != null && !string.IsNullOrWhiteSpace(errorWrapper.Error.Message))
                     {
                         errorMessage = errorWrapper.Error.Message;
                     }
                 }
                 catch
                 {
-                    // ignore JSON parse errors, keep generic message
+                    // ignore JSON parse errors
                 }
 
-                _adminLogger.AddError(
-                    "[RagAnswerService_AnswerAsync__LLM]",
-                    "LLM request failed.",
-                    ((int)resp.StatusCode).ToString().ToKVP("statusCode"));
-
-                _adminLogger.AddError(
-                    "[RagAnswerService_AnswerAsync__LLM]",
-                    $"LLM response body: {body}");
+                _adminLogger.AddError("[RagAnswerService_AnswerAsync__LLM]", "LLM request failed.", ((int)resp.StatusCode).ToString().ToKVP("statusCode"));
+                _adminLogger.AddError("[RagAnswerService_AnswerAsync__LLM]", $"LLM response body: {body}");
 
                 return InvokeResult<AnswerResult>.FromError(errorMessage);
             }
 
-            var oaiResponse = Newtonsoft.Json.JsonConvert.DeserializeObject<OpenAIResponse>(body);
+            var oaiResponse = JsonConvert.DeserializeObject<OpenAIResponse>(body);
             if (oaiResponse == null || oaiResponse.choices == null || !oaiResponse.choices.Any())
             {
-                _adminLogger.AddError(
-                    "[RagAnswerService_AnswerAsync__LLM]",
-                    "LLM response did not contain any choices.");
-
+                _adminLogger.AddError("[RagAnswerService_AnswerAsync__LLM]", "LLM response did not contain any choices.");
                 return InvokeResult<AnswerResult>.FromError("LLM response did not contain any choices.");
             }
 
-            var content = oaiResponse.choices.First().message.content ?? "";
+            var content = oaiResponse.choices.First().message.content ?? string.Empty;
             return InvokeResult<AnswerResult>.Create(new AnswerResult
             {
                 Text = content.Trim(),
-                Sources = snippets.Select(s => new SourceRef { Tag = s.Tag, Path = s.Path, FileName=s.FileName, Start = s.Start, End = s.End, Excerpt = s.Text, Symbol = s.Symbol, SymbolType = s.SymbolType }).ToList()
+                Sources = snippets
+                    .Select(s => new SourceRef
+                    {
+                        Tag = s.Tag,
+                        Path = s.Path,
+                        FileName = s.FileName,
+                        Start = s.Start,
+                        End = s.End,
+                        Excerpt = s.Text,
+                        Symbol = s.Symbol,
+                        SymbolType = s.SymbolType
+                    })
+                    .ToList()
             });
         }
 
@@ -186,19 +201,27 @@ namespace LagoVista.AI.Services
             var byKey = new Dictionary<string, QdrantScoredPoint>();
             foreach (var h in hits.OrderByDescending(h => h.Score))
             {
-                var path = h.Payload!["path"]?.ToString() ?? "";
-                var sym = h.Payload!.ContainsKey("symbol") ? h.Payload["symbol"]?.ToString() ?? "" : "";
+                var path = h.Payload!["path"]?.ToString() ?? string.Empty;
+                var sym = h.Payload!.ContainsKey("symbol") ? h.Payload["symbol"]?.ToString() ?? string.Empty : string.Empty;
                 var key = $"{path}::{sym}";
-                if (!byKey.ContainsKey(key)) byKey[key] = h;
-                if (byKey.Count >= topK) break;
+                if (!byKey.ContainsKey(key))
+                {
+                    byKey[key] = h;
+                }
+
+                if (byKey.Count >= topK)
+                {
+                    break;
+                }
             }
+
             return byKey.Values.ToList();
         }
 
         public async Task<InvokeResult<string>> GetContentAsync(AgentContext vectorDb, string path, string fileName, int start, int end, EntityHeader org, EntityHeader user)
         {
             var response = await _contentRepo.GetTextContentAsync(vectorDb, path, fileName);
-            if(!response.Successful)
+            if (!response.Successful)
             {
                 return InvokeResult<string>.FromError(response.ErrorMessage);
             }
@@ -206,11 +229,16 @@ namespace LagoVista.AI.Services
             var text = response.Result.Split("\n");
             start = Math.Max(1, start);
             end = Math.Min(text.Length, end);
-            if (end < start) return InvokeResult<string>.FromError("End is less than start");
+            if (end < start)
+            {
+                return InvokeResult<string>.FromError("End is less than start");
+            }
 
             var sb = new StringBuilder();
-            for (int i = start - 1; i <= end - 1; i++)
+            for (var i = start - 1; i <= end - 1; i++)
+            {
                 sb.AppendLine(text[i]);
+            }
 
             return InvokeResult<string>.Create(sb.ToString());
         }
@@ -224,7 +252,7 @@ namespace LagoVista.AI.Services
         public async Task<InvokeResult<string>> GetContentAsync(string path, string fileName, int start, int end, EntityHeader org, EntityHeader user)
         {
             var orgInfo = await _orgRepo.GetOrganizationAsync(org.Id);
-            if(EntityHeader.IsNullOrEmpty(orgInfo.DefaultVectorDatabase))
+            if (EntityHeader.IsNullOrEmpty(orgInfo.DefaultVectorDatabase))
             {
                 return InvokeResult<string>.FromError("Organization does not have a default vector database configured.");
             }
@@ -261,5 +289,4 @@ namespace LagoVista.AI.Services
         [JsonProperty("code")]
         public string Code { get; set; }
     }
-
 }

@@ -1,22 +1,27 @@
-// --- BEGIN CODE INDEX META (do not edit) ---
-// ContentHash: 96403ecf9b66ad23e723079209bc523d19c533c1b2d234d12a4e266097647c00
-// IndexVersion: 2
-// --- END CODE INDEX META ---
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using LagoVista.AI.Models;
 using LagoVista.AI.Services;
+using LagoVista.Core.AI.Models;
 using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
-using System.Threading.Tasks;
 
 namespace LagoVista.AI.Interfaces
 {
     public interface IRagAnswerService
     {
-        Task<InvokeResult<string>> GetContentAsync(AgentContext vectorDatabse, string path, string file, int start, int end, EntityHeader org, EntityHeader user);
-        Task<InvokeResult<string>> GetContentAsync(string vectorDbId, string path, string file, int start, int end, EntityHeader org, EntityHeader user);
-        Task<InvokeResult<string>> GetContentAsync(string path, string file, int start, int end, EntityHeader org, EntityHeader user);
-        Task<InvokeResult<AnswerResult>> AnswerAsync(string vectorDatabsaeId, string question, string conversationContextId, EntityHeader org, EntityHeader user, string repo = null, string language = "csharp", int topK = 8);
         Task<InvokeResult<AnswerResult>> AnswerAsync(string vectorDatabaseId, string question, EntityHeader org, EntityHeader user, string repo = null, string language = "csharp", int topK = 8);
+
+        Task<InvokeResult<AnswerResult>> AnswerAsync(string vectorDatabaseId, string question, string conversationContextId, EntityHeader org, EntityHeader user, string repo = null, string language = "csharp", int topK = 8);
+
+        Task<InvokeResult<AnswerResult>> AnswerAsync(string vectorDatabaseId, string question, string conversationContextId, EntityHeader org, EntityHeader user, string repo, string language, int topK, string ragScope, string workspaceId, List<ActiveFile> activeFiles);
+
+        Task<InvokeResult<string>> GetContentAsync(AgentContext vectorDb, string path, string fileName, int start, int end, EntityHeader org, EntityHeader user);
+
+        Task<InvokeResult<string>> GetContentAsync(string vectorDbId, string path, string fileName, int start, int end, EntityHeader org, EntityHeader user);
+
+        Task<InvokeResult<string>> GetContentAsync(string path, string fileName, int start, int end, EntityHeader org, EntityHeader user);
+
         Task<InvokeResult<AnswerResult>> AnswerAsync(string question, EntityHeader org, EntityHeader user, string repo = null, string language = "csharp", int topK = 8);
     }
 }
