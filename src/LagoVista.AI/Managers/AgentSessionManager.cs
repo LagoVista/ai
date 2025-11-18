@@ -1,4 +1,5 @@
-﻿using LagoVista.AI.Interfaces;
+﻿using ICSharpCode.SharpZipLib.Core;
+using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
 using LagoVista.Core;
 using LagoVista.Core.Exceptions;
@@ -45,7 +46,8 @@ namespace LagoVista.AI.Managers
             turn.CreationDate = session.LastUpdatedDate;
             turn.CreatedByUser = user;
             turn.SequenceNumber = session.Turns.Count + 1;
-          
+            session.Turns.Add(turn);
+
             ValidationCheck(session, Actions.Create);
 
             await _repo.UpdateSessionAsyunc(session);
@@ -54,9 +56,12 @@ namespace LagoVista.AI.Managers
         public async Task CompleteAgentSessionTurnAsync(string agentSessionId, string turnId, string answerSummary, string answerBlobUrl, string openAiResponseId, List<string> warnings, EntityHeader org, EntityHeader user)
         {
             var session = await _repo.GetAgentSessionAsync(agentSessionId);
-
-          
             var turn = session.Turns.SingleOrDefault(t => t.Id == turnId);
+            if (turn == null)
+            {
+                throw new RecordNotFoundException(nameof(AgentSessionTurn), turnId);
+            }
+
             turn.AgentAnswerSummary = answerSummary;
             turn.Status = EntityHeader<AgentSessionTurnStatuses>.Create( AgentSessionTurnStatuses.Completed);
             turn.StatusTimeStamp = DateTime.UtcNow.ToJSONString();
@@ -75,6 +80,11 @@ namespace LagoVista.AI.Managers
             await AuthorizeAsync(session, AuthorizeResult.AuthorizeActions.Update, user, org);
 
             var turn = session.Turns.SingleOrDefault(t => t.Id == turnId);
+            if(turn == null)
+            {
+                throw new RecordNotFoundException(nameof(AgentSessionTurn), turnId);
+            }
+
             turn.Status = EntityHeader<AgentSessionTurnStatuses>.Create(AgentSessionTurnStatuses.Failed);
             turn.StatusTimeStamp = DateTime.UtcNow.ToJSONString();
             turn.OpenAIResponseReceivedDate = turn.StatusTimeStamp;
