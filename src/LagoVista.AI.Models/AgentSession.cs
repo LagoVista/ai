@@ -25,8 +25,26 @@ namespace LagoVista.AI.Models
         Failed,
     }
 
+    public enum OperationKinds
+    {
+        [EnumLabel(AgentSession.OperationKind_Code, AIResources.Names.Common_Status_Failed, typeof(AIResources))]
+        Code,
+        [EnumLabel(AgentSession.OperationKind_Image, AIResources.Names.Common_Status_Failed, typeof(AIResources))]
+        Image,
+        [EnumLabel(AgentSession.OperationKind_Text, AIResources.Names.Common_Status_Failed, typeof(AIResources))]
+        Text,
+        [EnumLabel(AgentSession.OperationKind_Domain, AIResources.Names.Common_Status_Failed, typeof(AIResources))]
+        Domain
+    }
+
     public class AgentSession : EntityBase, ISummaryFactory, IValidateable
     {
+        public const string OperationKind_Code = "code";
+        public const string OperationKind_Image = "image";
+        public const string OperationKind_Text = "text";
+        public const string OperationKind_Domain = "domain";
+
+
         public EntityHeader AgentContext { get; set; }
 
         public EntityHeader ConversationContext { get; set; }
@@ -36,6 +54,8 @@ namespace LagoVista.AI.Models
         public string Repo { get; set; }
 
         public string DefaultLanguage { get; set; }
+
+        public EntityHeader<OperationKinds> OperationKind { get; set; }
 
         public List<AgentSessionTurn> Turns { get; set; } = new List<AgentSessionTurn>();
 
@@ -71,6 +91,8 @@ namespace LagoVista.AI.Models
         public const string AgentSessionTurnStatuses_Completed = "completed";
         public const string AgentSessionTurnStatuses_Failed = "failed";
         public const string AgentSessionTurnStatuses_Aborted = "aborted";
+
+        
 
         public string Id { get; set; } = Guid.NewGuid().ToId();
 

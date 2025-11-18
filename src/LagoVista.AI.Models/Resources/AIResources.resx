@@ -645,4 +645,16 @@
   <data name="Common_Status_Aborted" xml:space="preserve">
     <value>Aborted</value>
   </data>
+  <data name="OperationKind_Image" xml:space="preserve">
+    <value>Image</value>
+  </data>
+  <data name="OperationKind_Code" xml:space="preserve">
+    <value>Code</value>
+  </data>
+  <data name="OperationKind_Text" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="OperationKind_Domain" xml:space="preserve">
+    <value>Domain</value>
+  </data>
 </root>

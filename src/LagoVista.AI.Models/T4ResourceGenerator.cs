@@ -1,4 +1,4 @@
-﻿/*11/17/2025 6:25:28 PM*/
+﻿/*11/17/2025 6:44:26 PM*/
 using System.Globalization;
 using System.Reflection;
 
@@ -432,6 +432,18 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:ModelSetting_Value
 
 		public static string ModelSetting_Value { get { return GetResourceString("ModelSetting_Value"); } }
+//Resources:AIResources:OperationKind_Code
+
+		public static string OperationKind_Code { get { return GetResourceString("OperationKind_Code"); } }
+//Resources:AIResources:OperationKind_Domain
+
+		public static string OperationKind_Domain { get { return GetResourceString("OperationKind_Domain"); } }
+//Resources:AIResources:OperationKind_Image
+
+		public static string OperationKind_Image { get { return GetResourceString("OperationKind_Image"); } }
+//Resources:AIResources:OperationKind_Text
+
+		public static string OperationKind_Text { get { return GetResourceString("OperationKind_Text"); } }
 //Resources:AIResources:Preprocessor_ClassName
 
 		public static string Preprocessor_ClassName { get { return GetResourceString("Preprocessor_ClassName"); } }
@@ -711,6 +723,10 @@ namespace LagoVista.AI.Models.Resources
 			public const string ModelSetting_Help = "ModelSetting_Help";
 			public const string ModelSetting_Title = "ModelSetting_Title";
 			public const string ModelSetting_Value = "ModelSetting_Value";
+			public const string OperationKind_Code = "OperationKind_Code";
+			public const string OperationKind_Domain = "OperationKind_Domain";
+			public const string OperationKind_Image = "OperationKind_Image";
+			public const string OperationKind_Text = "OperationKind_Text";
 			public const string Preprocessor_ClassName = "Preprocessor_ClassName";
 			public const string Preprocessor_Description = "Preprocessor_Description";
 			public const string Preprocessor_Help = "Preprocessor_Help";

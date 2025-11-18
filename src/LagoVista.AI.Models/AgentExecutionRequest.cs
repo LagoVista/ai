@@ -17,6 +17,7 @@ namespace LagoVista.AI.Models
     {
         public string SessionId { get; set; }
         public string PreviousTurnId { get; set; }
+        public EntityHeader<OperationKinds> OperationKind { get; set; }
 
         public EntityHeader AgentContext { get; set; }
         public EntityHeader ConversationContext { get; set; }
