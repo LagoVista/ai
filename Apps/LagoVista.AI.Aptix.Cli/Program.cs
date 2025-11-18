@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using System.Text.Json;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.AgentClient;
-using LagoVista.Core.AI.Models;
+using LagoVista.AI.Models;
 using LagoVista.Core.Models;
+using LagoVista.Core.Validation;
+using Newtonsoft.Json;
 
 namespace LagoVista.AI.Aptix.Cli
 {
@@ -42,11 +44,11 @@ namespace LagoVista.AI.Aptix.Cli
 
             // --- ClientId resolution ---
             var inlineClientId = ParseInlineClientId(args);
-            var clientId = !String.IsNullOrWhiteSpace(inlineClientId)
+            var clientId = !string.IsNullOrWhiteSpace(inlineClientId)
                 ? inlineClientId
                 : config.ClientAppId;
 
-            if (String.IsNullOrWhiteSpace(clientId))
+            if (string.IsNullOrWhiteSpace(clientId))
             {
                 Console.WriteLine("Client app id is not configured.");
                 Console.WriteLine("Specify --clientid or set 'clientAppId' in aptix.config.json.");
@@ -58,11 +60,11 @@ namespace LagoVista.AI.Aptix.Cli
             var envToken = Environment.GetEnvironmentVariable("APTIX_AI_TOKEN");
 
             string token;
-            if (!String.IsNullOrWhiteSpace(inlineToken))
+            if (!string.IsNullOrWhiteSpace(inlineToken))
             {
                 token = inlineToken;
             }
-            else if (!String.IsNullOrWhiteSpace(envToken))
+            else if (!string.IsNullOrWhiteSpace(envToken))
             {
                 token = envToken;
             }
@@ -84,15 +86,13 @@ namespace LagoVista.AI.Aptix.Cli
             // Banner / eye candy
             PrintBanner(baseUrl, isLocal, isDev);
 
-            var agentClient = new AgentExecutionClient(httpClient);
-
             var command = args[0].ToLowerInvariant();
             var verbose = HasFlag(args, "--verbose", "-v");
 
             switch (command)
             {
                 case "ask":
-                    return await HandleAskAsync(args, config, agentClient, verbose);
+                    return await HandleAskAsync(args, config, httpClient, verbose);
 
                 case "ping":
                     return await HandlePingAsync(httpClient, verbose);
@@ -152,7 +152,7 @@ namespace LagoVista.AI.Aptix.Cli
                     return true;
                 }
 
-                if (!String.IsNullOrWhiteSpace(shortName)
+                if (!string.IsNullOrWhiteSpace(shortName)
                     && args[i].Equals(shortName, StringComparison.OrdinalIgnoreCase))
                 {
                     return true;
@@ -179,30 +179,25 @@ namespace LagoVista.AI.Aptix.Cli
             Console.WriteLine("Aptix CLI");
             Console.WriteLine();
             Console.WriteLine("Usage:");
-            Console.WriteLine(
-                "  aptix ask  [--dev|--local] [--clientid <id>] [--token <token>] [--verbose] \"your question\"");
-            Console.WriteLine(
-                "  aptix ping [--dev|--local] [--clientid <id>] [--token <token>] [--verbose]");
+            Console.WriteLine("  aptix ask  [--dev|--local] [--clientid <id>] [--token <token>] [--verbose] \"your question\"");
+            Console.WriteLine("  aptix ping [--dev|--local] [--clientid <id>] [--token <token>] [--verbose]");
             Console.WriteLine();
             Console.WriteLine("Environment variables:");
             Console.WriteLine("  APTIX_AI_TOKEN    If set, used as the token.");
             Console.WriteLine();
             Console.WriteLine("Flags:");
             Console.WriteLine("  --dev             Use https://dev-api.nuviot.com");
-            Console.WriteLine(
-                "  --local           Use https://localhost:5001 (Make sure API server, Not Portal is running locally)");
+            Console.WriteLine("  --local           Use https://localhost:5001 (Make sure API server, Not Portal is running locally)");
             Console.WriteLine("  --clientid        Override client app id used in Authorization header");
             Console.WriteLine("  --token, -t       Override token used in Authorization header");
             Console.WriteLine("  --verbose, -v     Print raw JSON / raw responses");
             Console.WriteLine();
             Console.WriteLine("Examples:");
             Console.WriteLine("  aptix ping --dev");
-            Console.WriteLine(
-                "  APTIX_AI_TOKEN=Secret123 aptix ask --clientid MyApp \"Show me repo layout.\"");
+            Console.WriteLine("  APTIX_AI_TOKEN=Secret123 aptix ask --clientid MyApp \"Show me repo layout.\"");
         }
 
-        private static async Task<int> HandleAskAsync(string[] args, AptixConfig config,
-            AgentExecutionClient agentClient, bool verbose)
+        private static async Task<int> HandleAskAsync(string[] args, AptixConfig config, HttpClient httpClient, bool verbose)
         {
             // Remove flags and their values from the question
             var cleanedArgs = new List<string>();
@@ -239,43 +234,134 @@ namespace LagoVista.AI.Aptix.Cli
             var question = string.Join(" ", cleanedArgs);
 
             var agentContext = EntityHeader.Create(config.AgentContextId, config.AgentContextName);
-            var conversationContext = EntityHeader.Create(config.ConversationContextId,
-                config.ConversationContextName);
+            var conversationContext = EntityHeader.Create(config.ConversationContextId, config.ConversationContextName);
 
-            var response = await agentClient.AskAsync(
-                agentContext,
-                conversationContext,
-                question,
-                workspaceId: config.DefaultWorkspaceId,
-                repo: config.DefaultRepo,
-                language: config.DefaultLanguage,
-                ragScope: config.DefaultRagScope,
-                activeFiles: new List<ActiveFile>(),
-                cancellationToken: CancellationToken.None);
+            var envelope = new AgentRequestEnvelope
+            {
+                ClientKind = AgentClientKind.Cli,
+                SessionId = null,
+                PreviousTurnId = null,
+                OperationKind = EntityHeader<OperationKinds>.Create(OperationKinds.Text),
+                AgentContext = agentContext,
+                ConversationContext = conversationContext,
+                WorkspaceId = config.DefaultWorkspaceId,
+                Repo = config.DefaultRepo,
+                Language = config.DefaultLanguage,
+                Instruction = question,
+                ActiveFiles = new List<ActiveFileDescriptor>(),
+                RagFilters = BuildRagFilters(config.DefaultRagScope)
+            };
 
-           
-            if (response == null)
+
+            var requestJson = JsonConvert.SerializeObject(envelope);
+            var content = new StringContent(requestJson, Encoding.UTF8, "application/json");
+
+            HttpResponseMessage responseMessage;
+            try
+            {
+                responseMessage = await httpClient.PostAsync("/api/ai/agent/execute", content, CancellationToken.None);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"HTTP error calling agent: {ex.Message}");
+
+                if (verbose)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine(ex.ToString());
+                }
+
+                return -1;
+            }
+
+            if (!responseMessage.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"Agent call failed: HTTP {(int)responseMessage.StatusCode} {responseMessage.ReasonPhrase}");
+
+                if (verbose)
+                {
+                    var body = await responseMessage.Content.ReadAsStringAsync();
+                    Console.WriteLine();
+                    Console.WriteLine("Response body:");
+                    Console.WriteLine(body);
+                }
+
+                return -1;
+            }
+
+            InvokeResult<AgentExecutionResponse> invokeResult;
+
+            try
+            {
+                var json = await responseMessage.Content.ReadAsStringAsync();
+                invokeResult = JsonConvert.DeserializeObject<InvokeResult<AgentExecutionResponse>>(json);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deserializing agent response: {ex.Message}");
+
+                if (verbose)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine(ex.ToString());
+                }
+
+                return -1;
+            }
+
+            if (invokeResult == null)
             {
                 Console.WriteLine("No response from agent.");
                 return -1;
             }
 
-            if (String.Equals(response.Kind, "error", StringComparison.OrdinalIgnoreCase))
+            if (!invokeResult.Successful)
             {
-                Console.WriteLine($"Agent error: {response.ErrorCode} - {response.ErrorMessage}");
+                Console.WriteLine("Agent reported an error.");
+
+                if (invokeResult.Errors != null)
+                {
+                    foreach (var err in invokeResult.Errors)
+                    {
+                        Console.WriteLine($"- {err.ErrorCode}: {err.Message}");
+                    }
+                }
+
+                if (!string.IsNullOrWhiteSpace(invokeResult.ErrorMessage))
+                {
+                    Console.WriteLine($"Message: {invokeResult.ErrorMessage}");
+                }
+
+                return -1;
+            }
+
+            var payload = invokeResult.Result;
+            if (payload == null)
+            {
+                Console.WriteLine("Agent returned an empty payload.");
                 return -1;
             }
 
             Console.WriteLine("=== Aptix Answer ===\n");
-            Console.WriteLine(response.Text);
+            Console.WriteLine(string.IsNullOrWhiteSpace(payload.AgentAnswerFullText) ? payload.AgentAnswer : payload.AgentAnswerFullText);
 
-            if (response.Sources != null && response.Sources.Count > 0)
+            if (payload.ChunkRefs != null && payload.ChunkRefs.Count > 0)
             {
                 Console.WriteLine();
                 Console.WriteLine("=== Sources ===");
-                foreach (var src in response.Sources)
+                foreach (var chunk in payload.ChunkRefs)
                 {
-                    Console.WriteLine($"[{src.Tag}] {src.Path}:{src.Start}-{src.End} ({src.SymbolType} {src.Symbol})");
+                    Console.WriteLine($"[{chunk.ChunkId}] {chunk.Path}:{chunk.StartLine}-{chunk.EndLine}");
+                }
+            }
+
+            if (payload.Warnings != null && payload.Warnings.Count > 0)
+            {
+                Console.WriteLine();
+                Console.WriteLine("=== Warnings ===");
+                foreach (var warning in payload.Warnings)
+                {
+                    Console.WriteLine($"- {warning}");
                 }
             }
 
@@ -283,12 +369,24 @@ namespace LagoVista.AI.Aptix.Cli
             {
                 Console.WriteLine();
                 Console.WriteLine("=== Raw Response (JSON) ===\n");
-                var json = JsonSerializer.Serialize(response, new JsonSerializerOptions { WriteIndented = true });
-                Console.WriteLine(json);
+                var rawJson = JsonConvert.SerializeObject(invokeResult);
+                Console.WriteLine(rawJson);
             }
 
             await Task.Yield();
             return 0;
+        }
+
+        private static Dictionary<string, string> BuildRagFilters(string ragScope)
+        {
+            var filters = new Dictionary<string, string>();
+
+            if (!string.IsNullOrWhiteSpace(ragScope))
+            {
+                filters["scope"] = ragScope;
+            }
+
+            return filters;
         }
 
         private static async Task<int> HandlePingAsync(HttpClient httpClient, bool verbose)
@@ -315,7 +413,7 @@ namespace LagoVista.AI.Aptix.Cli
                 var content = await response.Content.ReadAsStringAsync();
                 Console.WriteLine("Ping succeeded.");
 
-                if (!String.IsNullOrWhiteSpace(content))
+                if (!string.IsNullOrWhiteSpace(content))
                 {
                     Console.WriteLine($"Response: {content}");
                 }

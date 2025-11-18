@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -7,6 +8,7 @@ using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
 using LagoVista.Core;
+using LagoVista.Core.AI.Interfaces;
 using LagoVista.Core.AI.Models;
 using LagoVista.Core.Interfaces;
 using LagoVista.Core.Validation;
@@ -18,10 +20,9 @@ namespace LagoVista.AI.Services
     /// <summary>
     /// OpenAI implementation of ILLMClient using the Responses API (/v1/responses).
     ///
-    /// This implementation also has the ability to emit lightweight progress events
-    /// over the notification system when a sessionId is supplied. The orchestrator
-    /// remains unaware of these events; they are an implementation detail of the
-    /// LLM client keyed by the Aptix session id.
+    /// Supports optional streaming-style narration via the notification pipeline
+    /// when a sessionId is supplied. The orchestrator remains unaware of these
+    /// events; they are an implementation detail keyed by the Aptix session id.
     /// </summary>
     public class OpenAIResponsesClient : ILLMClient
     {
@@ -109,7 +110,8 @@ namespace LagoVista.AI.Services
                 response_format = new
                 {
                     type = "text"
-                }
+                },
+                stream = true
             };
 
             var requestJson = Newtonsoft.Json.JsonConvert.SerializeObject(requestObject);
@@ -127,78 +129,78 @@ namespace LagoVista.AI.Services
                 using (var httpClient = new HttpClient())
                 {
                     httpClient.BaseAddress = new Uri(baseUrl);
-                    httpClient.Timeout = TimeSpan.FromSeconds(60);
+                    httpClient.Timeout = TimeSpan.FromSeconds(120);
                     httpClient.DefaultRequestHeaders.Authorization =
                         new AuthenticationHeaderValue("Bearer", agentContext.LlmApiKey);
 
-                    using (var content = new StringContent(requestJson, Encoding.UTF8, "application/json"))
+                    var request = new HttpRequestMessage(HttpMethod.Post, "/v1/responses")
                     {
-                        var response = await httpClient.PostAsync(
-                            "/v1/responses",
-                            content,
-                            cancellationToken);
+                        Content = new StringContent(requestJson, Encoding.UTF8, "application/json")
+                    };
 
-                        var body = await response.Content.ReadAsStringAsync();
+                    var response = await httpClient.SendAsync(
+                        request,
+                        HttpCompletionOption.ResponseHeadersRead,
+                        cancellationToken);
 
-                        if (!response.IsSuccessStatusCode)
-                        {
-                            var errorMessage =
-                                $"LLM call failed with HTTP {(int)response.StatusCode} ({response.ReasonPhrase}).";
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        var errorBody = await response.Content.ReadAsStringAsync();
+                        var errorMessage =
+                            $"LLM call failed with HTTP {(int)response.StatusCode} ({response.ReasonPhrase}).";
 
-                            _adminLogger.AddError(
-                                "[OpenAIResponsesClient_GetAnswerAsync__HTTP]",
-                                errorMessage);
-                            _adminLogger.AddError(
-                                "[OpenAIResponsesClient_GetAnswerAsync__Body]",
-                                body);
-
-                            await PublishLlmEventAsync(
-                                sessionId,
-                                "LLMFailed",
-                                "failed",
-                                errorMessage,
-                                null,
-                                cancellationToken);
-
-                            return InvokeResult<LLMResult>.FromError(errorMessage);
-                        }
-
-                        var llmResult = ParseResponsesPayload(body);
-                        if (llmResult == null || string.IsNullOrWhiteSpace(llmResult.Text))
-                        {
-                            const string msg =
-                                "LLM response did not contain any text output in the expected format.";
-
-                            _adminLogger.AddError(
-                                "[OpenAIResponsesClient_GetAnswerAsync__Parse]",
-                                msg);
-                            _adminLogger.AddError(
-                                "[OpenAIResponsesClient_GetAnswerAsync__Body]",
-                                body);
-
-                            await PublishLlmEventAsync(
-                                sessionId,
-                                "LLMFailed",
-                                "failed",
-                                msg,
-                                null,
-                                cancellationToken);
-
-                            return InvokeResult<LLMResult>.FromError(msg);
-                        }
-
-                        llmResult.RawResponseJson = body;
+                        _adminLogger.AddError(
+                            "[OpenAIResponsesClient_GetAnswerAsync__HTTP]",
+                            errorMessage);
+                        _adminLogger.AddError(
+                            "[OpenAIResponsesClient_GetAnswerAsync__Body]",
+                            errorBody);
 
                         await PublishLlmEventAsync(
                             sessionId,
-                            "LLMCompleted",
-                            "completed",
-                            "Model response received.",
+                            "LLMFailed",
+                            "failed",
+                            errorMessage,
                             null,
                             cancellationToken);
 
-                        return InvokeResult<LLMResult>.Create(llmResult);
+                        return InvokeResult<LLMResult>.FromError(errorMessage);
                     }
+
+                    var llmResult = await ReadStreamingResponseAsync(
+                        response,
+                        sessionId,
+                        cancellationToken);
+
+                    if (llmResult == null || string.IsNullOrWhiteSpace(llmResult.Text))
+                    {
+                        const string msg =
+                            "LLM response did not contain any text output in the expected streaming format.";
+
+                        _adminLogger.AddError(
+                            "[OpenAIResponsesClient_GetAnswerAsync__ParseStreaming]",
+                            msg);
+
+                        await PublishLlmEventAsync(
+                            sessionId,
+                            "LLMFailed",
+                            "failed",
+                            msg,
+                            null,
+                            cancellationToken);
+
+                        return InvokeResult<LLMResult>.FromError(msg);
+                    }
+
+                    await PublishLlmEventAsync(
+                        sessionId,
+                        "LLMCompleted",
+                        "completed",
+                        "Model response received.",
+                        null,
+                        cancellationToken);
+
+                    return InvokeResult<LLMResult>.Create(llmResult);
                 }
             }
             catch (TaskCanceledException tex) when (tex.CancellationToken == cancellationToken)
@@ -234,6 +236,155 @@ namespace LagoVista.AI.Services
                     cancellationToken);
 
                 return InvokeResult<LLMResult>.FromError(msg);
+            }
+        }
+
+        /// <summary>
+        /// Read a streaming Responses API response (SSE-style) and accumulate
+        /// both the full text and intermediate narration events.
+        ///
+        /// This implementation focuses on text deltas from events whose type or
+        /// event name indicate "output_text.delta". If the upstream schema
+        /// evolves, this method can be adjusted without impacting callers.
+        /// </summary>
+        private async Task<LLMResult> ReadStreamingResponseAsync(
+            HttpResponseMessage response,
+            string sessionId,
+            CancellationToken cancellationToken)
+        {
+            using (var stream = await response.Content.ReadAsStreamAsync())
+            using (var reader = new StreamReader(stream))
+            {
+                var fullTextBuilder = new StringBuilder();
+                var rawBuilder = new StringBuilder();
+                string responseId = null;
+
+                string currentEvent = null;
+                var dataBuilder = new StringBuilder();
+
+                while (!reader.EndOfStream)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    var line = await reader.ReadLineAsync();
+                    if (line == null)
+                    {
+                        break;
+                    }
+
+                    if (string.IsNullOrWhiteSpace(line))
+                    {
+                        if (dataBuilder.Length > 0)
+                        {
+                            var dataJson = dataBuilder.ToString();
+                            rawBuilder.AppendLine(dataJson);
+
+                            await ProcessSseEventAsync(
+                                currentEvent,
+                                sessionId,
+                                dataJson,
+                                fullTextBuilder,
+                                value => responseId = value ?? responseId,
+                                cancellationToken);
+
+                            dataBuilder.Clear();
+                            currentEvent = null;
+                        }
+
+                        continue;
+                    }
+
+                    if (line.StartsWith("event:", StringComparison.OrdinalIgnoreCase))
+                    {
+                        currentEvent = line.Substring("event:".Length).Trim();
+                        continue;
+                    }
+
+                    if (line.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var dataPart = line.Substring("data:".Length).Trim();
+                        if (string.Equals(dataPart, "[DONE]", StringComparison.Ordinal))
+                        {
+                            break;
+                        }
+
+                        dataBuilder.AppendLine(dataPart);
+                    }
+                }
+
+                if (fullTextBuilder.Length == 0)
+                {
+                    return null;
+                }
+
+                var result = new LLMResult
+                {
+                    ResponseId = responseId,
+                    Text = fullTextBuilder.ToString(),
+                    RawResponseJson = rawBuilder.ToString()
+                };
+
+                return result;
+            }
+        }
+
+        /// <summary>
+        /// Process a single SSE event payload from the Responses API. Attempts to
+        /// extract text deltas and response id in a schema-tolerant way and emit
+        /// LLMDelta narration events for each non-empty text chunk.
+        /// </summary>
+        private async Task ProcessSseEventAsync(
+            string eventName,
+            string sessionId,
+            string dataJson,
+            StringBuilder fullTextBuilder,
+            Action<string> setResponseId,
+            CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(dataJson))
+            {
+                return;
+            }
+
+            try
+            {
+                var root = JObject.Parse(dataJson);
+
+                var type = (string)root["type"] ?? eventName ?? string.Empty;
+
+                if (type.EndsWith("output_text.delta", StringComparison.OrdinalIgnoreCase))
+                {
+                    var deltaText =
+                        (string)root["delta"]?["text"] ??
+                        (string)root["output_text"]?["delta"]?["text"] ??
+                        string.Empty;
+
+                    if (!string.IsNullOrEmpty(deltaText))
+                    {
+                        fullTextBuilder.Append(deltaText);
+
+                        await PublishLlmEventAsync(
+                            sessionId,
+                            "LLMDelta",
+                            "in-progress",
+                            deltaText,
+                            null,
+                            cancellationToken);
+                    }
+                }
+                else if (string.Equals(type, "response.completed", StringComparison.OrdinalIgnoreCase))
+                {
+                    var respId = (string)root["response"]?["id"];
+                    if (!string.IsNullOrWhiteSpace(respId))
+                    {
+                        setResponseId(respId);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _adminLogger.AddException(
+                    "[OpenAIResponsesClient_ProcessSseEventAsync__Exception]",
+                    ex);
             }
         }
 
@@ -279,56 +430,6 @@ namespace LagoVista.AI.Services
                 _adminLogger.AddException(
                     "[OpenAIResponsesClient_PublishLlmEventAsync__Exception]",
                     ex);
-            }
-        }
-
-        private static LLMResult ParseResponsesPayload(string body)
-        {
-            if (string.IsNullOrWhiteSpace(body))
-            {
-                return null;
-            }
-
-            try
-            {
-                var root = JObject.Parse(body);
-
-                var id = (string)root["id"];
-
-                string text = null;
-                var output = root["output"] as JArray;
-                if (output != null && output.Count > 0)
-                {
-                    var firstOutput = output[0] as JObject;
-                    var contentArray = firstOutput?["content"] as JArray;
-                    if (contentArray != null && contentArray.Count > 0)
-                    {
-                        var firstContent = contentArray[0] as JObject;
-                        text = (string)firstContent?["text"]
-                               ?? (string)firstContent?["content"];
-                    }
-                }
-
-                if (string.IsNullOrWhiteSpace(text))
-                {
-                    // Fall back to a best-effort extraction if the structure changes.
-                    text = (string)root["output_text"] ?? body;
-                }
-
-                return new LLMResult
-                {
-                    ResponseId = id,
-                    Text = text
-                };
-            }
-            catch
-            {
-                // If parsing fails, return a minimal result with raw body as text.
-                return new LLMResult
-                {
-                    ResponseId = null,
-                    Text = body
-                };
             }
         }
     }

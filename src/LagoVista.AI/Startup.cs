@@ -5,6 +5,7 @@
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Managers;
 using LagoVista.AI.Services;
+using LagoVista.Core.AI.Interfaces;
 using LagoVista.Core.Interfaces;
 
 namespace LagoVista.AI
@@ -27,10 +28,13 @@ namespace LagoVista.AI
             services.AddSingleton<IEmbedder, OpenAIEmbedder>();
             services.AddSingleton<IAgentContextManager, AgentContextManager>();
             services.AddSingleton<IAgentSessionManager, AgentSessionManager>();
+            services.AddSingleton<IAgentExecutionService, AgentExecutionService>();
+            services.AddSingleton<ILLMClient, OpenAIResponsesClient>();
             services.AddTransient<IAiConversationManager, AiConversationManager>();
             services.AddSingleton<IAgentOrchestrator, AgentOrchestrator>();
             services.AddSingleton<IAgentSessionFactory, AgentSessionFactory>();
             services.AddSingleton<IAgentTurnExecutor, AgentTurnExecutor>();
+            services.AddSingleton<IAgentRequestHandler, AgentRequestHandler>();
 
         }
     }

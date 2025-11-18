@@ -1,6 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Models;
+using LagoVista.Core.AI.Models;
 using LagoVista.Core.Validation;
 
 namespace LagoVista.AI.Interfaces

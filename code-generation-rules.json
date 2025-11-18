@@ -1,0 +1,86 @@
+{
+  "$schema": "https://example.com/nuvos/csharp-style-schema/v1",
+  "language": "csharp",
+  "name": "NuvOS_CSharp_Parameter_Wrapping_Rules",
+  "version": "1.0.0",
+  "rules": {
+    "lineLength": {
+      "softLimit": 120,
+      "description": "120 characters is a guideline, but must NOT be enforced by splitting parameter or argument lists across lines."
+    },
+
+    "methodSignatures": {
+      "neverSplitParameters": true,
+      "description": "For C# method, constructor, and delegate signatures, the full parameter list MUST remain on a single line.",
+      "examples": {
+        "valid": [
+          "public Task FooAsync(int id, string name, CancellationToken cancellationToken = default)",
+          "private static InvokeResult<Something> Create(string key, string value, int retryCount, bool enabled)"
+        ],
+        "invalid": [
+          "public Task FooAsync(int id,\n                         string name,\n                         CancellationToken cancellationToken = default)"
+        ]
+      }
+    },
+
+    "methodCalls": {
+      "neverSplitArguments": true,
+      "description": "For C# method and constructor calls, the full argument list MUST remain on a single line, even if this exceeds the soft 120-character limit.",
+      "examples": {
+        "valid": [
+          "var result = await _service.ExecuteAsync(session, turn, request, org, user, cancellationToken);"
+        ],
+        "invalid": [
+          "var result = await _service.ExecuteAsync(\n    session,\n    turn,\n    request,\n    org,\n    user,\n    cancellationToken);"
+        ]
+      }
+    },
+
+    "objectInitializers": {
+      "alwaysMultiLine": true,
+      "onePropertyPerLine": true,
+      "trailingCommaAllowed": false,
+      "description": "Object and collection initializers MUST be written over multiple lines with one member per line, regardless of length.",
+      "examples": {
+        "valid": [
+          "var evt = new AptixOrchestratorEvent\n{\n    SessionId = session.Id,\n    TurnId = turn.Id,\n    Stage = \"TurnFailed\",\n    Status = \"failed\",\n    Message = message,\n    ElapsedMs = elapsedMilliseconds,\n    Timestamp = DateTime.UtcNow.ToJSONString()\n};"
+        ],
+        "invalid": [
+          "var evt = new AptixOrchestratorEvent { SessionId = session.Id, TurnId = turn.Id, Stage = \"TurnFailed\" };"
+        ]
+      }
+    },
+
+    "arrayAndCollectionInitializers": {
+      "treatSameAsObjectInitializers": true,
+      "description": "When generating array or collection initializers with more than 2 items, prefer one item per line.",
+      "examples": {
+        "valid": [
+          "var list = new List<string>\n{\n    \"one\",\n    \"two\",\n    \"three\"\n};"
+        ]
+      }
+    },
+
+    "preserveExistingFormatting": {
+      "description": "When editing existing code that already follows these rules, DO NOT reflow or re-wrap lines. Only change what is necessary for the requested edit.",
+      "avoidReflowingUntouchedLines": true
+    },
+
+    "scoping": {
+      "appliesTo": [
+        "method_signatures",
+        "method_calls",
+        "constructor_signatures",
+        "constructor_calls",
+        "delegate_signatures",
+        "object_initializers",
+        "collection_initializers"
+      ],
+      "doesNotApplyTo": [
+        "comments",
+        "string_literals",
+        "verbatim_strings"
+      ]
+    }
+  }
+}

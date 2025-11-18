@@ -1,40 +1,46 @@
+using System.Threading;
 using System.Threading.Tasks;
+using LagoVista.AI.Interfaces;
+using LagoVista.AI.Models;
 using LagoVista.Core.Validation;
-using LagoVista.Core.AI.Models;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.IoT.Web.Common.Controllers;
 using LagoVista.UserAdmin.Models.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using LagoVista.Core.AI.Interfaces;
 
 namespace LagoVista.AI.Rest
 {
     [Authorize(AuthenticationSchemes = "APIToken")]
     public class AgentExecutionController : LagoVistaBaseController
     {
-        private readonly IAgentExecutionService _agentExecutionService;
+        private readonly IAgentRequestHandler _agentRequestHandler;
 
-        public AgentExecutionController(IAgentExecutionService agentExecutionService,
-                                        UserManager<AppUser> userManager,
-                                        IAdminLogger logger) : base(userManager, logger)
+        public AgentExecutionController(IAgentRequestHandler agentRequestHandler, UserManager<AppUser> userManager, IAdminLogger logger)
+            : base(userManager, logger)
         {
-            _agentExecutionService = agentExecutionService;
+            _agentRequestHandler = agentRequestHandler;
         }
 
         /// <summary>
         /// Execute an Aptix agent request using the configured AgentContext
         /// and ConversationContext. This is the endpoint used by the Aptix CLI
-        /// 'ask' command.
+        /// and other clients. The payload is normalized by AgentRequestHandler
+        /// and dispatched to the orchestrator.
         /// </summary>
         [HttpPost("/api/ai/agent/execute")]
-        public Task<InvokeResult<AgentExecuteResponse>> ExecuteAsync([FromBody] AgentExecuteRequest request)
+        public Task<InvokeResult<AgentExecutionResponse>> ExecuteAsync([FromBody] AgentRequestEnvelope request)
         {
-            return _agentExecutionService.ExecuteAsync(request, OrgEntityHeader, UserEntityHeader);
+            var cancellationToken = HttpContext?.RequestAborted ?? CancellationToken.None;
+
+            return _agentRequestHandler.HandleAsync(request, OrgEntityHeader, UserEntityHeader, cancellationToken);
         }
 
         [HttpGet("/api/ai/agent/ping")]
-        public IActionResult Ping() => Ok();
+        public IActionResult Ping()
+        {
+            return Ok();
+        }
     }
 }

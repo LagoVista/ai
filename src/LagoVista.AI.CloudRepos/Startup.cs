@@ -26,7 +26,8 @@ namespace LagoVista.AI.CloudRepos
             services.AddTransient<ILLMContentRepo, LLMContentRepo>(); //Note this is not thread safe, needs to be a transient.
             services.AddSingleton<IAgentConextRepo, AgentContextRepo>();
             services.AddSingleton<IAgentTurnTranscriptStore, AgentTurnTraanscriptStore>();
-            services.AddSingleton<IAiConversationRepo, AiConversationRepo>(); 
+            services.AddSingleton<IAiConversationRepo, AiConversationRepo>();
+            services.AddSingleton<IAgentSessionRepo, AgentSessionRepo>();
         }
     }
 }
