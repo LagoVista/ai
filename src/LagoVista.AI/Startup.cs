@@ -28,6 +28,10 @@ namespace LagoVista.AI
             services.AddSingleton<IAgentContextManager, AgentContextManager>();
             services.AddSingleton<IAgentSessionManager, AgentSessionManager>();
             services.AddTransient<IAiConversationManager, AiConversationManager>();
+            services.AddSingleton<IAgentOrchestrator, AgentOrchestrator>();
+            services.AddSingleton<IAgentSessionFactory, AgentSessionFactory>();
+            services.AddSingleton<IAgentTurnExecutor, AgentTurnExecutor>();
+
         }
     }
 }

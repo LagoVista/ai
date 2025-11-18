@@ -30,6 +30,15 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LagoVista.AI.AgentClient", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LagoVista.AI.Aptix.Cli", "Apps\LagoVista.AI.Aptix.Cli\LagoVista.AI.Aptix.Cli.csproj", "{3B74091B-D4E0-4962-AD33-A1CD4D975D05}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{C6DBC9BA-6F80-4140-90A3-5FAF8D3F5EE4}"
+	ProjectSection(SolutionItems) = preProject
+		filehandling.md = filehandling.md
+		vector.qdrant.llm.json = vector.qdrant.llm.json
+		vector.qdrant.cs.txt = vector.qdrant.cs.txt
+		vector.qdrant.md = vector.qdrant.md
+		vector.qdrant.schema.json = vector.qdrant.schema.json
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

@@ -3,22 +3,18 @@
 // IndexVersion: 2
 // --- END CODE INDEX META ---
 using System.Collections.Generic;
-using System.Net.Http;
 using System;
-using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using System.Linq;
-using static LagoVista.AI.Managers.OpenAIManager;
 using LagoVista.Core.Validation;
 using LagoVista.AI.Models;
 using LagoVista.Core.Models;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.UserAdmin.Interfaces.Repos.Orgs;
 using LagoVista.Core.AI.Models;
-using LagoVista.Core;
-using Newtonsoft.Json;
+using LagoVista.Core.AI.Interfaces;
 
 namespace LagoVista.AI.Services
 {
@@ -27,35 +23,69 @@ namespace LagoVista.AI.Services
         private readonly IOpenAISettings _openAiSettings;
         private IQdrantClient _qdrant;
         private IEmbedder _embedder;
-        private HttpClient _llm;
         private readonly ILLMContentRepo _contentRepo;
         private readonly IAgentContextManager _vectorDbManager;
         private readonly IAdminLogger _adminLogger;
         private readonly IOrganizationRepo _orgRepo;
+        private readonly ILLMClient _llmClient;
 
-        public RagAnswerService(IAdminLogger adminLogger, IAgentContextManager vectorDbManager, IOrganizationRepo orgRepo, IOpenAISettings openAiSettings, ILLMContentRepo contentRepo)
+        public RagAnswerService(
+            IAdminLogger adminLogger,
+            IAgentContextManager vectorDbManager,
+            IOrganizationRepo orgRepo,
+            IOpenAISettings openAiSettings,
+            ILLMContentRepo contentRepo,
+            ILLMClient llmClient)
         {
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
             _contentRepo = contentRepo ?? throw new ArgumentNullException(nameof(contentRepo));
             _openAiSettings = openAiSettings ?? throw new ArgumentNullException(nameof(openAiSettings));
             _orgRepo = orgRepo ?? throw new ArgumentNullException(nameof(orgRepo));
             _vectorDbManager = vectorDbManager ?? throw new ArgumentNullException(nameof(vectorDbManager));
+            _llmClient = llmClient ?? throw new ArgumentNullException(nameof(llmClient));
         }
 
-        public Task<InvokeResult<AnswerResult>> AnswerAsync(string vectorDatabaseId, string question, EntityHeader org, EntityHeader user, string repo = null, string language = "csharp", int topK = 8)
+        public Task<InvokeResult<AnswerResult>> AnswerAsync(
+            string vectorDatabaseId,
+            string question,
+            EntityHeader org,
+            EntityHeader user,
+            string repo = null,
+            string language = "csharp",
+            int topK = 8)
         {
             return AnswerAsync(vectorDatabaseId, question, null, org, user, repo, language, topK);
         }
 
-        public Task<InvokeResult<AnswerResult>> AnswerAsync(string vectorDatabaseId, string question, string conversationContextId, EntityHeader org, EntityHeader user, string repo, string language, int topK, string ragScope, string workspaceId, List<ActiveFile> activeFiles)
+        public Task<InvokeResult<AnswerResult>> AnswerAsync(
+            string vectorDatabaseId,
+            string question,
+            string conversationContextId,
+            EntityHeader org,
+            EntityHeader user,
+            string repo,
+            string language,
+            int topK,
+            string ragScope,
+            string workspaceId,
+            System.Collections.Generic.List<ActiveFile> activeFiles)
         {
             // Step 2.1: wiring only, ignore ragScope/workspaceId/activeFiles for now
             return AnswerAsync(vectorDatabaseId, question, conversationContextId, org, user, repo, language, topK);
         }
 
-        public async Task<InvokeResult<AnswerResult>> AnswerAsync(string vectorDatabaseId, string question, string conversationContextId, EntityHeader org, EntityHeader user, string repo = null, string language = "csharp", int topK = 8)
+        public async Task<InvokeResult<AnswerResult>> AnswerAsync(
+            string vectorDatabaseId,
+            string question,
+            string conversationContextId,
+            EntityHeader org,
+            EntityHeader user,
+            string repo = null,
+            string language = "csharp",
+            int topK = 8)
         {
             if (String.IsNullOrEmpty(vectorDatabaseId)) throw new ArgumentNullException(nameof(vectorDatabaseId));
+
             var vectorDb = await _vectorDbManager.GetAgentContextWithSecretsAsync(vectorDatabaseId, org, user);
 
             var conversationContext = string.IsNullOrEmpty(conversationContextId)
@@ -67,20 +97,25 @@ namespace LagoVista.AI.Services
 
             // 1) Embed the user question
             var qvec = await _embedder.EmbedAsync(question, -1);
-            _llm = new HttpClient { BaseAddress = new Uri(_openAiSettings.OpenAIUrl) };
-            _llm.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", vectorDb.LlmApiKey);
-            _llm.Timeout = TimeSpan.FromSeconds(60);
 
             // 2) Retrieve candidates from Qdrant
             var filter = new QdrantFilter { Must = new List<QdrantCondition>() };
             if (!string.IsNullOrWhiteSpace(language))
             {
-                filter.Must.Add(new QdrantCondition { Key = "language", Match = new QdrantMatch { Value = language } });
+                filter.Must.Add(new QdrantCondition
+                {
+                    Key = "language",
+                    Match = new QdrantMatch { Value = language }
+                });
             }
 
             if (!string.IsNullOrWhiteSpace(repo))
             {
-                filter.Must.Add(new QdrantCondition { Key = "repo", Match = new QdrantMatch { Value = repo } });
+                filter.Must.Add(new QdrantCondition
+                {
+                    Key = "repo",
+                    Match = new QdrantMatch { Value = repo }
+                });
             }
 
             var hits = await _qdrant.SearchAsync(vectorDb.VectorDatabaseCollectionName, new QdrantSearchRequest
@@ -129,54 +164,25 @@ namespace LagoVista.AI.Services
             // 5) Build prompt
             var prompt = PromptBuilder.Build(question, snippets);
 
-            // 6) Call the LLM (OpenAI-compatible /chat/completions)
-            var model = conversationContext.ModelName;
-            var req = new
+            // 6) Call the LLM via the Responses-based client
+            var llmResult = await _llmClient.GetAnswerAsync(
+                vectorDb,
+                conversationContext,
+                prompt.User,
+                prompt.Context);
+
+            if (!llmResult.Successful)
             {
-                model,
-                temperature = conversationContext.Temperature,
-                messages = new[]
-                {
-                    new { role = "system", content = conversationContext.System },
-                    new { role = "user", content = prompt.User },
-                    new { role = "assistant", content = prompt.Context }
-                }
-            };
+                _adminLogger.AddError(
+                    "[RagAnswerService_AnswerAsync__LLM]",
+                    "LLM request failed.",
+                    llmResult.ErrorsToKVPArray());
 
-            var resp = await _llm.PostAsJsonAsync("/v1/chat/completions", req);
-            var body = await resp.Content.ReadAsStringAsync();
-
-            if (!resp.IsSuccessStatusCode)
-            {
-                var errorMessage = $"LLM call failed with HTTP {(int)resp.StatusCode} ({resp.ReasonPhrase}).";
-
-                try
-                {
-                    var errorWrapper = JsonConvert.DeserializeObject<OpenAIErrorResponse>(body);
-                    if (errorWrapper?.Error != null && !string.IsNullOrWhiteSpace(errorWrapper.Error.Message))
-                    {
-                        errorMessage = errorWrapper.Error.Message;
-                    }
-                }
-                catch
-                {
-                    // ignore JSON parse errors
-                }
-
-                _adminLogger.AddError("[RagAnswerService_AnswerAsync__LLM]", "LLM request failed.", ((int)resp.StatusCode).ToString().ToKVP("statusCode"));
-                _adminLogger.AddError("[RagAnswerService_AnswerAsync__LLM]", $"LLM response body: {body}");
-
-                return InvokeResult<AnswerResult>.FromError(errorMessage);
+                return InvokeResult<AnswerResult>.FromInvokeResult(llmResult.ToInvokeResult());
             }
 
-            var oaiResponse = JsonConvert.DeserializeObject<OpenAIResponse>(body);
-            if (oaiResponse == null || oaiResponse.choices == null || !oaiResponse.choices.Any())
-            {
-                _adminLogger.AddError("[RagAnswerService_AnswerAsync__LLM]", "LLM response did not contain any choices.");
-                return InvokeResult<AnswerResult>.FromError("LLM response did not contain any choices.");
-            }
+            var content = llmResult.Result?.Text ?? string.Empty;
 
-            var content = oaiResponse.choices.First().message.content ?? string.Empty;
             return InvokeResult<AnswerResult>.Create(new AnswerResult
             {
                 Text = content.Trim(),
@@ -202,7 +208,10 @@ namespace LagoVista.AI.Services
             foreach (var h in hits.OrderByDescending(h => h.Score))
             {
                 var path = h.Payload!["path"]?.ToString() ?? string.Empty;
-                var sym = h.Payload!.ContainsKey("symbol") ? h.Payload["symbol"]?.ToString() ?? string.Empty : string.Empty;
+                var sym = h.Payload!.ContainsKey("symbol")
+                    ? h.Payload["symbol"]?.ToString() ?? string.Empty
+                    : string.Empty;
+
                 var key = $"{path}::{sym}";
                 if (!byKey.ContainsKey(key))
                 {
@@ -218,7 +227,14 @@ namespace LagoVista.AI.Services
             return byKey.Values.ToList();
         }
 
-        public async Task<InvokeResult<string>> GetContentAsync(AgentContext vectorDb, string path, string fileName, int start, int end, EntityHeader org, EntityHeader user)
+        public async Task<InvokeResult<string>> GetContentAsync(
+            AgentContext vectorDb,
+            string path,
+            string fileName,
+            int start,
+            int end,
+            EntityHeader org,
+            EntityHeader user)
         {
             var response = await _contentRepo.GetTextContentAsync(vectorDb, path, fileName);
             if (!response.Successful)
@@ -243,13 +259,26 @@ namespace LagoVista.AI.Services
             return InvokeResult<string>.Create(sb.ToString());
         }
 
-        public async Task<InvokeResult<string>> GetContentAsync(string vectorDbId, string path, string fileName, int start, int end, EntityHeader org, EntityHeader user)
+        public async Task<InvokeResult<string>> GetContentAsync(
+            string vectorDbId,
+            string path,
+            string fileName,
+            int start,
+            int end,
+            EntityHeader org,
+            EntityHeader user)
         {
             var vectorDb = await _vectorDbManager.GetAgentContextAsync(vectorDbId, org, user);
             return await GetContentAsync(vectorDb, path, fileName, start, end, org, user);
         }
 
-        public async Task<InvokeResult<string>> GetContentAsync(string path, string fileName, int start, int end, EntityHeader org, EntityHeader user)
+        public async Task<InvokeResult<string>> GetContentAsync(
+            string path,
+            string fileName,
+            int start,
+            int end,
+            EntityHeader org,
+            EntityHeader user)
         {
             var orgInfo = await _orgRepo.GetOrganizationAsync(org.Id);
             if (EntityHeader.IsNullOrEmpty(orgInfo.DefaultVectorDatabase))
@@ -257,36 +286,39 @@ namespace LagoVista.AI.Services
                 return InvokeResult<string>.FromError("Organization does not have a default vector database configured.");
             }
 
-            return await GetContentAsync(orgInfo.DefaultVectorDatabase.Id, path, fileName, start, end, org, user);
+            return await GetContentAsync(
+                orgInfo.DefaultVectorDatabase.Id,
+                path,
+                fileName,
+                start,
+                end,
+                org,
+                user);
         }
 
-        public async Task<InvokeResult<AnswerResult>> AnswerAsync(string question, EntityHeader org, EntityHeader user, string repo = null, string language = "csharp", int topK = 8)
+        public async Task<InvokeResult<AnswerResult>> AnswerAsync(
+            string question,
+            EntityHeader org,
+            EntityHeader user,
+            string repo = null,
+            string language = "csharp",
+            int topK = 8)
         {
             var orgInfo = await _orgRepo.GetOrganizationAsync(org.Id);
             if (EntityHeader.IsNullOrEmpty(orgInfo.DefaultVectorDatabase))
             {
-                return InvokeResult<AnswerResult>.FromError("Organization does not have a default vector database configured.");
+                return InvokeResult<AnswerResult>.FromError(
+                    "Organization does not have a default vector database configured.");
             }
 
-            return await AnswerAsync(orgInfo.DefaultVectorDatabase.Id, question, org, user, repo, language, topK);
+            return await AnswerAsync(
+                orgInfo.DefaultVectorDatabase.Id,
+                question,
+                org,
+                user,
+                repo,
+                language,
+                topK);
         }
-    }
-
-    public sealed class OpenAIErrorResponse
-    {
-        [JsonProperty("error")]
-        public OpenAIError Error { get; set; }
-    }
-
-    public sealed class OpenAIError
-    {
-        [JsonProperty("message")]
-        public string Message { get; set; }
-
-        [JsonProperty("type")]
-        public string Type { get; set; }
-
-        [JsonProperty("code")]
-        public string Code { get; set; }
     }
 }

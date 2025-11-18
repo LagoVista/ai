@@ -2,6 +2,7 @@
 // ContentHash: a27eb1c13ec36c494606c61641bc0faf9a49475edbd635b2b55772bd73be8e95
 // IndexVersion: 2
 // --- END CODE INDEX META ---
+using LagoVista.AI.Interfaces;
 using LagoVista.Core.Interfaces;
 using System;
 
@@ -24,6 +25,7 @@ namespace LagoVista.AI.CloudRepos
             services.AddTransient<IMLModelRepo, MLModelRepo>();
             services.AddTransient<ILLMContentRepo, LLMContentRepo>(); //Note this is not thread safe, needs to be a transient.
             services.AddSingleton<IAgentConextRepo, AgentContextRepo>();
+            services.AddSingleton<IAgentTurnTranscriptStore, AgentTurnTraanscriptStore>();
             services.AddSingleton<IAiConversationRepo, AiConversationRepo>(); 
         }
     }

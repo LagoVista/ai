@@ -19,9 +19,6 @@ namespace LagoVista.AI.Models
         [FormField(LabelResource: AIResources.Names.Common_Icon, FieldType: FieldTypes.Icon, ResourceType: typeof(AIResources))]
         public string Icon { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.Common_Description, FieldType: FieldTypes.MultiLineText, IsRequired: false, ResourceType: typeof(AIResources))]
-        public string Description { get; set; }
-
         public ModelCategorySummary CreateSummary()
         {
             var summary = new ModelCategorySummary();

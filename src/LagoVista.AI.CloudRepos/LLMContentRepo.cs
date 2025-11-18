@@ -57,7 +57,7 @@ namespace LagoVista.AI.CloudRepos
             
             var blobName = GetBlobName(path, fileName);
             var containerName = GetContainerName(vectorDb.OwnerOrganization.Id);
-            var result = await GetFileAsync(vectorDb.BlobContainerName, blobName);
+            var result = await GetFileAsync(containerName, blobName);
             return InvokeResult<string>.Create(System.Text.ASCIIEncoding.ASCII.GetString(result.Result));
         }
     }

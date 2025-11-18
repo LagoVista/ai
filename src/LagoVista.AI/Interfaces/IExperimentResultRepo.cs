@@ -3,7 +3,9 @@
 // IndexVersion: 2
 // --- END CODE INDEX META ---
 using LagoVista.AI.Models;
+using LagoVista.Core;
 using LagoVista.Core.Models.UIMetaData;
+using System;
 using System.Threading.Tasks;
 
 namespace LagoVista.AI
@@ -15,3 +17,4 @@ namespace LagoVista.AI
         Task<ListResponse<ExperimentResult>> GetResultsAsync(string modelId, int versionNumber, ListRequest listRequest);
     }
 }
+

@@ -12,10 +12,10 @@ namespace LagoVista.AI.Interfaces
     /// </summary>
     public interface IAgentOrchestrator
     {
-        Task<InvokeResult<AgentExecutionResponse>> ExecuteAsync(
-            AgentExecutionRequest request,
-            EntityHeader org,
-            EntityHeader user,
-            CancellationToken cancellationToken = default);
+        Task<InvokeResult<AgentExecutionResponse>> BeginNewSessionAsync(NewAgentExecutionSession request, EntityHeader org,
+            EntityHeader user, CancellationToken cancellationToken = default);
+    
+        Task<InvokeResult<AgentExecutionResponse>> ExecuteTurnAsync(AgentExecutionRequest request, EntityHeader org,
+            EntityHeader user, CancellationToken cancellationToken = default);
     }
 }

@@ -27,14 +27,11 @@ namespace LagoVista.AI.Models
         }
 
 
-        [FormField(LabelResource: AIResources.Names.Common_Description, FieldType: FieldTypes.MultiLineText, IsRequired: false, ResourceType: typeof(AIResources))]
-        public string Description { get; set; }
-
         [FormField(LabelResource: AIResources.Names.Common_Icon, FieldType: FieldTypes.Icon, ResourceType: typeof(AIResources))]
         public string Icon { get; set; }
 
         [FormField(LabelResource: AIResources.Names.LabelSet_Labels, FieldType: FieldTypes.ChildListInline, FactoryUrl:  "/api/ml/modellabel/factory", ResourceType: typeof(AIResources))] 
-        public List<ModelLabel> Labels { get; set; }
+        public new List<ModelLabel> Labels { get; set; }
 
         public ModelLabelSetSummary CreateSummary()
         {

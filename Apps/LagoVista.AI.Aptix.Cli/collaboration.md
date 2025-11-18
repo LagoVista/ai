@@ -4,7 +4,7 @@ Summarize topics first
 
 I’ll list the things we need to decide as a short, numbered list.
 
-Each item gets a Design ID like DD-001, DD-002, etc.
+Each item gets a Design ID like ORCH-001, ORCH-002, etc.
 
 One decision at a time
 
@@ -18,7 +18,7 @@ Design Decision Record (DDR) format
 
 For each decision, we conceptually store something like:
 
-Id – e.g., DD-001
+Id – e.g., ORCH-001
 
 Title – short descriptive name
 
