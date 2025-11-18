@@ -35,6 +35,7 @@ namespace LagoVista.AI
             services.AddSingleton<IAgentSessionFactory, AgentSessionFactory>();
             services.AddSingleton<IAgentTurnExecutor, AgentTurnExecutor>();
             services.AddSingleton<IAgentRequestHandler, AgentRequestHandler>();
+            services.AddSingleton<IAgentSessionNamingService, OpenAISessionNamingService>();
 
         }
     }

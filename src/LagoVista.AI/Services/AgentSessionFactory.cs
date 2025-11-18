@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
 using LagoVista.Core;
@@ -10,15 +11,30 @@ namespace LagoVista.AI.Services
     {
         private const int InstructionSummaryMaxLength = 256;
 
-        public AgentSession CreateSession(NewAgentExecutionSession request, EntityHeader org, EntityHeader user)
+        private readonly IAgentSessionNamingService _namingService;
+
+        public AgentSessionFactory(IAgentSessionNamingService namingService)
         {
+            _namingService = namingService ?? throw new ArgumentNullException(nameof(namingService));
+        }
+
+        public async Task<AgentSession> CreateSession(NewAgentExecutionSession request, AgentContext agentContext, EntityHeader org, EntityHeader user)
+        {
+            var now = DateTime.UtcNow.ToJSONString();
+
             if (request == null)
             {
                 throw new ArgumentNullException(nameof(request));
             }
 
+
             var session = new AgentSession
             {
+                OwnerOrganization = org,
+                CreatedBy = user,
+                CreationDate = now,
+                LastUpdatedBy = user,
+                LastUpdatedDate = now,
                 AgentContext = request.AgentContext,
                 ConversationContext = request.ConversationContext,
                 OperationKind = request.OperationKind,
@@ -26,6 +42,9 @@ namespace LagoVista.AI.Services
                 Repo = request.Repo,
                 DefaultLanguage = request.Language
             };
+
+            session.Key = session.Id.ToLower();
+            session.Name =await  _namingService.GenerateNameAsync(agentContext, request.Instruction, default);
 
             return session;
         }

@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using LagoVista.AI.Models;
 using LagoVista.Core.Models;
 
@@ -6,7 +7,7 @@ namespace LagoVista.AI.Interfaces
 {
     public interface IAgentSessionFactory
     {
-        AgentSession CreateSession(NewAgentExecutionSession request, EntityHeader org, EntityHeader user);
+        Task<AgentSession> CreateSession(NewAgentExecutionSession request, AgentContext context, EntityHeader org, EntityHeader user);
 
         AgentSessionTurn CreateTurnForNewSession(AgentSession session, NewAgentExecutionSession request, EntityHeader org, EntityHeader user);
 
