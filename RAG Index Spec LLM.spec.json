@@ -1,0 +1,400 @@
+﻿[
+  {
+    "Id": "IDX-001",
+    "Title": "DocId Generation Strategy",
+    "Status": "Accepted",
+    "Description": "The DocId is the stable identifier assigned to a document (i.e., a source file or artifact) within the indexing system. Each document may be split into multiple chunks, but all of those chunks share the same DocId. The DocId ensures consistent grouping, retrieval, and tracking across ingestion runs.",
+    "Decision": {
+      "UseDeterministicGuidV5Kind": "UUIDv5",
+      "CanonicalStringPattern": "<RepoUrl>|<NormalizedPath>",
+      "NormalizationRules": {
+        "RepoUrl": "trim whitespace, lowercase, remove trailing slash",
+        "Path": "use forward slashes, collapse duplicate slashes, lowercase"
+      },
+      "DocIdComputation": "UUIDv5(NamespaceCodeFiles, canonicalString)",
+      "StorageType": "string",
+      "StringFormat": "32 uppercase hexadecimal characters, no braces or hyphens",
+      "UniquenessScope": "global across all indexed content",
+      "PathChangeBehavior": "If canonical string changes (file moved/renamed), treat as new DocId (no aliasing)",
+      "NamespaceGuidVersioning": "Single fixed namespace GUID for now; change only if canonical rules change"
+    },
+    "Rationale": "Provides stable, deterministic identifiers without requiring centralized state. GUID v5 aligns with existing code. Storing as string simplifies serialization and supports future flexibility. Excluding aliasing keeps the contract clean and deterministic. Ensures global uniqueness, avoiding collisions and simplifying tooling across all content.",
+    "ResolvedQuestions": [
+      {
+        "Q": "Include OrgId in canonical string?",
+        "Answer": "No"
+      },
+      {
+        "Q": "Store DocId as string or Guid?",
+        "Answer": "String, format uppercase, no hyphens"
+      },
+      {
+        "Q": "Namespace GUID versioning?",
+        "Answer": "Single fixed namespace for now"
+      },
+      {
+        "Q": "Uniqueness scope?",
+        "Answer": "Global"
+      },
+      {
+        "Q": "File renamed/moved → new DocId or alias?",
+        "Answer": "New DocId; aliasing handled externally if needed"
+      }
+    ]
+  },
+
+  {
+    "Id": "IDX-002",
+    "Title": "PointId Generation Strategy",
+    "Status": "Accepted",
+    "Description": "The PointId is the unique identifier assigned to each vector chunk in the vector database. It allows each chunk to be upserted, retrieved, updated, or deleted independently.",
+    "Decision": {
+      "PointIdType": "GUID",
+      "StorageType": "string",
+      "UniquenessScope": "global across all chunks",
+      "SlugFormatUsed": "No custom slug, GUID only"
+    },
+    "Rationale": "Simplifies generation and avoids slug-format complexity. Aligns with Qdrant’s requirement that point IDs be integers or UUID strings. Human-readable metadata remains in other fields.",
+    "ResolvedQuestions": []
+  },
+  {
+    "Id": "IDX-003",
+    "Title": "Canonical Path & BlobUri Normalization Rules",
+    "Status": "Accepted",
+    "Description": "Defines how we normalize file paths and blob URIs for consistency, deduplication, and deterministic ID generation.",
+    "Decision": {
+      "FirstPathSegment": "ProjectId provided at indexing setup",
+      "UseForwardSlashes": true,
+      "Lowercase": true,
+      "CollapseRepeatedSlashes": true,
+      "EnsureLeadingSlash": true,
+      "BlobUriMirrorsPath": true,
+      "ReservedPrefixEnforcement": false,
+      "MovedFilePolicy": "New canonical path = new identity",
+      "MaxPathLengthEnforced": false
+    },
+    "Rationale": "Stable normalized paths avoid separator/case variation; project identifier provides portability; prefix enforcement avoided for flexibility; storage limits are high so no cap now.",
+    "ResolvedQuestions": [
+      {
+        "Q": "Strip extensions for Title/ComponentName?",
+        "Answer": "No"
+      },
+      {
+        "Q": "Enforce reserved path prefixes?",
+        "Answer": "No"
+      },
+      {
+        "Q": "Enforce maximum path length?",
+        "Answer": "No, defer"
+      },
+      {
+        "Q": "If file moved/renamed, preserve old path segment?",
+        "Answer": "No"
+      }
+    ]
+  },
+  {
+    "Id": "IDX-004",
+    "Title": "Kind & SubKind Classification Rules",
+    "Status": "Accepted",
+    "Description": "Kind classifies each document/chunk broadly; SubKind gives a more specific role under Kind. Both are required fields and values are free-form for now using PascalCase.",
+    "Decision": {
+      "KindField": "required",
+      "SubKindField": "required",
+      "NamingConvention": "PascalCase",
+      "VocabularyControlled": false
+    },
+    "Rationale": "Two-level classification gives better granularity; PascalCase aligns with .NET naming conventions; free-form initially gives flexibility.",
+    "ResolvedQuestions": [
+      {
+        "Q": "Should we have Kind + SubKind?",
+        "Answer": "Yes"
+      },
+      {
+        "Q": "Should SubKind be required?",
+        "Answer": "Yes"
+      },
+      {
+        "Q": "Naming convention?",
+        "Answer": "PascalCase"
+      },
+      {
+        "Q": "Controlled vocabulary now?",
+        "Answer": "No, free-form for now"
+      }
+    ]
+  },
+  {
+    "Id": "IDX-005",
+    "Title": "ContentType / ContentTypeId Rules",
+    "Status": "Accepted",
+    "Description": "ContentType and ContentTypeId classify each document/chunk at a technical level (e.g., source code vs markdown vs HTML).",
+    "Decision": {
+      "ContentTypeIdEnum": "RagContentType",
+      "ContentTypeString": "same name as enum value",
+      "FieldsRequired": [ "ContentTypeId", "ContentType" ],
+      "SemanticCategoriesUsed": true,
+      "NamingConvention": "PascalCase",
+      "SingleValueOnly": true,
+      "VersionModifiersAllowed": false
+    },
+    "Rationale": "Numeric ID plus descriptive string supports readable and efficient metadata; semantic categories simplify mapping; PascalCase aligns with .NET conventions.",
+    "ResolvedQuestions": [
+      {
+        "Q": "Initial set of values?",
+        "Answer": "Defined via enum"
+      },
+      {
+        "Q": "Reflect semantics vs file extensions?",
+        "Answer": "Semantics"
+      },
+      {
+        "Q": "Multiple content types per item?",
+        "Answer": "No"
+      },
+      {
+        "Q": "Version/variant in ContentType string?",
+        "Answer": "No"
+      },
+      {
+        "Q": "Naming convention?",
+        "Answer": "PascalCase"
+      }
+    ]
+  },
+  {
+    "Id": "IDX-006",
+    "Title": "Subtype Rules",
+    "Status": "Accepted",
+    "Description": "The SubKind metadata field provides specific classification under Kind (e.g., for Kind=Code: Manager, Repository, Model, PrimitiveComponent).",
+    "Decision": {
+      "KindField": "required",
+      "SubKindField": "required",
+      "NamingConvention": "PascalCase",
+      "VocabularyControlled": false,
+      "SingleValueOnly": true,
+      "VersionModifiersAllowed": false,
+      "GlobalUniquenessOfSubKind": false,
+      "RuntimeKindSubKindValidation": false
+    },
+    "Rationale": "Two-level classification gives granularity without explosion of top-level kinds; PascalCase aligns with .NET naming; free-form initially gives flexibility until glossary defined.",
+    "ResolvedQuestions": [
+      {
+        "Q": "Glossary formalization process?",
+        "Answer": "Deferred"
+      },
+      {
+        "Q": "Version modifiers in SubKind?",
+        "Answer": "No"
+      },
+      {
+        "Q": "Is SubKind optional?",
+        "Answer": "No, required (\"None\" accepted)"
+      },
+      {
+        "Q": "Are SubKind values globally unique?",
+        "Answer": "No"
+      },
+      {
+        "Q": "Runtime validation of Kind+SubKind?",
+        "Answer": "No"
+      }
+    ]
+  },
+  {
+    "Id": "IDX-007",
+    "Title": "Domain / Layer / Role Semantics",
+    "Status": "Accepted",
+    "Description": "The metadata fields Domain, Layer and Role provide orthogonal classification axes to describe where and how a document fits in the system architecture.",
+    "Decision": {
+      "FieldsOptionalForNonCode": true,
+      "FieldsRequiredForCode": true,
+      "NamingConvention": "PascalCase",
+      "FreeFormValues": true,
+      "SingleRoleOnly": true,
+      "LayerFreeForm": true,
+      "RoleNamesReusableAcrossDomains": true,
+      "IngestionLogicEnforcementDeferred": true
+    },
+    "Rationale": "Optional for non-code keeps metadata light; PascalCase aligns with conventions; free-form values allow agility; single role simplifies classification; reuse across domains is logical.",
+    "ResolvedQuestions": [
+      {
+        "Q": "Controlled vocabulary?",
+        "Answer": "No"
+      },
+      {
+        "Q": "Multiple Role values?",
+        "Answer": "No, only one"
+      },
+      {
+        "Q": "Ingestion logic enforcement?",
+        "Answer": "Deferred"
+      },
+      {
+        "Q": "Layer ordering?",
+        "Answer": "No, free-form"
+      },
+      {
+        "Q": "Are Role names globally unique?",
+        "Answer": "No"
+      }
+    ]
+  },
+  {
+    "Id": "IDX-008",
+    "Title": "SymbolType Rules",
+    "Status": "Accepted",
+    "Description": "The SymbolType metadata field classifies the nature of the symbol a chunk represents (e.g., file, component, method).",
+    "Decision": {
+      "SymbolTypeFieldRequiredForCode": true,
+      "NamingConvention": "PascalCase",
+      "TopLevelSymbolTypeForFile": "File",
+      "SingleValueOnly": true,
+      "ControlledVocabulary": false,
+      "GlobalUniquenessOfSymbolType": "Deferred",
+      "RuntimeKindSymbolTypeValidation": "Deferred"
+    },
+    "Rationale": "Optional for non-code assets keeps metadata simpler; PascalCase aligns with metadata conventions; File as top level symbol gives predictability; free-form now allows flexibility.",
+    "ResolvedQuestions": [
+      {
+        "Q": "File-level chunks need special SymbolType?",
+        "Answer": "Yes – File"
+      },
+      {
+        "Q": "Multiple symbol types per chunk?",
+        "Answer": "No"
+      },
+      {
+        "Q": "SymbolType values globally unique?",
+        "Answer": "Deferred"
+      },
+      {
+        "Q": "Translate chunker SymbolType or mirror?",
+        "Answer": "No – minimal mapping"
+      },
+      {
+        "Q": "Pre-define SymbolTypes for non-code assets now?",
+        "Answer": "Deferred"
+      }
+    ]
+  },
+  {
+    "Id": "IDX-009",
+    "Title": "ComponentType & ComponentName Rules",
+    "Status": "Preliminary",
+    "Description": "ComponentType and ComponentName provide specialized classification for component-oriented artifacts (primitive/composite) and the specific component name.",
+    "Decision": {
+      "ComponentTypeField": "populated only for component artifacts",
+      "ComponentTypeValues": [ "primitive", "composite", "other" ],
+      "ComponentTypeNaming": "lowercase",
+      "ComponentNameField": "populated only for component artifacts",
+      "ComponentNameNaming": "PascalCase",
+      "DefaultComponentTypeIfUndetermined": "other"
+    },
+    "Rationale": "Distinguishing primitive vs composite components enables meaningful filtering; ComponentName aligned to code symbol improves traceability; restricting values supports consistency; fields optional for non-component artifacts.",
+    "ResolvedQuestions": [
+      {
+        "Q": "Extend ComponentType taxonomy?",
+        "Answer": "No"
+      },
+      {
+        "Q": "Composite components classification?",
+        "Answer": "composite"
+      },
+      {
+        "Q": "ComponentName include namespace?",
+        "Answer": "No"
+      },
+      {
+        "Q": "Platform-agnostic component classification?",
+        "Answer": "Handled in other metadata"
+      },
+      {
+        "Q": "For non-component artifacts should these fields be omitted?",
+        "Answer": "Yes"
+      }
+    ]
+  },
+  {
+    "Id": "IDX-010",
+    "Title": "LabelSlugs & LabelIds Semantics",
+    "Status": "Accepted",
+    "Description": "LabelSlugs and LabelIds provide tagging metadata for each chunk/document, enabling richer filtering and categorization.",
+    "Decision": {
+      "LabelSlugsRequired": true,
+      "LabelIdsRequired": true,
+      "LabelSlugsNaming": "lowercase-hyphen-separated",
+      "LabelIdsFormat": "uppercase alphanumeric with prefix",
+      "AlignSlugsAndIds": true,
+      "FreeFormTags": true,
+      "AvoidDuplicates": true,
+      "FlatTagsOnly": true,
+      "NoMaxLabels": true,
+      "IdsScopedPerProject": true
+    },
+    "Rationale": "Tagging supports flexible metadata; slug naming improves uniformity; stable IDs support backend tooling; flat tags simplify ingestion; free-form initially allows agility.",
+    "ResolvedQuestions": [
+      {
+        "Q": "Controlled vocabulary now?",
+        "Answer": "No"
+      },
+      {
+        "Q": "Max number of labels?",
+        "Answer": "No"
+      },
+      {
+        "Q": "LabelIds globally unique?",
+        "Answer": "No"
+      },
+      {
+        "Q": "Hierarchical slugs allowed?",
+        "Answer": "No, flat only"
+      },
+      {
+        "Q": "Track label timestamp/version?",
+        "Answer": "No"
+      }
+    ]
+  },
+  {
+    "Id": "IDX-011",
+    "Title": "Priority System",
+    "Status": "Accepted",
+    "Description": "The Priority field denotes relative importance of a chunk/document (lower = higher priority).",
+    "Decision": {
+      "Range": "1–10",
+      "TailoredPerAssetKind": true,
+      "IntegerOnly": true,
+      "DynamicAdjustmentsAllowed": true
+    },
+    "Rationale": "A 1-10 integer scale provides granularity; tailored heuristics per asset kind improve relevance; integer simplifies logic; dynamic updates allow evolving importance.",
+    "ResolvedQuestions": [
+      {
+        "Q": "Exact integer range?",
+        "Answer": "1–10"
+      },
+      {
+        "Q": "Define each numeric level now?",
+        "Answer": "To be documented later"
+      },
+      {
+        "Q": "Separate scales per asset kind?",
+        "Answer": "Yes, allowed"
+      },
+      {
+        "Q": "Fractional values allowed?",
+        "Answer": "No"
+      },
+      {
+        "Q": "Priority immutable?",
+        "Answer": "No, adjustable"
+      }
+    ]
+  }
+
+
+
+
+
+
+]
