@@ -390,7 +390,367 @@
         "Answer": "No, adjustable"
       }
     ]
+  },
+  {
+    "Id": "IDX-012",
+    "Title": "JSON Field Naming Convention",
+    "Status": "Accepted",
+    "Description": "Defines naming style and field-presence rules for JSON metadata payloads.",
+    "Decision": {
+      "NamingConvention": "PascalCase",
+      "ExactMatchToCSharpPropertyNames": true,
+      "NullValuedFieldsStrategy": "OmitProperties",
+      "NoAliasesForBackwardCompatibility": true,
+      "ClientLayerCasingTransformsAllowed": true
+    },
+    "Rationale": "Matching C# names simplifies serialization; single naming style avoids confusion; omitting null fields reduces payload size and indicates non-applicability; optional fields prevalent so omission is leaner.",
+    "ResolvedQuestions": [
+      {
+        "Q": "Allow aliasing of keys for backward compatibility?",
+        "Answer": "No"
+      },
+      {
+        "Q": "Null-valued properties: include or omit?",
+        "Answer": "Omit"
+      },
+      {
+        "Q": "Client‐level casing differences handled where?",
+        "Answer": "At client layer, not storage schema"
+      }
+    ]
+  },
+  {
+    "Id": "IDX-013",
+    "Title": "UpdatedUtc Logic",
+    "Status": "Accepted",
+    "Description": "The UpdatedUtc field (source modification timestamp) is removed from the metadata contract; indexing only on required content changes so this field is unnecessary now.",
+    "Decision": {
+      "RemoveField": "UpdatedUtc",
+      "Rationale": "Simplifies metadata model; indexing control handles re-indexing when needed; keeps payload lean.",
+      "FutureConsideration": "Field retained as placeholder if incremental update or auditing becomes required"
+    }
+  },
+  {
+    "Id": "IDX-014",
+    "Title": "Token Field Definitions",
+    "Status": "Accepted",
+    "Description": "The fields EstimatedTokens, ChunkSizeTokens and OverlapTokens capture chunk size and overlap metrics for embedding and indexing.",
+    "Decision": {
+      "EstimatedTokensRequired": true,
+      "ChunkSizeTokensOptional": true,
+      "OverlapTokensOptional": true,
+      "NamingConvention": "PascalCase",
+      "UseCases": [ "analytics", "costEstimation", "chunkStrategyTuning" ],
+      "MaxTokenThresholdEnforced": "Deferred",
+      "OverlapValidation": "None",
+      "LineBasedChunkersMustEstimateTokens": true
+    },
+    "Rationale": "Estimating token size aids monitoring and cost analysis; requiring EstimatedTokens ensures baseline size metric; optional actual/overlap fields add richness; naming consistency maintained.",
+    "ResolvedQuestions": [
+      {
+        "Q": "Max token threshold enforcement?",
+        "Answer": "Deferred"
+      },
+      {
+        "Q": "Validate overlap smaller than chunk size?",
+        "Answer": "No enforcement now"
+      },
+      {
+        "Q": "Line-based chunker scenario—EstimatedTokens?",
+        "Answer": "Still compute estimate"
+      },
+      {
+        "Q": "Enforce rounding/truncation of token counts?",
+        "Answer": "No"
+      },
+      {
+        "Q": "Track token budget vs model usage separately?",
+        "Answer": "No (may revisit)"
+      }
+    ]
+  },
+  {
+    "Id": "IDX-015",
+    "Title": "SourceSha256 Rules",
+    "Status": "Deprecated",
+    "Description": "The SourceSha256 field (document-level hash) is removed from the metadata contract; change detection will rely on ContentHash.",
+    "Decision": {
+      "RemoveField": "SourceSha256",
+      "ChangeDetectionVia": "ContentHash only",
+      "LegacyRetention": "Existing data may contain field but new ingestion ignores it"
+    },
+    "Rationale": "Document-level hash redundant under full-file re-index strategy; reduces metadata complexity; aligns with ingestion workflow."
+  },
+  {
+    "Id": "IDX-016",
+    "Title": "ContentHash Rules",
+    "Status": "Accepted",
+    "Description": "ContentHash stores the SHA-256 hash of the normalized text content of a chunk (or file-level chunk) for change detection and indexing triggers.",
+    "Decision": {
+      "FieldRequired": true,
+      "Algorithm": "SHA-256",
+      "HashFormat": "64-hex lowercase",
+      "NormalizedTextContentOnly": true,
+      "DropDocumentLevelHash": true,
+      "ChangeTriggerOnHashMismatch": true,
+      "ChunkingLogicStabilityRequired": true
+    },
+    "Rationale": "A single content hash simplifies change detection; SHA-256 provides strong integrity; dropping document-level hash reduces redundancy given our full-file-reindex strategy; line ending normalization ensures cross-platform determinism.",
+    "ResolvedQuestions": [
+      {
+        "Q": "Always use SHA-256?",
+        "Answer": "Yes"
+      },
+      {
+        "Q": "Chunking/normalization change handling?",
+        "Answer": "Full re-index triggered"
+      },
+      {
+        "Q": "Chunk identity when PartIndex changes?",
+        "Answer": "Chunking logic must remain stable; if not treat as changed"
+      },
+      {
+        "Q": "Include embedding vector/metadata in hash?",
+        "Answer": "No"
+      },
+      {
+        "Q": "Timestamp when hash computed?",
+        "Answer": "No"
+      }
+    ]
+  },
+  {
+    "Id": "IDX-017",
+    "Title": "BlobVersionId Rules",
+    "Status": "Accepted",
+    "Description": "The BlobVersionId field will be optional and unused for version‐tracking; indexing logic relies on fresh content and content‐hash workflows.",
+    "Decision": {
+      "FieldOptional": true,
+      "UseForVersioning": false,
+      "CaptureIfAvailable": true,
+      "ChangeDetectionVia": "ContentHash only"
+    },
+    "Rationale": "Workflow uses latest blob content only; version IDs add complexity without benefit; decouples storage versioning from indexing logic.",
+    "ResolvedQuestions": [
+      {
+        "Q": "Require BlobVersionId when storage supports versioning?",
+        "Answer": "No"
+      },
+      {
+        "Q": "Store version timestamp alongside ID?",
+        "Answer": "No"
+      },
+      {
+        "Q": "Handle storage versioning disabled?",
+        "Answer": "N/A to logic"
+      },
+      {
+        "Q": "Use version ID in DocId/PointId?",
+        "Answer": "No"
+      },
+      {
+        "Q": "Special treatment when blob overwritten without versioning?",
+        "Answer": "No"
+      }
+    ]
+  },
+  {
+    "Id": "IDX-018",
+    "Title": "PDF / HTML Mapping",
+    "Status": "Proposed",
+    "Description": "Optional mapping fields PdfPages and HtmlAnchor enable linking vector chunks to their source location in PDF or HTML documents.",
+    "Decision": {
+      "PdfPagesOptional": true,
+      "HtmlAnchorOptional": true,
+      "PopulateIfAvailable": true,
+      "DoesNotBlockIndexingOnMissing": true
+    },
+    "Rationale": "Allows improved navigation to source context for PDF/HTML assets; optional fields keep contract lean for other asset types.",
+    "ResolvedQuestions": [
+      {
+        "Q": "Require at least one mapping for PDF/HTML assets?",
+        "Answer": "Deferred"
+      },
+      {
+        "Q": "PdfPages support ranges vs list?",
+        "Answer": "Deferred"
+      },
+      {
+        "Q": "HtmlAnchor include full URL or just fragment?",
+        "Answer": "Deferred"
+      },
+      {
+        "Q": "Prioritise PDF vs HTML when both exist?",
+        "Answer": "Deferred"
+      },
+      {
+        "Q": "Link both page and anchor when possible?",
+        "Answer": "Deferred"
+      }
+    ]
+  },
+  {
+    "Id": "IDX-019",
+    "Title": "PartIndex / PartTotal Guarantees",
+    "Status": "Accepted",
+    "Description": "PartIndex (1-based) and PartTotal (total chunks) provide ordering and completeness metadata for each chunk.",
+    "Decision": {
+      "PartIndexRequired": true,
+      "PartTotalRequired": true,
+      "IndexBase": "1",
+      "Guarantee": "1 ≤ PartIndex ≤ PartTotal",
+      "SamePartTotalAcrossChunks": true,
+      "SimpleDeterministicSystem": true
+    },
+    "Rationale": "Ordering and completeness metadata simplifies tooling; 1-based indexing aligns with intuitive user interfaces; deterministic assignment supports reliable ingestion workflows."
+  },
+  {
+    "Id": "IDX-020",
+    "Title": "LineStart / LineEnd Expectations",
+    "Status": "Accepted",
+    "Description": "LineStart and LineEnd denote the inclusive 1-based line number range a chunk covers in the source document; CharStart/CharEnd optional offsets. Additional rule: any source line >500 characters is truncated at 500 chars before chunking.",
+    "Decision": {
+      "LineStartRequiredForText": true,
+      "LineEndRequiredForText": true,
+      "LineBase": "1",
+      "LineEndGreaterOrEqualStart": true,
+      "CharOffsetsOptional": true,
+      "MaxLineSpanEnforced": false,
+      "MidLineSplitAllowed": { "LineEndEqualsLineStart": true },
+      "TruncateSourceLineMaxChars": 500
+    },
+    "Rationale": "Line boundaries improve traceability; requiring them for text ensures consistency; mid-line splits supported; truncation of excessively long lines protects embedding budgets and chunking logic."
+  },
+  {
+    "Id": "IDX-021",
+    "Title": "CharStart / CharEnd Semantics",
+    "Status": "Accepted",
+    "Description": "CharStart and CharEnd define 0-based inclusive character offset range within normalized source text for the chunk.",
+    "Decision": {
+      "CharStartOptional": true,
+      "CharEndOptional": true,
+      "CharStartMin": 0,
+      "CharEndMinCharStart": true,
+      "OffsetsBasedOnNormalizedText": true,
+      "MidLineSplitPermitted": true,
+      "SubstringMustMatchTextNormalized": true
+    },
+    "Rationale": "Character offsets provide precise location pointers for advanced tooling; optionality keeps the model flexible; inclusive range avoids ambiguity on boundaries.",
+    "ResolvedQuestions": [
+      {
+        "Q": "Require offsets for all text-based chunks?",
+        "Answer": "No"
+      },
+      {
+        "Q": "Inclusive definition if splitting mid-char?",
+        "Answer": "Inclusive"
+      },
+      {
+        "Q": "Should substring match exactly?",
+        "Answer": "Yes"
+      },
+      {
+        "Q": "Enforce rounding/truncation on offsets?",
+        "Answer": "No"
+      },
+      {
+        "Q": "Compute offsets only above token threshold?",
+        "Answer": "No"
+      }
+    ]
+  },
+  {
+    "Id": "IDX-022",
+    "Title": "How We Store Example Values in Spec",
+    "Status": "Proposed",
+    "Description": "Guidelines for including and formatting example values in the spec (markdown and JSON L) and long-term plan to harvest live data.",
+    "Decision": {
+      "ProvideInlineExamples": true,
+      "MatchSerializationFormat": true,
+      "IncludeExamplesAttributeInJSONL": true,
+      "EnsureConsistencyAcrossExamples": true,
+      "LongTermPlan": "Harvest live data from vector DB to populate real examples"
+    },
+    "Rationale": "Using illustrative values improves comprehension, tooling support and spec clarity; aligning with serialization format reduces mistakes; live-data examples increase realism and adherence to specification best practices."
+  },
+  {
+    "Id": "IDX-023",
+    "Title": "ExternalId Field Strategy",
+    "Status": "Accepted",
+    "Description": "ExternalId is an optional external locator for chunk/document; flexible format, no uniqueness or versioning required.",
+    "Decision": {
+      "FieldOptional": true,
+      "FormatEnforced": false,
+      "UniquenessRequired": false,
+      "PopulateWhenUnavailable": false,
+      "MandatoryForClients": false,
+      "VersioningRequired": false
+    },
+    "Rationale": "Flexible external references support diverse use-cases; keeping it auxiliary avoids complicating core indexing logic."
+  },
+  {
+    "Id": "IDX-024",
+    "Title": "SubKind Definitions for Server Code Base",
+    "Status": "Accepted",
+    "Description": "Defines the semantic SubKind values and their categorization for server-side C# source files.",
+    "Decision": {
+      "SubKinds": [ "DomainDescription", "Model", "Manager", "Repository", "Controller", "Service", "Interface", "Other" ],
+      "PriorityOrder": [ "DomainDescription", "Model", "Manager", "Repository", "Controller", "Service", "Interface", "Other" ],
+      "SymbolTypeMapping": {
+        "classes": "component",
+        "interfaces": "interface"
+      },
+      "ChunkingStrategyVaries": true,
+      "MixedPurposeClassesFlagged": true,
+      "AutoReclassification": false,
+      "UnmappedFilesManualReview": false,
+      "ExtensibilityOfSubKindList": false
+    },
+    "Rationale": "Controlled SubKind values enable richer metadata filtering; clear heuristics reduce ambiguity in classification; supports search, analytics and code-understanding workflows."
+  },
+  {
+    "Id": "IDX-030",
+    "Title": "Local Indexing & Persisted SubKind Override",
+    "Status": "Accepted",
+    "Description": "Defines local index store for file metadata including ContentHash & SubKind, and change-detection logic using Reindex directives.",
+    "Decision": {
+      "RecordFields": [ "FilePath", "DocId", "ContentHash", "SubKind", "LastIndexedUtc", "FlagForReview", "Reindex" ],
+      "ReuseIfHashAndSubKindMatch": true,
+      "ReindexValues": [ "chunk", "full" ],
+      "OverrideStoredSubKindPreferred": true,
+      "ManualOverrideSetsReindex": "chunk",
+      "FlagMixedOrUnmapped": true,
+      "LightweightStore": true
+    },
+    "Rationale": "Ensures efficient ingestion by skipping unchanged files; supports manual override and re-classification; gives control over chunking/embedding via Reindex field."
+  },
+  {
+    "Id": "IDX-031",
+    "Title": "SubKind Heuristics & Detection Rules",
+    "Status": "Accepted",
+    "Description": "Detection heuristics and rules for classifying server-side C# source files into SubKinds, using attributes, base class, interface name, namespace/folder patterns.",
+    "Decision": {
+      "HeuristicOrder": [ "DomainDescription", "Model", "Manager", "Repository", "Controller", "Service", "Interface", "Other" ],
+      "DetectionCriteria": {
+        "DomainDescription": [ "AttributeDomainDescriptor", "AttributeDomainDescription", "NamespaceIncludes(.Domain|.Descriptors)" ],
+        "Model": [ "AttributeEntityDescription", "InheritsEntityBase", "NamespaceIncludes(Models)" ],
+        "Manager": [ "ImplementsI*Manager", "InheritsManagerBase", "NamespaceIncludes(Managers)" ],
+        "Repository": [ "InheritsDocumentDBRepoBase", "InheritsTableStorageBase", "ImplementsI*Repository", "NamespaceIncludes(Repositories)" ],
+        "Controller": [ "InheritsLagoVistaBaseController", "NamespaceIncludes(Controllers)", "HasAttributeApiController" ],
+        "Service": [ "ImplementsI*Service", "NamespaceIncludes(Services)", "NotMatchedHigherHeuristics" ],
+        "Interface": [ "TypeIsInterface", "NameStartsWithI" ],
+        "Other": []
+      },
+      "SymbolTypeMapping": {
+        "classes": "component",
+        "interfaces": "interface"
+      },
+      "ChunkingStrategyVaries": true,
+      "FlagOtherOrMixed": true
+    },
+    "Rationale": "Systematic classification of legacy code base supports richer metadata filtering; adaptable chunking per artifact type; enables tooling and analytics over role-based categories."
   }
+
 
 
 

@@ -337,3 +337,431 @@ The `Priority` metadata field denotes the relative importance of each chunk/docu
 3. Should different asset kinds have separate scales? → Yes, allowed.  
 4. Should fractional values be allowed? → No, integers only.  
 5. Should priority be immutable? → No, adjustable over time.  
+
+### IDX-012  
+**Title:** JSON Field Naming Convention  
+**Status:** Accepted  
+
+**Description:**  
+Defines the naming style and field-presence rules for JSON payloads in the vector database metadata contract. Ensures consistency across ingestion, storage, tooling, and client systems.
+
+**Decision:**  
+- JSON property names will use **PascalCase** exactly matching the corresponding C# property names (e.g., `OrgId`, `ProjectId`, `DocId`, `ContentTypeId`, `ContentType`, `IsRagMetadata`).  
+- No exceptions: all keys must use PascalCase (matching the C# class), not camelCase, snake_case, kebab-case, or mixed.  
+- Fields whose values are `null` will be **omitted entirely** (i.e., the property is not serialized when the value is null).  
+- Serialize only present properties; clients and tooling must handle missing keys as equivalent to null.  
+- External systems requiring different casing or naming for display should handle transformation at the client layer; the storage schema remains PascalCase.
+
+**Rationale:**  
+- Matching C# property names exactly simplifies serialization/deserialization and reduces mapping complexity for .NET-centric tooling.  
+- Enforcing a single consistent naming convention (PascalCase) avoids confusion and reduces the chance of metadata inconsistencies.  
+- Omitting null-valued fields reduces payload size and clearly signals non-applicability of a property rather than “unknown” or “empty” value. :contentReference[oaicite:0]{index=0}  
+- Since many metadata fields are optional, omitting nulls leads to leaner JSON and fewer boilerplate keys.
+
+**Resolved Questions:**  
+1. Should we allow aliasing of key names for backward compatibility? → *No*.  
+2. Should null-valued properties be omitted or included with `"PropertyName": null`? → *Omit properties entirely*.  
+3. Will clients/tools external to .NET expect different casing (e.g., camelCase)? → *Handled at client layer; storage schema remains PascalCase*.  
+
+### IDX-013  
+**Title:** UpdatedUtc Logic  
+**Status:** Accepted  
+
+**Description:**  
+The `UpdatedUtc` metadata field (which would represent when the underlying source content was last modified) is **omitted** from the indexing contract. Since indexing will only happen when content changes, tracking a separate “last‐modified” timestamp is deemed unnecessary at this time.
+
+**Decision:**  
+- Remove the `UpdatedUtc` field from the metadata contract.  
+- The ingestion/indexing workflow will only index or re‐index when “required” — i.e., when a content change is detected.  
+- As a result, there is no need for a separate timestamp to indicate staleness or modification beyond the `IndexedUtc`.  
+- The field is retained here as a design placeholder if future requirements change; otherwise, it will not be used.
+
+**Rationale:**  
+- Simplifies the metadata model by eliminating a field that does not add value under current indexing practices.  
+- Avoids unnecessary tracking of timestamps when the system already controls when re‐indexing occurs.  
+- Keeps the payload lean and avoids storing unused or redundant fields.
+
+**Notes:**  
+We keep this decision in the contract for possible future reconsideration. If ingestion logic evolves to support incremental updates, change detection, or version auditing, the `UpdatedUtc` field can be introduced at that time.
+
+### IDX-014  
+**Title:** Token Field Definitions  
+**Status:** Accepted  
+
+**Description:**  
+The fields `EstimatedTokens`, `ChunkSizeTokens`, and `OverlapTokens` capture key metrics about how source text is broken into chunks for embedding and indexing.  
+- `EstimatedTokens`: Estimate of the number of tokens in the chunk before embedding.  
+- `ChunkSizeTokens`: (Optional) The actual token count of the chunk at embedding time.  
+- `OverlapTokens`: (Optional) The number of tokens shared with the previous chunk in a sliding-window context.  
+
+**Decision:**  
+- `EstimatedTokens` is **required** for every chunk/document and must be a positive integer.  
+- `ChunkSizeTokens` and `OverlapTokens` are **optional** (nullable) since not all chunkers compute them.  
+- Use **PascalCase** naming: `EstimatedTokens`, `ChunkSizeTokens`, `OverlapTokens`.  
+- Populate `EstimatedTokens` using the chunker’s heuristic; if actual token count is known, populate `ChunkSizeTokens`.  
+- Slide-window overlap logic can populate `OverlapTokens`; if not used, leave null.  
+- Downstream analytics/monitoring use these fields for diagnostics, cost estimation, and chunk-strategy tuning.  
+
+**Rationale:**  
+- Having an estimate benchmark enables analytics on chunking strategy performance and embedding cost. :contentReference[oaicite:0]{index=0}  
+- Requiring `EstimatedTokens` ensures every chunk reports at least size approx, which aids comparability.  
+- Optional fields allow richer metrics when available without forcing all chunkers to compute them.  
+- PascalCase naming stays consistent with other metadata field conventions.  
+
+**Resolved Questions:**  
+1. Should we enforce a maximum token threshold for `ChunkSizeTokens`? → *Deferred*.  
+2. Should `OverlapTokens` always be smaller than `ChunkSizeTokens` and validated? → *No enforcement now*.  
+3. If a chunker splits by lines rather than tokens, should `EstimatedTokens` be null? → *No*, still compute a reasonable estimate.  
+4. Should we enforce rounding/truncation of token counts? → *No specification now*.  
+5. Should we track token budget or model usage separately (input vs output)? → *No, may revisit later*.  
+
+### IDX-015  
+**Title:** SourceSha256 Rules  
+**Status:** Deprecated  
+
+**Description:**  
+Previously the `SourceSha256` field stored a SHA-256 hash of the entire document’s normalized content for change detection. Under the updated indexing strategy, this document-level hash is no longer required and is removed from the metadata contract.
+
+**Decision:**  
+- The `SourceSha256` field is **removed** from the contract and will not be used for new ingestion runs.  
+- Change detection will instead rely on `ContentHash` at the chunk (or file-level chunk) granularity.  
+- Existing indexed data containing `SourceSha256` may remain for archival or audit purposes but the ingestion engine will ignore it for change-detection logic going forward.  
+- The contract must be updated to reflect absence of `SourceSha256`, and any tooling / serialization logic must not expect it.
+
+**Rationale:**  
+- Given the current “re-index entire file on any change” strategy, the document-level hash adds redundancy without additional benefit.  
+- Simplifying the contract reduces metadata fields and avoids maintaining dual hashes for document and chunks.  
+- Focusing on `ContentHash` provides sufficient change-detection granularity and aligns with ingestion workflow.  
+- Removing `SourceSha256` avoids confusion and ensures the contract remains lean and easy to maintain.
+
+**Notes:**  
+Should future versions of the ingestion process adopt incremental chunk-level updates, the `SourceSha256` field could be re-introduced if needed. For now it is deprecated and excluded from new data.
+
+
+### IDX-016  
+**Title:** ContentHash Rules  
+**Status:** Accepted  
+
+**Description:**  
+The `ContentHash` field stores a hash value representing the normalized text content of a chunk (or file). This fingerprint is used for detecting changes at chunk-level and determining when re-indexing is needed.
+
+**Decision:**  
+- `ContentHash` is **required** for each chunk (or file-level object when treated as a single chunk).  
+- Compute the hash using the chunk’s full normalized text (normalize line‐endings to `\n`, apply repository/ingestion normalisation steps such as trimming) **after** chunking (or for a full‐file chunk).  
+- Use the **SHA-256** algorithm producing a 64-hex lowercase string.  
+- Store the resulting hash in `ContentHash`. No separate `SourceSha256` field will be used.  
+- At ingestion time, before embedding or indexing: retrieve the prior `ContentHash` (if available). If the newly computed `ContentHash` differs from the stored value (or new chunks appear/disappear), then treat the chunk/file as changed and trigger re-indexing of all relevant points.  
+- The chunking process must remain consistent (splitting logic, normalization) so that unchanged text produces identical hashes across runs.  
+- If chunking logic changes significantly (e.g., different overlap, token budget, splitting rules), ingestion should treat the change as a full re-index-trigger, because prior hashes may no longer align.
+
+**Rationale:**  
+- Having a single reliable hash (`ContentHash`) simplifies change detection and indexing workflows by focusing on normalized text content.  
+- Using SHA-256 ensures collision resistance and repeatability across platforms. :contentReference[oaicite:0]{index=0}  
+- Avoiding a separate document-level hash (`SourceSha256`) reduces redundancy and aligns with the current strategy of re-indexing a file entirely on any content change.  
+- Normalizing line endings ensures deterministic hashing across different OS/platform sources.
+
+**Resolved Questions:**  
+1. Should the hash algorithm always be SHA-256? → *Yes*.  
+2. If chunking/normalization changes, how handle old hashes? → *Full re-index logic triggered.*  
+3. Should chunk identity mapping be impacted when PartIndex changes? → *Chunking logic must be stable; if not, treat as changed set.*  
+4. Should embedding vector or metadata be included in the hash? → *No; only normalized text content.*  
+5. Should we record a timestamp for when `ContentHash` is computed? → *No; outside scope for now.*
+
+**Notes:**  
+This design assumes the ingestion pipeline will reliably compute and compare `ContentHash` values for change detection and skip outdated embeddings. If in future the strategy evolves to preserve unchanged chunks selectively, the contract can be extended (e.g., record old chunk IDs, versioning).  
+
+### IDX-017  
+**Title:** BlobVersionId Rules  
+**Status:** Accepted  
+
+**Description:**  
+The `BlobVersionId` field was originally intended to store the version identifier of the underlying blob/file at the time of indexing. Under the current ingestion strategy—where we keep only fresh indexes in the vector database and maintain a 1:1 mapping with the latest blob content—version tracking is not required. Hence, `BlobVersionId` will remain optional and unused for version-control logic.
+
+**Decision:**  
+- `BlobVersionId` will be **optional** and may remain `null`.  
+- We will **not** rely on `BlobVersionId` for change detection or indexing triggers.  
+- If a storage system returns a version ID and it is captured, we may store it in the metadata payload for informational/audit purposes, but ingestion logic will ignore it.  
+- The ingestion/indexer assumes the newest blob content is current; any changes are detected via content-hashing workflows not via version ID.  
+- No legacy reliance on `BlobVersionId` needed—the contract and tooling should not require it.
+
+**Rationale:**  
+- Since the workflow is simpler (always index fresh content), tracking storage-version identifiers adds unnecessary complexity.  
+- Removing the dependency on versioning decouples blob storage features (e.g., Azure versioning) from indexing logic, simplifying ingestion.  
+- Keeps the metadata model lean by not enforcing fields that carry no functional value under the current strategy.  
+- If future requirements evolve (e.g., support for incremental updates, historical versions, rollback), the contract can be extended to re-introduce version semantics.
+
+**Resolved Questions:**  
+1. Should `BlobVersionId` be required in supported storage systems? → *No*.  
+2. Should we store a timestamp of the version alongside `BlobVersionId`? → *No*.  
+3. How do we handle storage systems that disable versioning (after previously enabled)? → *Not applicable for change detection.*  
+4. Should `BlobVersionId` be used in `DocId`/`PointId` generation? → *No*.  
+5. If a blob is replaced without versioning, should we treat it specially? → *No — we rely on content-hash logic instead.*
+
+### IDX-018  
+**Title:** PDF / HTML Mapping  
+**Status:** Proposed  
+
+**Description:**  
+The fields `PdfPages` and `HtmlAnchor` support mappings from content chunks to their location in non-plain-text source artifacts (specifically PDF documents or rendered HTML). This allows linking a vector chunk back to a specific page number(s) in a PDF or a fragment/anchor in HTML, enabling richer user navigation and traceability of search results.
+
+**Decision:**  
+- Include `PdfPages` (int[]; 1-based page numbers) and `HtmlAnchor` (string fragment identifier) as **optional** metadata in the contract.  
+- `PdfPages` should list one or more page numbers that the chunk text corresponds to. If spanning multiple pages, list them or provide a contiguous range.  
+- `HtmlAnchor` should hold the fragment/anchor string (e.g., `#section-3-overview`) in the rendered HTML that matches the chunk.  
+- For content types where PDF/HTML mapping is not relevant (e.g., source code, plain Markdown), these fields remain null.  
+- If both PDF and HTML formats exist for a document, populate whichever mapping is available; optionally both if supported.  
+- The ingestion pipeline may attempt to extract mapping data during processing; failure to extract should *not* block indexing — fields remain null.  
+
+**Rationale:**  
+- Many documents (user guides, specs, white papers) come in PDF or HTML formats; mapping vector chunks to page numbers or anchors enhances navigation from results to source context.  
+- Page/anchor mapping supports better user experience in retrieval applications (e.g., “See page 45 of this document”).  
+- Making fields optional preserves contract simplicity for asset types where it’s irrelevant.  
+- Aligns with metadata best practice: optional navigation pointers complement core content metadata. :contentReference[oaicite:0]{index=0}  
+
+**Resolved Questions:**  
+1. Should we enforce that at least one of `PdfPages` or `HtmlAnchor` is provided for PDF/HTML assets? → *Deferred.*  
+2. Should `PdfPages` support compact ranges (e.g., “12-15”) vs list of individual numbers? → *Deferred.*  
+3. Should `HtmlAnchor` include full URL/fragment or only fragment? → *Deferred.*  
+4. If both PDF and HTML formats exist, which mapping do we prioritise? → *Deferred.*  
+5. Should we link to both page and anchor when available, or only one? → *Deferred.*  
+
+1. ### IDX-019  
+**Title:** PartIndex / PartTotal Guarantees  
+**Status:** Accepted  
+
+**Description:**  
+The metadata fields `PartIndex` and `PartTotal` represent the position of a chunk within a document (or file) and the total number of chunks derived from that document, respectively. These fields provide ordering and completeness guarantees for chunk sets in the indexing pipeline.
+
+**Decision:**  
+- `PartIndex` and `PartTotal` are **required** for every chunk.  
+- `PartIndex` uses 1-based numbering (i.e., the first chunk has `PartIndex = 1`).  
+- `PartTotal` equals the total number of chunks produced for the document in the ingestion run, and is calculated *after* the chunks are identified.  
+- Guarantee that for each chunk: `1 ≤ PartIndex ≤ PartTotal`.  
+- All chunks derived for a given document in that ingestion run share the same `PartTotal` value.  
+- Chunk consumers (UI, analytics, tooling) may rely on ordering via `PartIndex` and completeness via `PartTotal`.  
+- Simplified system: no enforcement of maximum limits, no chunk run ID, no optional ordering—system remains simple and deterministic.
+
+**Rationale:**  
+Providing explicit ordering and completeness metadata simplifies downstream tooling and enhances clarity (e.g., “chunk 3 of 12”). The simplicity of always calculating `PartTotal` and using 1-based indexing aligns with deterministic ingestion workflows and avoids ambiguity.
+
+### IDX-020  
+**Title:** LineStart / LineEnd Expectations  
+**Status:** Accepted  
+
+**Description:**  
+The metadata fields `LineStart` and `LineEnd` indicate the 1-based inclusive line number range within the source document that a given chunk covers. They enable traceability from the chunk back to the exact source location.
+
+**Decision:**  
+- For all **text-based** chunks, `LineStart` and `LineEnd` are **required** integer fields.  
+- `LineStart` must be ≥ 1.  
+- `LineEnd` must be ≥ LineStart.  
+- `LineStart` and `LineEnd` define an inclusive range: the chunk covers source lines from `LineStart` through `LineEnd`.  
+- If the chunker splits mid-line (due to token limits or overlaps), then `LineEnd` may equal `LineStart`.  
+- `CharStart` and `CharEnd` (character offsets) are **optional**; if the chunker does not track them, they should remain `null`.  
+- No fixed maximum span on number of lines a chunk may cover.  
+- Additional rule: If a single source line exceeds **500 characters**, the ingestion logic will truncate that line at 500 characters before chunking to avoid oversized single-line chunks (e.g., containing base-64 blobs).  
+- For non-text assets or when line numbering is not meaningful, `LineStart`/`LineEnd` may remain `null`.
+
+**Rationale:**  
+- Including line-number boundaries enhances traceability and gives consumers (UI, tooling) something tangible: e.g., “see lines 101-128 of file X”.  
+- Making the fields required for text content ensures consistent metadata coverage rather than leaving important location data blank.  
+- Allowing `LineEnd = LineStart` addresses cases where splitting mid-line is unavoidable (e.g., huge single lines).  
+- The 500-character truncation rule prevents pathological cases (very long blob lines) that could distort token budgets, embedding performance, or chunk counts.  
+- Keeping `CharStart`/`CharEnd` optional keeps the metadata model flexible for chunkers that don’t track character offsets.
+
+**Resolved Questions:**  
+1. Should `LineStart`/`LineEnd` be required for text-based chunks? → *Yes.*  
+2. Should `CharStart`/`CharEnd` be tracked? → *Yes (optional).*  
+3. If splitting mid-line, should `LineEnd` point to the same line? → *Yes.*  
+4. Should there be a maximum number of lines per chunk? → *No.*  
+5. Should `CharStart`/`CharEnd` be null if not tracked? → *Yes.*
+
+**Notes:**  
+Ingestion tooling must apply consistent line numbering and truncation logic so that downstream consumers can rely on `LineStart`/`LineEnd`. The truncation rule for very long lines should be documented and tested (especially for code files or embedded blobs).
+
+### IDX-021  
+**Title:** CharStart / CharEnd Semantics  
+**Status:** Accepted  
+
+**Description:**  
+The metadata fields `CharStart` and `CharEnd` represent the 0-based character offset range within the normalized source text that a given chunk covers. They provide fine-grained location pointers that complement `LineStart`/`LineEnd`, enabling tools to precisely locate the chunk text for uses such as snippet extraction or editor linking.
+
+**Decision:**  
+- `CharStart` and `CharEnd` are **optional** integer fields and may be `null` if the chunker does not compute exact character offsets.  
+- If populated:  
+  - `CharStart` must be ≥ 0 and points to the index of the first character of the chunk in the normalized source text.  
+  - `CharEnd` must be ≥ `CharStart` and points to the index of the last character of the chunk (inclusive).  
+  - Offsets are based on the normalized text used for embedding (after line-ending normalization, trimming, etc.).  
+- Splitting mid-line is permitted; in such cases both offsets still reflect the range within the normalized text.  
+- If `CharStart`/`CharEnd` are present, downstream consumers may use them for exact snippet extraction; if absent, consumers may fall back to `LineStart`/`LineEnd`.  
+- No requirement to compute offsets for all chunk types; text-based chunks are **encouraged** but not mandatory to supply them.
+
+**Rationale:**  
+- Character offsets provide higher precision than line numbers alone—beneficial for UI tooling such as highlights or deep linking.  
+- Making them optional preserves metadata flexibility for chunkers that cannot (or choose not to) compute exact offsets.  
+- Definition of inclusive ranges (start & end) avoids ambiguity around range boundaries.  
+- This supports consistent chunk metadata without over-mandating complexity where it may be unnecessary.
+
+**Resolved Questions:**  
+1. Must `CharStart`/`CharEnd` be required for all text-based chunks? → *No.*  
+2. If the chunker splits mid-character, how should `CharEnd` be defined? → *Inclusive (last character index included).*  
+3. Should the substring from `CharStart` to `CharEnd` exactly match `TextNormalized`? → *Yes.*  
+4. Should we enforce offset rounding/truncation when preprocessing? → *No.*  
+5. Should offsets only be computed when `EstimatedTokens` or `ChunkSizeTokens` exceed a threshold? → *No.*  
+
+**Notes:**  
+Ingestion tools must ensure any computed offsets align correctly with the normalized source text to prevent mismatches in snippet extraction or linking. When `CharStart`/`CharEnd` are omitted, consumer tools must rely on `LineStart`/`LineEnd` or other fallback logic.
+
+### IDX-022  
+**Title:** How We Store Example Values in Spec  
+**Status:** Proposed  
+
+**Description:**  
+This decision governs how we include and format example values in our specification documents (Markdown) and JSON-L records for each metadata field in the indexing contract. The goal is to improve clarity, tooling support, and developer comprehension by providing concrete illustrative data.
+
+**Decision:**  
+- Example values will be provided **in-line** in the Markdown spec for each metadata field that is non-trivial or may be ambiguous. For example:  
+  ```json
+  "DocId": "A1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6"
+
+we will provide examples from live data once our vector database is populated.
+
+### IDX-023  
+**Title:** ExternalId Field Strategy  
+**Status:** Accepted  
+
+**Description:**  
+The `ExternalId` field stores an optional external locator for the chunk/document, enabling linking to external systems, UI paths or debugging references.
+
+**Decision:**  
+- `ExternalId` is optional (nullable).  
+- No enforced pattern/format is required; any string may be used if provided.  
+- Uniqueness is *not* required across all items.  
+- It may be left `null` when no external reference is available; indexing proceeds regardless.  
+- Downstream clients may use `ExternalId` for deep-linking or diagnostics but should *not* rely on it for core logic.  
+- No versioning or timestamping of `ExternalId` is required when source changes.
+
+**Rationale:**  
+Allowing flexible, optional external identifiers supports a wide variety of reference use-cases without complicating ingestion. Keeping this auxiliary ensures core indexing logic remains stable and uncoupled from external link systems.
+
+**Notes:**  
+If future versions require mandatory external referencing or versioned linking, this decision may be revisited.
+
+### IDX-024  
+**Title:** SubKind Definitions for Server Code Base  
+**Status:** Accepted  
+
+**Description:**  
+Defines the allowed `SubKind` values and their semantics for server-side C# source files in the indexing pipeline, and how they will be classified and handled.
+
+**Decision:**  
+- The following `SubKind` values are defined (PascalCase):  
+  - `DomainDescription`  
+  - `Model`  
+  - `Manager`  
+  - `Repository`  
+  - `Controller`  
+  - `Service`  
+  - `Interface`  
+  - `Other` (fallback)  
+- Heuristic detection order: DomainDescription → Model → Manager → Repository → Controller → Service → Interface → Other.  
+- Once a file/class matches a higher-priority SubKind, lower-priority checks are not applied.  
+- `SymbolType` metadata: “component” for classes, “interface” for interface types.  
+- Chunking strategy will vary by SubKind (e.g., specific rules per kind).  
+- Additional decisions:  
+  - Chunking strategy variation **yes** (we will design different chunk strategies per SubKind).  
+  - Mixed-purpose classes should be **flagged** in the index output for manual review.  
+  - Automatic re-classification when role changes = **no**; this scenario will not be supported.  
+- Unmapped files do **not** trigger manual review unless flagged per the mixed-purpose rule.  
+- The SubKind list is **not** extensible/versioned at this time.
+
+**Rationale:**  
+A controlled set of `SubKind` values allows consistent classification, filtering, retrieval, and analytics of chunks across the codebase. The priority and fallback logic minimize ambiguity in a legacy codebase with inconsistent naming conventions. Differentiating chunking behaviour by SubKind supports more efficient embeddings and retrieval for different code artifact types.
+
+### IDX-030  
+**Title:** Local Indexing & Persisted SubKind Override  
+**Status:** Accepted  
+
+**Description:**  
+Defines the mechanism by which the ingestion engine maintains a local index of previously processed source files, enabling efficient change detection, stable use of manually corrected `SubKind` values, and control over reindexing behaviour via a `Reindex` directive.
+
+**Decision:**  
+- Local index record for each file will include:  
+  - `FilePath` (normalized)  
+  - `DocId`  
+  - `ContentHash`  
+  - `SubKind`  
+  - `LastIndexedUtc`  
+  - `FlagForReview` (boolean)  
+  - `Reindex` (optional string: “chunk”, “full”, or null/missing)  
+- Ingestion logic:  
+  1. Compute `ContentHash`.  
+  2. Retrieve index record by `FilePath`.  
+     - If record exists **and** `ContentHash` matches **and** `SubKind` matches **and** `Reindex` is null/missing → update `LastIndexedUtc`; skip file in indexing pipeline.  
+     - If record exists **and** (`ContentHash` differs **or** `SubKind` differs **or** `Reindex = “chunk”`) → include file in pipeline; use stored `SubKind`; reset `Reindex` to null.  
+     - If record does not exist **or** `Reindex = “full”` → include file; run heuristic detection to determine `SubKind`; persist new record; reset `Reindex` to null.  
+- Manual override of `SubKind` may set `Reindex = “chunk”` to force re-chunking/embedding/upload while preserving the manually set `SubKind`.  
+- Files flagged for review (`FlagForReview = true`) should appear in indexing logs for manual correction.  
+- The local index serves as authoritative for `SubKind`; heuristic detection only runs when needed.
+
+**Rationale:**  
+- Preserves classification stability by reusing `SubKind` unless changes necessitate update.  
+- Efficiently skips unchanged files, reducing redundant chunking/embedding.  
+- `Reindex` field gives control over forced re-chunking/embedding without needing to change heuristics.  
+- Manual override support ensures mis-classified files can be corrected and re-indexed appropriately.
+
+**Notes:**  
+The local index approach is core to the ingestion pipeline’s performance and correctness. Future enhancements may include propagation of changes to related files (e.g., dependent managers when a model changes) and extended metadata in the local index.
+
+### IDX-031  
+**Title:** SubKind Heuristics & Detection Rules  
+**Status:** Accepted  
+
+**Description:**  
+Defines the detection heuristics and rules by which the ingestion engine classifies server-side C# source files into the defined `SubKind` categories (as per IDX-024). The heuristics leverage attributes, base-class inheritance, interface naming patterns, namespace/folder conventions, and file-path metadata. Priority ordering and conflict resolution logic are included.
+
+**Decision:**  
+- The following heuristic detection order and criteria apply for each `SubKind` (evaluated top-to-bottom):  
+  1. **DomainDescription** — Class is decorated with `[DomainDescriptor]` or `[DomainDescription]` attribute, or contains static properties of type `DomainDescription`, or namespace/folder includes `.Domain` or `.Descriptors`.  
+  2. **Model** — Class decorated with `[EntityDescription]`, or inherits (directly or transitively) from `EntityBase`, or resides in a namespace/folder segment containing `.Models`.  
+  3. **Manager** — Class implements an interface whose name ends with `Manager`, or inherits from `ManagerBase`, or is in namespace/folder segment `.Managers`.  
+  4. **Repository** — Class inherits from one of `DocumentDBRepoBase`, `TableStorageBase`, `CloudFileStorage`, or implements interface whose name ends with `Repository`, or namespace/folder segment `.Repositories`.  
+  5. **Controller** — Class inherits from `LagoVistaBaseController` (or equivalent), or namespace/folder segment `.Controllers`, or decorated with `[ApiController]`.  
+  6. **Service** — Class implements interface with suffix `Service`, or resides in namespace/folder segment `.Services`, provided it has not matched a higher-priority SubKind.  
+  7. **Interface** — File declares an `interface IXXX` and does not match any higher SubKind heuristic.  
+  8. **Other** — Fallback for all files not matching any of the above heuristics.  
+- Once a `SubKind` is matched, lower-priority heuristics are **not evaluated**.  
+- If a file/class matches multiple heuristics at the same priority level, it shall be **flagged for review** and assigned the highest-priority SubKind.  
+- The ingestion engine shall apply Roslyn or equivalent syntax/semantic analysis to detect:  
+  - Attributes (e.g., `Symbol.GetAttributes()`)  
+  - Base-class inheritance (`Symbol.BaseType` or `AllBaseTypes()`)  
+  - Interface implementations (`Symbol.AllInterfaces.Any(i => i.Name.EndsWith(...))`)  
+  - Namespace segments (`Symbol.ContainingNamespace.ToDisplayString()` or `SyntaxTree.FilePath`)  
+- `SubKind` is set to the exact PascalCase value matched (e.g., `"Model"`).  
+- `SymbolType` is set as follows:  
+  - For classes: `"component"`  
+  - For interfaces: `"interface"`  
+- Chunking strategy may differ by `SubKind`. For example:  
+  - **Model**: chunk at class level or per property if large.  
+  - **Manager/Repository/Service**: chunk per public method.  
+  - **Controller**: chunk per HTTP action method.  
+  - **Interface**: chunk per method signature or entire interface.  
+  - **DomainDescription**: chunk per static description property.  
+  - **Other**: chunk the entire file as a single chunk.  
+- Files classified as `Other` or flagged for review should appear in indexing logs for manual inspection and possible future heuristics refinement.
+
+**Rationale:**  
+- Provides a systematic, consistent method for classifying a large and evolving legacy codebase where naming conventions are imperfect.  
+- Enables richer metadata filtering, search and analytics based on semantic roles (models vs managers vs controllers).  
+- Helps chunking engine optimize embed size and context by adapting strategy per SubKind.  
+- Flagging ambiguous files allows incremental refinement of classification heuristics and avoids mis-classification risk.
+
+**Resolved Questions:**  
+1. Should we vary embedding/chunking parameters by `SubKind`? → *No*  
+2. Are there additional heuristics needed? → *No*  
+3. How should the ingestion engine handle nested types or partial classes across files relative to `SubKind` detection? → *No*  
+4. Should we permit project-specific custom `SubKind` values beyond the standard list? → *No*  
+5. What thresholds determine when a chunking strategy should escalate from class-level to property/method-level? → *Deferred*
+
+**Notes:**  
+This heuristics spec supports stable classification via detection rules. As you index your code base, you may refine heuristics to reduce the number of `Other` classifications and minimize flagging over time.
