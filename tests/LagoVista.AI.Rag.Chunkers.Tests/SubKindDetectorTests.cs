@@ -69,6 +69,24 @@ public class DeviceManager : IDeviceManager
         }
 
         [Test]
+        public void Detects_Startup_From_ClassName()
+        {
+            var source = @"
+public class Startup
+{
+}
+";
+
+            var result = SubKindDetector.DetectForFile(source, "src/Repositoriess/startup.cs");
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.SubKind, Is.EqualTo(CodeSubKind.Startup));
+                Assert.That(result.PrimaryTypeName, Is.EqualTo("Startup"));
+            });
+        }
+
+        [Test]
         public void Detects_Repository_From_BaseClass()
         {
             var source = @"
@@ -83,6 +101,61 @@ public class DeviceRepository : DocumentDBRepoBase<Device>
             {
                 Assert.That(result.SubKind, Is.EqualTo(CodeSubKind.Repository));
                 Assert.That(result.PrimaryTypeName, Is.EqualTo("DeviceRepository"));
+            });
+        }
+
+        [Test]
+        public void Detects_Repository_From_TableBaseClass()
+        {
+            var source = @"  public class LabelSampleRepo
+                    {
+                    }";
+
+            var result = SubKindDetector.DetectForFile(source, "src/Repo/LabelSampleRepo.cs");
+            WriteResult(result);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.SubKind, Is.EqualTo(CodeSubKind.Repository));
+                Assert.That(result.PrimaryTypeName, Is.EqualTo("LabelSampleRepo"));
+            });
+
+        }
+
+
+        [Test]
+        public void Detects_Repository_If_Class_Ends_With_Reop()
+        {
+            var source = @"   class SampleMediaRepo : ISampleMediaRepo
+    {
+   
+                    }";
+
+            var result = SubKindDetector.DetectForFile(source, "src/Repo/LabelSampleRepo.cs");
+            WriteResult(result);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.SubKind, Is.EqualTo(CodeSubKind.Repository));
+                Assert.That(result.PrimaryTypeName, Is.EqualTo("SampleMediaRepo"));
+            });
+        }
+
+
+        [Test]
+        public void Detects_Repository_If_Class_Ends_With_Reopository()
+        {
+            var source = @"  public class LabelSampleRepository
+                    {
+                    }";
+
+            var result = SubKindDetector.DetectForFile(source, "src/Repo/LabelSampleRepo.cs");
+            WriteResult(result);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.SubKind, Is.EqualTo(CodeSubKind.Repository));
+                Assert.That(result.PrimaryTypeName, Is.EqualTo("LabelSampleRepository"));
             });
         }
 
@@ -119,6 +192,24 @@ public class DeviceService : IDeviceService
             {
                 Assert.That(result.SubKind, Is.EqualTo(CodeSubKind.Service));
                 Assert.That(result.PrimaryTypeName, Is.EqualTo("DeviceService"));
+            });
+        }
+
+        [Test]
+        public void Detects_Exception_From_Inhertis_Exception()
+        {
+            var source = @"
+public class InUseException : Exception
+{
+}
+";
+
+            var result = SubKindDetector.DetectForFile(source, "src/Services/InUseException.cs");
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.SubKind, Is.EqualTo(CodeSubKind.Exception));
+                Assert.That(result.PrimaryTypeName, Is.EqualTo("InUseException"));
             });
         }
 

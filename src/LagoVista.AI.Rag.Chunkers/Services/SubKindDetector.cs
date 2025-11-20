@@ -22,11 +22,25 @@ namespace LagoVista.AI.Rag.Chunkers.Services
         Service,
         Test,
         Interface,
+        Startup,
+        Program,
+        Client,
+        Configuration,
+        Handler,
+        ResourceFile,
+        CodeAttribute,
+        Exception,
+        ExtensionMethods,
+        Request,
+        Result,
+        Response,
+        ProxyServices,
         Other
     }
 
     public sealed class SubKindDetectionResult
     {
+        public string Path { get; set; }
         public CodeSubKind SubKind { get; set; }
         public string SubKindString => SubKind.ToString();
         public string PrimaryTypeName { get; set; }
@@ -54,6 +68,19 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             var tree = CSharpSyntaxTree.ParseText(sourceText);
             var root = tree.GetRoot();
 
+            if(relativePath.ToLower().EndsWith("resx"))
+            {
+                return new SubKindDetectionResult
+                {
+                    SubKind = CodeSubKind.ResourceFile,
+                    PrimaryTypeName = null,
+                    IsMixed = false,
+                    Path = relativePath,
+                    Reason = "File name ended with RESX, is a ersource file.",
+                    Evidence = Array.Empty<string>()
+                };
+            }
+
             var segments = (relativePath ?? string.Empty)
                 .Replace('\\', '/')
                 .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
@@ -75,6 +102,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                     SubKind = CodeSubKind.Other,
                     PrimaryTypeName = null,
                     IsMixed = false,
+                    Path = relativePath,
                     Reason = "No top-level types found; defaulting SubKind=Other.",
                     Evidence = Array.Empty<string>()
                 };
@@ -101,6 +129,10 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 {
                     info.Kind = CodeSubKind.DomainDescription;
                 }
+                else if (IsException(type, ns, segments, info.Evidence))
+                {
+                    info.Kind = CodeSubKind.Exception;
+                }
                 else if (IsModel(type, ns, segments, info.Evidence))
                 {
                     info.Kind = CodeSubKind.Model;
@@ -125,6 +157,11 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 {
                     info.Kind = CodeSubKind.Interface;
                 }
+                else if(IsStartup(type, ns, segments, info.Evidence))
+                {
+                    info.Kind = CodeSubKind.Startup;
+                }
+                
 
                 inferences.Add(info);
             }
@@ -155,6 +192,12 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 chosen = CodeSubKind.Service;
             else if (distinctKinds.Contains(CodeSubKind.Interface))
                 chosen = CodeSubKind.Interface;
+            else if (distinctKinds.Contains(CodeSubKind.Exception))
+                chosen = CodeSubKind.Exception;
+            else if (distinctKinds.Contains(CodeSubKind.Client))
+                chosen = CodeSubKind.Client;
+            else if (distinctKinds.Contains(CodeSubKind.CodeAttribute))
+                chosen = CodeSubKind.CodeAttribute;
             else
                 chosen = CodeSubKind.Other;
 
@@ -171,6 +214,14 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 .Distinct()
                 .ToArray();
 
+            if(chosen == CodeSubKind.Other)
+            {
+                if(FallbackSubKindDetector(primaryTypeName, segments, out CodeSubKind subKind))
+                {
+                    chosen = subKind;
+                }
+            }
+
             var reason = evidence.Length == 0
                 ? $"SubKind={chosen} inferred by fallback rules."
                 : $"SubKind={chosen} inferred based on: {string.Join("; ", evidence)}";
@@ -181,8 +232,107 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 PrimaryTypeName = primaryTypeName,
                 IsMixed = isMixed,
                 Reason = reason,
-                Evidence = evidence
+                Evidence = evidence,
+                Path = relativePath
             };
+        }
+
+        private static bool FallbackSubKindDetector(String typeName, string[] segments, out CodeSubKind subKind)
+        {
+            if(ClassEndsWith(typeName, "repo", "repository"))
+            {
+                subKind = CodeSubKind.Repository;
+                return true;
+            }
+
+            if (ClassEndsWith(typeName, "handler"))
+            {
+                subKind = CodeSubKind.Handler;
+                return true;
+            }
+
+            if (ClassEndsWith(typeName, "client"))
+            {
+                subKind = CodeSubKind.Client;
+                return true;
+            }
+
+            if (ClassEndsWith(typeName, "config"))
+            {
+                subKind = CodeSubKind.Configuration;
+                return true;
+            }
+
+            if (ClassEndsWith(typeName, "extensions"))
+            {
+                subKind = CodeSubKind.ExtensionMethods;
+                return true;
+            }
+
+            if (typeName.ToLower() == "program")
+            {
+                subKind = CodeSubKind.Program;
+                return true;
+            }
+
+            if (ClassEndsWith(typeName, "service"))
+            {
+                subKind = CodeSubKind.Service;
+                return true;
+            }
+
+            if (ClassEndsWith(typeName, "attribute"))
+            {
+                subKind = CodeSubKind.CodeAttribute;
+                return true;
+            }
+
+            if (typeName.ToLower() == "startup")
+            {
+                subKind = CodeSubKind.Startup;
+                return true;
+            }
+
+            if (ClassEndsWith(typeName, "request"))
+            {
+                subKind = CodeSubKind.Request;
+                return true;
+            }
+
+            if (ClassEndsWith(typeName, "result"))
+            {
+                subKind = CodeSubKind.Result;
+                return true;
+            }
+
+            if (ClassEndsWith(typeName, "response"))
+            {
+                subKind = CodeSubKind.Response;
+                return true;
+            }
+
+            if (ClassEndsWith(typeName, "proxy"))
+            {
+                subKind = CodeSubKind.ProxyServices;
+                return true;
+            }
+
+            if (segments.Any(seg => seg.ToLower().Contains("proxy")))
+            {
+                subKind = CodeSubKind.ProxyServices;
+                return true;
+            }
+
+
+            if (segments.Any(seg => seg.ToLower() == "extensions"))
+            {
+                subKind = CodeSubKind.ExtensionMethods;
+                return true;
+            }
+
+            subKind = CodeSubKind.Other;
+
+            return false;
         }
 
         private static string GetNamespace(SyntaxNode node)
@@ -265,6 +415,34 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             return false;
         }
 
+        private static bool IsException(
+    TypeDeclarationSyntax type,
+    string ns,
+    string[] segments,
+    List<string> evidence)
+        {
+            if (InheritsBase(type, "Exception"))
+            {
+                evidence.Add($"Type {type.Identifier.ValueText} inherits from Exception.");
+                return true;
+            }
+
+            if (!string.IsNullOrEmpty(ns) &&
+                ns.IndexOf(".Exceptions", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                evidence.Add($"Namespace '{ns}' contains '.Exceptions'.");
+                return true;
+            }
+
+            if (HasPathSegment(segments, "exceptions"))
+            {
+                evidence.Add("Path contains 'exceptions' segment.");
+                return true;
+            }
+
+            return false;
+        }
+
         private static bool IsManager(
             TypeDeclarationSyntax type,
             string ns,
@@ -313,30 +491,39 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             if (type is InterfaceDeclarationSyntax)
                 return false;
 
-            if (InheritsBase(type, "DocumentDBRepoBase", "TableStorageRepoBase"))
+            // Base class detection – include both *RepoBase and TableStorageBase variants
+            if (InheritsBase(type, "DocumentDBRepoBase", "TableStorageRepoBase", "TableStorageBase", "CloudFileStorage"))
             {
                 evidence.Add($"Type {type.Identifier.ValueText} inherits from a repository base type.");
                 return true;
             }
 
+            // Interface pattern I*Repository
             if (ImplementsInterfacePattern(type, "Repository"))
             {
                 evidence.Add($"Type {type.Identifier.ValueText} implements I*Repository interface.");
                 return true;
             }
 
+            // Namespace hint: *.Repositories* or *.Repo*
             if (!string.IsNullOrEmpty(ns) &&
-                ns.IndexOf(".Repositories", StringComparison.OrdinalIgnoreCase) >= 0)
+                (ns.IndexOf(".Repositories", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                 ns.IndexOf(".Repo", StringComparison.OrdinalIgnoreCase) >= 0))
             {
-                evidence.Add($"Namespace '{ns}' contains '.Repositories'.");
+                evidence.Add($"Namespace '{ns}' contains '.Repositories' or '.Repo'.");
                 return true;
             }
 
-            if (HasPathSegment(segments, "repositories") || HasPathSegment(segments, "repos"))
+            // Path hint: /repositories/, /repos/, or /repo/
+            if (HasPathSegment(segments, "repositories") ||
+                HasPathSegment(segments, "repos") ||
+                HasPathSegment(segments, "repo"))
             {
-                evidence.Add("Path contains 'repositories' or 'repos' segment.");
+                evidence.Add("Path contains 'repositories', 'repos', or 'repo' segment.");
                 return true;
             }
+
+
 
             return false;
         }
@@ -376,6 +563,20 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 return true;
             }
 
+            return false;
+        }
+
+        private static bool IsStartup(
+            TypeDeclarationSyntax type,
+            string ns,
+            string[] segments,
+            List<string> evidence)
+        {
+            if (type.GetType().Name == "Startup")
+            {
+                evidence.Add($"Type {type.Identifier.ValueText} is named 'Startup'.");
+                return true;
+            }
             return false;
         }
 
@@ -496,6 +697,18 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             }
 
             return false;
+        }
+
+        private static bool ClassEndsWith(string typeName, params string[] suffix)
+        {
+            typeName = typeName.ToLower(); 
+
+            foreach (var s in suffix)
+                if (typeName.EndsWith(s.ToLower()))
+                    return true;
+
+            return false;
+
         }
 
         private static bool ImplementsInterfacePattern(TypeDeclarationSyntax type, string suffix)

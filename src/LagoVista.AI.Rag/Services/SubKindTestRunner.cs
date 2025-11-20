@@ -84,18 +84,22 @@ namespace LagoVista.AI.Rag.Services
                     cancellationToken.ThrowIfCancellationRequested();
 
                     var text = await File.ReadAllTextAsync(fullPath, cancellationToken);
-                    var repoRelative = Path.GetRelativePath(repoRoot, fullPath)
-                        .Replace('\\', '/');
-
-                    var detection = SubKindDetector.DetectForFile(text, repoRelative);
-
-                    results.Add(new SubKindTestResult
+                    if (!String.IsNullOrEmpty(text))
                     {
-                        RepoId = repoId,
-                        RepoRelativePath = repoRelative,
-                        SubKind = detection.SubKind,
-                        PrimaryTypeName = detection.PrimaryTypeName
-                    });
+                        var repoRelative = Path.GetRelativePath(repoRoot, fullPath)
+                            .Replace('\\', '/');
+
+                        var detection = SubKindDetector.DetectForFile(text, repoRelative);
+
+                        results.Add(new SubKindTestResult
+                        {
+                            RepoId = repoId,
+                            RepoRelativePath = repoRelative,
+                            SubKind = detection.SubKind,
+                            PrimaryTypeName = detection.PrimaryTypeName
+                        });
+
+                    }
                 }
             }
 

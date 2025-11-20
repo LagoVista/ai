@@ -25,12 +25,12 @@ using System.Threading.Tasks;
 
 namespace LagoVista.AI.Rag
 {
-    public class Ingestor
+    public class IngestorService
     {
         private readonly AgentContext _agentContext;
         private readonly IngestionConfig _config;
 
-        public Ingestor(IngestionConfig config, AgentContext agentContext)
+        public IngestorService(IngestionConfig config, AgentContext agentContext)
         {
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _agentContext = agentContext;
