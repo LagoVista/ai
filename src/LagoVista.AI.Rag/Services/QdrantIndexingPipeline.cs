@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using LagoVista.AI.CloudRepos;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
-using LagoVista.AI.Rag.Types;
+using LagoVista.AI.Rag.Models;
 using LagoVista.AI.Services;
 using LagoVista.Core.Models;
 using LagoVista.Core.Utils;

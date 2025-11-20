@@ -6,7 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace LagoVista.AI.Rag.Types
+namespace LagoVista.AI.Rag.Models
 {
     /// <summary>
     /// Represents a single file entry in the local index.

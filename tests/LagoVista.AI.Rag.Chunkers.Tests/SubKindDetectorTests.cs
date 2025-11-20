@@ -1,5 +1,6 @@
 using NUnit.Framework;
-using LagoVista.AI.Rag.Chunkers;
+using LagoVista.AI.Rag.Chunkers.Services;
+using System;
 
 namespace LagoVista.AI.Rag.Chunkers.Tests
 {
@@ -121,6 +122,13 @@ public class DeviceService : IDeviceService
             });
         }
 
+        void WriteResult(SubKindDetectionResult result)
+        {
+            Console.WriteLine("SubKind: " + result.SubKind);
+            Console.WriteLine("PrimaryTypeName: " + result.PrimaryTypeName);
+            Console.WriteLine("IsMixed: " + result.IsMixed);
+        }
+
         [Test]
         public void Detects_Interface_When_File_Is_Interface()
         {
@@ -132,6 +140,8 @@ public interface IDeviceManager
 ";
 
             var result = SubKindDetector.DetectForFile(source, "src/Managers/IDeviceManager.cs");
+
+            WriteResult(result);
 
             Assert.Multiple(() =>
             {

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Models;
-using LagoVista.AI.Rag.Types;
+using LagoVista.AI.Rag.Models;
 using LagoVista.AI.Services;
 using LagoVista.Core;
 using LagoVista.IoT.Logging;

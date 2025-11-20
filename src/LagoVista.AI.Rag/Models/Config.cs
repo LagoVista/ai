@@ -3,7 +3,7 @@ using LagoVista.Core.Interfaces;
 using System;
 using System.Collections.Generic;
 
-namespace LagoVista.AI.Rag.Types
+namespace LagoVista.AI.Rag.Models
 {
     public class IngestionConfig
     {

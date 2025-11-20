@@ -4,7 +4,7 @@
 // --- END CODE INDEX META ---
 using System.IO;
 
-namespace LagoVista.AI.Rag.Types
+namespace LagoVista.AI.Rag.Models
 {
     public static class LanguageGuesser
     {

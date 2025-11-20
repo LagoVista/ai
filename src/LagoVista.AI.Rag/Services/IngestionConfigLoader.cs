@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Text.Json;
 
-using LagoVista.AI.Rag.Types;
+using LagoVista.AI.Rag.Models;
 
 namespace LagoVista.AI.Rag.Services
 {
@@ -40,7 +40,7 @@ namespace LagoVista.AI.Rag.Services
             if (cfg == null) throw new ArgumentNullException(nameof(cfg));
 
             if (cfg.Qdrant == null)
-                cfg.Qdrant = new Types.QdrantConfig();
+                cfg.Qdrant = new Models.QdrantConfig();
 
             if (cfg.Embeddings == null)
                 cfg.Embeddings = new EmbeddingsConfig();

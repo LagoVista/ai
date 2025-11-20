@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using LagoVista.AI.Rag.Types;
+using LagoVista.AI.Rag.Models;
 
 namespace LagoVista.AI.Rag.Services
 {

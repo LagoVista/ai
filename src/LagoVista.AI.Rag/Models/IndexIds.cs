@@ -3,7 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace LagoVista.AI.Rag.Types
+namespace LagoVista.AI.Rag.Models
 {
     /// <summary>
     /// Utilities for canonical path construction and DocId / PointId generation.

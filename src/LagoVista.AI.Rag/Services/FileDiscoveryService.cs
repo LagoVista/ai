@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using LagoVista.AI.Rag.Types;
+using LagoVista.AI.Rag.Models;
 
 namespace LagoVista.AI.Rag.Services
 {

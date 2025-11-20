@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using LagoVista.AI.Rag.Types;
+using LagoVista.AI.Rag.Models;
 using LagoVista.AI.Services;
 using LagoVista.Core.Utils;
 using LagoVista.Core.Utils.Types;

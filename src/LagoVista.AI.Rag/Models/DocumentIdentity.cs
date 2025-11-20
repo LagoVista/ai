@@ -1,6 +1,6 @@
 using System;
 
-namespace LagoVista.AI.Rag.Types
+namespace LagoVista.AI.Rag.Models
 {
     /// <summary>
     /// Document-level identity information for a single source artifact.

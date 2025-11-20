@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Text.Json;
-using LagoVista.AI.Rag.Types;
 
 namespace LagoVista.AI.Rag.Services
 {

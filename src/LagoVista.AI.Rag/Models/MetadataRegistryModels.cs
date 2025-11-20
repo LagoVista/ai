@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace LagoVista.AI.Rag.Types
+namespace LagoVista.AI.Rag.Models
 {
     /// <summary>
     /// DTOs for reporting facet values to the metadata registry.

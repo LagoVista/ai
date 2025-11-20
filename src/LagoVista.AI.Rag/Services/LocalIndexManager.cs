@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using LagoVista.AI.Rag.Types;
 
 namespace LagoVista.AI.Rag.Services
 {

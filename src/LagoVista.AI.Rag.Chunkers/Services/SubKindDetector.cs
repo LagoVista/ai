@@ -5,11 +5,11 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace LagoVista.AI.Rag.Chunkers
+namespace LagoVista.AI.Rag.Chunkers.Services
 {
     /// <summary>
     /// Detects SubKind for server-side C# code using syntax-only heuristics
-    /// derived from IDX-024 and IDX-031.
+    /// derived from IDX-024 and IDX-031 plus an additional Test SubKind.
     /// Works purely from source text and relative path – no reflection required.
     /// </summary>
     public enum CodeSubKind
@@ -20,6 +20,7 @@ namespace LagoVista.AI.Rag.Chunkers
         Repository,
         Controller,
         Service,
+        Test,
         Interface,
         Other
     }
@@ -91,7 +92,12 @@ namespace LagoVista.AI.Rag.Chunkers
                 var ns = GetNamespace(type);
 
                 // Evaluate in priority order for this type.
-                if (IsDomainDescription(type, ns, segments, info.Evidence))
+                // Tests first so that test projects referencing domain/models/etc are classified as Test.
+                if (IsTest(type, ns, segments, info.Evidence))
+                {
+                    info.Kind = CodeSubKind.Test;
+                }
+                else if (IsDomainDescription(type, ns, segments, info.Evidence))
                 {
                     info.Kind = CodeSubKind.DomainDescription;
                 }
@@ -132,7 +138,10 @@ namespace LagoVista.AI.Rag.Chunkers
 
             CodeSubKind chosen;
 
-            if (distinctKinds.Contains(CodeSubKind.DomainDescription))
+            // File-level priority: Tests win over everything else.
+            if (distinctKinds.Contains(CodeSubKind.Test))
+                chosen = CodeSubKind.Test;
+            else if (distinctKinds.Contains(CodeSubKind.DomainDescription))
                 chosen = CodeSubKind.DomainDescription;
             else if (distinctKinds.Contains(CodeSubKind.Model))
                 chosen = CodeSubKind.Model;
@@ -262,6 +271,10 @@ namespace LagoVista.AI.Rag.Chunkers
             string[] segments,
             List<string> evidence)
         {
+            // Interfaces should not be classified as Manager even if the path/namespace matches
+            if (type is InterfaceDeclarationSyntax)
+                return false;
+
             if (ImplementsInterfacePattern(type, "Manager"))
             {
                 evidence.Add($"Type {type.Identifier.ValueText} implements I*Manager interface.");
@@ -296,6 +309,10 @@ namespace LagoVista.AI.Rag.Chunkers
             string[] segments,
             List<string> evidence)
         {
+            // Interfaces should not be classified as Repository even if the path/namespace matches
+            if (type is InterfaceDeclarationSyntax)
+                return false;
+
             if (InheritsBase(type, "DocumentDBRepoBase", "TableStorageRepoBase"))
             {
                 evidence.Add($"Type {type.Identifier.ValueText} inherits from a repository base type.");
@@ -330,6 +347,10 @@ namespace LagoVista.AI.Rag.Chunkers
             string[] segments,
             List<string> evidence)
         {
+            // Interfaces should not be classified as Controller even if the path/namespace matches
+            if (type is InterfaceDeclarationSyntax)
+                return false;
+
             if (HasAttribute(type, "ApiController"))
             {
                 evidence.Add($"Type {type.Identifier.ValueText} has ApiController attribute.");
@@ -364,6 +385,10 @@ namespace LagoVista.AI.Rag.Chunkers
             string[] segments,
             List<string> evidence)
         {
+            // Interfaces should not be classified as Service even if the path/namespace matches
+            if (type is InterfaceDeclarationSyntax)
+                return false;
+
             if (ImplementsInterfacePattern(type, "Service"))
             {
                 evidence.Add($"Type {type.Identifier.ValueText} implements I*Service interface.");
@@ -380,6 +405,46 @@ namespace LagoVista.AI.Rag.Chunkers
             if (HasPathSegment(segments, "services"))
             {
                 evidence.Add("Path contains 'services' segment.");
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool IsTest(
+            TypeDeclarationSyntax type,
+            string ns,
+            string[] segments,
+            List<string> evidence)
+        {
+            // We treat anything that clearly looks like a test type as Test, regardless of what it tests.
+
+            // Common attributes (NUnit, MSTest, xUnit-style wrappers, etc.)
+            if (HasAttribute(type, "TestFixture", "TestClass"))
+            {
+                evidence.Add($"Type {type.Identifier.ValueText} has a known test fixture attribute.");
+                return true;
+            }
+
+            // Naming convention: *Tests or *Test
+            var name = type.Identifier.ValueText;
+            if (name.EndsWith("Tests", StringComparison.Ordinal) || name.EndsWith("Test", StringComparison.Ordinal))
+            {
+                evidence.Add($"Type {name} name ends with 'Test' or 'Tests'.");
+                return true;
+            }
+
+            // Namespace convention: *.Tests.*
+            if (!string.IsNullOrEmpty(ns) && ns.IndexOf(".Tests", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                evidence.Add($"Namespace '{ns}' contains '.Tests'.");
+                return true;
+            }
+
+            // Path convention: /tests/ or /test/
+            if (HasPathSegment(segments, "tests") || HasPathSegment(segments, "test"))
+            {
+                evidence.Add("Path contains 'tests' or 'test' segment.");
                 return true;
             }
 
@@ -406,13 +471,13 @@ namespace LagoVista.AI.Rag.Chunkers
             var names = new HashSet<string>(attributeNames, StringComparer.OrdinalIgnoreCase);
 
             foreach (var list in type.AttributeLists)
-            foreach (var attr in list.Attributes)
-            {
-                var rawName = attr.Name.ToString(); // may include namespace
-                var simple = GetSimpleIdentifier(rawName);
-                if (names.Contains(simple) || names.Contains(simple.Replace("Attribute", string.Empty)))
-                    return true;
-            }
+                foreach (var attr in list.Attributes)
+                {
+                    var rawName = attr.Name.ToString(); // may include namespace
+                    var simple = GetSimpleIdentifier(rawName);
+                    if (names.Contains(simple) || names.Contains(simple.Replace("Attribute", string.Empty)))
+                        return true;
+                }
 
             return false;
         }

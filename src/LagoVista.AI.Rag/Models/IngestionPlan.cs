@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace LagoVista.AI.Rag.Types
+namespace LagoVista.AI.Rag.Models
 {
     /// <summary>
     /// File-level ingestion decision for a single source file.
