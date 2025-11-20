@@ -749,12 +749,513 @@
       "FlagOtherOrMixed": true
     },
     "Rationale": "Systematic classification of legacy code base supports richer metadata filtering; adaptable chunking per artifact type; enables tooling and analytics over role-based categories."
+  },
+  {
+    "Id": "IDX-033",
+    "Title": "Metadata Registry & Facet Discovery",
+    "Status": "Accepted",
+    "Description": "After each indexing run, the ingestor reports unique facet values and combinations (e.g., Kind, SubKind, ChunkFlavor, Repo, Domain) to a server-side Metadata Registry.",
+    "Decision": {
+      "SyncMode": "batch-at-end-of-run",
+      "FacetEligibleFields": [ "Kind", "SubKind", "ChunkFlavor", "Repo", "Domain", "Layer", "Role", "ComponentType", "ComponentName", "ContentType", "ContentTypeId" ],
+      "SingleFacetShape": {
+        "Property": "string",
+        "Value": "string"
+      },
+      "ComboFacetShape": {
+        "Dimensions": [
+          {
+            "Property": "string",
+            "Value": "string"
+          }
+        ]
+      },
+      "Examples": [ "Kind=SourceCode", "Kind=SourceCode,SubKind=Model", "Kind=SourceCode,SubKind=Model,ChunkFlavor=Raw" ],
+      "ClientGuarantees": [ "unique-per-run", "no-global-state" ],
+      "ServerResponsibilities": [ "dedupe", "persist", "use-for-filters-and-analytics" ]
+    },
+    "Rationale": "Keeps ingestion lightweight and local while enabling a central registry to drive filters, analytics, and UI facets over vector metadata."
+  },
+  {
+    "Id": "IDX-0034",
+    "Title": "Deletion of Stale Chunks",
+    "Status": "Accepted",
+    "Description": "Defines when and how vector chunks are considered stale and must be removed from the vector database whenever a document is re-indexed.",
+    "Decision": {
+      "StaleChunkDefinition": "Any existing chunk in the vector store whose payload DocId matches a document being re-indexed in the current run but is not part of the newly generated chunk set.",
+      "DocScopeForDeletion": "Per DocId; only DocIds processed during the current run are eligible for stale-chunk deletion.",
+      "DeletionStrategy": "Replace-all-per-DocId",
+      "DeletionMechanism": "Before inserting new chunks for a DocId, delete all existing chunks where payload.DocId equals that DocId using a delete-by-filter operation.",
+      "UpsertStrategyForNewChunks": "Insert all newly-generated chunks after deletion, each with a fresh PointId.",
+      "NoFineGrainedDiffing": true,
+      "ContentHashRelationship": "ContentHash determines whether the file needs re-indexing; once triggered, all chunks for that DocId are stale regardless of individual chunk hashes.",
+      "ReindexFlagRelationship": {
+        "WhenReindexIsNoneOrMissing": "If the local index indicates no change, the file is skipped and existing chunks remain untouched.",
+        "WhenReindexIsChunkOrFull": "The file is re-chunked and re-embedded; all previous chunks for that DocId are deleted and replaced."
+      },
+      "DryRunBehavior": "Dry-run mode reports which DocIds would be deleted and how many chunks, but performs no changes.",
+      "NonTextAssets": "Non-text assets use the same delete-and-replace strategy.",
+      "ConcurrencyAndConsistencyScope": "After a successful run, there is at most one generation of chunks per DocId; temporary internal duplication is not part of the external contract."
+    },
+    "Rationale": "Using DocId as the ownership boundary simplifies ingestion and ensures deterministic deletion of outdated chunks. Replace-all-per-DocId avoids diffing complexity and guarantees no orphaned or stale chunks remain. The local index controls re-index triggers; once engaged, deletion is unconditional.",
+    "ResolvedQuestions": [
+      {
+        "Q": "Do we ever attempt fine-grained diffing to preserve chunks?",
+        "Answer": "No."
+      },
+      {
+        "Q": "Do we delete chunks for DocIds not processed in this run?",
+        "Answer": "No."
+      },
+      {
+        "Q": "Are PointIds stable across re-indexing?",
+        "Answer": "No."
+      },
+      {
+        "Q": "Does chunk-level ContentHash affect deletion?",
+        "Answer": "No; decisions occur at the file level only."
+      }
+    ]
+  },
+  {
+    "Id": "IDX-0035",
+    "Title": "Deletion of Chunks When Local File No Longer Exists",
+    "Status": "Accepted",
+    "Description": "Defines how to delete chunks from the vector database when a previously-indexed file no longer exists in the current filesystem or project during an indexing run.",
+    "Decision": {
+      "DetectionRule": "A file is orphaned when it exists in the local index but does not exist on disk at its recorded path.",
+      "DeletionStrategy": "Delete all chunks whose payload.DocId matches the orphaned file's DocId, then remove the file's record from the local index.",
+      "ReplacementPolicy": "No replacement chunks are created; this is a pure deletion operation.",
+      "TriggerConditions": [ "File missing from filesystem", "File moved or renamed", "File excluded by filters", "File outside project scope" ],
+      "FilterEquivalenceRule": "Files excluded by ignore rules or filters are treated as missing.",
+      "DryRunBehavior": "Report candidate DocIds and chunk counts but do not modify vector DB or local index.",
+      "DeterminismGuarantee": "After a successful run, no chunks exist for any file missing from the filesystem."
+    },
+    "Rationale": "Ensures vector DB and local index remain consistent with the actual filesystem. Missing files must be fully removed to avoid orphaned chunks and stale search results. Treating deletions, renames, moves, and filter-driven exclusions uniformly simplifies logic and maintains determinism.",
+    "ResolvedQuestions": [
+      {
+        "Q": "Recover renamed files?",
+        "Answer": "No; renames create new DocIds per canonical path rules."
+      },
+      {
+        "Q": "Delete chunks for filter-excluded files?",
+        "Answer": "Yes; exclusion is treated as deletion for indexing purposes."
+      },
+      {
+        "Q": "Depend on ContentHash or Reindex flags?",
+        "Answer": "No; missing-file detection overrides all other signals."
+      },
+      {
+        "Q": "Retain records for historical tracking?",
+        "Answer": "No; local index contains only currently-present files."
+      }
+    ]
+  },
+  {
+    "Id": "IDX-0036",
+    "Title": "Local Index File Format & Maintenance Rules",
+    "Status": "Accepted",
+    "Description": "Defines the JSON structure, update rules, and lifecycle behavior of the local index used to determine re-indexing, SubKind overrides, missing-file cleanup, and which files are active for LLM inclusion.",
+    "Decision": {
+      "RecordShape": {
+        "FilePath": "string",
+        "DocId": "string",
+        "ContentHash": "string",
+        "ActiveContentHash": "string or null",
+        "SubKind": "string or null",
+        "LastIndexedUtc": "ISO-8601",
+        "FlagForReview": "boolean or null",
+        "Reindex": "null | \"chunk\" | \"full\""
+      },
+      "ContentHashSemantics": "Hash of the last content successfully indexed into the vector DB.",
+      "ActiveContentHashSemantics": "Hash of the current on-disk content; mismatch indicates the file is Active and should be sent directly to the LLM.",
+      "Location": "<project-root>/.nuvos/index/local-index.json",
+      "StartupRules": [ "Load if exists", "If corrupt rename and start fresh", "If missing start empty" ],
+      "ProcessingRules": {
+        "ComputeActiveContentHash": true,
+        "ActiveDetection": "Active when ActiveContentHash != ContentHash",
+        "PersistSubKindOverride": true
+      },
+      "MissingFileBehavior": "Delete all DocId chunks and remove record.",
+      "AfterSuccessfulIngestion": [ "Set ContentHash = ActiveContentHash", "Update LastIndexedUtc", "Apply SubKind if no override", "Clear Reindex" ],
+      "WriteFrequency": "Write index after every file using atomic write.",
+      "Atomicity": [ "Write to temp file", "Atomic replace" ],
+      "Sorting": "Entries sorted by FilePath ascending",
+      "SafetyGuarantees": [ "No entries for missing files", "Canonical paths only", "ContentHash always last-indexed content", "ActiveContentHash always current content", "SubKind overrides persist", "Reindex cleared after ingestion", "Crash-safe because index is saved per-file" ]
+    },
+    "Rationale": "Writing after every file ensures crash-safe recovery and accurate incremental processing. Distinguishing between ContentHash and ActiveContentHash enables downstream LLM orchestration to know which files require direct context injection versus those already reflected in the vector DB.",
+    "ResolvedQuestions": [
+      {
+        "Q": "Does indexing clear Active status?",
+        "Answer": "Yes, by setting ContentHash = ActiveContentHash."
+      },
+      {
+        "Q": "Historical metadata for missing files retained?",
+        "Answer": "No."
+      },
+      {
+        "Q": "Do SubKind overrides persist?",
+        "Answer": "Yes."
+      },
+      {
+        "Q": "Track OS file metadata?",
+        "Answer": "No."
+      },
+      {
+        "Q": "Multiple index files supported?",
+        "Answer": "No."
+      }
+    ]
+  },
+  {
+    "Id": "NOTE-ENTITY-EXTRACTOR-001",
+    "Title": "How to Build ModelStructureDescription from C# Attributes",
+    "Kind": "ImplementationHint",
+    "RelatedTo": [ "IDX-0037", "IDX-0038" ],
+    "Description": "High-level guidance for extracting ModelStructureDescription from existing C# EntityDescription/FormField/Resource attributes and resource dictionaries.",
+    "Details": {
+      "ClassLevel": {
+        "Attribute": "EntityDescription",
+        "Purpose": "Source of high-level entity metadata and URLs.",
+        "FieldsToUse": [ "TitleResource", "HelpResource", "DescriptionResource", "Domain", "ListUIUrl", "EditUIUrl", "CreateUIUrl", "HelpUrl", "InsertUrl", "SaveUrl", "UpdateUrl", "FactoryUrl", "GetUrl", "GetListUrl", "DeleteUrl", "ResourceLibrary" ],
+        "Processing": "Read EntityDescription via reflection, resolve Title/Help/Description from the specified resource library using the provided resource keys, and map URLs directly into ModelStructureDescription fields."
+      },
+      "PropertyLevel": {
+        "PrimaryAttribute": "FormField",
+        "OptionalAttributes": [ "HelpResource", "LabelResource", "FKeyProperty" ],
+        "ResourceUsage": "FormField.ResourceType indicates which resource library to use. LabelResource and HelpResource hold keys into that library for display name and description of the field.",
+        "StructuralDetection": [ "Determine LanguageType from property type.", "Set IsCollection for List<T> / arrays.", "Set IsNullable based on type and nullability.", "Set IsEnum when the type or underlying generic argument is an enum." ],
+        "EntityHeaderDetection": [ "Detect EntityHeader<T> and List<EntityHeader<T>>.", "Set TargetType = T.", "Set IsEnumHeader when T is an enum.", "Attach FactoryUrl when present (used to create child records).", "If FKeyProperty is present, set HasFKeyAttribute=true and record KeyField." ],
+        "ChildObjects": [ "Detect List<ChildClass> where ChildClass is an owned type.", "For each, create ChildObjectDescription with FieldName, ChildType, IsCollection=true, RelationshipKind=\"Owned\"." ]
+      },
+      "OutputMapping": {
+        "ModelStructureDescriptionFields": [ "ModelName", "Namespace", "QualifiedName", "Domain", "Title", "Help", "Description", "Cloneable", "CanImport", "CanExport", "ListUIUrl", "EditUIUrl", "CreateUIUrl", "InsertUrl", "SaveUrl", "UpdateUrl", "FactoryUrl", "GetUrl", "GetListUrl", "DeleteUrl", "HelpUrl" ],
+        "Collections": [ "Properties", "EntityHeaderRefs", "ChildObjects", "Relationships" ],
+        "Rule": "All extracted values are projections of existing attributes and resource dictionaries; ModelStructureDescription is a read-only view, not a new source of truth."
+      },
+      "SeparationFromMetadata": { "Rule": "IDX-0037 (ModelStructureDescription) holds structural shape, relationships, and high-level operational affordances. IDX-0038 will hold detailed UI/validation metadata derived from the same attributes." }
+    }
+  },
+  {
+    "Id": "IDX-0037",
+    "Title": "Model Structure Description",
+    "Status": "Accepted",
+    "Description": "Structured chunk for Kind=Model capturing identity, domain, structural graph, properties, entity header references, child objects, relationships, and operational affordances.",
+    "ChunkFlavor": "Structured",
+    "Fields": [ "ModelName", "Namespace", "QualifiedName", "Domain", "Title", "Help", "Description", "Cloneable", "CanImport", "CanExport", "ListUIUrl", "EditUIUrl", "CreateUIUrl", "HelpUrl", "InsertUrl", "SaveUrl", "UpdateUrl", "FactoryUrl", "GetUrl", "GetListUrl", "DeleteUrl", "Properties", "EntityHeaderRefs", "ChildObjects", "Relationships" ],
+    "ImplementationNote": "Data derived from EntityDescription, FormField, LabelResource, HelpResource, FKeyProperty, resource dictionaries, and reflection.",
+    "Purpose": "Give the LLM a structural and semantic view of the entity for reasoning and code generation."
+  },
+  {
+    "Id": "IDX-0038",
+    "Title": "Model Metadata & UI Description",
+    "Status": "Accepted",
+    "Description": "Detailed UI, validation, picker, layout, labeling, and metadata for model entities.",
+    "ChunkFlavor": "Metadata",
+    "Fields": [ "ModelName", "Namespace", "Domain", "ResourceLibrary", "Fields[]" ],
+    "FieldSchemaGroups": [ "IdentityAndResources", "DataAndFieldKind", "Validation", "UIBehaviorAndLayout", "ChildAndCollectionSemantics", "PickerAndLookupSemantics", "FileImageAndMedia", "EnumAndOptionsBehavior", "AIAndAdvanced" ],
+    "ImplementationSource": "FormFieldAttribute, LabelResource, HelpResource, ResourceType, EnumType, and associated attributes.",
+    "Purpose": "Provide full UI/UX metadata contract for generating forms, validation, list views, pickers, and advanced UI behaviors."
+  },
+  {
+    "Id": "IDX-0038",
+    "Title": "Model Metadata & UI Description",
+    "Status": "Accepted",
+    "Description": "Detailed UI, validation, picker, layout, labeling, metadata, and form layouts for model entities, including additional actions.",
+    "ChunkFlavor": "Metadata",
+    "Fields": [ "ModelName", "Namespace", "Domain", "ResourceLibrary", "Fields[]", "Layouts" ],
+    "FieldSchemaGroups": [ "IdentityAndResources", "DataAndFieldKind", "Validation", "UIBehaviorAndLayout", "ChildAndCollectionSemantics", "PickerAndLookupSemantics", "FileImageAndMedia", "EnumAndOptionsBehavior", "AIAndAdvanced" ],
+    "Layouts": {
+      "Description": "Form and view layouts derived from IFormDescriptor* interfaces and additional action definitions.",
+      "Shape": {
+        "Form": {
+          "Col1Fields": "IFormDescriptor.GetFormFields()",
+          "Col2Fields": "IFormDescriptorCol2.GetFormFieldsCol2()",
+          "BottomFields": "IFormDescriptorBottom.GetFormFieldsBottom()",
+          "TabFields": "IFormDescriptorTabs.GetFormFieldsTabs()"
+        },
+        "Advanced": {
+          "Col1Fields": "IFormDescriptorAdvanced.GetAdvancedFields()",
+          "Col2Fields": "IFormDescriptorAdvancedCol2.GetAdvancedFieldsCol2()"
+        },
+        "InlineFields": "IFormDescriptorInlineFields.GetInlineFields()",
+        "MobileFields": "IFormMobileFields.GetMobileFields()",
+        "SimpleFields": "IFormDescriptorSimple.GetSimpleFields()",
+        "QuickCreateFields": "IFormDescriptorQuickCreate.GetQuickCreateFields()",
+        "AdditionalActions": {
+          "Source": "IFormAdditionalActions.GetAdditionalActions()",
+          "ActionShape": {
+            "Title": "string",
+            "Icon": "string",
+            "Help": "string",
+            "Key": "string",
+            "ForCreate": "bool",
+            "ForEdit": "bool"
+          }
+        }
+      }
+    },
+    "FormDescriptorInterfaces": [ "IFormDescriptor", "IFormDescriptorCol2", "IFormDescriptorBottom", "IFormDescriptorTabs", "IFormDescriptorAdvanced", "IFormDescriptorAdvancedCol2", "IFormDescriptorInlineFields", "IFormMobileFields", "IFormDescriptorSimple", "IFormDescriptorQuickCreate", "IFormAdditionalActions" ],
+    "ImplementationSource": "FormFieldAttribute, LabelResource, HelpResource, ResourceType, EnumType, FormAdditionalAction, and form-descriptor interfaces including IFormDescriptor* and IFormAdditionalActions.",
+    "Purpose": "Provide full UI/UX metadata contract for generating forms, validation, list views, pickers, layouts, additional actions, and advanced variants (mobile, simple, quick-create) for model entities."
+  },
+  {
+    "Id": "IDX-0039",
+    "Title": "Chunking Strategy for Kind=Manager",
+    "Status": "Accepted",
+    "Kind": "SourceCode",
+    "SubKind": "Manager",
+    "Description": "Deterministic, semantics-aware chunking for Manager classes, including overview, per-method chunks, overflow handling, PrimaryEntity detection, and Manager\u2013interface relationships.",
+    "ChunkFlavors": [ "ManagerOverview", "ManagerMethod", "ManagerMethodOverflow" ],
+    "Ordering": {
+      "Rule": "Emit chunks in strict source order per Manager class.",
+      "Sequence": [ "ManagerOverview", "ManagerMethod (in source order)", "ManagerMethodOverflow (immediately after owning method)" ],
+      "WhyOrderingMatters": [ "Keeps PartIndex/PartTotal stable across runs.", "Reduces unnecessary reembedding and churn.", "Preserves adjacency for multi-chunk methods.", "Improves RAG reconstruction and context for the LLM." ]
+    },
+    "ManagerOverview": {
+      "ChunkFlavor": "ManagerOverview",
+      "SymbolType": "Class",
+      "Includes": [ "Using directives (optional)", "Namespace declaration", "Class XML docs", "Class attributes", "Class signature (base types and interfaces)", "Private field declarations (signatures only)", "Public/protected properties (signatures only)", "Method index (public methods, signatures only)" ],
+      "RequiredMetadata": [ "Kind=SourceCode", "SubKind=Manager", "SymbolType=Class", "ChunkFlavor=ManagerOverview", "PrimaryEntity" ],
+      "InterfaceMetadata": {
+        "ImplementedInterfaces": "Array of all implemented interfaces by simple type name, e.g., ['IDeviceManager','IDisposable'].",
+        "PrimaryInterface": "Primary DI/contract interface when determinable; selected via heuristics: prefer I<ClassName>, then I<PrimaryEntity>Manager, then a unique *Manager interface, else null."
+      }
+    },
+    "ManagerMethod": {
+      "ChunkFlavor": "ManagerMethod",
+      "SymbolType": "Method",
+      "Includes": [ "Method XML docs", "Method attributes", "Full method signature", "Full method body" ],
+      "Metadata": {
+        "Kind": "SourceCode",
+        "SubKind": "Manager",
+        "SymbolType": "Method",
+        "ChunkFlavor": "ManagerMethod",
+        "PrimaryEntity": "Same as overview",
+        "MethodKind": "Optional classification such as Create, Update, Delete, Query, Validation, Other."
+      }
+    },
+    "OverflowHandling": {
+      "ChunkFlavor": "ManagerMethodOverflow",
+      "WhenUsed": "Method body exceeds configured token/size thresholds.",
+      "Policy": [ "Never split across method boundaries.", "Split inside method body at safe boundaries (blank lines, regions, comment blocks) when required.", "Primary ManagerMethod chunk contains signature and initial body.", "Overflow chunks contain remaining body content.", "Overflow chunks emitted immediately after their owning ManagerMethod chunk." ],
+      "Metadata": {
+        "Kind": "SourceCode",
+        "SubKind": "Manager",
+        "SymbolType": "Method",
+        "ChunkFlavor": "ManagerMethodOverflow",
+        "OverflowOf": "Name of owning method",
+        "PrimaryEntity": "Same as overview"
+      }
+    },
+    "PrimaryEntityDetection": {
+      "FieldName": "PrimaryEntity",
+      "Description": "Simple class name of the main entity orchestrated by this Manager.",
+      "AppliedTo": [ "ManagerOverview", "ManagerMethod", "ManagerMethodOverflow" ],
+      "HeuristicsInOrder": [
+        {
+          "Name": "ClassNamePattern",
+          "Rule": "If class name matches '<EntityName>Manager', set PrimaryEntity = EntityName.",
+          "Strength": "Strongest"
+        },
+        {
+          "Name": "AddOrCreateFirstParameter",
+          "Rule": "If a method starts with Add* or Create* and the first parameter type is an Entity, set PrimaryEntity to that type name.",
+          "Strength": "Next strongest"
+        },
+        {
+          "Name": "MethodSignatureDominance",
+          "Rule": "Count entity types in method parameters/returns and choose the most frequent when no stronger rule applies.",
+          "Strength": "Fallback"
+        },
+        {
+          "Name": "FieldOrPropertyReferences",
+          "Rule": "If a single entity type clearly appears in repository/service field names, use that as a final tie-breaker.",
+          "Strength": "Final fallback"
+        }
+      ],
+      "AmbiguityHandling": "If no clear dominant entity is found, PrimaryEntity is null.",
+      "Rationale": [ "Managers are typically centered on a single entity type.", "PrimaryEntity greatly improves retrieval and cross-linking to model metadata and UI (IDX-0037, IDX-0038).", "The heuristics are deterministic and stable across indexing runs." ]
+    },
+    "MetadataExpectations": {
+      "SharedDocIdPerFile": true,
+      "PartIndexPartTotal": "Required for all Manager chunks; assigned using ordering above.",
+      "LineStartLineEnd": "Required for text chunks per IDX-020.",
+      "CharOffsetsOptional": true
+    },
+    "Rationale": [ "Manager classes encapsulate workflows and business operations for a primary entity.", "Per-method chunks allow fine-grained reasoning about individual behaviors.", "A class-level overview preserves workflow context and catalog.", "PrimaryEntity connects Manager behavior to model and UI metadata.", "PrimaryInterface and ImplementedInterfaces enable clean cross-linking from Controllers via DI interfaces.", "Stable ordering reduces reindexing cost and enhances RAG quality." ]
+  },
+  {
+    "Id": "IDX-0040",
+    "Title": "Chunking Strategy for Kind=Repository",
+    "Status": "Accepted",
+    "Kind": "SourceCode",
+    "SubKind": "Repository",
+    "Description": "Deterministic chunking for repository classes, including overview, per-method chunks, overflow handling, and PrimaryEntity detection.",
+    "ChunkFlavors": [ "RepositoryOverview", "RepositoryMethod", "RepositoryMethodOverflow" ],
+    "Ordering": {
+      "Rule": "Emit chunks in strict source order per repository class.",
+      "Sequence": [ "RepositoryOverview", "RepositoryMethod (in source order)", "RepositoryMethodOverflow (immediately after owning method)" ],
+      "WhyOrderingMatters": [ "Keeps PartIndex/PartTotal stable across runs.", "Reduces unnecessary reembedding and churn.", "Preserves adjacency for multi-chunk methods.", "Improves RAG reconstruction and context for the LLM." ]
+    },
+    "RepositoryOverview": {
+      "ChunkFlavor": "RepositoryOverview",
+      "SymbolType": "Class",
+      "Includes": [ "Using directives (optional)", "Namespace declaration", "Class XML docs", "Class attributes", "Class signature (base types and interfaces)", "Private field declarations (signatures only)", "Public/protected properties (signatures only)", "Method index (public methods, signatures only)" ],
+      "RequiredMetadata": [ "Kind=SourceCode", "SubKind=Repository", "SymbolType=Class", "ChunkFlavor=RepositoryOverview", "PrimaryEntity" ],
+      "OptionalStorageProfile": {
+        "StorageKind": "DocumentDb|TableStorage|Sql|InMemory|Other",
+        "EntityType": "PrimaryEntity or equivalent",
+        "CollectionOrTable": "Name when inferable",
+        "PartitionKeyField": "Field name when inferable"
+      }
+    },
+    "RepositoryMethod": {
+      "ChunkFlavor": "RepositoryMethod",
+      "SymbolType": "Method",
+      "Includes": [ "Method XML docs", "Method attributes", "Full method signature", "Full method body" ],
+      "MethodSelection": [ "Include all public methods.", "Include protected/internal methods when they contain meaningful persistence/query logic.", "Include private methods only when they encapsulate non-trivial behavior." ],
+      "Metadata": {
+        "Kind": "SourceCode",
+        "SubKind": "Repository",
+        "SymbolType": "Method",
+        "ChunkFlavor": "RepositoryMethod",
+        "PrimaryEntity": "Same as overview",
+        "MethodKind": "Optional classification such as Query, GetById, Insert, Update, Delete, Upsert, Other."
+      }
+    },
+    "OverflowHandling": {
+      "ChunkFlavor": "RepositoryMethodOverflow",
+      "WhenUsed": "Method body exceeds configured token/size thresholds.",
+      "Policy": [ "Never split across method boundaries.", "Split inside method body at safe boundaries (blank lines, regions, comment blocks) when required.", "Primary RepositoryMethod chunk contains signature and initial body.", "Overflow chunks contain remaining body content.", "Overflow chunks emitted immediately after their owning RepositoryMethod chunk." ],
+      "Metadata": {
+        "Kind": "SourceCode",
+        "SubKind": "Repository",
+        "SymbolType": "Method",
+        "ChunkFlavor": "RepositoryMethodOverflow",
+        "OverflowOf": "Name of owning method",
+        "PrimaryEntity": "Same as overview"
+      }
+    },
+    "PrimaryEntityDetection": {
+      "FieldName": "PrimaryEntity",
+      "Description": "Simple class name of the main entity persisted by this repository.",
+      "AppliedTo": [ "RepositoryOverview", "RepositoryMethod", "RepositoryMethodOverflow" ],
+      "HeuristicsInOrder": [
+        {
+          "Name": "BaseClassGenericArgument",
+          "Rule": "If repository inherits a generic base such as DocumentDBRepoBase<T> or TableStorageRepoBase<T>, set PrimaryEntity = typeof(T).Name.",
+          "Strength": "Strongest"
+        },
+        {
+          "Name": "ClassNamePattern",
+          "Rule": "If class name matches '<EntityName>Repository' or '<EntityName>Repo', set PrimaryEntity = EntityName.",
+          "Strength": "Strong"
+        },
+        {
+          "Name": "AddInsertUpsertSaveFirstParameter",
+          "Rule": "If methods beginning with Add*, Insert*, Upsert*, or Save* exist and their first parameter type is an entity, set PrimaryEntity to that type name.",
+          "Strength": "Next strongest"
+        },
+        {
+          "Name": "MethodSignatureDominance",
+          "Rule": "Count entity types in method parameters/returns and choose the most frequent when no stronger rule applies.",
+          "Strength": "Fallback"
+        },
+        {
+          "Name": "FieldOrPropertyReferences",
+          "Rule": "If a single entity type clearly appears in repository/service field/property names, use that as a final tie-breaker.",
+          "Strength": "Final fallback"
+        }
+      ],
+      "AmbiguityHandling": "If no clear dominant entity is found, PrimaryEntity is null.",
+      "Rationale": [ "Repositories are typically centered on a single entity type.", "PrimaryEntity greatly improves retrieval and cross-linking to model metadata (IDX-0037, IDX-0038).", "The heuristics are deterministic and stable across indexing runs." ]
+    },
+    "MetadataExpectations": {
+      "SharedDocIdPerFile": true,
+      "PartIndexPartTotal": "Required for all repository chunks; assigned using ordering above.",
+      "LineStartLineEnd": "Required for text chunks per IDX-020.",
+      "CharOffsetsOptional": true
+    },
+    "Rationale": [ "Repository classes encode persistence behavior for entities.", "Per-method chunks allow fine-grained reasoning about individual queries and operations.", "A class-level overview preserves storage context and behavior catalog.", "PrimaryEntity connects repository behavior to model and UI metadata.", "Stable ordering reduces reindexing cost and enhances RAG quality." ]
+  },
+  {
+    "Id": "IDX-0041",
+    "Title": "Controller Endpoint Description Chunks",
+    "Status": "Accepted",
+    "Kind": "SourceCode",
+    "SubKind": "Controller",
+    "ChunkFlavor": "EndpointDescription",
+    "Description": "Defines a 1:1 semantic chunk per HTTP endpoint, capturing identity, linkage to Managers, request/response shape, and authorization metadata for controller actions.",
+    "Identity": {
+      "Fields": [ "ControllerName", "ActionName", "EndpointKey", "RouteTemplate", "HttpMethods", "ApiVersion", "Area", "PrimaryEntity", "Handler" ],
+      "EndpointKeyPattern": "<ControllerName>.<ActionNameWithoutAsyncSuffix>",
+      "Handler": {
+        "Interface": "DI-injected interface name, e.g. IDeviceManager.",
+        "Method": "Handler method name called from the action, e.g. CreateDeviceAsync.",
+        "Kind": "Logical handler kind, e.g. Manager."
+      }
+    },
+    "SummaryDescription": {
+      "Summary": "One-line human description of the endpoint. Prefer XML <summary>, else synthesize.",
+      "Description": "Longer explanation, prefer XML <remarks>, else synthesize.",
+      "Tags": "Optional free-form tags for classification, e.g. ['Device','Read','OrgScoped'].",
+      "Notes": "Optional list of implementation hints (e.g. uses OrgEntityHeader, wraps in InvokeResult)."
+    },
+    "RequestShape": {
+      "ParameterClassification": [ "Route \u2013 appears in route template or has [FromRoute].", "Query \u2013 has [FromQuery] or is scalar in GET/DELETE by convention.", "Header \u2013 has [FromHeader].", "Body \u2013 complex parameter forming RequestBody.", "Service \u2013 [FromServices] or DI-only types (ignored).", "Unknown \u2013 anything that does not fit the above." ],
+      "Parameters": { "Fields": [ "Name (string)", "Source (Route|Query|Header|Unknown)", "Type (string)", "IsRequired (bool)", "IsCollection (bool)", "DefaultValue (string, optional)", "Description (string, optional)" ] },
+      "RequestBody": {
+        "Fields": [ "ModelType (string)", "IsCollection (bool)", "IsPrimitive (bool)", "ContentTypes (string[])", "Description (string, optional)" ],
+        "Cardinality": "Zero or one RequestBody per endpoint."
+      }
+    },
+    "ResponseShape": {
+      "ResponsesArray": "One entry per status code returned by the endpoint.",
+      "Fields": [ "StatusCode (int)", "Description (string, optional)", "ModelType (string, optional; logical payload type)", "IsCollection (bool, required when ModelType present)", "IsWrapped (bool, optional; true for InvokeResult-style wrappers)", "WrapperType (string, optional; e.g. 'InvokeResult<Device>')", "ContentTypes (string[], optional)", "IsError (bool, optional)", "ErrorShape (string, optional; e.g. 'InvokeResult')" ],
+      "Examples": [ "Task<InvokeResult<Device>> => ModelType=Device, IsCollection=false, IsWrapped=true, WrapperType='InvokeResult<Device>'", "Task<InvokeResult<List<Device>>> => ModelType=Device, IsCollection=true, IsWrapped=true, WrapperType='InvokeResult<List<Device>>'" ]
+    },
+    "Authorization": {
+      "Fields": [ "RequiresAuthentication (bool)", "AllowAnonymous (bool)", "Roles (string[], optional)", "Policies (string[], optional)", "Scopes (string[], optional)", "Tenancy (string, optional)" ],
+      "TenancyValues": [ "OrgScoped", "UserScoped", "System", "Public" ],
+      "RoleSource": "[Authorize(Roles=...)] and similar attributes.",
+      "PolicySource": "Authorize(Policy=...) and domain-specific authorization attributes.",
+      "ScopeSource": "OAuth/OpenID scope attributes when present."
+    },
+    "PrimaryEntity": {
+      "FieldName": "PrimaryEntity",
+      "Description": "Simple class name of the main entity operated on by this endpoint (e.g. Device).",
+      "HeuristicSources": [ "Controller name (e.g. DeviceController => Device).", "Route segments (e.g. 'api/devices' => Device).", "Request/response model types.", "Handler Manager's PrimaryEntity when available." ]
+    },
+    "Ordering": {
+      "Rule": "EndpointDescription chunks for a given controller DocId are emitted in source order: controllers in file order, then methods in declaration order.",
+      "PartIndexPartTotal": "Assigned using this physical sequence per DocId."
+    },
+    "Rationale": [ "Provides a single, rich, semantic unit per endpoint for RAG and tooling.", "Connects controllers to Manager and Model metadata via Handler and PrimaryEntity.", "Structured request and response shape supports client generation and testing.", "Authorization metadata enables security-aware reasoning and analysis.", "Design is V1-stable while remaining extensible as real implementation code evolves." ]
+  },
+  {
+    "Id": "IDX-0042",
+    "Title": "Interface Overview Chunks",
+    "Status": "Accepted",
+    "Kind": "SourceCode",
+    "SubKind": "Interface",
+    "ChunkFlavor": "Overview",
+    "Description": "Defines a 1:1 semantic chunk per C# interface, capturing identity, primary entity, methods, and linkage to implementations and controllers.",
+    "Identity": {
+      "Fields": [ "InterfaceName", "Namespace", "FullName", "IsGeneric", "GenericArity", "BaseInterfaces", "PrimaryEntity", "Role" ],
+      "PrimaryEntity": "Simple class name of the primary entity the interface operates on (e.g. Device).",
+      "RoleValues": [ "ManagerContract", "RepositoryContract", "ServiceContract", "OtherContract" ]
+    },
+    "Methods": {
+      "Description": "Summarized contract surface of the interface methods.",
+      "Fields": [ "Name (string)", "ReturnType (string)", "IsAsync (bool)", "Parameters (array)", "Summary (string, optional)" ],
+      "ParameterFields": [ "Name (string)", "Type (string)", "IsOptional (bool)", "DefaultValue (string, optional)" ]
+    },
+    "Usage": {
+      "ImplementedBy": "Array of full class names that implement this interface.",
+      "UsedByControllers": "Array of EndpointKeys from IDX-0041 for endpoints that depend on this interface via DI."
+    },
+    "Ordering": { "Rule": "One InterfaceOverview chunk per interface; chunks within a file are ordered in source order and assigned PartIndex/PartTotal per IDX-019." },
+    "Rationale": [ "Provides a compact contract-level description of interfaces.", "Connects interfaces to their implementations and consuming controllers.", "Complements Manager/Repository/Controller DDRs without duplicating UI metadata.", "Supports LLM and tooling scenarios that need to reason about contracts independent of implementations." ]
   }
-
-
-
-
-
-
-
 ]

@@ -26,17 +26,17 @@ namespace LagoVista.AI.Rag.Services
         //public const int IndexVersion = 1;
 
         private static readonly Regex HeaderRegex = new Regex(
-            @"^\/\/\s---\sBEGIN\sCODE\sINDEX\sMETA\s\(do\snot\sedit\)\s---\s*\r?\n" +
-            @"\/\/\sContentHash:\s(?<hash>[0-9a-f]{64})\s*\r?\n" +
-            @"\/\/\sIndexVersion:\s(?<ver>\d+)\s*\r?\n" +
-            @"\/\/\s---\sEND\sCODE\sINDEX\sMETA\s---\s*\r?\n?",
+            @"^//\s---\sBEGIN\sCODE\sINDEX\sMETA\s\(do\snot\sedit\)\s---\s*\r?\n" +
+            @"//\sContentHash:\s(?<hash>[0-9a-f]{64})\s*\r?\n" +
+            @"//\sIndexVersion:\s(?<ver>\d+)\s*\r?\n" +
+            @"//\s---\sEND\sCODE\sINDEX\sMETA\s---\s*\r?\n?",
             RegexOptions.Compiled | RegexOptions.Multiline | RegexOptions.CultureInvariant);
 
         /// <summary>
         /// Return C# files that need (re)indexing.
         /// A file is flagged when:
         ///  - it has no header, or
-        ///  - the stored hash != current hash of the body (header excluded, CRLF normalized).
+        ///  - the stored hash != current hash of the body (header excluded, CRLF-normalized).
         /// </summary>
         public IEnumerable<string> GetFilesNeedingIndex(IEnumerable<string> csharpFiles, int currentVersion)
         {
@@ -47,10 +47,9 @@ namespace LagoVista.AI.Rag.Services
                 var textRaw = File.ReadAllText(file);
                 var hasHeader = TryReadStoredHash(textRaw, out var storedHash, out var version);
 
-                // Compute current body hash on CRLF-normalized body WITHOUT header
+                // Compute current body hash on normalized body WITHOUT header
                 var bodyText = StripHeader(textRaw, out _);
-                var bodyCrlf = NormalizeToCrlf(bodyText);
-                var currentHash = ComputeHash(bodyCrlf);
+                var currentHash = ContentHashUtil.ComputeContentHash(bodyText);
 
                 if (!hasHeader || !string.Equals(storedHash, currentHash, StringComparison.OrdinalIgnoreCase) || currentVersion != version)
                 {
@@ -70,11 +69,11 @@ namespace LagoVista.AI.Rag.Services
             // 1) Remove existing header (if any)
             var bodyOnly = StripHeader(textRaw, out var hadHeader);
 
-            // 2) Normalize body to CRLF so subsequent hashing/reads are stable
-            var bodyCrlf = NormalizeToCrlf(bodyOnly);
+            // 2) Compute body hash on normalized text
+            var hash = ContentHashUtil.ComputeContentHash(bodyOnly);
 
-            // 3) Compute body hash on CRLF text
-            var hash = ComputeHash(bodyCrlf);
+            // 3) Normalize body to CRLF so subsequent hashing/reads are stable
+            var bodyCrlf = ContentHashUtil.NormalizeToCrlf(bodyOnly);
 
             // 4) Build header (CRLF newlines)
             var header = BuildHeader(hash, version);
@@ -116,31 +115,6 @@ namespace LagoVista.AI.Rag.Services
             }
             hadHeader = false;
             return text;
-        }
-
-        /// <summary>
-        /// Normalize all line endings in the provided text to CRLF (\r\n).
-        /// </summary>
-        private static string NormalizeToCrlf(string text)
-        {
-            if (string.IsNullOrEmpty(text)) return text;
-            // First, normalize all to LF
-            var lf = text.Replace("\r\n", "\n").Replace("\r", "\n");
-            // Then convert to CRLF
-            return lf.Replace("\n", "\r\n");
-        }
-
-        /// <summary>
-        /// Compute a SHA-256 hash of the given string (UTF-8 bytes).
-        /// </summary>
-        private static string ComputeHash(string text)
-        {
-            using var sha = SHA256.Create();
-            var bytes = Encoding.UTF8.GetBytes(text);
-            var hash = sha.ComputeHash(bytes);
-            var sb = new StringBuilder(hash.Length * 2);
-            foreach (var b in hash) sb.Append(b.ToString("x2"));
-            return sb.ToString();
         }
 
         /// <summary>

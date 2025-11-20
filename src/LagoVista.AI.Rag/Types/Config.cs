@@ -1,7 +1,3 @@
-// --- BEGIN CODE INDEX META (do not edit) ---
-// ContentHash: 391645f6d04e209d66bbcebeb470d282a37f5c16521331291417913caebf350e
-// IndexVersion: 2
-// --- END CODE INDEX META ---
 using LagoVista.AI.CloudRepos;
 using LagoVista.Core.Interfaces;
 using System;
@@ -12,8 +8,19 @@ namespace LagoVista.AI.Rag.Types
     public class IngestionConfig
     {
         public string OrgId { get; set; }
-      
-        public bool Reindex { get; set; }
+
+        /// <summary>
+        /// Global reindex mode for this run.
+        /// Stored as a string so it can be manually edited in appsettings.
+        /// Suggested values (case-insensitive):
+        ///   null/empty  - default behavior (only changed/flagged files)
+        ///   "none"     - same as default, no global override
+        ///   "chunk"    - force re-chunk/re-embed where applicable
+        ///   "full"     - force a full reindex pass
+        /// This is a high-level knob; per-file Reindex in the local index
+        /// (null | "chunk" | "full") still controls fine-grained behavior.
+        /// </summary>
+        public string Reindex { get; set; }
 
         public int IndexVersion { get; set; }
 
@@ -44,7 +51,7 @@ namespace LagoVista.AI.Rag.Types
 
         public int MaxTokensPerChunk { get; set; }
         public int OverlapLines { get; set; }
-        public string SourceRoot { get; set; } = String.Empty;
+        public string SourceRoot { get; set; } = string.Empty;
         public List<string> Repositories { get; set; } = new List<string>();
         public List<string> Include { get; set; } = new List<string>();
         public List<string> Exclude { get; set; } = new List<string>();
@@ -67,4 +74,3 @@ namespace LagoVista.AI.Rag.Types
         public bool ShouldConsolidateCollections => throw new NotImplementedException();
     }
 }
-
