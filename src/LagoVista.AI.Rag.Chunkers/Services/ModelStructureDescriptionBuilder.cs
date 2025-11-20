@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using LagoVista.AI.Rag.Chunkers.Models;
-using LagoVista.Core.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -12,8 +10,8 @@ namespace LagoVista.AI.Rag.Chunkers.Services
 {
     /// <summary>
     /// Builds IDX-0037 ModelStructureDescription from raw C# source.
-    /// Works primarily from syntax and a resource dictionary, and augments
-    /// with EntityBase properties via reflection when the model inherits EntityBase.
+    /// Works purely from syntax (no reflection) and a resource dictionary.
+    /// Also infers EntityHeader-based relationships for the structural graph.
     /// </summary>
     public static class ModelStructureDescriptionBuilder
     {
@@ -150,7 +148,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 // Shape analysis: CLR type & collection
                 var (clrType, isCollection) = AnalyzePropertyType(prop.Type);
 
-                // Value vs reference (heuristic; no reflection available for the model itself)
+                // Value vs reference (heuristic; no reflection available)
                 var isValueType = LooksLikeValueType(clrType);
 
                 // Enum detection: if the (unqualified) type matches a known enum in this file
@@ -176,22 +174,55 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                     IsEnum = isEnum,
                     IsKey = isKey,
 
-                    // IDX-0037 wiring points – we will populate these in later iterations
+                    // IDX-0037 wiring points – we will populate these below as we detect
+                    // entity header references or child objects.
                     EntityHeaderRefKey = null,
                     ChildObjectKey = null,
                     Group = null
                 };
 
+                // -------- EntityHeader-based relationship detection --------
+                // We only treat EntityHeader<T> as true external relationships.
+                if (IsEntityHeaderType(clrType, out var targetTypeName))
+                {
+                    var refKey = ToCamelCase(propertyName);
+
+                    // Register entity header reference
+                    result.EntityHeaderRefs.Add(new ModelEntityHeaderRefDescription
+                    {
+                        Key = refKey,
+                        PropertyName = propertyName,
+                        TargetType = targetTypeName,
+                        Domain = null, // can be populated in a later pass when domain metadata is available
+                        IsCollection = isCollection
+                    });
+
+                    // Wire property back to the ref key
+                    propDesc.EntityHeaderRefKey = refKey;
+
+                    // Create a relationship edge in the model graph
+                    var toModelSimple = GetSimpleTypeName(targetTypeName ?? "EntityHeader");
+                    var relName = $"{modelName}To{toModelSimple}";
+
+                    result.Relationships.Add(new ModelRelationshipDescription
+                    {
+                        Name = relName,
+                        FromModel = qualifiedName,
+                        ToModel = targetTypeName ?? "EntityHeader",
+                        Cardinality = isCollection ? "OneToMany" : "OneToOne",
+                        SourceProperty = propertyName,
+                        TargetProperty = null,
+                        Description = null
+                    });
+                }
+
                 result.Properties.Add(propDesc);
             }
 
-            // If the model inherits EntityBase, append EntityBase properties via reflection
-            if (InheritsEntityBase(modelType))
-            {
-                AppendEntityBaseProperties(result.Properties);
-            }
+            // EntityHeaderRefs and Relationships are currently derived solely from
+            // EntityHeader<T> properties. ChildObjects are treated as composition
+            // and not exposed as separate relationships at this stage.
 
-            // EntityHeaderRefs, ChildObjects, Relationships will be fleshed out in later passes
             return result;
         }
 
@@ -378,7 +409,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
 
         /// <summary>
         /// Analyze the CLR type string and whether this is a collection.
-        /// Handles simple types, generics like List<T>, and arrays.
+        /// Handles simple types, generics like List&lt;T&gt;, and arrays.
         /// </summary>
         private static (string clrType, bool isCollection) AnalyzePropertyType(TypeSyntax typeSyntax)
         {
@@ -445,113 +476,62 @@ namespace LagoVista.AI.Rag.Chunkers.Services
         }
 
         /// <summary>
-        /// Determine from syntax whether the model inherits EntityBase.
-        /// We only look at the simple base-type name (EntityBase or ...EntityBase).
+        /// Detects if a CLR type string represents an EntityHeader or EntityHeader&lt;T&gt;
+        /// and, when generic, extracts the target type name.
         /// </summary>
-        private static bool InheritsEntityBase(ClassDeclarationSyntax type)
+        private static bool IsEntityHeaderType(string clrType, out string targetType)
         {
-            if (type.BaseList == null) return false;
+            targetType = null;
+            if (string.IsNullOrWhiteSpace(clrType)) return false;
 
-            foreach (var bt in type.BaseList.Types)
+            var text = clrType.Trim();
+
+            // Look for EntityHeader<...> (fully-qualified or not)
+            var idx = text.IndexOf("EntityHeader<", StringComparison.Ordinal);
+            if (idx >= 0)
             {
-                var simple = bt.Type.ToString();
+                var start = idx + "EntityHeader<".Length;
+                var end = text.IndexOf('>', start);
+                if (end > start)
+                {
+                    targetType = text.Substring(start, end - start).Trim();
+                }
+                return true;
+            }
 
-                // Strip generics
-                var angleIdx = simple.IndexOf('<');
-                if (angleIdx >= 0)
-                    simple = simple.Substring(0, angleIdx);
-
-                // Strip namespace
-                var dotIdx = simple.LastIndexOf('.');
-                if (dotIdx >= 0 && dotIdx < simple.Length - 1)
-                    simple = simple.Substring(dotIdx + 1);
-
-                if (string.Equals(simple, nameof(EntityBase), StringComparison.Ordinal))
-                    return true;
+            // Non-generic EntityHeader (we keep targetType as null)
+            if (text.EndsWith("EntityHeader", StringComparison.Ordinal))
+            {
+                return true;
             }
 
             return false;
         }
 
-        /// <summary>
-        /// Append public instance properties from LagoVista.Core.Models.EntityBase
-        /// into the model's property list, skipping any that already exist.
-        /// </summary>
-        private static void AppendEntityBaseProperties(List<ModelPropertyDescription> properties)
+        private static string ToCamelCase(string name)
         {
-            if (properties == null)
-                return;
-
-            var entityBaseType = typeof(EntityBase);
-
-            var baseProps = entityBaseType.GetProperties(
-                BindingFlags.Public | BindingFlags.Instance);
-
-            var existingNames = new HashSet<string>(
-                properties.Select(p => p.Name),
-                StringComparer.OrdinalIgnoreCase);
-
-            foreach (var prop in baseProps)
-            {
-                if (existingNames.Contains(prop.Name))
-                    continue;
-
-                var type = prop.PropertyType;
-
-                bool isCollection =
-                    type != typeof(string) &&
-                    typeof(System.Collections.IEnumerable).IsAssignableFrom(type);
-
-                bool isValueType =
-                    type.IsValueType || type == typeof(string);
-
-                bool isEnum = type.IsEnum;
-
-                bool isKey =
-                    string.Equals(prop.Name, "Id", StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(prop.Name, "Key", StringComparison.OrdinalIgnoreCase);
-
-                properties.Add(new ModelPropertyDescription
-                {
-                    Name = prop.Name,
-                    ClrType = GetFriendlyClrName(type),
-                    IsCollection = isCollection,
-                    IsValueType = isValueType,
-                    IsEnum = isEnum,
-                    IsKey = isKey,
-                    EntityHeaderRefKey = null,
-                    ChildObjectKey = null,
-                    Group = "EntityBase"
-                });
-
-                existingNames.Add(prop.Name);
-            }
+            if (string.IsNullOrEmpty(name)) return name;
+            if (char.IsLower(name[0])) return name;
+            if (name.Length == 1) return name.ToLowerInvariant();
+            return char.ToLowerInvariant(name[0]) + name.Substring(1);
         }
 
-        private static string GetFriendlyClrName(Type type)
+        private static string GetSimpleTypeName(string typeName)
         {
-            if (type == typeof(string)) return "string";
-            if (type == typeof(int)) return "int";
-            if (type == typeof(long)) return "long";
-            if (type == typeof(bool)) return "bool";
-            if (type == typeof(DateTime)) return "DateTime";
-            if (type == typeof(Guid)) return "Guid";
+            if (string.IsNullOrWhiteSpace(typeName)) return typeName;
 
-            if (type.IsGenericType)
-            {
-                var def = type.GetGenericTypeDefinition();
-                var args = type.GetGenericArguments();
+            var simple = typeName;
 
-                var baseName = def.Name;
-                var tickIndex = baseName.IndexOf('`');
-                if (tickIndex >= 0)
-                    baseName = baseName.Substring(0, tickIndex);
+            // Strip generic arguments if present
+            var lt = simple.IndexOf('<');
+            if (lt >= 0)
+                simple = simple.Substring(0, lt);
 
-                var argNames = string.Join(", ", args.Select(GetFriendlyClrName));
-                return baseName + "<" + argNames + ">";
-            }
+            var dot = simple.LastIndexOf('.');
+            if (dot >= 0 && dot < simple.Length - 1)
+                simple = simple.Substring(dot + 1);
 
-            return type.Name;
+            return simple;
         }
     }
 }
