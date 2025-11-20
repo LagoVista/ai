@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using LagoVista.AI.Rag.Chunkers.Models;
 using LagoVista.AI.Rag.Chunkers.Services;
 using NUnit.Framework;
@@ -141,6 +142,323 @@ namespace MyApp.Models
                 Assert.That(rel.Cardinality, Is.EqualTo("OneToMany"));
                 Assert.That(rel.SourceProperty, Is.EqualTo("Customers"));
                 Assert.That(rel.TargetProperty, Is.Null);
+            });
+        }
+
+        [Test]
+        public void Builds_EntityHeader_Relationships_From_Model()
+        {
+            // Note: this is raw C# source passed into the Roslyn-based builder.
+            // Types like AIResources, AIDomain, EntityHeader, etc. do NOT need
+            // to exist at runtime. They are just plain text to the parser.
+            var source = @"
+using LagoVista.Core.Models;
+using LagoVista.Core.Models.UIMetaData;
+using LagoVista.Core.Attributes;
+using LagoVista.Core;
+using System.Collections.Generic;
+
+namespace LagoVista.AI.Models
+{
+    public enum LlmProviders { OpenAI }
+
+    [EntityDescription(
+        AIDomain.AIAdmin,
+        AIResources.Names.AiAgentContext_Title,
+        AIResources.Names.AiAgentContext_Description,
+        AIResources.Names.AiAgentContext_Description,
+        EntityDescriptionAttribute.EntityTypes.CoreIoTModel,
+        typeof(AIResources),
+        GetUrl: ""/api/ai/agentcontext/{id}"",
+        GetListUrl: ""/api/ai/agentcontexts"",
+        FactoryUrl: ""/api/ai/agentcontext/factory"",
+        SaveUrl: ""/api/ai/agentcontext"",
+        DeleteUrl: ""/api/ai/agentcontext/{id}"",
+        ListUIUrl: ""/mlworkbench/agents"",
+        EditUIUrl: ""/mlworkbench/agent/{id}"",
+        CreateUIUrl: ""/mlworkbench/agent/add"",
+        Icon: ""icon-ae-database-3"")]
+    public class AgentContextTestData : EntityBase
+    {
+        [FormField(
+            LabelResource: AIResources.Names.AgentContext_LlmProvider,
+            FieldType: FieldTypes.Picker,
+            EnumType: typeof(LlmProviders),
+            ResourceType: typeof(AIResources))]
+        public EntityHeader<LlmProviders> LlmProvider { get; set; }
+
+        [FormField(
+            LabelResource: AIResources.Names.AgentContext_DefaultConversationContext,
+            FieldType: FieldTypes.EntityHeaderPicker,
+            ResourceType: typeof(AIResources))]
+        public EntityHeader DefaultConversationContext { get; set; }
+    }
+}
+";
+
+            // Minimal resource dictionary to satisfy EntityDescription lookups
+            var resources = new Dictionary<string, string>
+            {
+                ["AiAgentContext_Title"] = "AI Agent Context",
+                ["AiAgentContext_Description"] = "AI Agent Context Description"
+            };
+
+            var description = ModelStructureDescriptionBuilder.FromSource(
+                source,
+                "src/Models/AgentContextTestData.cs",
+                resources);
+
+            Assert.Multiple(() =>
+            {
+                // Expect two EntityHeader-based properties
+                Assert.That(description.EntityHeaderRefs, Has.Count.EqualTo(2),
+                    "Should detect two EntityHeader references.");
+                Assert.That(description.Relationships, Has.Count.EqualTo(2),
+                    "Each EntityHeader should produce one relationship.");
+
+                // ----- LlmProvider: EntityHeader<LlmProviders> (One-to-One) -----
+                var llmRef = description.EntityHeaderRefs
+                    .Single(r => r.PropertyName == "LlmProvider");
+
+                Assert.That(llmRef.Key, Is.EqualTo("llmProvider"));
+                Assert.That(llmRef.TargetType, Is.EqualTo("LlmProviders"));
+                Assert.That(llmRef.IsCollection, Is.False);
+
+                var llmRel = description.Relationships
+                    .Single(r => r.SourceProperty == "LlmProvider");
+
+                Assert.That(llmRel.FromModel, Is.EqualTo(description.QualifiedName));
+                Assert.That(llmRel.ToModel, Is.EqualTo("LlmProviders"));
+                Assert.That(llmRel.Cardinality, Is.EqualTo("OneToOne"));
+
+                // ----- DefaultConversationContext: plain EntityHeader (One-to-One) -----
+                var defaultRef = description.EntityHeaderRefs
+                    .Single(r => r.PropertyName == "DefaultConversationContext");
+
+                Assert.That(defaultRef.Key, Is.EqualTo("defaultConversationContext"));
+                Assert.That(defaultRef.TargetType, Is.Null);
+                Assert.That(defaultRef.IsCollection, Is.False);
+
+                var defaultRel = description.Relationships
+                    .Single(r => r.SourceProperty == "DefaultConversationContext");
+
+                Assert.That(defaultRel.FromModel, Is.EqualTo(description.QualifiedName));
+                Assert.That(defaultRel.ToModel, Is.EqualTo("EntityHeader"));
+                Assert.That(defaultRel.Cardinality, Is.EqualTo("OneToOne"));
+            });
+        }
+
+        [Test]
+        public void Builds_Single_ChildView_Composition_From_Model()
+        {
+            var source = @"
+using LagoVista.Core.Models;
+using LagoVista.Core.Models.UIMetaData;
+using LagoVista.Core.Attributes;
+using System.Collections.Generic;
+
+namespace LagoVista.AI.Models
+{
+    public static class AIResources
+    {
+        public static class Names
+        {
+            public const string AgentContext_Title = ""AgentContext_Title"";
+            public const string AgentContext_Description = ""AgentContext_Description"";
+            public const string Common_Name = ""Common_Name"";
+            public const string AgentContext_Address = ""AgentContext_Address"";
+            public const string Common_Street = ""Common_Street"";
+        }
+    }
+
+    public static class AIDomain
+    {
+        public const string AIAdmin = ""AIAdmin"";
+    }
+
+    [EntityDescription(
+        AIDomain.AIAdmin,
+        AIResources.Names.AgentContext_Title,
+        AIResources.Names.AgentContext_Description,
+        AIResources.Names.AgentContext_Description,
+        EntityDescriptionAttribute.EntityTypes.CoreIoTModel,
+        typeof(AIResources),
+        GetUrl: ""/api/ai/agentcontext/{id}"",
+        GetListUrl: ""/api/ai/agentcontexts"",
+        FactoryUrl: ""/api/ai/agentcontext/factory"",
+        SaveUrl: ""/api/ai/agentcontext"",
+        DeleteUrl: ""/api/ai/agentcontext/{id}"",
+        ListUIUrl: ""/mlworkbench/agents"",
+        EditUIUrl: ""/mlworkbench/agent/{id}"",
+        CreateUIUrl: ""/mlworkbench/agent/add"",
+        Icon: ""icon-ae-database-3"")]
+    public class ParentModel : EntityBase
+    {
+        [FormField(LabelResource: AIResources.Names.Common_Name,
+                   FieldType: FieldTypes.Text,
+                   ResourceType: typeof(AIResources))]
+        public string Name { get; set; }
+
+        [FormField(LabelResource: AIResources.Names.AgentContext_Address,
+                   FieldType: FieldTypes.ChildView,
+                   ResourceType: typeof(AIResources))]
+        public Address Address { get; set; }
+    }
+
+    public class Address
+    {
+        [FormField(LabelResource: AIResources.Names.Common_Street,
+                   FieldType: FieldTypes.Text,
+                   ResourceType: typeof(AIResources))]
+        public string Street { get; set; }
+    }
+}
+";
+
+            var resources = new Dictionary<string, string>
+            {
+                ["AgentContext_Title"] = "Agent Context",
+                ["AgentContext_Description"] = "Agent Context Description",
+                ["Common_Name"] = "Name",
+                ["AgentContext_Address"] = "Address",
+                ["Common_Street"] = "Street"
+            };
+
+            var description = ModelStructureDescriptionBuilder.FromSource(
+                source,
+                "src/Models/ParentModel.cs",
+                resources);
+
+            Assert.Multiple(() =>
+            {
+                // We should still have the scalar Name property.
+                var nameProp = description.Properties.Single(p => p.Name == "Name");
+                Assert.That(nameProp.ClrType, Is.EqualTo("string"));
+                Assert.That(nameProp.IsCollection, Is.False);
+
+                // There should be a property for Address.
+                var addressProp = description.Properties.Single(p => p.Name == "Address");
+                Assert.That(addressProp.ClrType, Is.EqualTo("Address"));
+                Assert.That(addressProp.IsCollection, Is.False);
+
+                // And there should be a ChildObject entry keyed off Address.
+                Assert.That(description.ChildObjects, Has.Count.EqualTo(1));
+                var child = description.ChildObjects.Single();
+
+                Assert.That(child.PropertyName, Is.EqualTo("Address"));
+                Assert.That(child.Key, Is.EqualTo("address"));   // camelCase convention
+                Assert.That(child.ClrType, Is.EqualTo("Address"));
+                Assert.That(child.IsCollection, Is.False);
+
+                // Relationship-wise, we’re treating this as composition.
+                // Depending on how we wire it, we either:
+                //  - don’t add a Relationship entry, OR
+                //  - add one with Cardinality = ""Composition"".
+                //
+                // For now we’ll assert the conservative expectation:
+                Assert.That(description.Relationships.Any(r => r.SourceProperty == "Address"), Is.False);
+            });
+        }
+
+        [Test]
+        public void Builds_ChildList_Composition_From_Model()
+        {
+            var source = @"
+using LagoVista.Core.Models;
+using LagoVista.Core.Models.UIMetaData;
+using LagoVista.Core.Attributes;
+using System.Collections.Generic;
+
+namespace LagoVista.AI.Models
+{
+    public static class AIResources
+    {
+        public static class Names
+        {
+            public const string AgentContext_Title = ""AgentContext_Title"";
+            public const string AgentContext_Description = ""AgentContext_Description"";
+            public const string Common_Name = ""Common_Name"";
+            public const string AgentContext_Addresses = ""AgentContext_Addresses"";
+            public const string Common_Street = ""Common_Street"";
+        }
+    }
+
+    public static class AIDomain
+    {
+        public const string AIAdmin = ""AIAdmin"";
+    }
+
+    [EntityDescription(
+        AIDomain.AIAdmin,
+        AIResources.Names.AgentContext_Title,
+        AIResources.Names.AgentContext_Description,
+        AIResources.Names.AgentContext_Description,
+        EntityDescriptionAttribute.EntityTypes.CoreIoTModel,
+        typeof(AIResources),
+        GetUrl: ""/api/ai/agentcontext/{id}"",
+        GetListUrl: ""/api/ai/agentcontexts"",
+        FactoryUrl: ""/api/ai/agentcontext/factory"",
+        SaveUrl: ""/api/ai/agentcontext"",
+        DeleteUrl: ""/api/ai/agentcontext/{id}"",
+        ListUIUrl: ""/mlworkbench/agents"",
+        EditUIUrl: ""/mlworkbench/agent/{id}"",
+        CreateUIUrl: ""/mlworkbench/agent/add"",
+        Icon: ""icon-ae-database-3"")]
+    public class ParentModel : EntityBase
+    {
+        [FormField(LabelResource: AIResources.Names.Common_Name,
+                   FieldType: FieldTypes.Text,
+                   ResourceType: typeof(AIResources))]
+        public string Name { get; set; }
+
+        [FormField(LabelResource: AIResources.Names.AgentContext_Addresses,
+                   FieldType: FieldTypes.ChildListInline,
+                   ResourceType: typeof(AIResources))]
+        public List<Address> Addresses { get; set; }
+    }
+
+    public class Address
+    {
+        [FormField(LabelResource: AIResources.Names.Common_Street,
+                   FieldType: FieldTypes.Text,
+                   ResourceType: typeof(AIResources))]
+        public string Street { get; set; }
+    }
+}
+";
+
+            var resources = new Dictionary<string, string>
+            {
+                ["AgentContext_Title"] = "Agent Context",
+                ["AgentContext_Description"] = "Agent Context Description",
+                ["Common_Name"] = "Name",
+                ["AgentContext_Addresses"] = "Addresses",
+                ["Common_Street"] = "Street"
+            };
+
+            var description = ModelStructureDescriptionBuilder.FromSource(
+                source,
+                "src/Models/ParentModel.cs",
+                resources);
+
+            Assert.Multiple(() =>
+            {
+                // Addresses should appear as a collection property.
+                var addressesProp = description.Properties.Single(p => p.Name == "Addresses");
+                Assert.That(addressesProp.ClrType, Is.EqualTo("Address"));
+                Assert.That(addressesProp.IsCollection, Is.True);
+
+                // And there should be a ChildObject entry describing the composition.
+                Assert.That(description.ChildObjects, Has.Count.EqualTo(1));
+                var child = description.ChildObjects.Single();
+
+                Assert.That(child.PropertyName, Is.EqualTo("Addresses"));
+                Assert.That(child.Key, Is.EqualTo("addresses"));
+                Assert.That(child.ClrType, Is.EqualTo("Address"));
+                Assert.That(child.IsCollection, Is.True);
+
+                // Again, treat this as composition (no external relationship).
+                Assert.That(description.Relationships.Any(r => r.SourceProperty == "Addresses"), Is.False);
             });
         }
     }

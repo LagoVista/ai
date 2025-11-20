@@ -11,7 +11,8 @@ namespace LagoVista.AI.Rag.Chunkers.Services
     /// <summary>
     /// Builds IDX-0037 ModelStructureDescription from raw C# source.
     /// Works purely from syntax (no reflection) and a resource dictionary.
-    /// Also infers EntityHeader-based relationships for the structural graph.
+    /// Also infers EntityHeader-based relationships for the structural graph,
+    /// and composition-based child objects for ChildView / ChildList field types.
     /// </summary>
     public static class ModelStructureDescriptionBuilder
     {
@@ -158,8 +159,10 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                     simpleTypeName = simpleTypeName.Substring(dotIdx + 1);
                 var isEnum = enumNames.Contains(simpleTypeName);
 
-                // Primary-key heuristic: name-based and FormField type-based
+                // FieldType = enum argument on [FormField]
                 var fieldTypeName = GetNamedEnumName(formFieldAttr, "FieldType");
+
+                // Primary-key heuristic: name-based and FormField type-based
                 var isKey =
                     string.Equals(propertyName, "Key", StringComparison.OrdinalIgnoreCase) ||
                     propertyName.EndsWith("Id", StringComparison.OrdinalIgnoreCase) ||
@@ -174,7 +177,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                     IsEnum = isEnum,
                     IsKey = isKey,
 
-                    // IDX-0037 wiring points – we will populate these below as we detect
+                    // Wiring points – we will populate these below as we detect
                     // entity header references or child objects.
                     EntityHeaderRefKey = null,
                     ChildObjectKey = null,
@@ -214,6 +217,37 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                         TargetProperty = null,
                         Description = null
                     });
+                }
+
+                // -------- Child object / composition detection --------
+                // Treat ChildView/ChildItem/ChildList* as composition on this model.
+                if (!string.IsNullOrEmpty(fieldTypeName))
+                {
+                    if (string.Equals(fieldTypeName, "ChildView", StringComparison.Ordinal) ||
+                        string.Equals(fieldTypeName, "ChildItem", StringComparison.Ordinal))
+                    {
+                        AddChildObjectComposition(
+                            result,
+                            resources,
+                            propDesc,
+                            propertyName,
+                            clrType,
+                            isCollection: false,
+                            formFieldAttr: formFieldAttr);
+                    }
+                    else if (string.Equals(fieldTypeName, "ChildList", StringComparison.Ordinal) ||
+                             string.Equals(fieldTypeName, "ChildListInline", StringComparison.Ordinal) ||
+                             string.Equals(fieldTypeName, "ChildListInlinePicker", StringComparison.Ordinal))
+                    {
+                        AddChildObjectComposition(
+                            result,
+                            resources,
+                            propDesc,
+                            propertyName,
+                            clrType,
+                            isCollection: true,
+                            formFieldAttr: formFieldAttr);
+                    }
                 }
 
                 result.Properties.Add(propDesc);
@@ -359,33 +393,33 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                     return id.Identifier.Text;
 
                 case MemberAccessExpressionSyntax ma:
-                {
-                    var full = ma.ToString();
-                    var idx = full.IndexOf(".Names.", StringComparison.Ordinal);
-                    if (idx >= 0)
                     {
-                        var start = idx + ".Names.".Length;
-                        if (start < full.Length)
-                            return full.Substring(start);
-                    }
+                        var full = ma.ToString();
+                        var idx = full.IndexOf(".Names.", StringComparison.Ordinal);
+                        if (idx >= 0)
+                        {
+                            var start = idx + ".Names.".Length;
+                            if (start < full.Length)
+                                return full.Substring(start);
+                        }
 
-                    // Fallback: last identifier
-                    return ma.Name.Identifier.Text;
-                }
+                        // Fallback: last identifier
+                        return ma.Name.Identifier.Text;
+                    }
 
                 default:
-                {
-                    var text = expr.ToString();
-                    var idx = text.IndexOf(".Names.", StringComparison.Ordinal);
-                    if (idx >= 0)
                     {
-                        var start = idx + ".Names.".Length;
-                        if (start < text.Length)
-                            return text.Substring(start);
-                    }
+                        var text = expr.ToString();
+                        var idx = text.IndexOf(".Names.", StringComparison.Ordinal);
+                        if (idx >= 0)
+                        {
+                            var start = idx + ".Names.".Length;
+                            if (start < text.Length)
+                                return text.Substring(start);
+                        }
 
-                    return text;
-                }
+                        return text;
+                    }
             }
         }
 
@@ -419,21 +453,21 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                     return (ats.ElementType.ToString(), true);
 
                 case GenericNameSyntax gns:
-                {
-                    var name = gns.Identifier.ValueText;
-                    var isCollection = string.Equals(name, "List", StringComparison.Ordinal) ||
-                                       string.Equals(name, "IList", StringComparison.Ordinal) ||
-                                       string.Equals(name, "ICollection", StringComparison.Ordinal) ||
-                                       string.Equals(name, "IEnumerable", StringComparison.Ordinal);
-
-                    if (isCollection && gns.TypeArgumentList.Arguments.Count == 1)
                     {
-                        var inner = gns.TypeArgumentList.Arguments[0].ToString();
-                        return (inner, true);
-                    }
+                        var name = gns.Identifier.ValueText;
+                        var isCollection = string.Equals(name, "List", StringComparison.Ordinal) ||
+                                           string.Equals(name, "IList", StringComparison.Ordinal) ||
+                                           string.Equals(name, "ICollection", StringComparison.Ordinal) ||
+                                           string.Equals(name, "IEnumerable", StringComparison.Ordinal);
 
-                    return (typeSyntax.ToString(), isCollection);
-                }
+                        if (isCollection && gns.TypeArgumentList.Arguments.Count == 1)
+                        {
+                            var inner = gns.TypeArgumentList.Arguments[0].ToString();
+                            return (inner, true);
+                        }
+
+                        return (typeSyntax.ToString(), isCollection);
+                    }
 
                 default:
                     return (typeSyntax.ToString(), false);
@@ -506,6 +540,55 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             }
 
             return false;
+        }
+
+        private static void AddChildObjectComposition(
+            ModelStructureDescription result,
+            IReadOnlyDictionary<string, string> resources,
+            ModelPropertyDescription propDesc,
+            string propertyName,
+            string clrType,
+            bool isCollection,
+            AttributeSyntax formFieldAttr)
+        {
+            // If we've already registered a child object for this property, just wire the key.
+            var existing = result.ChildObjects.FirstOrDefault(c => c.PropertyName == propertyName);
+            if (existing != null)
+            {
+                propDesc.ChildObjectKey = existing.Key;
+                return;
+            }
+
+            var key = ToCamelCase(propertyName);
+
+            // Title/Description from label/help resources when available
+            string title = null;
+            string description = null;
+
+            var labelKey = GetNamedResourceKey(formFieldAttr, "LabelResource");
+            if (!string.IsNullOrWhiteSpace(labelKey))
+            {
+                title = Lookup(resources, labelKey, $"FormField LabelResource for {propertyName}");
+            }
+
+            var helpKey = GetNamedResourceKey(formFieldAttr, "HelpResource");
+            if (!string.IsNullOrWhiteSpace(helpKey))
+            {
+                description = Lookup(resources, helpKey, $"FormField HelpResource for {propertyName}");
+            }
+
+            var child = new ModelChildObjectDescription
+            {
+                Key = key,
+                PropertyName = propertyName,
+                ClrType = clrType,
+                IsCollection = isCollection,
+                Title = title,
+                Description = description
+            };
+
+            result.ChildObjects.Add(child);
+            propDesc.ChildObjectKey = key;
         }
 
         private static string ToCamelCase(string name)
