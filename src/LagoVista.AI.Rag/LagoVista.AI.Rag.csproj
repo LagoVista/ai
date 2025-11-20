@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LagoVista.AI.CloudRepos\LagoVista.AI.CloudRepos.csproj" />
+    <ProjectReference Include="..\LagoVista.AI.Rag.Chunkers\LagoVista.AI.Rag.Chunkers.csproj" />
   </ItemGroup>
 
 </Project>
