@@ -5,28 +5,13 @@ using LagoVista.AI.Models;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.Resources;
+using LagoVista.AI.Rag.Chunkers.Models;
 
 namespace LagoVista.AI.Rag.Chunkers.Tests
 {
     [TestFixture]
     public class ModelStructureDescriptionBuilderTests
     {
-        private static string GetContentPath(params string[] parts)
-        {
-            // TestDirectory points at .../tests/LagoVista.AI.Rag.Chunkers.Tests/bin/Debug/netX
-            // We walk up to the repo root, then back down into tests/.../Content.
-            var baseDir = TestContext.CurrentContext.TestDirectory;
-            var repoRoot = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..")); // up from bin/Debug/netX
-            var contentRoot = Path.Combine(repoRoot, "tests", "LagoVista.AI.Rag.Chunkers.Tests", "Content");
-
-            foreach (var part in parts)
-            {
-                contentRoot = Path.Combine(contentRoot, part);
-            }
-
-            return contentRoot;
-        }
-
         [Test]
         public void Builds_Structure_From_Device_Model_Source()
         {
