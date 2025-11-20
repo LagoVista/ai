@@ -4,64 +4,55 @@ using System.Collections.Generic;
 namespace LagoVista.AI.Rag.Types
 {
     /// <summary>
-    /// Represents the indexing decision for a single file.
+    /// File-level ingestion decision for a single source file.
     /// </summary>
-    public class FilePlanItem
+    public class PlannedFileIngestion
     {
-        public string FilePath { get; set; }
-
-        /// <summary>
-        /// Canonical path for the file (usually the same as FilePath for now).
-        /// </summary>
+        public string RepoRoot { get; set; }
+        public string ProjectId { get; set; }
+        public string RepoUrl { get; set; }
         public string CanonicalPath { get; set; }
-
-        /// <summary>
-        /// Optional DocId associated with this file when known.
-        /// </summary>
         public string DocId { get; set; }
+        public string LocalPath { get; set; }
 
         /// <summary>
-        /// Action for this file: "Skip" | "Index" | "Delete".
+        /// null | "chunk" | "full" per IDX-0036.
         /// </summary>
-        public string Action { get; set; }
+        public string Reindex { get; set; }
 
         /// <summary>
-        /// Reindex mode: null | "chunk" | "full".
-        /// Mirrors LocalIndexRecord.Reindex.
+        /// True when the current on-disk content differs from the last indexed content
+        /// or an explicit Reindex flag is set.
         /// </summary>
-        public string ReindexMode { get; set; }
+        public bool IsActive { get; set; }
 
         /// <summary>
-        /// Human-friendly reason for the decision (for logs and debugging).
+        /// True when this file has never been indexed before (no ContentHash recorded).
         /// </summary>
-        public string Reason { get; set; }
+        public bool IsNewDocument { get; set; }
     }
 
     /// <summary>
-    /// Overall plan for a repository indexing run.
+    /// Planned deletion of all chunks for a DocId (IDX-0034, IDX-0035).
     /// </summary>
-    public class IngestionPlan
+    public class PlannedDocDeletion
     {
-        public List<FilePlanItem> Files { get; set; } = new List<FilePlanItem>();
+        public string RepoUrl { get; set; }
+        public string DocId { get; set; }
+        public string CanonicalPath { get; set; }
+    }
 
-        /// <summary>
-        /// Total number of files discovered on disk for this repo.
-        /// </summary>
-        public int TotalDiscoveredFiles { get; set; }
+    /// <summary>
+    /// Overall ingestion plan for a single repository.
+    /// </summary>
+    public class FileIngestionPlan
+    {
+        public string RepoRoot { get; set; }
+        public string RepoUrl { get; set; }
+        public string BranchRef { get; set; }
+        public string ProjectId { get; set; }
 
-        /// <summary>
-        /// Records whose files are missing from disk and should have their chunks deleted.
-        /// </summary>
-        public int TotalMissingFiles { get; set; }
-
-        /// <summary>
-        /// How many files should be (re)indexed this run.
-        /// </summary>
-        public int TotalToIndex { get; set; }
-
-        /// <summary>
-        /// How many records are purely deletions (no replacement chunks).
-        /// </summary>
-        public int TotalToDelete { get; set; }
+        public List<PlannedFileIngestion> FilesToIndex { get; set; } = new List<PlannedFileIngestion>();
+        public List<PlannedDocDeletion> DocsToDelete { get; set; } = new List<PlannedDocDeletion>();
     }
 }
