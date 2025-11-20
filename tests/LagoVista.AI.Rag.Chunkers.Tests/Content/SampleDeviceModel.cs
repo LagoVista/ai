@@ -1,7 +1,3 @@
-// --- BEGIN CODE INDEX META (do not edit) ---
-// ContentHash: 9691650f74ac0a4a1a4874cef7dbe09f9dae22cae37448f3f6ff08b058887e32
-// IndexVersion: 2
-// --- END CODE INDEX META ---
 using LagoVista.AI.Models.Resources;
 using LagoVista.Core;
 using LagoVista.Core.Attributes;
@@ -17,7 +13,7 @@ namespace LagoVista.AI.Models
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.AiAgentContext_Title, AIResources.Names.AiAgentContext_Description, AIResources.Names.AiAgentContext_Description, EntityDescriptionAttribute.EntityTypes.CoreIoTModel, typeof(AIResources),
         GetUrl: "/api/ai/agentcontext/{id}", GetListUrl: "/api/ai/agentcontexts", FactoryUrl: "/api/ai/agentcontext/factory", SaveUrl: "/api/ai/agentcontext", DeleteUrl: "/api/ai/agentcontext/{id}",
         ListUIUrl: "/mlworkbench/agents", EditUIUrl: "/mlworkbench/agent/{id}", CreateUIUrl: "/mlworkbench/agent/add", Icon: "icon-ae-database-3")]
-    public class AgentContext : EntityBase, IFormDescriptor, ISummaryFactory, IFormConditionalFields, IValidateable, IFormDescriptorCol2, IFormDescriptorBottom
+    public class AgentContextTestData : EntityBase, IFormDescriptor, ISummaryFactory, IFormConditionalFields, IValidateable, IFormDescriptorCol2, IFormDescriptorBottom
     {
         public const string LlmProvider_OpenAI = "openai";
 
@@ -127,45 +123,5 @@ namespace LagoVista.AI.Models
                 nameof(Description)
             };
         }
-    }
-
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.AgentContext_ConversationContext_Title, AIResources.Names.AgentContext_ConversationContext_Description, AIResources.Names.AgentContext_ConversationContext_Description, EntityDescriptionAttribute.EntityTypes.ChildObject, typeof(AIResources),
-    FactoryUrl: "/api/ai/agent/conversation/context/factory")]
-    public class ConversationContext : IFormDescriptor, IValidateable, IConversationContext
-    {
-        public string Id { get; set; } = Guid.NewGuid().ToId();
-
-        [FormField(LabelResource: AIResources.Names.Common_Name, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
-        public string Name { get; set; }
-
-        [FormField(LabelResource: AIResources.Names.AgentContext_ConversationContext_ModelName, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
-        public string ModelName { get; set; } = "gpt-5";
-
-        [FormField(LabelResource: AIResources.Names.AgentContext_ConversationContext_System, HelpResource: AIResources.Names.AgentContext_ConversationContext_System_Help,
-            FieldType: FieldTypes.MultiLineText, IsRequired: true, ResourceType: typeof(AIResources))]
-        public string System { get; set; }
-
-        [FormField(LabelResource: AIResources.Names.AgentContext_ConversationContext_Temperature, HelpResource: AIResources.Names.AgentContext_ConversationContext_Temperature_Help,
-            FieldType: FieldTypes.Decimal, IsRequired: true, ResourceType: typeof(AIResources))]
-        public float Temperature { get; set; } = 0.5f;
-
-        public List<string> GetFormFields()
-        {
-            return new List<string>()
-            {
-                nameof(Name),
-                nameof(ModelName),
-                nameof(System),
-                nameof(Temperature),
-            };
-        }
-    }
-
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.AiAgentContexts_Title, AIResources.Names.AiAgentContext_Description, AIResources.Names.AiAgentContext_Description, EntityDescriptionAttribute.EntityTypes.CoreIoTModel, typeof(AIResources),
-       GetUrl: "/api/ai/agentcontext/{id}", GetListUrl: "/api/ai/agentcontexts", FactoryUrl: "/api/ai/agentcontext/factory", SaveUrl: "/api/ai/agentcontext", DeleteUrl: "/api/ai/agentcontext/{id}",
-       ListUIUrl: "/mlworkbench/agents", EditUIUrl: "/mlworkbench/agent/{id}", CreateUIUrl: "/mlworkbench/agent/add", Icon: "icon-ae-database-3")]
-    public class AgentContextSummary : SummaryData
-    {
-
     }
 }

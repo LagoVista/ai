@@ -89,18 +89,20 @@ namespace LagoVista.AI.Rag.Services
                         var repoRelative = Path.GetRelativePath(repoRoot, fullPath)
                             .Replace('\\', '/');
 
-                        var detection = SubKindDetector.DetectForFile(text, repoRelative);
-
-                        results.Add(new SubKindTestResult
+                        var subKindResults = SubKindDetector.DetectForFile(text, repoRelative);
+                        foreach (var subKindresult in subKindResults)
                         {
-                            RepoId = repoId,
-                            RepoRelativePath = repoRelative,
-                            SubKind = detection.SubKind,
-                            PrimaryTypeName = detection.PrimaryTypeName
-                        });
+                            results.Add(new SubKindTestResult
+                            {
+                                RepoId = repoId,
+                                RepoRelativePath = repoRelative,
+                                SubKind = subKindresult.SubKind,
+                                PrimaryTypeName = subKindresult.PrimaryTypeName
+                            });
+                        }
 
+                        }
                     }
-                }
             }
 
             return results;

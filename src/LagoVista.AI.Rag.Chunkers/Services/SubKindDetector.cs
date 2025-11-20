@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using LagoVista.AI.Rag.Chunkers.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -9,13 +11,16 @@ namespace LagoVista.AI.Rag.Chunkers.Services
 {
     /// <summary>
     /// Detects SubKind for server-side C# code using syntax-only heuristics
-    /// derived from IDX-024 and IDX-031 plus an additional Test SubKind.
+    /// derived from IDX-024 and IDX-031 plus additional SubKinds.
     /// Works purely from source text and relative path – no reflection required.
+    /// 
+    /// NOTE: This version returns one SubKindDetectionResult per type found in the file.
     /// </summary>
     public enum CodeSubKind
     {
         DomainDescription,
         Model,
+        SummaryListModel,
         Manager,
         Repository,
         Controller,
@@ -35,18 +40,8 @@ namespace LagoVista.AI.Rag.Chunkers.Services
         Result,
         Response,
         ProxyServices,
+        Message,
         Other
-    }
-
-    public sealed class SubKindDetectionResult
-    {
-        public string Path { get; set; }
-        public CodeSubKind SubKind { get; set; }
-        public string SubKindString => SubKind.ToString();
-        public string PrimaryTypeName { get; set; }
-        public bool IsMixed { get; set; }
-        public string Reason { get; set; }
-        public IReadOnlyList<string> Evidence { get; set; } = Array.Empty<string>();
     }
 
     public static class SubKindDetector
@@ -59,27 +54,34 @@ namespace LagoVista.AI.Rag.Chunkers.Services
         }
 
         /// <summary>
-        /// Detects the most appropriate SubKind for a C# source file.
+        /// Detects the most appropriate SubKind(s) for all top-level types in a C# source file.
+        /// Returns one SubKindDetectionResult per type.
         /// </summary>
-        public static SubKindDetectionResult DetectForFile(string sourceText, string relativePath)
+        public static IReadOnlyList<SubKindDetectionResult> DetectForFile(string sourceText, string relativePath)
         {
             if (sourceText == null) throw new ArgumentNullException(nameof(sourceText));
 
-            var tree = CSharpSyntaxTree.ParseText(sourceText);
-            var root = tree.GetRoot();
-
-            if(relativePath.ToLower().EndsWith("resx"))
+            // Resource (.resx) files are handled as a special case and do not need Roslyn parsing.
+            if (!string.IsNullOrEmpty(relativePath) &&
+                relativePath.EndsWith("resx", StringComparison.OrdinalIgnoreCase))
             {
-                return new SubKindDetectionResult
+                return new[]
                 {
-                    SubKind = CodeSubKind.ResourceFile,
-                    PrimaryTypeName = null,
-                    IsMixed = false,
-                    Path = relativePath,
-                    Reason = "File name ended with RESX, is a ersource file.",
-                    Evidence = Array.Empty<string>()
+                    new SubKindDetectionResult
+                    {
+                        SubKind = CodeSubKind.ResourceFile,
+                        PrimaryTypeName = null,
+                        IsMixed = false,
+                        Path = relativePath,
+                        Reason = "File name ended with RESX, classified as ResourceFile.",
+                        Evidence = Array.Empty<string>(),
+                        SymbolText = null
+                    }
                 };
             }
+
+            var tree = CSharpSyntaxTree.ParseText(sourceText);
+            var root = tree.GetRoot();
 
             var segments = (relativePath ?? string.Empty)
                 .Replace('\\', '/')
@@ -95,16 +97,21 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 .OfType<TypeDeclarationSyntax>()
                 .ToList();
 
+            // No types: still return a single result so callers have something to key off of.
             if (typeNodes.Count == 0)
             {
-                return new SubKindDetectionResult
+                return new[]
                 {
-                    SubKind = CodeSubKind.Other,
-                    PrimaryTypeName = null,
-                    IsMixed = false,
-                    Path = relativePath,
-                    Reason = "No top-level types found; defaulting SubKind=Other.",
-                    Evidence = Array.Empty<string>()
+                    new SubKindDetectionResult
+                    {
+                        SubKind = CodeSubKind.Other,
+                        PrimaryTypeName = null,
+                        IsMixed = false,
+                        Path = relativePath,
+                        Reason = "No top-level types found; defaulting SubKind=Other.",
+                        Evidence = Array.Empty<string>(),
+                        SymbolText = null
+                    }
                 };
             }
 
@@ -133,6 +140,10 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 {
                     info.Kind = CodeSubKind.Exception;
                 }
+                else if (IsListModel(type, ns, segments, info.Evidence))
+                {
+                    info.Kind = CodeSubKind.SummaryListModel;
+                }
                 else if (IsModel(type, ns, segments, info.Evidence))
                 {
                     info.Kind = CodeSubKind.Model;
@@ -157,89 +168,74 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 {
                     info.Kind = CodeSubKind.Interface;
                 }
-                else if(IsStartup(type, ns, segments, info.Evidence))
+                else if (IsStartup(type, ns, segments, info.Evidence))
                 {
                     info.Kind = CodeSubKind.Startup;
                 }
-                
 
                 inferences.Add(info);
             }
 
-            var distinctKinds = inferences
-                .Select(i => i.Kind)
-                .Where(k => k.HasValue)
-                .Select(k => k.Value)
-                .Distinct()
-                .ToList();
-
-            CodeSubKind chosen;
-
-            // File-level priority: Tests win over everything else.
-            if (distinctKinds.Contains(CodeSubKind.Test))
-                chosen = CodeSubKind.Test;
-            else if (distinctKinds.Contains(CodeSubKind.DomainDescription))
-                chosen = CodeSubKind.DomainDescription;
-            else if (distinctKinds.Contains(CodeSubKind.Model))
-                chosen = CodeSubKind.Model;
-            else if (distinctKinds.Contains(CodeSubKind.Manager))
-                chosen = CodeSubKind.Manager;
-            else if (distinctKinds.Contains(CodeSubKind.Repository))
-                chosen = CodeSubKind.Repository;
-            else if (distinctKinds.Contains(CodeSubKind.Controller))
-                chosen = CodeSubKind.Controller;
-            else if (distinctKinds.Contains(CodeSubKind.Service))
-                chosen = CodeSubKind.Service;
-            else if (distinctKinds.Contains(CodeSubKind.Interface))
-                chosen = CodeSubKind.Interface;
-            else if (distinctKinds.Contains(CodeSubKind.Exception))
-                chosen = CodeSubKind.Exception;
-            else if (distinctKinds.Contains(CodeSubKind.Client))
-                chosen = CodeSubKind.Client;
-            else if (distinctKinds.Contains(CodeSubKind.CodeAttribute))
-                chosen = CodeSubKind.CodeAttribute;
-            else
-                chosen = CodeSubKind.Other;
-
-            var isMixed = distinctKinds.Count > 1;
-
-            var winningTypes = inferences
-                .Where(i => i.Kind == chosen)
-                .ToList();
-
-            var primaryTypeName = winningTypes.FirstOrDefault()?.Name ?? inferences.First().Name;
-
-            var evidence = winningTypes
-                .SelectMany(i => i.Evidence)
-                .Distinct()
-                .ToArray();
-
-            if(chosen == CodeSubKind.Other)
+            // Apply fallback name/path-based detection for any types that are still Other/unknown.
+            foreach (var inf in inferences)
             {
-                if(FallbackSubKindDetector(primaryTypeName, segments, out CodeSubKind subKind))
+                if (!inf.Kind.HasValue || inf.Kind.Value == CodeSubKind.Other)
                 {
-                    chosen = subKind;
+                    if (FallbackSubKindDetector(inf.Name, segments, out var fallbackKind) &&
+                        fallbackKind != CodeSubKind.Other)
+                    {
+                        inf.Kind = fallbackKind;
+                        inf.Evidence.Add(
+                            $"FallbackSubKindDetector matched '{inf.Name}'/path pattern -> {fallbackKind}.");
+                    }
                 }
             }
 
-            var reason = evidence.Length == 0
-                ? $"SubKind={chosen} inferred by fallback rules."
-                : $"SubKind={chosen} inferred based on: {string.Join("; ", evidence)}";
+            // Determine if the file is "mixed" (multiple distinct SubKinds).
+            var distinctKinds = inferences
+                .Where(i => i.Kind.HasValue)
+                .Select(i => i.Kind.Value)
+                .Distinct()
+                .ToList();
 
-            return new SubKindDetectionResult
+            var isMixed = distinctKinds.Count > 1;
+
+            // Build per-type results, preserving per-type evidence and symbol text.
+            var results = new List<SubKindDetectionResult>(typeNodes.Count);
+
+            for (int i = 0; i < typeNodes.Count; i++)
             {
-                SubKind = chosen,
-                PrimaryTypeName = primaryTypeName,
-                IsMixed = isMixed,
-                Reason = reason,
-                Evidence = evidence,
-                Path = relativePath
-            };
+                var type = typeNodes[i];
+                var inf = inferences[i];
+
+                var kind = inf.Kind ?? CodeSubKind.Other;
+                var evidence = inf.Evidence.Distinct().ToArray();
+
+                // If nothing specific fired, make it clear this was fallback-only.
+                var reason = evidence.Length == 0
+                    ? $"SubKind={kind} inferred by fallback rules."
+                    : $"SubKind={kind} inferred based on: {string.Join("; ", evidence)}";
+
+                results.Add(new SubKindDetectionResult
+                {
+                    Path = relativePath,
+                    SubKind = kind,
+                    PrimaryTypeName = inf.Name,
+                    IsMixed = isMixed,
+                    Reason = reason,
+                    Evidence = evidence,
+                    SymbolText = type.ToFullString()
+                });
+            }
+
+            return results;
         }
 
-        private static bool FallbackSubKindDetector(String typeName, string[] segments, out CodeSubKind subKind)
+        private static bool FallbackSubKindDetector(string typeName, string[] segments, out CodeSubKind subKind)
         {
-            if(ClassEndsWith(typeName, "repo", "repository"))
+            var fileName = segments.Last();
+
+            if (ClassEndsWith(typeName, "repo", "repository"))
             {
                 subKind = CodeSubKind.Repository;
                 return true;
@@ -269,13 +265,13 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 return true;
             }
 
-            if (typeName.ToLower() == "program")
+            if (typeName.Equals("program", StringComparison.OrdinalIgnoreCase))
             {
                 subKind = CodeSubKind.Program;
                 return true;
             }
 
-            if (ClassEndsWith(typeName, "service"))
+            if (ClassEndsWith(typeName, "service") || ClassEndsWith(typeName, "services"))
             {
                 subKind = CodeSubKind.Service;
                 return true;
@@ -287,7 +283,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 return true;
             }
 
-            if (typeName.ToLower() == "startup")
+            if (typeName.Equals("startup", StringComparison.OrdinalIgnoreCase))
             {
                 subKind = CodeSubKind.Startup;
                 return true;
@@ -311,9 +307,21 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 return true;
             }
 
+            if (ClassEndsWith(typeName, "message"))
+            {
+                subKind = CodeSubKind.Message;
+                return true;
+            }
+
             if (ClassEndsWith(typeName, "proxy"))
             {
                 subKind = CodeSubKind.ProxyServices;
+                return true;
+            }
+
+            if(fileName.ToLower().EndsWith("result") || fileName.ToLower().EndsWith("results"))
+            {
+                subKind = CodeSubKind.Result;
                 return true;
             }
 
@@ -323,15 +331,13 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 return true;
             }
 
-
-            if (segments.Any(seg => seg.ToLower() == "extensions"))
+            if (segments.Any(seg => seg.Equals("extensions", StringComparison.OrdinalIgnoreCase)))
             {
                 subKind = CodeSubKind.ExtensionMethods;
                 return true;
             }
 
             subKind = CodeSubKind.Other;
-
             return false;
         }
 
@@ -381,6 +387,21 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             return false;
         }
 
+        public static bool IsListModel(
+            TypeDeclarationSyntax type,
+            string ns,
+            string[] segments,
+            List<string> evidence)
+        {
+            if (InheritsBase(type, "EntityBase"))
+            {
+                evidence.Add($"Type {type.Identifier.ValueText} inherits from EntityBase.");
+                return true;
+            }
+
+            return false;
+        }
+
         private static bool IsModel(
             TypeDeclarationSyntax type,
             string ns,
@@ -416,10 +437,10 @@ namespace LagoVista.AI.Rag.Chunkers.Services
         }
 
         private static bool IsException(
-    TypeDeclarationSyntax type,
-    string ns,
-    string[] segments,
-    List<string> evidence)
+            TypeDeclarationSyntax type,
+            string ns,
+            string[] segments,
+            List<string> evidence)
         {
             if (InheritsBase(type, "Exception"))
             {
@@ -523,8 +544,6 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 return true;
             }
 
-
-
             return false;
         }
 
@@ -572,11 +591,13 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             string[] segments,
             List<string> evidence)
         {
-            if (type.GetType().Name == "Startup")
+            // Check the actual type identifier, not the syntax node's CLR type
+            if (string.Equals(type.Identifier.ValueText, "Startup", StringComparison.Ordinal))
             {
                 evidence.Add($"Type {type.Identifier.ValueText} is named 'Startup'.");
                 return true;
             }
+
             return false;
         }
 
@@ -636,7 +657,8 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             }
 
             // Namespace convention: *.Tests.*
-            if (!string.IsNullOrEmpty(ns) && ns.IndexOf(".Tests", StringComparison.OrdinalIgnoreCase) >= 0)
+            if (!string.IsNullOrEmpty(ns) &&
+                ns.IndexOf(".Tests", StringComparison.OrdinalIgnoreCase) >= 0)
             {
                 evidence.Add($"Namespace '{ns}' contains '.Tests'.");
                 return true;
@@ -701,14 +723,13 @@ namespace LagoVista.AI.Rag.Chunkers.Services
 
         private static bool ClassEndsWith(string typeName, params string[] suffix)
         {
-            typeName = typeName.ToLower(); 
+            typeName = typeName.ToLower();
 
             foreach (var s in suffix)
                 if (typeName.EndsWith(s.ToLower()))
                     return true;
 
             return false;
-
         }
 
         private static bool ImplementsInterfacePattern(TypeDeclarationSyntax type, string suffix)

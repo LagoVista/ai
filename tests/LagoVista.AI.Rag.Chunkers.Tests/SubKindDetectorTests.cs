@@ -1,6 +1,9 @@
 using NUnit.Framework;
 using LagoVista.AI.Rag.Chunkers.Services;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using LagoVista.AI.Rag.Chunkers.Models;
 
 namespace LagoVista.AI.Rag.Chunkers.Tests
 {
@@ -19,7 +22,8 @@ public class Device
 }
 ";
 
-            var result = SubKindDetector.DetectForFile(source, "src/Models/Device.cs");
+            var results = SubKindDetector.DetectForFile(source, "src/Models/Device.cs");
+            var result = SingleResult(results);
 
             Assert.Multiple(() =>
             {
@@ -41,7 +45,8 @@ namespace Acme.Project.Domain
 }
 ";
 
-            var result = SubKindDetector.DetectForFile(source, "src/Domain/DeviceDomain.cs");
+            var results = SubKindDetector.DetectForFile(source, "src/Domain/DeviceDomain.cs");
+            var result = SingleResult(results);
 
             Assert.Multiple(() =>
             {
@@ -59,7 +64,8 @@ public class DeviceManager : IDeviceManager
 }
 ";
 
-            var result = SubKindDetector.DetectForFile(source, "src/Managers/DeviceManager.cs");
+            var results = SubKindDetector.DetectForFile(source, "src/Managers/DeviceManager.cs");
+            var result = SingleResult(results);
 
             Assert.Multiple(() =>
             {
@@ -77,7 +83,8 @@ public class Startup
 }
 ";
 
-            var result = SubKindDetector.DetectForFile(source, "src/Repositoriess/startup.cs");
+            var results = SubKindDetector.DetectForFile(source, "src/Repositoriess/startup.cs");
+            var result = SingleResult(results);
 
             Assert.Multiple(() =>
             {
@@ -95,7 +102,8 @@ public class DeviceRepository : DocumentDBRepoBase<Device>
 }
 ";
 
-            var result = SubKindDetector.DetectForFile(source, "src/Repositories/DeviceRepository.cs");
+            var results = SubKindDetector.DetectForFile(source, "src/Repositories/DeviceRepository.cs");
+            var result = SingleResult(results);
 
             Assert.Multiple(() =>
             {
@@ -111,28 +119,30 @@ public class DeviceRepository : DocumentDBRepoBase<Device>
                     {
                     }";
 
-            var result = SubKindDetector.DetectForFile(source, "src/Repo/LabelSampleRepo.cs");
-            WriteResult(result);
+            var results = SubKindDetector.DetectForFile(source, "src/Repo/LabelSampleRepo.cs");
+            WriteResults(results);
+
+            var result = SingleResult(results);
 
             Assert.Multiple(() =>
             {
                 Assert.That(result.SubKind, Is.EqualTo(CodeSubKind.Repository));
                 Assert.That(result.PrimaryTypeName, Is.EqualTo("LabelSampleRepo"));
             });
-
         }
 
-
         [Test]
-        public void Detects_Repository_If_Class_Ends_With_Reop()
+        public void Detects_Repository_If_Class_Ends_With_Repo()
         {
             var source = @"   class SampleMediaRepo : ISampleMediaRepo
     {
    
                     }";
 
-            var result = SubKindDetector.DetectForFile(source, "src/Repo/LabelSampleRepo.cs");
-            WriteResult(result);
+            var results = SubKindDetector.DetectForFile(source, "src/Repo/SampleMediaRepo.cs");
+            WriteResults(results);
+
+            var result = SingleResult(results);
 
             Assert.Multiple(() =>
             {
@@ -141,16 +151,17 @@ public class DeviceRepository : DocumentDBRepoBase<Device>
             });
         }
 
-
         [Test]
-        public void Detects_Repository_If_Class_Ends_With_Reopository()
+        public void Detects_Repository_If_Class_Ends_With_Repository()
         {
             var source = @"  public class LabelSampleRepository
                     {
                     }";
 
-            var result = SubKindDetector.DetectForFile(source, "src/Repo/LabelSampleRepo.cs");
-            WriteResult(result);
+            var results = SubKindDetector.DetectForFile(source, "src/Repo/LabelSampleRepository.cs");
+            WriteResults(results);
+
+            var result = SingleResult(results);
 
             Assert.Multiple(() =>
             {
@@ -168,7 +179,8 @@ public class DeviceController : LagoVistaBaseController
 }
 ";
 
-            var result = SubKindDetector.DetectForFile(source, "src/Controllers/DeviceController.cs");
+            var results = SubKindDetector.DetectForFile(source, "src/Controllers/DeviceController.cs");
+            var result = SingleResult(results);
 
             Assert.Multiple(() =>
             {
@@ -186,7 +198,8 @@ public class DeviceService : IDeviceService
 }
 ";
 
-            var result = SubKindDetector.DetectForFile(source, "src/Services/DeviceService.cs");
+            var results = SubKindDetector.DetectForFile(source, "src/Services/DeviceService.cs");
+            var result = SingleResult(results);
 
             Assert.Multiple(() =>
             {
@@ -196,7 +209,7 @@ public class DeviceService : IDeviceService
         }
 
         [Test]
-        public void Detects_Exception_From_Inhertis_Exception()
+        public void Detects_Exception_From_Inherits_Exception()
         {
             var source = @"
 public class InUseException : Exception
@@ -204,20 +217,14 @@ public class InUseException : Exception
 }
 ";
 
-            var result = SubKindDetector.DetectForFile(source, "src/Services/InUseException.cs");
+            var results = SubKindDetector.DetectForFile(source, "src/Services/InUseException.cs");
+            var result = SingleResult(results);
 
             Assert.Multiple(() =>
             {
                 Assert.That(result.SubKind, Is.EqualTo(CodeSubKind.Exception));
                 Assert.That(result.PrimaryTypeName, Is.EqualTo("InUseException"));
             });
-        }
-
-        void WriteResult(SubKindDetectionResult result)
-        {
-            Console.WriteLine("SubKind: " + result.SubKind);
-            Console.WriteLine("PrimaryTypeName: " + result.PrimaryTypeName);
-            Console.WriteLine("IsMixed: " + result.IsMixed);
         }
 
         [Test]
@@ -230,9 +237,11 @@ public interface IDeviceManager
 }
 ";
 
-            var result = SubKindDetector.DetectForFile(source, "src/Managers/IDeviceManager.cs");
+            var results = SubKindDetector.DetectForFile(source, "src/Managers/IDeviceManager.cs");
 
-            WriteResult(result);
+            WriteResults(results);
+
+            var result = SingleResult(results);
 
             Assert.Multiple(() =>
             {
@@ -255,30 +264,71 @@ public class DeviceRepository : DocumentDBRepoBase<Device>
 }
 ";
 
-            var result = SubKindDetector.DetectForFile(source, "src/Mixed/Device.cs");
+            var results = SubKindDetector.DetectForFile(source, "src/Mixed/Device.cs");
+            WriteResults(results);
 
             Assert.Multiple(() =>
             {
-                Assert.That(result.IsMixed, Is.True);
-                Assert.That(result.SubKind, Is.Not.EqualTo(CodeSubKind.Other));
+                // We expect two different SubKinds (Model + Repository) and IsMixed true on both.
+                Assert.That(results.Count, Is.EqualTo(2));
+                Assert.That(results.All(r => r.IsMixed), Is.True);
+
+                Assert.That(results.Any(r => r.SubKind == CodeSubKind.Model && r.PrimaryTypeName == "Device"), Is.True);
+                Assert.That(results.Any(r => r.SubKind == CodeSubKind.Repository && r.PrimaryTypeName == "DeviceRepository"), Is.True);
             });
         }
 
         [Test]
-        public void Falls_Back_To_Other_When_No_Signals_Present()
+        public void Falls_Back_To_Other_When_No_Types_Present()
         {
             var source = @"
 using System;
 namespace Foo { }
 ";
 
-            var result = SubKindDetector.DetectForFile(source, "src/Misc/Random.cs");
+            var results = SubKindDetector.DetectForFile(source, "src/Misc/Random.cs");
+            var result = SingleResult(results);
 
             Assert.Multiple(() =>
             {
                 Assert.That(result.SubKind, Is.EqualTo(CodeSubKind.Other));
                 Assert.That(result.PrimaryTypeName, Is.Null);
             });
+        }
+
+        // ---- Helpers ----------------------------------------------------
+
+        private static SubKindDetectionResult SingleResult(IReadOnlyList<SubKindDetectionResult> results)
+        {
+            Assert.That(results, Is.Not.Null, "results should not be null");
+            Assert.That(results.Count, Is.EqualTo(1), "expected exactly one type in this file for this test");
+            return results[0];
+        }
+
+        private static void WriteResults(IReadOnlyList<SubKindDetectionResult> results)
+        {
+            if (results == null)
+            {
+                Console.WriteLine("Results: <null>");
+                return;
+            }
+
+            foreach (var r in results)
+            {
+                Console.WriteLine("---- Result ----");
+                Console.WriteLine("Path: " + r.Path);
+                Console.WriteLine("SubKind: " + r.SubKind);
+                Console.WriteLine("PrimaryTypeName: " + r.PrimaryTypeName);
+                Console.WriteLine("IsMixed: " + r.IsMixed);
+                Console.WriteLine("Reason: " + r.Reason);
+                if (r.Evidence != null)
+                {
+                    foreach (var ev in r.Evidence)
+                    {
+                        Console.WriteLine("  Evidence: " + ev);
+                    }
+                }
+            }
         }
     }
 }
