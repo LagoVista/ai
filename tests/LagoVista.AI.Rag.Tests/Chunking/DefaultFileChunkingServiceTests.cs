@@ -7,6 +7,7 @@ using LagoVista.AI.Rag.Chunkers.Models;
 using LagoVista.AI.Rag.Chunkers.Services;
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Services;
 using LagoVista.AI.Rag.Models;
+using LagoVista.Core.Utils.Types;
 using NUnit.Framework;
 
 namespace LagoVista.AI.Rag.Tests.Chunking
@@ -106,11 +107,9 @@ namespace LagoVista.AI.Rag.Tests.Chunking
 
         private sealed class FakeChunkerServices : IChunkerServices
         {
-            public IReadOnlyList<SubKindDetectionResult> DetectForFile(string sourceText, string relativePath)
+            public SourceKindResult DetectForFile(string sourceText, string relativePath)
             {
-                return new[]
-                {
-                    new SubKindDetectionResult
+                return new SourceKindResult
                     {
                         Path = relativePath,
                         SubKind = CodeSubKind.Model,
@@ -120,7 +119,6 @@ namespace LagoVista.AI.Rag.Tests.Chunking
                         Reason = "Test stub: detected model type Device.",
                         Evidence = Array.Empty<string>(),
                         SymbolText = "public class Device { }"
-                    }
                 };
             }
 
@@ -129,6 +127,16 @@ namespace LagoVista.AI.Rag.Tests.Chunking
             public string BuildSummaryForMethod(MethodSummaryContext ctx) => throw new NotImplementedException();
             public IReadOnlyList<DomainSummaryInfo> ExtractDomains(string source, string filePath) => throw new NotImplementedException();
             public Task<TitleDescriptionReviewResult> ReviewTitleAndDescriptionAsync(SummaryObjectKind kind, string symbolName, string title, string description, string llmUrl, string llmApiKey, System.Net.Http.HttpClient httpClient = null, string model = "gpt-4.1-mini", CancellationToken cancellationToken = default) => throw new NotImplementedException();
+
+            public int EstimateTokens(string s)
+            {
+                throw new NotImplementedException();
+            }
+
+            public RagChunkPlan ChunkCSharpWithRoslyn(string text, string relPath, string blobPath, int maxTokensPerChunk = 6500, int overlapLines = 6)
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }

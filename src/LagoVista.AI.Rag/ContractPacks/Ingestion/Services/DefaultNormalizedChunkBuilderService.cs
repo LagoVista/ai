@@ -57,77 +57,73 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
             var relativePath = (fileContext.RelativePath ?? fileContext.FullPath)
                 .Replace('\\', '/');
 
-            var detectionResults = _chunkerServices.DetectForFile(sourceText, relativePath)
-                                   ?? Array.Empty<SubKindDetectionResult>();
-
+            var result = _chunkerServices.DetectForFile(sourceText, relativePath);   
             var chunks = new List<NormalizedChunk>();
             var index = 0;
 
-            foreach (var result in detectionResults)
+            token.ThrowIfCancellationRequested();
+
+            var symbolName = string.IsNullOrWhiteSpace(result.PrimaryTypeName)
+                ? $"symbol-{index}"
+                : result.PrimaryTypeName;
+
+            var identity = new DocumentIdentity
             {
-                token.ThrowIfCancellationRequested();
+                OrgId = fileContext.OrgId,
+                ProjectId = fileContext.ProjectId,
+                RepoId = fileContext.RepoId,
+                RelativePath = relativePath,
+                Symbol = symbolName,
+                SymbolType = result.SubKindString
+            };
 
-                var symbolName = string.IsNullOrWhiteSpace(result.PrimaryTypeName)
-                    ? $"symbol-{index}"
-                    : result.PrimaryTypeName;
+            identity.ComputeDocId();
 
-                var identity = new DocumentIdentity
-                {
-                    OrgId = fileContext.OrgId,
-                    ProjectId = fileContext.ProjectId,
-                    RepoId = fileContext.RepoId,
-                    RelativePath = relativePath,
-                    Symbol = symbolName,
-                    SymbolType = result.SubKindString
-                };
+            var sectionKeyBase = symbolName.ToLowerInvariant();
+            identity.SectionKey = $"symbol-{sectionKeyBase}";
+            identity.ComputeChunkId();
 
-                identity.ComputeDocId();
+            var sb = new StringBuilder();
 
-                var sectionKeyBase = symbolName.ToLowerInvariant();
-                identity.SectionKey = $"symbol-{sectionKeyBase}";
-                identity.ComputeChunkId();
+            sb.AppendLine($"OrgId: {fileContext.OrgId}");
+            sb.AppendLine($"ProjectId: {fileContext.ProjectId}");
+            sb.AppendLine($"RepoId: {fileContext.RepoId}");
+            sb.AppendLine($"Path: {relativePath}");
+            sb.AppendLine($"SubKind: {result.SubKindString}");
+            sb.AppendLine($"Symbol: {symbolName}");
 
-                var sb = new StringBuilder();
-
-                sb.AppendLine($"OrgId: {fileContext.OrgId}");
-                sb.AppendLine($"ProjectId: {fileContext.ProjectId}");
-                sb.AppendLine($"RepoId: {fileContext.RepoId}");
-                sb.AppendLine($"Path: {relativePath}");
-                sb.AppendLine($"SubKind: {result.SubKindString}");
-                sb.AppendLine($"Symbol: {symbolName}");
-
-                if (!string.IsNullOrWhiteSpace(result.Summary))
-                {
-                    sb.AppendLine();
-                    sb.AppendLine("Summary:");
-                    sb.AppendLine(result.Summary.Trim());
-                }
-
-                if (!string.IsNullOrWhiteSpace(result.Reason))
-                {
-                    sb.AppendLine();
-                    sb.AppendLine("Detection Reason:");
-                    sb.AppendLine(result.Reason.Trim());
-                }
-
-                if (!string.IsNullOrWhiteSpace(result.SymbolText))
-                {
-                    sb.AppendLine();
-                    sb.AppendLine("Code:");
-                    sb.AppendLine(result.SymbolText.Trim());
-                }
-
-                var chunk = new NormalizedChunk
-                {
-                    Identity = identity,
-                    Kind = "SourceCode",
-                    SubKind = result.SubKindString,
-                    NormalizedText = sb.ToString()
-                };
-
-                chunks.Add(chunk);
-                index++;
+            if (!string.IsNullOrWhiteSpace(result.Summary))
+            {
+                sb.AppendLine();
+                sb.AppendLine("Summary:");
+                sb.AppendLine(result.Summary.Trim());
             }
+
+            if (!string.IsNullOrWhiteSpace(result.Reason))
+            {
+                sb.AppendLine();
+                sb.AppendLine("Detection Reason:");
+                sb.AppendLine(result.Reason.Trim());
+            }
+
+            if (!string.IsNullOrWhiteSpace(result.SymbolText))
+            {
+                sb.AppendLine();
+                sb.AppendLine("Code:");
+                sb.AppendLine(result.SymbolText.Trim());
+            }
+
+            var chunk = new NormalizedChunk
+            {
+                Identity = identity,
+                Kind = "SourceCode",
+                SubKind = result.SubKindString,
+                NormalizedText = sb.ToString()
+            };
+
+            chunks.Add(chunk);
+            index++;
+            
 
             return chunks;
         }

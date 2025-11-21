@@ -29,11 +29,6 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             return DomainDescriptorSummaryExtractor.Extract(source, filePath);
         }
 
-        public IReadOnlyList<SubKindDetectionResult> DetectSubKindsInSourceFile(string sourceText, string relativePath)
-        {
-            return SubKindDetector.DetectForFile(sourceText, relativePath);
-        }
-
         public Task<TitleDescriptionReviewResult> ReviewTitleAndDescriptionAsync(SummaryObjectKind kind, string symbolName, string title, string description, string llmUrl, string llmApiKey, HttpClient httpClient = null, string model = "gpt-4.1-mini", CancellationToken cancellationToken = default)
         {
             return OpenAiTitleDescriptionReview.ReviewAsync(
@@ -48,9 +43,9 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 cancellationToken);
         }
 
-        public IReadOnlyList<SubKindDetectionResult> DetectForFile(string sourceText, string relativePath)
+        public SourceKindResult DetectForFile(string sourceText, string relativePath)
         {
-            return SubKindDetector.DetectForFile(sourceText, relativePath);
+            return SourceKindAnalyzer.AnalyzeFile(sourceText, relativePath);
         }
 
         public int EstimateTokens(string s)

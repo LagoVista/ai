@@ -7,15 +7,16 @@ using LagoVista.AI.Rag.Chunkers.Services;
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Models;
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Services;
 using LagoVista.AI.Rag.Models;
+using LagoVista.Core.Utils.Types;
 using NUnit.Framework;
 
 namespace LagoVista.AI.Rag.Tests.Chunkers
 {
     /// <summary>
-    /// Smoke tests that exercise the full pipeline for 7.2:
-    ///   - Determine SubKind via SubKindDetector
-    ///   - Flow results through DefaultNormalizedChunkBuilderService
-    ///   - Inspect the final NormalizedText that would be embedded
+    /// Smoke tests that exercise the full 7.2 pipeline:
+    ///   - Use IChunkerServices.ChunkCSharpWithRoslyn (RoslynCSharpChunker under the hood)
+    ///   - Wrap RagChunk results into NormalizedChunk via DefaultNormalizedChunkBuilderService
+    ///   - Dump the NormalizedText that would be embedded.
     ///
     /// These use the real-world AgentContext* sample files under ./Content.
     /// </summary>
@@ -27,7 +28,9 @@ namespace LagoVista.AI.Rag.Tests.Chunkers
         [SetUp]
         public void Setup()
         {
-            // ChunkerServicesPipeline wires DetectForFile to the real SubKindDetector.
+            // ChunkerServicesPipeline wires raw C# chunking to RoslynCSharpChunker
+            // and SubKind detection to SubKindDetector. For 7.2 we only rely on
+            // the Roslyn chunker path.
             _builder = new DefaultNormalizedChunkBuilderService(new ChunkerServicesPipeline());
         }
 
@@ -144,24 +147,45 @@ namespace LagoVista.AI.Rag.Tests.Chunkers
 
         /// <summary>
         /// Minimal pipeline implementation of IChunkerServices for 7.2 tests:
-        /// - DetectForFile is wired to the real SubKindDetector so we exercise
-        ///   the actual SubKind detection logic.
-        /// - Other methods are placeholders for now and can be fleshed out when
-        ///   we start exercising the richer summary/metadata paths.
+        /// - DetectForFile delegates to the real SubKindDetector (not yet used).
+        /// - ChunkCSharpWithRoslyn delegates to RoslynCSharpChunker.Chunk.
+        /// - EstimateTokens delegates to TokenEstimator.
+        /// - Other methods are placeholders for now.
         /// </summary>
         private sealed class ChunkerServicesPipeline : IChunkerServices
         {
-            public System.Collections.Generic.IReadOnlyList<SubKindDetectionResult> DetectForFile(string sourceText, string relativePath)
+            public SourceKindResult DetectForFile(string sourceText, string relativePath)
             {
-                return SubKindDetector.DetectForFile(sourceText, relativePath);
+                return SourceKindAnalyzer.AnalyzeFile(sourceText, relativePath);
             }
 
-            public ModelMetadataDescription BuildMetadataDescriptionForModel(string sourceText, string relativePath, System.Collections.Generic.IReadOnlyDictionary<string, string> resources)
+            public int EstimateTokens(string s)
+            {
+                return TokenEstimator.EstimateTokens(s ?? string.Empty);
+            }
+
+            public RagChunkPlan ChunkCSharpWithRoslyn(
+                string text,
+                string relPath,
+                string blobPath,
+                int maxTokensPerChunk = 6500,
+                int overlapLines = 6)
+            {
+                return RoslynCSharpChunker.Chunk(text, relPath, blobPath, maxTokensPerChunk, overlapLines);
+            }
+
+            public ModelMetadataDescription BuildMetadataDescriptionForModel(
+                string sourceText,
+                string relativePath,
+                System.Collections.Generic.IReadOnlyDictionary<string, string> resources)
             {
                 throw new NotImplementedException("BuildMetadataDescriptionForModel is not used in 7.2 smoke tests.");
             }
 
-            public ModelStructureDescription BuildStructuredDescriptionForModel(string sourceText, string relativePath, System.Collections.Generic.IReadOnlyDictionary<string, string> resources)
+            public ModelStructureDescription BuildStructuredDescriptionForModel(
+                string sourceText,
+                string relativePath,
+                System.Collections.Generic.IReadOnlyDictionary<string, string> resources)
             {
                 throw new NotImplementedException("BuildStructuredDescriptionForModel is not used in 7.2 smoke tests.");
             }
@@ -180,7 +204,8 @@ namespace LagoVista.AI.Rag.Tests.Chunkers
 
             public string BuildModelSummary(ModelMetadataDescription metadata)
             {
-                // Delegate to the shared helper; not used in these tests yet but keeps the contract complete.
+                // Delegate to the shared helper; not used in these tests yet but
+                // keeps the contract complete and aligned with the interface.
                 return ModelMetadataSummaryBuilder.BuildSummary(metadata);
             }
 

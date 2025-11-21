@@ -52,46 +52,43 @@ namespace LagoVista.AI.Rag.ContractPacks.Infrastructure.Services
 
                 var source = await File.ReadAllTextAsync(file.FullPath, token).ConfigureAwait(false);
 
-                var subKindResults = _chunkerServices.DetectForFile(source, file.RelativePath) ?? Array.Empty<SubKindDetectionResult>();
+                var result = _chunkerServices.DetectForFile(source, file.RelativePath);
 
-                foreach (var result in subKindResults)
+                var snippet = string.IsNullOrWhiteSpace(result.SymbolText)
+                    ? source
+                    : result.SymbolText;
+
+                // 1) Domains: ExtractDomains will return empty for non-domain snippets.
+                var domainInfos = _chunkerServices.ExtractDomains(snippet, file.RelativePath);
+                if (domainInfos != null)
                 {
-                    var snippet = string.IsNullOrWhiteSpace(result.SymbolText)
-                        ? source
-                        : result.SymbolText;
-
-                    // 1) Domains: ExtractDomains will return empty for non-domain snippets.
-                    var domainInfos = _chunkerServices.ExtractDomains(snippet, file.RelativePath);
-                    if (domainInfos != null)
+                    foreach (var domain in domainInfos)
                     {
-                        foreach (var domain in domainInfos)
-                        {
-                            if (string.IsNullOrWhiteSpace(domain.DomainKey))
-                                continue;
+                        if (string.IsNullOrWhiteSpace(domain.DomainKey))
+                            continue;
 
-                            if (!domainsByKey.ContainsKey(domain.DomainKey))
-                            {
-                                domainsByKey[domain.DomainKey] = domain;
-                            }
+                        if (!domainsByKey.ContainsKey(domain.DomainKey))
+                        {
+                            domainsByKey[domain.DomainKey] = domain;
                         }
                     }
+                }
 
-                    // 2) Models: BuildStructuredDescriptionForModel returns null for non-model snippets.
-                    var modelStructure = _chunkerServices.BuildStructuredDescriptionForModel(
-                        snippet,
-                        file.RelativePath,
-                        resources: new Dictionary<string, string>());
+                // 2) Models: BuildStructuredDescriptionForModel returns null for non-model snippets.
+                var modelStructure = _chunkerServices.BuildStructuredDescriptionForModel(
+                    snippet,
+                    file.RelativePath,
+                    resources: new Dictionary<string, string>());
 
-                    if (modelStructure != null && !string.IsNullOrWhiteSpace(modelStructure.QualifiedName))
+                if (modelStructure != null && !string.IsNullOrWhiteSpace(modelStructure.QualifiedName))
+                {
+                    modelsByQualifiedName[modelStructure.QualifiedName] = new ModelCatalogEntry
                     {
-                        modelsByQualifiedName[modelStructure.QualifiedName] = new ModelCatalogEntry
-                        {
-                            RepoId = repoId,
-                            RelativePath = file.RelativePath,
-                            SubKind = result.SubKind,
-                            Structure = modelStructure
-                        };
-                    }
+                        RepoId = repoId,
+                        RelativePath = file.RelativePath,
+                        SubKind = result.SubKind,
+                        Structure = modelStructure
+                    };
                 }
             }
 

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using LagoVista.AI.Rag.Chunkers.Models;
@@ -11,73 +10,39 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace LagoVista.AI.Rag.Chunkers.Services
 {
     /// <summary>
-    /// Detects SubKind for server-side C# code using syntax-only heuristics
-    /// derived from IDX-024 and IDX-031 plus additional SubKinds.
-    /// Works purely from source text and relative path – no reflection required.
-    /// 
-    /// NOTE: This version returns one SubKindDetectionResult per type found in the file.
+    /// Single-symbol SubKind analyzer.
+    ///
+    /// This is the canonical home for all SubKind heuristics that used to live
+    /// in SubKindDetector. It is intended to be called on isolated symbol text
+    /// (e.g., output of SymbolSplitter). If more than one top-level type is
+    /// detected, an InvalidOperationException is thrown.
     /// </summary>
-    public enum CodeSubKind
+    public static class SourceKindAnalyzer
     {
-        DomainDescription,
-        Model,
-        SummaryListModel,
-        Manager,
-        Repository,
-        Controller,
-        Service,
-        Test,
-        Interface,
-        Startup,
-        Program,
-        Client,
-        Configuration,
-        Handler,
-        ResourceFile,
-        CodeAttribute,
-        Exception,
-        ExtensionMethods,
-        Request,
-        Result,
-        Response,
-        ProxyServices,
-        Message,
-        Other
-    }
-
-    public static class SubKindDetector
-    {
-        private sealed class TypeKindInference
-        {
-            public string Name { get; set; }
-            public CodeSubKind? Kind { get; set; }
-            public List<string> Evidence { get; } = new List<string>();
-        }
-
         /// <summary>
-        /// Detects the most appropriate SubKind(s) for all top-level types in a C# source file.
-        /// Returns one SubKindDetectionResult per type.
+        /// Analyze an isolated C# symbol and return a single SourceKindResult.
+        ///
+        /// If more than one top-level type is detected, this indicates a pipeline
+        /// bug (callers must split the file first) and an InvalidOperationException
+        /// is thrown.
         /// </summary>
-        public static IReadOnlyList<SubKindDetectionResult> DetectForFile(string sourceText, string relativePath)
+        public static SourceKindResult AnalyzeFile(string sourceText, string relativePath)
         {
             if (sourceText == null) throw new ArgumentNullException(nameof(sourceText));
 
-            // Resource (.resx) files are handled as a special case and do not need Roslyn parsing.
+            // Special case: .resx files are treated as ResourceFile without Roslyn parsing.
             if (!string.IsNullOrEmpty(relativePath) &&
-                relativePath.EndsWith("resx", StringComparison.OrdinalIgnoreCase))
+                relativePath.EndsWith(".resx", StringComparison.OrdinalIgnoreCase))
             {
-                return new[]
+                return new SourceKindResult
                 {
-                    new SubKindDetectionResult
-                    {
-                        SubKind = CodeSubKind.ResourceFile,
-                        PrimaryTypeName = null,
-                        IsMixed = false,
-                        Path = relativePath,
-                        Reason = "File name ended with RESX, classified as ResourceFile.",
-                        Evidence = Array.Empty<string>(),
-                        SymbolText = null
-                    }
+                    Path = relativePath,
+                    SubKind = CodeSubKind.ResourceFile,
+                    PrimaryTypeName = null,
+                    IsMixed = false,
+                    Reason = "File name ended with .resx, classified as ResourceFile.",
+                    Evidence = Array.Empty<string>(),
+                    SymbolText = null
                 };
             }
 
@@ -98,143 +63,117 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 .OfType<TypeDeclarationSyntax>()
                 .ToList();
 
-            // No types: still return a single result so callers have something to key off of.
             if (typeNodes.Count == 0)
             {
-                return new[]
-                {
-                    new SubKindDetectionResult
-                    {
-                        SubKind = CodeSubKind.Other,
-                        PrimaryTypeName = null,
-                        IsMixed = false,
-                        Path = relativePath,
-                        Reason = "No top-level types found; defaulting SubKind=Other.",
-                        Evidence = Array.Empty<string>(),
-                        SymbolText = null
-                    }
-                };
-            }
-
-            var inferences = new List<TypeKindInference>();
-
-            foreach (var type in typeNodes)
-            {
-                var info = new TypeKindInference
-                {
-                    Name = type.Identifier.ValueText
-                };
-
-                var ns = GetNamespace(type);
-
-                // Evaluate in priority order for this type.
-                // Tests first so that test projects referencing domain/models/etc are classified as Test.
-                if (IsTest(type, ns, segments, info.Evidence))
-                {
-                    info.Kind = CodeSubKind.Test;
-                }
-                else if (IsDomainDescription(type, ns, segments, info.Evidence))
-                {
-                    info.Kind = CodeSubKind.DomainDescription;
-                }
-                else if (IsException(type, ns, segments, info.Evidence))
-                {
-                    info.Kind = CodeSubKind.Exception;
-                }
-                else if (IsListModel(type, ns, segments, info.Evidence))
-                {
-                    info.Kind = CodeSubKind.SummaryListModel;
-                }
-                else if (IsModel(type, ns, segments, info.Evidence))
-                {
-                    info.Kind = CodeSubKind.Model;
-                }
-                else if (IsManager(type, ns, segments, info.Evidence))
-                {
-                    info.Kind = CodeSubKind.Manager;
-                }
-                else if (IsRepository(type, ns, segments, info.Evidence))
-                {
-                    info.Kind = CodeSubKind.Repository;
-                }
-                else if (IsController(type, ns, segments, info.Evidence))
-                {
-                    info.Kind = CodeSubKind.Controller;
-                }
-                else if (IsService(type, ns, segments, info.Evidence))
-                {
-                    info.Kind = CodeSubKind.Service;
-                }
-                else if (IsInterfaceType(type, ns, segments, info.Evidence))
-                {
-                    info.Kind = CodeSubKind.Interface;
-                }
-                else if (IsStartup(type, ns, segments, info.Evidence))
-                {
-                    info.Kind = CodeSubKind.Startup;
-                }
-
-                inferences.Add(info);
-            }
-
-            // Apply fallback name/path-based detection for any types that are still Other/unknown.
-            foreach (var inf in inferences)
-            {
-                if (!inf.Kind.HasValue || inf.Kind.Value == CodeSubKind.Other)
-                {
-                    if (FallbackSubKindDetector(inf.Name, segments, out var fallbackKind) &&
-                        fallbackKind != CodeSubKind.Other)
-                    {
-                        inf.Kind = fallbackKind;
-                        inf.Evidence.Add(
-                            $"FallbackSubKindDetector matched '{inf.Name}'/path pattern -> {fallbackKind}.");
-                    }
-                }
-            }
-
-            // Determine if the file is "mixed" (multiple distinct SubKinds).
-            var distinctKinds = inferences
-                .Where(i => i.Kind.HasValue)
-                .Select(i => i.Kind.Value)
-                .Distinct()
-                .ToList();
-
-            var isMixed = distinctKinds.Count > 1;
-
-            // Build per-type results, preserving per-type evidence and symbol text.
-            var results = new List<SubKindDetectionResult>(typeNodes.Count);
-
-            for (int i = 0; i < typeNodes.Count; i++)
-            {
-                var type = typeNodes[i];
-                var inf = inferences[i];
-
-                var kind = inf.Kind ?? CodeSubKind.Other;
-                var evidence = inf.Evidence.Distinct().ToArray();
-
-                // If nothing specific fired, make it clear this was fallback-only.
-                var reason = evidence.Length == 0
-                    ? $"SubKind={kind} inferred by fallback rules."
-                    : $"SubKind={kind} inferred based on: {string.Join("; ", evidence)}";
-
-                results.Add(new SubKindDetectionResult
+                return new SourceKindResult
                 {
                     Path = relativePath,
-                    SubKind = kind,
-                    PrimaryTypeName = inf.Name,
-                    IsMixed = isMixed,
-                    Reason = reason,
-                    Evidence = evidence,
-                    SymbolText = BuildIsolatedSymbolText(type, root)
-                });
+                    SubKind = CodeSubKind.Other,
+                    PrimaryTypeName = null,
+                    IsMixed = false,
+                    Reason = "No top-level types found; defaulting SubKind=Other.",
+                    Evidence = Array.Empty<string>(),
+                    SymbolText = null
+                };
             }
 
-            return results;
+            if (typeNodes.Count > 1)
+            {
+                var fileLabel = string.IsNullOrWhiteSpace(relativePath) ? "<unknown>" : relativePath;
+
+                throw new InvalidOperationException(
+                    $"SourceKindAnalyzer.AnalyzeFile expected a single top-level type but found {typeNodes.Count} in '{fileLabel}'. " +
+                    "This API must only be called with isolated symbol text (e.g., SymbolSplitter output)."
+                );
+            }
+
+            var type = typeNodes[0];
+            var evidence = new List<string>();
+            var ns = GetNamespace(type);
+
+            // Primary classification (priority order).
+            CodeSubKind kind;
+
+            if (IsTest(type, ns, segments, evidence))
+            {
+                kind = CodeSubKind.Test;
+            }
+            else if (IsDomainDescription(type, ns, segments, evidence))
+            {
+                kind = CodeSubKind.DomainDescription;
+            }
+            else if (IsException(type, ns, segments, evidence))
+            {
+                kind = CodeSubKind.Exception;
+            }
+            else if (IsListModel(type, ns, segments, evidence))
+            {
+                kind = CodeSubKind.SummaryListModel;
+            }
+            else if (IsModel(type, ns, segments, evidence))
+            {
+                kind = CodeSubKind.Model;
+            }
+            else if (IsManager(type, ns, segments, evidence))
+            {
+                kind = CodeSubKind.Manager;
+            }
+            else if (IsRepository(type, ns, segments, evidence))
+            {
+                kind = CodeSubKind.Repository;
+            }
+            else if (IsController(type, ns, segments, evidence))
+            {
+                kind = CodeSubKind.Controller;
+            }
+            else if (IsService(type, ns, segments, evidence))
+            {
+                kind = CodeSubKind.Service;
+            }
+            else if (IsInterfaceType(type, ns, segments, evidence))
+            {
+                kind = CodeSubKind.Interface;
+            }
+            else if (IsStartup(type, ns, segments, evidence))
+            {
+                kind = CodeSubKind.Startup;
+            }
+            else
+            {
+                kind = CodeSubKind.Other;
+            }
+
+            // Fallback name/path-based detection if still Other.
+            if (kind == CodeSubKind.Other)
+            {
+                if (FallbackSubKindDetector(type.Identifier.ValueText, segments, out var fallbackKind) &&
+                    fallbackKind != CodeSubKind.Other)
+                {
+                    kind = fallbackKind;
+                    evidence.Add($"FallbackSubKindDetector matched '{type.Identifier.ValueText}'/path pattern -> {fallbackKind}.");
+                }
+            }
+
+            var evidenceArray = evidence.Distinct().ToArray();
+            var reason = evidenceArray.Length == 0
+                ? $"SubKind={kind} inferred by fallback rules."
+                : $"SubKind={kind} inferred based on: {string.Join("; ", evidenceArray)}";
+
+            return new SourceKindResult
+            {
+                Path = relativePath,
+                SubKind = kind,
+                PrimaryTypeName = type.Identifier.ValueText,
+                IsMixed = false,
+                Reason = reason,
+                Evidence = evidenceArray,
+                SymbolText = BuildIsolatedSymbolText(type, root)
+            };
         }
 
         private static bool FallbackSubKindDetector(string typeName, string[] segments, out CodeSubKind subKind)
         {
-            var fileName = segments.Last();
+            var fileName = segments.Length > 0 ? segments[^1] : string.Empty;
 
             if (ClassEndsWith(typeName, "repo", "repository"))
             {
@@ -320,13 +259,14 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 return true;
             }
 
-            if (fileName.ToLower().EndsWith("result") || fileName.ToLower().EndsWith("results"))
+            var fileLower = fileName.ToLowerInvariant();
+            if (fileLower.EndsWith("result") || fileLower.EndsWith("results"))
             {
                 subKind = CodeSubKind.Result;
                 return true;
             }
 
-            if (segments.Any(seg => seg.ToLower().Contains("proxy")))
+            if (segments.Any(seg => seg.ToLowerInvariant().Contains("proxy")))
             {
                 subKind = CodeSubKind.ProxyServices;
                 return true;
@@ -388,7 +328,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             return false;
         }
 
-        public static bool IsListModel(
+        private static bool IsListModel(
             TypeDeclarationSyntax type,
             string ns,
             string[] segments,
@@ -592,7 +532,6 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             string[] segments,
             List<string> evidence)
         {
-            // Check the actual type identifier, not the syntax node's CLR type
             if (string.Equals(type.Identifier.ValueText, "Startup", StringComparison.Ordinal))
             {
                 evidence.Add($"Type {type.Identifier.ValueText} is named 'Startup'.");
@@ -640,16 +579,13 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             string[] segments,
             List<string> evidence)
         {
-            // We treat anything that clearly looks like a test type as Test, regardless of what it tests.
-
-            // Common attributes (NUnit, MSTest, xUnit-style wrappers, etc.)
+            // Common attributes (NUnit, MSTest, etc.)
             if (HasAttribute(type, "TestFixture", "TestClass"))
             {
                 evidence.Add($"Type {type.Identifier.ValueText} has a known test fixture attribute.");
                 return true;
             }
 
-            // Naming convention: *Tests or *Test
             var name = type.Identifier.ValueText;
             if (name.EndsWith("Tests", StringComparison.Ordinal) || name.EndsWith("Test", StringComparison.Ordinal))
             {
@@ -657,7 +593,6 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 return true;
             }
 
-            // Namespace convention: *.Tests.*
             if (!string.IsNullOrEmpty(ns) &&
                 ns.IndexOf(".Tests", StringComparison.OrdinalIgnoreCase) >= 0)
             {
@@ -665,7 +600,6 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 return true;
             }
 
-            // Path convention: /tests/ or /test/
             if (HasPathSegment(segments, "tests") || HasPathSegment(segments, "test"))
             {
                 evidence.Add("Path contains 'tests' or 'test' segment.");
@@ -695,13 +629,15 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             var names = new HashSet<string>(attributeNames, StringComparer.OrdinalIgnoreCase);
 
             foreach (var list in type.AttributeLists)
+            {
                 foreach (var attr in list.Attributes)
                 {
-                    var rawName = attr.Name.ToString(); // may include namespace
+                    var rawName = attr.Name.ToString();
                     var simple = GetSimpleIdentifier(rawName);
                     if (names.Contains(simple) || names.Contains(simple.Replace("Attribute", string.Empty)))
                         return true;
                 }
+            }
 
             return false;
         }
@@ -724,11 +660,13 @@ namespace LagoVista.AI.Rag.Chunkers.Services
 
         private static bool ClassEndsWith(string typeName, params string[] suffix)
         {
-            typeName = typeName.ToLower();
+            var lower = typeName.ToLowerInvariant();
 
             foreach (var s in suffix)
-                if (typeName.EndsWith(s.ToLower()))
+            {
+                if (lower.EndsWith(s.ToLowerInvariant()))
                     return true;
+            }
 
             return false;
         }
@@ -755,8 +693,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
         {
             if (segments == null || segments.Length == 0) return false;
 
-            return segments.Any(s =>
-                s.Equals(value, StringComparison.OrdinalIgnoreCase));
+            return segments.Any(s => s.Equals(value, StringComparison.OrdinalIgnoreCase));
         }
 
         private static bool LooksLikeInterfaceName(string name)
@@ -769,12 +706,10 @@ namespace LagoVista.AI.Rag.Chunkers.Services
         {
             if (string.IsNullOrEmpty(typeName)) return typeName;
 
-            // Strip generic arity
             var angleIndex = typeName.IndexOf('<');
             if (angleIndex >= 0)
                 typeName = typeName.Substring(0, angleIndex);
 
-            // Strip namespace
             var dotIndex = typeName.LastIndexOf('.');
             if (dotIndex >= 0 && dotIndex < typeName.Length - 1)
                 typeName = typeName.Substring(dotIndex + 1);
@@ -783,15 +718,12 @@ namespace LagoVista.AI.Rag.Chunkers.Services
         }
 
         /// <summary>
-        /// Builds a self-contained C# snippet for a single type:
-        /// - Includes using directives from the compilation unit and containing namespace.
-        /// - Wraps the type in a namespace block if a namespace is present.
+        /// Builds a self-contained C# snippet for a single type (including usings and namespace).
         /// </summary>
         private static string BuildIsolatedSymbolText(TypeDeclarationSyntax type, CompilationUnitSyntax root)
         {
             var sb = new StringBuilder();
 
-            // 1. Collect using directives from the compilation unit and the containing namespace.
             var usingNodes = new List<UsingDirectiveSyntax>();
             usingNodes.AddRange(root.Usings);
 
@@ -805,7 +737,6 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 usingNodes.AddRange(nsNode.Usings);
             }
 
-            // Deduplicate by normalized string.
             var seen = new HashSet<string>(StringComparer.Ordinal);
             foreach (var u in usingNodes)
             {
@@ -816,12 +747,10 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 }
             }
 
-            // 2. Add namespace wrapper (if any) and the type itself.
             var ns = GetNamespace(type);
 
             if (!string.IsNullOrEmpty(ns))
             {
-                // Ensure a blank line between usings and namespace if there were any usings.
                 if (sb.Length > 0 && !sb.ToString().EndsWith(Environment.NewLine, StringComparison.Ordinal))
                 {
                     sb.AppendLine();
@@ -852,7 +781,6 @@ namespace LagoVista.AI.Rag.Chunkers.Services
         {
             if (text == null) return string.Empty;
 
-            // Normalize newlines and then re-join with environment newlines.
             var normalized = text.Replace("\r\n", "\n");
             var lines = normalized.Split('\n');
 

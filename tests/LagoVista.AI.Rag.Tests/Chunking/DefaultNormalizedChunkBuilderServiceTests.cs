@@ -7,6 +7,7 @@ using LagoVista.AI.Rag.Chunkers.Models;
 using LagoVista.AI.Rag.Chunkers.Services;
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Services;
 using LagoVista.AI.Rag.Models;
+using LagoVista.Core.Utils.Types;
 using NUnit.Framework;
 
 namespace LagoVista.AI.Rag.Tests.Chunking
@@ -95,38 +96,6 @@ namespace LagoVista.AI.Rag.Tests.Chunking
             Assert.That(text, Does.Contain("public class Device"));
         }
 
-        [Test]
-        public async Task Multiple_DetectionResults_Produce_Multiple_Chunks_With_Correct_Symbols()
-        {
-            var fileContext = new IndexFileContext
-            {
-                OrgId = "org-2",
-                ProjectId = "proj-2",
-                RepoId = "Repo2",
-                FullPath = _filePath,
-                RelativePath = _relativePath.Replace('\\', '/')
-            };
-
-            var chunker = new FakeChunkerServicesMultiple();
-            var builder = new DefaultNormalizedChunkBuilderService(chunker);
-
-            var chunks = await builder.BuildChunksAsync(fileContext, CancellationToken.None);
-
-            Assert.That(chunks, Is.Not.Null);
-            Assert.That(chunks.Count, Is.EqualTo(2));
-
-            var deviceChunk = chunks[0];
-            var managerChunk = chunks[1];
-
-            Assert.That(deviceChunk.Identity.Symbol, Is.EqualTo("Device"));
-            Assert.That(managerChunk.Identity.Symbol, Is.EqualTo("DeviceManager"));
-
-            Assert.That(deviceChunk.NormalizedText, Does.Contain("Symbol: Device"));
-            Assert.That(managerChunk.NormalizedText, Does.Contain("Symbol: DeviceManager"));
-
-            Assert.That(deviceChunk.SubKind, Is.EqualTo("Model"));
-            Assert.That(managerChunk.SubKind, Is.EqualTo("Manager"));
-        }
 
         [Test]
         public async Task When_Summary_Is_Empty_Summary_Section_Is_Omitted_But_Code_Remains()
@@ -165,21 +134,19 @@ namespace LagoVista.AI.Rag.Tests.Chunking
 
         private sealed class FakeChunkerServicesSingle : IChunkerServices
         {
-            public IReadOnlyList<SubKindDetectionResult> DetectForFile(string sourceText, string relativePath)
+
+            public SourceKindResult DetectForFile(string sourceText, string relativePath)
             {
-                return new[]
+                return new SourceKindResult
                 {
-                    new SubKindDetectionResult
-                    {
-                        Path = relativePath,
-                        SubKind = CodeSubKind.Model,
-                        PrimaryTypeName = "Device",
-                        IsMixed = false,
-                        Summary = "This is a test summary for Device.",
-                        Reason = "Test stub: detected model type Device.",
-                        Evidence = Array.Empty<string>(),
-                        SymbolText = "public class Device { }"
-                    }
+                    Path = relativePath,
+                    SubKind = CodeSubKind.Model,
+                    PrimaryTypeName = "Device",
+                    IsMixed = false,
+                    Summary = "This is a test summary for Device.",
+                    Reason = "Test stub: detected model type Device.",
+                    Evidence = Array.Empty<string>(),
+                    SymbolText = "public class Device { }"
                 };
             }
 
@@ -188,63 +155,31 @@ namespace LagoVista.AI.Rag.Tests.Chunking
             public string BuildSummaryForMethod(MethodSummaryContext ctx) => throw new NotImplementedException();
             public IReadOnlyList<DomainSummaryInfo> ExtractDomains(string source, string filePath) => throw new NotImplementedException();
             public Task<TitleDescriptionReviewResult> ReviewTitleAndDescriptionAsync(SummaryObjectKind kind, string symbolName, string title, string description, string llmUrl, string llmApiKey, System.Net.Http.HttpClient httpClient = null, string model = "gpt-4.1-mini", CancellationToken cancellationToken = default) => throw new NotImplementedException();
-        }
 
-        private sealed class FakeChunkerServicesMultiple : IChunkerServices
-        {
-            public IReadOnlyList<SubKindDetectionResult> DetectForFile(string sourceText, string relativePath)
+            public int EstimateTokens(string s)
             {
-                return new[]
-                {
-                    new SubKindDetectionResult
-                    {
-                        Path = relativePath,
-                        SubKind = CodeSubKind.Model,
-                        PrimaryTypeName = "Device",
-                        IsMixed = true,
-                        Summary = "Model summary for Device.",
-                        Reason = "Detected model type Device.",
-                        Evidence = Array.Empty<string>(),
-                        SymbolText = "public class Device { }"
-                    },
-                    new SubKindDetectionResult
-                    {
-                        Path = relativePath,
-                        SubKind = CodeSubKind.Manager,
-                        PrimaryTypeName = "DeviceManager",
-                        IsMixed = true,
-                        Summary = "Manager summary for DeviceManager.",
-                        Reason = "Detected manager type DeviceManager.",
-                        Evidence = Array.Empty<string>(),
-                        SymbolText = "public class DeviceManager { }"
-                    }
-                };
+                throw new NotImplementedException();
             }
 
-            public ModelMetadataDescription BuildMetadataDescriptionForModel(string sourceText, string relativePath, IReadOnlyDictionary<string, string> resources) => throw new NotImplementedException();
-            public ModelStructureDescription BuildStructuredDescriptionForModel(string sourceText, string relativePath, IReadOnlyDictionary<string, string> resources) => throw new NotImplementedException();
-            public string BuildSummaryForMethod(MethodSummaryContext ctx) => throw new NotImplementedException();
-            public IReadOnlyList<DomainSummaryInfo> ExtractDomains(string source, string filePath) => throw new NotImplementedException();
-            public Task<TitleDescriptionReviewResult> ReviewTitleAndDescriptionAsync(SummaryObjectKind kind, string symbolName, string title, string description, string llmUrl, string llmApiKey, System.Net.Http.HttpClient httpClient = null, string model = "gpt-4.1-mini", CancellationToken cancellationToken = default) => throw new NotImplementedException();
+            public RagChunkPlan ChunkCSharpWithRoslyn(string text, string relPath, string blobPath, int maxTokensPerChunk = 6500, int overlapLines = 6)
+            {
+                throw new NotImplementedException();
+            }
         }
 
         private sealed class FakeChunkerServicesNoSummary : IChunkerServices
         {
-            public IReadOnlyList<SubKindDetectionResult> DetectForFile(string sourceText, string relativePath)
+            public SourceKindResult DetectForFile(string sourceText, string relativePath)
             {
-                return new[]
+                return new SourceKindResult
                 {
-                    new SubKindDetectionResult
-                    {
-                        Path = relativePath,
-                        SubKind = CodeSubKind.Model,
-                        PrimaryTypeName = "Device",
-                        IsMixed = false,
-                        Summary = null,
-                        Reason = "Detected model type Device without summary.",
-                        Evidence = Array.Empty<string>(),
-                        SymbolText = "public class Device { }"
-                    }
+                    Path = relativePath,
+                    SubKind = CodeSubKind.Model,
+                    PrimaryTypeName = "Device",
+                    IsMixed = false,
+                    Reason = "Detected model type Device without summary.",
+                    Evidence = Array.Empty<string>(),
+                    SymbolText = "public class Device { }"
                 };
             }
 
@@ -253,6 +188,16 @@ namespace LagoVista.AI.Rag.Tests.Chunking
             public string BuildSummaryForMethod(MethodSummaryContext ctx) => throw new NotImplementedException();
             public IReadOnlyList<DomainSummaryInfo> ExtractDomains(string source, string filePath) => throw new NotImplementedException();
             public Task<TitleDescriptionReviewResult> ReviewTitleAndDescriptionAsync(SummaryObjectKind kind, string symbolName, string title, string description, string llmUrl, string llmApiKey, System.Net.Http.HttpClient httpClient = null, string model = "gpt-4.1-mini", CancellationToken cancellationToken = default) => throw new NotImplementedException();
+
+            public int EstimateTokens(string s)
+            {
+                throw new NotImplementedException();
+            }
+
+            public RagChunkPlan ChunkCSharpWithRoslyn(string text, string relPath, string blobPath, int maxTokensPerChunk = 6500, int overlapLines = 6)
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }

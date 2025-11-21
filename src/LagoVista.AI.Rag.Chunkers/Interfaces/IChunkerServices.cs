@@ -13,7 +13,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
     /// </summary>
     public interface IChunkerServices
     {
-        IReadOnlyList<SubKindDetectionResult> DetectForFile(string sourceText, string relativePath);
+        SourceKindResult DetectForFile(string sourceText, string relativePath);
 
         int EstimateTokens(string s);
 
