@@ -30,6 +30,11 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             string source,
             string filePath);
 
+        string BuildModelSummary(ModelMetadataDescription metadata)
+        {
+            return ModelMetadataSummaryBuilder.BuildSummary(metadata);
+        }
+
         Task<TitleDescriptionReviewResult> ReviewTitleAndDescriptionAsync(
             SummaryObjectKind kind,
             string symbolName,
