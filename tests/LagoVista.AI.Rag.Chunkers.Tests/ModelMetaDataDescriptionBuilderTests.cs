@@ -59,6 +59,49 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         }
 
         [Test]
+        public void Builds_Metadata_From_Agent_Content_With_Properties()
+        {
+            var modelPath = "./Content/SampleDeviceModel.cs";
+
+            Assert.That(File.Exists(modelPath), Is.True, $"Model content file not found at {modelPath}");
+
+            var source = File.ReadAllText(modelPath);
+            var resources = ResxLabelScanner.GetSingleResourceDictionary(".");
+
+            var metadata = ModelMetadataDescriptionBuilder.FromSource(source, "src/Models/Device.cs", resources);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(metadata, Is.Not.Null);
+                Assert.That(metadata.ModelName, Is.EqualTo("AgentContextTestData"));
+                Assert.That(metadata.Namespace, Is.EqualTo("LagoVista.AI.Models"));
+                Assert.That(metadata.Domain, Is.EqualTo("AIAdmin"));
+
+                Assert.That(metadata.Title, Is.EqualTo("Agent Context"));
+                Assert.That(metadata.Description, Is.Not.Empty);
+                Assert.That(metadata.Help, Is.Not.Empty);
+
+                Assert.That(metadata.ListUIUrl, Is.EqualTo("/mlworkbench/agents"));
+                Assert.That(metadata.EditUIUrl, Is.EqualTo("/mlworkbench/agent/{id}"));
+                Assert.That(metadata.CreateUIUrl, Is.EqualTo("/mlworkbench/agent/add"));
+                Assert.That(metadata.SaveUrl, Is.EqualTo("/api/ai/agentcontext"));
+                Assert.That(metadata.GetListUrl, Is.EqualTo("/api/ai/agentcontexts"));
+            });
+
+            Assert.That(metadata.Fields, Is.Not.Null.And.Not.Empty);
+
+            var azureField = metadata.Fields.Find(f => f.PropertyName == nameof(AgentContext.AzureAccountId));
+            Assert.Multiple(() =>
+            {
+                Assert.That(azureField.PropertyName, Is.EqualTo(nameof(AgentContext.AzureAccountId)));
+                Assert.That(azureField.FieldType, Is.EqualTo("Text"));
+                Assert.That(azureField.Label, Is.EqualTo("Azure Storage Account Id"));
+                Assert.That(azureField.Help, Is.EqualTo("Account Id of the Storage Account used to storage raw content that was indexed."));
+                Assert.That(azureField.IsRequired, Is.EqualTo(true));
+            });
+        }
+
+        [Test]
         public void Builds_Expanded_Layouts_From_Layout_Sample_Model()
         {
             var modelPath = "./Content/LayoutSampleModel.cs";
