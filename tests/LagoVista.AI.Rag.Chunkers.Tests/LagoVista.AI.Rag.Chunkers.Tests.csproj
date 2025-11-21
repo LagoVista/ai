@@ -1,8 +1,11 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="Content\LayoutSampleModel.cs" />
+  </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Remove="Content\resources.resx" />
   </ItemGroup>
@@ -10,6 +13,9 @@
     <None Remove="Content\sample-device.resources.txt" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Content\LayoutSampleModel.cs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Content\resources.resx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

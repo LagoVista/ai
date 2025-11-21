@@ -160,23 +160,57 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 metadata.Layouts = new ModelFormLayouts();
             if (metadata.Layouts.Form == null)
                 metadata.Layouts.Form = new ModelFormLayoutColumns();
+            if (metadata.Layouts.Advanced == null)
+                metadata.Layouts.Advanced = new ModelFormLayoutColumns();
 
-            // GetFormFields()  => primary form column 1
+            // Main form columns
             var col1 = ExtractLayoutFieldNames(modelType, "GetFormFields");
             if (col1 != null && col1.Count > 0)
                 metadata.Layouts.Form.Col1Fields = col1;
 
-            // GetFormFieldsCol2() => primary form column 2
             var col2 = ExtractLayoutFieldNames(modelType, "GetFormFieldsCol2");
             if (col2 != null && col2.Count > 0)
                 metadata.Layouts.Form.Col2Fields = col2;
 
-            // GetFormFieldsBottom() => bottom fields
             var bottom = ExtractLayoutFieldNames(modelType, "GetFormFieldsBottom");
             if (bottom != null && bottom.Count > 0)
                 metadata.Layouts.Form.BottomFields = bottom;
 
-            // Advanced, tabs, mobile, etc. can be layered in later using the same pattern.
+            // Advanced layout
+            var advCol1 = ExtractLayoutFieldNames(modelType, "GetAdvancedFields");
+            if (advCol1 != null && advCol1.Count > 0)
+                metadata.Layouts.Advanced.Col1Fields = advCol1;
+
+            var advCol2 = ExtractLayoutFieldNames(modelType, "GetAdvancedFieldsCol2");
+            if (advCol2 != null && advCol2.Count > 0)
+                metadata.Layouts.Advanced.Col2Fields = advCol2;
+
+            // Inline fields
+            var inlineFields = ExtractLayoutFieldNames(modelType, "GetInlineFields");
+            if (inlineFields != null && inlineFields.Count > 0)
+                metadata.Layouts.InlineFields = inlineFields;
+
+            // Mobile fields
+            var mobileFields = ExtractLayoutFieldNames(modelType, "GetMobileFields");
+            if (mobileFields != null && mobileFields.Count > 0)
+                metadata.Layouts.MobileFields = mobileFields;
+
+            // Simple layout
+            var simpleFields = ExtractLayoutFieldNames(modelType, "GetSimpleFields");
+            if (simpleFields != null && simpleFields.Count > 0)
+                metadata.Layouts.SimpleFields = simpleFields;
+
+            // Quick-create layout
+            var quickCreateFields = ExtractLayoutFieldNames(modelType, "GetQuickCreateFields");
+            if (quickCreateFields != null && quickCreateFields.Count > 0)
+                metadata.Layouts.QuickCreateFields = quickCreateFields;
+
+            // Additional actions
+            var additionalActions = ExtractAdditionalActions(modelType, resources);
+            if (additionalActions != null && additionalActions.Count > 0)
+                metadata.Layouts.AdditionalActions = additionalActions;
+
+            // Advanced TabFields and other layout variants can be layered in later.
 
             return metadata;
         }
@@ -215,6 +249,112 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             }
 
             return names.Count == 0 ? null : names;
+        }
+
+        /// <summary>
+        /// Extracts additional form actions from a GetAdditionalActions() method
+        /// that returns a sequence of FormAdditionalAction object initializers.
+        /// </summary>
+        private static List<ModelFormAdditionalActionDescription> ExtractAdditionalActions(
+            ClassDeclarationSyntax modelType,
+            IReadOnlyDictionary<string, string> resources)
+        {
+            var method = modelType.Members
+                .OfType<MethodDeclarationSyntax>()
+                .FirstOrDefault(m => m.Identifier.ValueText == "GetAdditionalActions");
+
+            if (method == null || method.Body == null)
+                return null;
+
+            var actions = new List<ModelFormAdditionalActionDescription>();
+
+            var objectCreations = method.Body
+                .DescendantNodes()
+                .OfType<ObjectCreationExpressionSyntax>();
+
+            foreach (var creation in objectCreations)
+            {
+                var simpleType = GetSimpleTypeName(creation.Type.ToString());
+                if (!string.Equals(simpleType, "FormAdditionalAction", StringComparison.Ordinal))
+                    continue;
+
+                var action = new ModelFormAdditionalActionDescription();
+
+                if (creation.Initializer != null)
+                {
+                    foreach (var expr in creation.Initializer.Expressions.OfType<AssignmentExpressionSyntax>())
+                    {
+                        if (expr.Left is not IdentifierNameSyntax left)
+                            continue;
+
+                        var propName = left.Identifier.Text;
+                        var valueExpr = expr.Right;
+
+                        switch (propName)
+                        {
+                            case "Title":
+                                action.Title = ExtractStringOrResource(valueExpr, resources, "FormAdditionalAction.Title");
+                                break;
+                            case "Icon":
+                                action.Icon = ExtractStringLiteral(valueExpr);
+                                break;
+                            case "Help":
+                                action.Help = ExtractStringOrResource(valueExpr, resources, "FormAdditionalAction.Help");
+                                break;
+                            case "Key":
+                                action.Key = ExtractStringLiteral(valueExpr);
+                                break;
+                            case "ForCreate":
+                                action.ForCreate = ExtractBoolLiteral(valueExpr);
+                                break;
+                            case "ForEdit":
+                                action.ForEdit = ExtractBoolLiteral(valueExpr);
+                                break;
+                        }
+                    }
+                }
+
+                actions.Add(action);
+            }
+
+            return actions.Count == 0 ? null : actions;
+        }
+
+        private static string ExtractStringOrResource(
+            ExpressionSyntax expr,
+            IReadOnlyDictionary<string, string> resources,
+            string context)
+        {
+            // String literal: use directly
+            if (expr is LiteralExpressionSyntax lit && lit.IsKind(SyntaxKind.StringLiteralExpression))
+            {
+                return lit.Token.ValueText;
+            }
+
+            // Otherwise treat as resource reference
+            var key = ExtractResourceKey(expr);
+            return Lookup(resources, key, context);
+        }
+
+        private static string ExtractStringLiteral(ExpressionSyntax expr)
+        {
+            if (expr is LiteralExpressionSyntax lit && lit.IsKind(SyntaxKind.StringLiteralExpression))
+            {
+                return lit.Token.ValueText;
+            }
+
+            return null;
+        }
+
+        private static bool ExtractBoolLiteral(ExpressionSyntax expr)
+        {
+            if (expr is LiteralExpressionSyntax lit)
+            {
+                if (lit.IsKind(SyntaxKind.TrueLiteralExpression)) return true;
+                if (lit.IsKind(SyntaxKind.FalseLiteralExpression)) return false;
+            }
+
+            return false;
         }
 
         // ---------- Shared helpers (mirroring ModelStructureDescriptionBuilder) ----------
@@ -448,6 +588,24 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             if (char.IsLower(name[0])) return name;
             if (name.Length == 1) return name.ToLowerInvariant();
             return char.ToLowerInvariant(name[0]) + name.Substring(1);
+        }
+
+        private static string GetSimpleTypeName(string typeName)
+        {
+            if (string.IsNullOrWhiteSpace(typeName)) return typeName;
+
+            var simple = typeName;
+
+            // Strip generic arguments if present
+            var lt = simple.IndexOf('<');
+            if (lt >= 0)
+                simple = simple.Substring(0, lt);
+
+            var dot = simple.LastIndexOf('.');
+            if (dot >= 0 && dot < simple.Length - 1)
+                simple = simple.Substring(dot + 1);
+
+            return simple;
         }
     }
 }
