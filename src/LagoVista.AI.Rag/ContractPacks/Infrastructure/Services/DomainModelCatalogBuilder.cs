@@ -18,14 +18,10 @@ namespace LagoVista.AI.Rag.ContractPacks.Infrastructure.Services
     /// </summary>
     public class DomainModelCatalogBuilder : IDomainModelCatalogBuilder
     {
-        private readonly ISubKindDetector _subKindDetector;
         private readonly IChunkerServices _chunkerServices;
 
-        public DomainModelCatalogBuilder(
-            ISubKindDetector subKindDetector,
-            IChunkerServices chunkerServices)
+        public DomainModelCatalogBuilder(IChunkerServices chunkerServices)
         {
-            _subKindDetector = subKindDetector ?? throw new ArgumentNullException(nameof(subKindDetector));
             _chunkerServices = chunkerServices ?? throw new ArgumentNullException(nameof(chunkerServices));
         }
 
@@ -56,7 +52,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Infrastructure.Services
 
                 var source = await File.ReadAllTextAsync(file.FullPath, token).ConfigureAwait(false);
 
-                var subKindResults = _subKindDetector.DetectForFile(source, file.RelativePath) ?? Array.Empty<SubKindDetectionResult>();
+                var subKindResults = _chunkerServices.DetectForFile(source, file.RelativePath) ?? Array.Empty<SubKindDetectionResult>();
 
                 foreach (var result in subKindResults)
                 {

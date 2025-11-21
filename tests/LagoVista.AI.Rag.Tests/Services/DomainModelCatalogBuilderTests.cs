@@ -60,9 +60,8 @@ namespace LagoVista.AI.Rag.Tests.Services
                 }
             };
 
-            var detector = new FakeSubKindDetector();
             var chunker = new FakeChunkerServices();
-            var builder = new DomainModelCatalogBuilder(detector, chunker);
+            var builder = new DomainModelCatalogBuilder(chunker);
 
             var catalog = await builder.BuildAsync(_repoId, files, CancellationToken.None);
 
@@ -102,7 +101,7 @@ namespace LagoVista.AI.Rag.Tests.Services
 
             var detector = new FakeSubKindDetector();
             var chunker = new FakeChunkerServices();
-            var builder = new DomainModelCatalogBuilder(detector, chunker);
+            var builder = new DomainModelCatalogBuilder(chunker);
 
             var catalog = await builder.BuildAsync(_repoId, files, CancellationToken.None);
 
@@ -110,8 +109,23 @@ namespace LagoVista.AI.Rag.Tests.Services
             Assert.That(catalog.ModelsByQualifiedName.Count, Is.EqualTo(0));
         }
 
-        private sealed class FakeSubKindDetector : ISubKindDetector
+        private sealed class FakeSubKindDetector : IChunkerServices
         {
+            public ModelMetadataDescription BuildMetadataDescriptionForModel(string sourceText, string relativePath, IReadOnlyDictionary<string, string> resources)
+            {
+                throw new NotImplementedException();
+            }
+
+            public ModelStructureDescription BuildStructuredDescriptionForModel(string sourceText, string relativePath, IReadOnlyDictionary<string, string> resources)
+            {
+                throw new NotImplementedException();
+            }
+
+            public string BuildSummaryForMethod(MethodSummaryContext ctx)
+            {
+                throw new NotImplementedException();
+            }
+
             public IReadOnlyList<SubKindDetectionResult> DetectForFile(string sourceText, string relativePath)
             {
                 // We return two results: one we intend to be treated as a domain snippet,
@@ -138,6 +152,16 @@ namespace LagoVista.AI.Rag.Tests.Services
                         SymbolText = "MODEL_SNIPPET"
                     }
                 };
+            }
+
+            public IReadOnlyList<DomainSummaryInfo> ExtractDomains(string source, string filePath)
+            {
+                throw new NotImplementedException();
+            }
+
+            public Task<TitleDescriptionReviewResult> ReviewTitleAndDescriptionAsync(SummaryObjectKind kind, string symbolName, string title, string description, string llmUrl, string llmApiKey, HttpClient httpClient = null, string model = "gpt-4.1-mini", CancellationToken cancellationToken = default)
+            {
+                throw new NotImplementedException();
             }
         }
 
@@ -198,7 +222,31 @@ namespace LagoVista.AI.Rag.Tests.Services
 
             public IReadOnlyList<SubKindDetectionResult> DetectForFile(string sourceText, string relativePath)
             {
-                throw new NotImplementedException();
+
+                // We return two results: one we intend to be treated as a domain snippet,
+                // and one as a model snippet. The builder does not branch on SubKind, so
+                // we simply distinguish them via SymbolText content.
+                return new List<SubKindDetectionResult>
+                {
+                    new SubKindDetectionResult
+                    {
+                        Path = relativePath,
+                        SubKind = default(CodeSubKind),
+                        PrimaryTypeName = "DevicesDomain",
+                        IsMixed = true,
+                        Reason = "Fake domain for tests",
+                        SymbolText = "DOMAIN_SNIPPET"
+                    },
+                    new SubKindDetectionResult
+                    {
+                        Path = relativePath,
+                        SubKind = default(CodeSubKind),
+                        PrimaryTypeName = "Device",
+                        IsMixed = true,
+                        Reason = "Fake model for tests",
+                        SymbolText = "MODEL_SNIPPET"
+                    }
+                };
             }
 
             public Task<TitleDescriptionReviewResult> ReviewTitleAndDescriptionAsync(SummaryObjectKind kind, string symbolName, string title, string description, string llmUrl, string llmApiKey, HttpClient httpClient = null, string model = "gpt-4.1-mini", CancellationToken cancellationToken = default)
