@@ -47,6 +47,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LagoVista.AI.Rag.Chunkers",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LagoVista.AI.Rag.Chunkers.Tests", "tests\LagoVista.AI.Rag.Chunkers.Tests\LagoVista.AI.Rag.Chunkers.Tests.csproj", "{F0AE441F-A281-4F07-8FE1-94DC03152111}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LagoVista.AI.Rag.Tests", "tests\LagoVista.AI.Rag.Tests\LagoVista.AI.Rag.Tests.csproj", "{2A33E0B2-92EC-4B46-8579-89F92DABAA82}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -89,6 +91,10 @@ Global
 		{F0AE441F-A281-4F07-8FE1-94DC03152111}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F0AE441F-A281-4F07-8FE1-94DC03152111}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F0AE441F-A281-4F07-8FE1-94DC03152111}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A33E0B2-92EC-4B46-8579-89F92DABAA82}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A33E0B2-92EC-4B46-8579-89F92DABAA82}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A33E0B2-92EC-4B46-8579-89F92DABAA82}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A33E0B2-92EC-4B46-8579-89F92DABAA82}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -103,6 +109,7 @@ Global
 		{01658AFF-D51B-467B-8BBE-CEF875036828} = {374F4C7F-619C-4B41-AAAC-0F9B3B259F07}
 		{D6CF7A31-B9B9-4A72-B319-4C6AD5C64311} = {374F4C7F-619C-4B41-AAAC-0F9B3B259F07}
 		{F0AE441F-A281-4F07-8FE1-94DC03152111} = {0C3AF45F-896E-44A6-9A2A-E62A8609B5D4}
+		{2A33E0B2-92EC-4B46-8579-89F92DABAA82} = {0C3AF45F-896E-44A6-9A2A-E62A8609B5D4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {29D4F79F-3C1A-46CA-BA14-25CEA87D4B71}

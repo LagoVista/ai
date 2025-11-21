@@ -3,7 +3,6 @@
 // IndexVersion: 2
 // --- END CODE INDEX META ---
 using LagoVista.AI.Models;
-using LagoVista.AI.Rag.Services;
 using LagoVista.AI.Services;
 using LagoVista.Core.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -102,13 +101,13 @@ namespace LagoVista.AI.Tests
         [TestMethod]
         public void TestChunker()
         {
-            var content = System.IO.File.ReadAllText("DocumentTemplateManager.cs");
-            var chunker = new RoslynCSharpChunker();
-            var chunks = chunker.Chunk(content, "whocares", "whocares");
-            foreach(var chunk in chunks.Chunks)
-            {
-                Console.WriteLine($"{chunk.SymbolType}/{chunk.Symbol} - {chunk.EstimatedTokens} {chunk.LineStart}, {chunk.LineEnd}, {chunk.CharStart}, {chunk.CharEnd}");
-            }
+            //var content = System.IO.File.ReadAllText("DocumentTemplateManager.cs");
+            //var chunker = new RoslynCSharpChunker();
+            //var chunks = chunker.Chunk(content, "whocares", "whocares");
+            //foreach(var chunk in chunks.Chunks)
+            //{
+            //    Console.WriteLine($"{chunk.SymbolType}/{chunk.Symbol} - {chunk.EstimatedTokens} {chunk.LineStart}, {chunk.LineEnd}, {chunk.CharStart}, {chunk.CharEnd}");
+            //}
 
 
         }

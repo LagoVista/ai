@@ -1,126 +1,154 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using LagoVista.AI.Rag.ContractPacks.Infrastructure.Interfaces;
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Interfaces;
 using LagoVista.AI.Rag.ContractPacks.Orchestration.Interfaces;
+using LagoVista.AI.Rag.ContractPacks.Registry.Interfaces;
 using LagoVista.AI.Rag.Models;
 
 namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
 {
     /// <summary>
-    /// High-level orchestrator for an indexing run.
+    /// Skeleton implementation of the indexing run orchestrator.
     ///
-    /// Responsibilities:
-    ///  - Interpret IngestionConfig (SourceRoot, repos, etc.).
-    ///  - Discover files via IFileDiscoveryService.
-    ///  - Build a FileIngestionPlan via IFileIngestionPlanner.
-    ///  - Load/save LocalIndexStore via ILocalIndexStore.
-    ///  - Invoke IIndexingPipeline for FilesToIndex.
-    ///  - Handle DocsToDelete (TODO: integrate registry deletion semantics).
+    /// This class wires together the major contract packs:
+    ///  - Configuration (IIngestionConfigProvider)
+    ///  - File discovery (IFileDiscoveryService)
+    ///  - Local index (ILocalIndexStore)
+    ///  - Ingestion planning (IFileIngestionPlanner)
+    ///  - Indexing pipeline (IIndexingPipeline)
+    ///  - Facet accumulation & registry (IFacetAccumulator, IMetadataRegistryClient)
     ///
-    /// This is the spiritual replacement for the legacy IngestorService but
-    /// expressed in terms of the new contract-pack interfaces.
+    /// Detailed behavior (chunking, embedding, Qdrant, etc.) is delegated to
+    /// the underlying services.
     /// </summary>
     public sealed class IndexRunOrchestrator : IIndexRunOrchestrator
     {
-        private readonly IngestionConfig _config;
+        private readonly IIngestionConfigProvider _configProvider;
         private readonly IFileDiscoveryService _discoveryService;
         private readonly IFileIngestionPlanner _ingestionPlanner;
         private readonly ILocalIndexStore _localIndexStore;
         private readonly IIndexingPipeline _pipeline;
+        private readonly IFacetAccumulator _facetAccumulator;
+        private readonly IMetadataRegistryClient _metadataRegistryClient;
 
         public IndexRunOrchestrator(
-            IngestionConfig config,
+            IIngestionConfigProvider configProvider,
             IFileDiscoveryService discoveryService,
             IFileIngestionPlanner ingestionPlanner,
             ILocalIndexStore localIndexStore,
-            IIndexingPipeline pipeline)
+            IIndexingPipeline pipeline,
+            IFacetAccumulator facetAccumulator,
+            IMetadataRegistryClient metadataRegistryClient)
         {
-            _config = config ?? throw new ArgumentNullException(nameof(config));
+            _configProvider = configProvider ?? throw new ArgumentNullException(nameof(configProvider));
             _discoveryService = discoveryService ?? throw new ArgumentNullException(nameof(discoveryService));
             _ingestionPlanner = ingestionPlanner ?? throw new ArgumentNullException(nameof(ingestionPlanner));
             _localIndexStore = localIndexStore ?? throw new ArgumentNullException(nameof(localIndexStore));
             _pipeline = pipeline ?? throw new ArgumentNullException(nameof(pipeline));
+            _facetAccumulator = facetAccumulator ?? throw new ArgumentNullException(nameof(facetAccumulator));
+            _metadataRegistryClient = metadataRegistryClient ?? throw new ArgumentNullException(nameof(metadataRegistryClient));
         }
 
-        public async Task RunAsync(string repoId, CancellationToken token = default)
+        public async Task RunAsync(IngestionConfig config, CancellationToken cancellationToken = default)
         {
-            if (string.IsNullOrWhiteSpace(repoId))
-                throw new ArgumentNullException(nameof(repoId));
+            // 1. Load configuration
+            if (config == null)
+                throw new InvalidOperationException("IIngestionConfigProvider returned null config.");
 
-            // Determine repo root from config. For now we assume SourceRoot + repoId.
-            var sourceRoot = _config.Ingestion?.SourceRoot ?? string.Empty;
-            var repoRoot = string.IsNullOrWhiteSpace(sourceRoot)
-                ? repoId
-                : Path.Combine(sourceRoot, repoId);
+            var repos = config.Ingestion?.Repositories ?? new List<string>();
 
-            // Ensure the repo root exists; if not, nothing to do.
-            if (!Directory.Exists(repoRoot))
-                return;
-
-            // Load local index
-            var localIndex = await _localIndexStore.LoadAsync(repoId, token).ConfigureAwait(false);
-
-            // Discover files under this repo
-            var discovered = await _discoveryService
-                .DiscoverAsync(repoRoot, token)
-                .ConfigureAwait(false);
-
-            // Build ingestion plan from discovered files and local index
-            var discoveredRelativePaths = discovered
-                .Select(df => df.RelativePath)
-                .Where(p => !string.IsNullOrWhiteSpace(p))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList();
-
-            var plan = await _ingestionPlanner
-                .BuildPlanAsync(repoId, discoveredRelativePaths, localIndex, token)
-                .ConfigureAwait(false);
-
-            // Index files according to plan
-            foreach (var file in plan.FilesToIndex)
+            foreach (var repoId in repos)
             {
-                token.ThrowIfCancellationRequested();
+                cancellationToken.ThrowIfCancellationRequested();
 
-                var fullPath = Path.Combine(repoRoot, file.CanonicalPath);
-                if (!File.Exists(fullPath))
+                // 2. Resolve repo root
+                var sourceRoot = config.Ingestion?.SourceRoot ?? string.Empty;
+                var repoRoot = string.IsNullOrWhiteSpace(sourceRoot)
+                    ? repoId
+                    : Path.Combine(sourceRoot, repoId);
+
+                if (!Directory.Exists(repoRoot))
+                {
+                    // No local repo folder; skip for now.
                     continue;
+                }
 
-                var ctx = new IndexFileContext
+                // 3. Load local index for this repo
+                var localIndex = await _localIndexStore.LoadAsync(repoId, cancellationToken).ConfigureAwait(false);
+
+                // 4. Discover files
+                var discovered = await _discoveryService
+                    .DiscoverAsync(repoRoot, cancellationToken)
+                    .ConfigureAwait(false);
+
+                var relativePaths = new List<string>();
+                foreach (var file in discovered)
                 {
-                    OrgId = _config.OrgId,
-                    ProjectId = plan.ProjectId,
-                    RepoId = repoId,
-                    FullPath = fullPath,
-                    RelativePath = file.CanonicalPath,
-                    Language = null,
-                    Metadata = new Dictionary<string, object>()
-                };
+                    if (!string.IsNullOrWhiteSpace(file.RelativePath))
+                    {
+                        relativePaths.Add(file.RelativePath);
+                    }
+                }
 
-                // Compute a basic DocumentIdentity so downstream components
-                // have something consistent to work with.
-                var identity = new DocumentIdentity
+                // 5. Build ingestion plan
+                var plan = await _ingestionPlanner
+                    .BuildPlanAsync(repoId, relativePaths, localIndex, cancellationToken)
+                    .ConfigureAwait(false);
+
+                // 6. Index files according to plan
+                foreach (var filePlan in plan.FilesToIndex)
                 {
-                    OrgId = _config.OrgId,
-                    ProjectId = plan.ProjectId,
-                    RepoId = repoId,
-                    RelativePath = file.CanonicalPath
-                };
-                identity.ComputeDocId();
-                ctx.DocumentIdentity = identity;
+                    cancellationToken.ThrowIfCancellationRequested();
 
-                await _pipeline.IndexFileAsync(ctx, token).ConfigureAwait(false);
+                    var fullPath = Path.Combine(repoRoot, filePlan.CanonicalPath ?? string.Empty);
+                    if (!File.Exists(fullPath))
+                        continue;
+
+                    var ctx = new IndexFileContext
+                    {
+                        OrgId = config.OrgId,
+                        ProjectId = plan.ProjectId,
+                        RepoId = repoId,
+                        FullPath = fullPath,
+                        RelativePath = filePlan.CanonicalPath,
+                        Metadata = new System.Collections.Generic.Dictionary<string, object>()
+                    };
+
+                    await _pipeline.IndexFileAsync(ctx, cancellationToken).ConfigureAwait(false);
+
+                    // TODO: update localIndex for this file (hash, facets, LastIndexedUtc)
+                    // and immediately persist via _localIndexStore.SaveAsync to be crash-safe.
+                    // TODO: accumulate facets via _facetAccumulator as the pipeline begins
+                    // returning them (once that contract is in place).
+                }
+
+                // TODO: handle plan.DocsToDelete by calling IQdrantVectorStore (via pipeline or
+                // a dedicated deletion path) and updating localIndex accordingly.
+
+                // Finally, persist local index for this repo.
+                await _localIndexStore.SaveAsync(repoId, localIndex, cancellationToken).ConfigureAwait(false);
             }
 
-            // TODO: Handle plan.DocsToDelete by invoking registry / Qdrant deletion.
-            // For now this is left as a follow-on refactor once the new pipeline
-            // is fully validated.
-
-            // Persist updated local index
-            await _localIndexStore.SaveAsync(repoId, localIndex, token).ConfigureAwait(false);
+            // After all repos, flush accumulated facets to metadata registry.
+            var allFacets = _facetAccumulator.GetAll();
+            if (allFacets.Count > 0)
+            {
+                // Note: ProjectId / RepoId here may need to be expanded to a per-repo
+                // call in future. For now, we use the last config.ProjectId and leave
+                // the aggregation semantics to the implementation.
+                await _metadataRegistryClient
+                    .ReportFacetsAsync(
+                        orgId: null,            // TODO: supply org id when facet aggregation is wired
+                        projectId: null,        // TODO: supply project id
+                        repoId: null,           // TODO: supply repo id or support multi-repo aggregation
+                        facets: allFacets,
+                        cancellationToken: cancellationToken)
+                    .ConfigureAwait(false);
+            }
         }
     }
 }

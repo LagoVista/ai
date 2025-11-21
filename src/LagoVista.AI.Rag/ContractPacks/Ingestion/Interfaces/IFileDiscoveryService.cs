@@ -1,3 +1,4 @@
+using LagoVista.AI.Rag.ContractPacks.Ingestion.Models;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,16 +14,5 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Interfaces
     {
         Task<IReadOnlyList<DiscoveredFile>> DiscoverAsync(string repoId, CancellationToken token = default);
     }
-
-    /// <summary>
-    /// Simple descriptor for a discovered file.
-    /// </summary>
-    public class DiscoveredFile
-    {
-        public string RepoId { get; set; }
-        public string FullPath { get; set; }
-        public string RelativePath { get; set; }
-        public long SizeBytes { get; set; }
-        public bool IsBinary { get; set; }
-    }
+    
 }

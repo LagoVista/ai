@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Interfaces;
+using LagoVista.AI.Rag.ContractPacks.Ingestion.Models;
 
 namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
 {
