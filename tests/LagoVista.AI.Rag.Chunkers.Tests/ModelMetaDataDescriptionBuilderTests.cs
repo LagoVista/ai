@@ -12,7 +12,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         [Test]
         public void Builds_Metadata_From_Device_Model_Source()
         {
-            var modelPath = "./Content/SampleDeviceModel.cs";
+            var modelPath = "./Content/AgentContextTest.txt";
 
             Assert.That(File.Exists(modelPath), Is.True, $"Model content file not found at {modelPath}");
 
@@ -41,11 +41,11 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
 
             Assert.That(metadata.Fields, Is.Not.Null.And.Not.Empty);
 
-            var iconField = metadata.Fields.Find(f => f.PropertyName == nameof(AgentContextTestData.Icon));
+            var iconField = metadata.Fields.Find(f => f.PropertyName == nameof(AgentContext.Icon));
             Assert.That(iconField, Is.Not.Null);
             Assert.That(iconField.Label, Is.EqualTo("Icon"));
 
-            var vectorDbNameField = metadata.Fields.Find(f => f.PropertyName == nameof(AgentContextTestData.VectorDatabaseCollectionName));
+            var vectorDbNameField = metadata.Fields.Find(f => f.PropertyName == nameof(AgentContext.VectorDatabaseCollectionName));
             Assert.That(vectorDbNameField, Is.Not.Null);
             Assert.That(vectorDbNameField.IsRequired, Is.True);
 
@@ -61,7 +61,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         [Test]
         public void Builds_Metadata_From_Agent_Content_With_Properties()
         {
-            var modelPath = "./Content/SampleDeviceModel.cs";
+            var modelPath = "./Content/AgentContextTest.txt";
 
             Assert.That(File.Exists(modelPath), Is.True, $"Model content file not found at {modelPath}");
 

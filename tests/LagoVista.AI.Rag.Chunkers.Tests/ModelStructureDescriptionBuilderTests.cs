@@ -15,11 +15,18 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         [Test]
         public void Builds_Structure_From_Device_Model_Source()
         {
-            var modelPath = "./Content/SampleDeviceModel.cs";
+            var modelPath = "./Content/AgentContextTest.txt";
+            var managerPath = "./Content/AgentContextTestManager.txt";
+            var repoPath = "./Content/AgentContextTestRepository.txt";
+            var controllerPath = "./Content/AgentContextTestController.txt";
+
             var resourcePath = "./Content/resources.resx";
 
             Assert.That(File.Exists(modelPath), Is.True, $"Model content file not found at {modelPath}");
-            Assert.That(File.Exists(resourcePath), Is.True, $"Resource content file not found at {resourcePath}");
+            Assert.That(File.Exists(resourcePath), Is.True, $"Model content file not found at {resourcePath}");
+            Assert.That(File.Exists(managerPath), Is.True, $"Model content file not found at {managerPath}");
+            Assert.That(File.Exists(controllerPath), Is.True, $"Resource content file not found at {controllerPath}");
+            Assert.That(File.Exists(repoPath), Is.True, $"Model content file not found at {repoPath}");
 
             var source = File.ReadAllText(modelPath);
             var resources = ResxLabelScanner.GetSingleResourceDictionary(".");

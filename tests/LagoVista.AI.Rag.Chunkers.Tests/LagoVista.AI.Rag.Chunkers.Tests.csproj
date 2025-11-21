@@ -10,16 +10,29 @@
     <EmbeddedResource Remove="Content\resources.resx" />
   </ItemGroup>
   <ItemGroup>
+    <None Remove="Content\AgentContextTestController.txt" />
+    <None Remove="Content\AgentContextTestRepository.txt" />
     <None Remove="Content\sample-device.resources.txt" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Content\AgentContextTestController.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Content\AgentContextTestRepository.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\AgentContextTestManager.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Content\LayoutSampleModel.cs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\resources.resx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\SampleDeviceModel.cs">
+    <Content Include="Content\AgentContextTest.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

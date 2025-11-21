@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <IsPackable>false</IsPackable>
@@ -7,6 +7,32 @@
     <Compile Remove="Infrastructure\**" />
     <EmbeddedResource Remove="Infrastructure\**" />
     <None Remove="Infrastructure\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Content\LayoutSampleModel.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Remove="Content\resources.resx" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Content\AgentContextTest.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\AgentContextTestController.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\AgentContextTestManager.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\AgentContextTestRepository.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\LayoutSampleModel.cs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\resources.resx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
  
   <ItemGroup>

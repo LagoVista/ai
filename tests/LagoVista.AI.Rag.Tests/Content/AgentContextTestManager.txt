@@ -1,0 +1,139 @@
+// --- BEGIN CODE INDEX META (do not edit) ---
+// ContentHash: c8a9b0de2a6bf14f063c55f46c52d46ee0035077eb8b79425e721a25b3db6fe3
+// IndexVersion: 2
+// --- END CODE INDEX META ---
+using LagoVista.AI.Models;
+using LagoVista.Core.Exceptions;
+using LagoVista.Core.Interfaces;
+using LagoVista.Core.Managers;
+using LagoVista.Core.Models;
+using LagoVista.Core.Models.UIMetaData;
+using LagoVista.Core.Validation;
+using LagoVista.IoT.Logging.Loggers;
+using System;
+using System.Threading.Tasks;
+
+namespace LagoVista.AI.Managers
+{
+    public class AgentContextTestManager : ManagerBase, IAgentContextTestManager
+    {
+        private readonly IAgentConextRepo _repo;
+        private readonly ISecureStorage _secureStorage;
+
+        public AgentContextTestManager(IAgentConextRepo repo, ISecureStorage secureStorage, IAdminLogger logger, IAppConfig appConfig, IDependencyManager dependencyManager, ISecurity security)
+                  : base(logger, appConfig, dependencyManager, security)
+        {
+            _repo = repo ?? throw new NullReferenceException(nameof(repo));
+            _secureStorage = secureStorage ?? throw new NullReferenceException(nameof(secureStorage));
+        }
+
+        public async Task<InvokeResult> AddAgentContextTestAsync(Models.AgentContextTest AgentContextTest, EntityHeader org, EntityHeader user)
+        {
+            ValidationCheck(AgentContextTest, Actions.Create);
+            if(String.IsNullOrEmpty(AgentContextTest.VectorDatabaseApiKey) &&
+               String.IsNullOrEmpty(AgentContextTest.LlmApiKey) &&
+               String.IsNullOrEmpty(AgentContextTest.AzureApiToken))
+            {
+                return InvokeResult.FromError("At least one of the following secrets must be provided: AzureApiToken, OpenAIApiKey, VectorDatabaseApiKey");
+            }
+
+            var addResult = await _secureStorage.AddSecretAsync(org, AgentContextTest.AzureApiToken);
+            if (!addResult.Successful) return addResult.ToInvokeResult();
+            AgentContextTest.AzureApiTokenSecretId = addResult.Result;
+            AgentContextTest.AzureApiToken = null;
+
+            addResult = await _secureStorage.AddSecretAsync(org, AgentContextTest.LlmApiKey);
+            if (!addResult.Successful) return addResult.ToInvokeResult();
+            AgentContextTest.LlmApiKeySecretId = addResult.Result;
+            AgentContextTest.LlmApiKey = null;
+            
+            addResult = await _secureStorage.AddSecretAsync(org, AgentContextTest.VectorDatabaseApiKey);
+            if (!addResult.Successful) return addResult.ToInvokeResult();
+            AgentContextTest.VectorDatabaseApiKeySecretId = addResult.Result;
+            AgentContextTest.VectorDatabaseApiKey = null;
+
+            await AuthorizeAsync(AgentContextTest, AuthorizeResult.AuthorizeActions.Create, user, org);
+            await _repo.AddAgentContextTestAsync(AgentContextTest);
+            return InvokeResult.Success;
+        }
+
+        public async Task<InvokeResult> DeleteAgentContextTestAsync(string id, EntityHeader org, EntityHeader user)
+        {
+            var host = await _repo.GetAgentContextTestAsync(id);
+
+            await AuthorizeAsync(host, AuthorizeResult.AuthorizeActions.Delete, user, org);
+            await ConfirmNoDepenenciesAsync(host);
+            await _repo.DeleteAgentContextTestAsync(id);
+            return InvokeResult.Success;
+        }
+
+        public async Task<Models.AgentContextTest> GetAgentContextTestAsync(string id, EntityHeader org, EntityHeader user)
+        {
+            var model = await _repo.GetAgentContextTestAsync(id);
+            await AuthorizeAsync(model, AuthorizeResult.AuthorizeActions.Read, user, org);
+            return model;
+        }
+
+        public async Task<Models.AgentContextTest> GetAgentContextTestWithSecretsAsync(string id, EntityHeader org, EntityHeader user)
+        {
+            var model = await _repo.GetAgentContextTestAsync(id);
+            await AuthorizeAsync(model, AuthorizeResult.AuthorizeActions.Read, user, org, "withSecrets");
+
+            var secret = await _secureStorage.GetSecretAsync(org, model.AzureApiTokenSecretId, user);
+            model.AzureApiToken = secret.Successful ? secret.Result : throw new RecordNotFoundException(nameof(AgentContextTest.AzureApiTokenSecretId),"N/A");
+
+            secret = await _secureStorage.GetSecretAsync(org, model.LlmApiKeySecretId, user);
+            model.LlmApiKey = secret.Successful ? secret.Result : throw new RecordNotFoundException(nameof(AgentContextTest.LlmApiKeySecretId), "N/A");
+
+            secret = await _secureStorage.GetSecretAsync(org, model.VectorDatabaseApiKeySecretId, user);
+            model.VectorDatabaseApiKey = secret.Successful ? secret.Result : throw new RecordNotFoundException(nameof(AgentContextTest.VectorDatabaseApiKeySecretId), "N/A");
+            return model;
+        }
+
+        public async Task<Models.AgentContextTest> GetVectorDatabaseAsyncWithSecrets(string id, EntityHeader org, EntityHeader user)
+        {
+            var model = await _repo.GetAgentContextTestAsync(id);
+            await AuthorizeAsync(model, AuthorizeResult.AuthorizeActions.Read, user, org);
+            return model;
+        }
+
+        public async Task<ListResponse<AgentContextTestSummary>> GetAgentContextTestsForOrgAsync(EntityHeader org, EntityHeader user, ListRequest listRequest)
+        {
+            await AuthorizeOrgAccessAsync(user, org.Id, typeof(Models.Label));
+            return await _repo.GetAgentContextTestSummariesForOrgAsync(org.Id, listRequest);
+        }
+
+        public async Task<InvokeResult> UpdateAgentContextTestAsync(AgentContextTest db, EntityHeader org, EntityHeader user)
+        {
+            ValidationCheck(db, Actions.Create);
+            await AuthorizeAsync(db, AuthorizeResult.AuthorizeActions.Update, user, org);
+
+            if (!String.IsNullOrEmpty(db.AzureApiToken))
+            {
+                var addResult = await _secureStorage.AddSecretAsync(org, db.AzureApiToken);
+                if (!addResult.Successful) return addResult.ToInvokeResult();
+                db.AzureApiTokenSecretId = addResult.Result;
+                db.AzureApiToken = null;
+            }
+
+            if (!String.IsNullOrEmpty(db.LlmApiKey))
+            {
+                var addResult = await _secureStorage.AddSecretAsync(org, db.LlmApiKey);
+                if (!addResult.Successful) return addResult.ToInvokeResult();
+                db.LlmApiKeySecretId = addResult.Result;
+                db.LlmApiKey = null;
+            }
+
+            if (!String.IsNullOrEmpty(db.VectorDatabaseApiKey))
+            {
+                var addResult = await _secureStorage.AddSecretAsync(org, db.VectorDatabaseApiKey);
+                if (!addResult.Successful) return addResult.ToInvokeResult();
+                db.VectorDatabaseApiKeySecretId = addResult.Result;
+                db.VectorDatabaseApiKey = null;
+            }
+
+            await _repo.UpdateAgentContextTestAsync(db);
+            return InvokeResult.Success;
+        }
+    }
+}

@@ -1,4 +1,5 @@
 ﻿using LagoVista.AI.Rag.Chunkers.Models;
+using LagoVista.Core.Utils.Types;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
@@ -50,6 +51,16 @@ namespace LagoVista.AI.Rag.Chunkers.Services
         public IReadOnlyList<SubKindDetectionResult> DetectForFile(string sourceText, string relativePath)
         {
             return SubKindDetector.DetectForFile(sourceText, relativePath);
+        }
+
+        public int EstimateTokens(string s)
+        {
+            return TokenEstimator.EstimateTokens(s);
+        }
+
+        public RagChunkPlan ChunkCSharpWithRoslyn(string text, string relPath, string blobPath, int maxTokensPerChunk = 6500, int overlapLines = 6)
+        {
+            return RoslynCSharpChunker.Chunk(text, relPath, blobPath, maxTokensPerChunk, overlapLines);
         }
     }
 }

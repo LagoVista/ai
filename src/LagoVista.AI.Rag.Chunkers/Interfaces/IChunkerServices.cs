@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Threading;
+using LagoVista.Core.Utils.Types;
 
 namespace LagoVista.AI.Rag.Chunkers.Services
 {
@@ -13,6 +14,15 @@ namespace LagoVista.AI.Rag.Chunkers.Services
     public interface IChunkerServices
     {
         IReadOnlyList<SubKindDetectionResult> DetectForFile(string sourceText, string relativePath);
+
+        int EstimateTokens(string s);
+
+        RagChunkPlan ChunkCSharpWithRoslyn(
+            string text,
+            string relPath,
+            string blobPath,
+            int maxTokensPerChunk = 6500,
+            int overlapLines = 6);
 
         ModelMetadataDescription BuildMetadataDescriptionForModel(
             string sourceText,

@@ -1,0 +1,660 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="VectorDatabase_ApiKey" xml:space="preserve">
+    <value>Vector Database API Key</value>
+  </data>
+  <data name="Common_Category" xml:space="preserve">
+    <value>Category</value>
+  </data>
+  <data name="Common_Datestamp" xml:space="preserve">
+    <value>Datestamp</value>
+  </data>
+  <data name="Common_Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="Common_Icon" xml:space="preserve">
+    <value>Icon</value>
+  </data>
+  <data name="Common_Key" xml:space="preserve">
+    <value>Key</value>
+  </data>
+  <data name="Common_Key_Help" xml:space="preserve">
+    <value>The key is used to identify this item in scripts and must be unique with respect to it's parent. One a key has been assigned, it can not be changed.</value>
+  </data>
+  <data name="Common_Key_Validation" xml:space="preserve">
+    <value>The key must use only letters and numbers, and must be lowercase and must be between 3 and 20 characters.</value>
+  </data>
+  <data name="Common_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Common_Notes" xml:space="preserve">
+    <value>Notes</value>
+  </data>
+  <data name="Common_SelectCategory" xml:space="preserve">
+    <value>-select category-</value>
+  </data>
+  <data name="Experiemnt_Help" xml:space="preserve">
+    <value>sAn experiment is a set of test critiera that can be used to validate the model in the real world.  This is used on the execution engine and node the model development environment.</value>
+  </data>
+  <data name="Experiment_Description" xml:space="preserve">
+    <value>An experiment is a set of test critiera that can be used to validate the model in the real world.  This is used on the execution engine and node the model development environment.</value>
+  </data>
+  <data name="Experiment_Instructions" xml:space="preserve">
+    <value>Instructions</value>
+  </data>
+  <data name="Experiment_Title" xml:space="preserve">
+    <value>Experiment</value>
+  </data>
+  <data name="InputType_DataPoints" xml:space="preserve">
+    <value>Data Points</value>
+  </data>
+  <data name="InputType_Image" xml:space="preserve">
+    <value>Image</value>
+  </data>
+  <data name="LabelSets_Title" xml:space="preserve">
+    <value>AI - Label Sets</value>
+  </data>
+  <data name="LabelSet_Help" xml:space="preserve">
+    <value>Label Sets are used to add labels to identify inferences made from model evaluations</value>
+  </data>
+  <data name="LabelSet_Labels" xml:space="preserve">
+    <value>Labels</value>
+  </data>
+  <data name="LabelSet_Title" xml:space="preserve">
+    <value>AI - Label Set</value>
+  </data>
+  <data name="Label_Description" xml:space="preserve">
+    <value>A label is an output of the classifier/ml evaluation engine</value>
+  </data>
+  <data name="Label_Enabled" xml:space="preserve">
+    <value>Enabled</value>
+  </data>
+  <data name="Label_Help" xml:space="preserve">
+    <value>A label is an output of the classifier/ml evaluation engine</value>
+  </data>
+  <data name="Label_Icon" xml:space="preserve">
+    <value>Icon</value>
+  </data>
+  <data name="Label_Index" xml:space="preserve">
+    <value>Index</value>
+  </data>
+  <data name="Label_Key" xml:space="preserve">
+    <value>Key</value>
+  </data>
+  <data name="Label_Title" xml:space="preserve">
+    <value>Label</value>
+  </data>
+  <data name="Label_Visible" xml:space="preserve">
+    <value>Visible</value>
+  </data>
+  <data name="ModelCategories_Title" xml:space="preserve">
+    <value>Model Categories</value>
+  </data>
+  <data name="ModelCategory_Description" xml:space="preserve">
+    <value>The Model Category is used to organized models of a specific type.</value>
+  </data>
+  <data name="ModelCategory_Help" xml:space="preserve">
+    <value>The Model Category is used to organized models of a specific type.</value>
+  </data>
+  <data name="ModelCategory_Title" xml:space="preserve">
+    <value>Model Category</value>
+  </data>
+  <data name="ModelNotes_AddedBy" xml:space="preserve">
+    <value>Added by</value>
+  </data>
+  <data name="ModelNotes_Description" xml:space="preserve">
+    <value>Model Notes are attached to a model revision.</value>
+  </data>
+  <data name="ModelNotes_Help" xml:space="preserve">
+    <value>Model Notes are attached to a model revision.</value>
+  </data>
+  <data name="ModelNotes_Note" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="ModelNotes_Title" xml:space="preserve">
+    <value>Model Notes</value>
+  </data>
+  <data name="ModelRevision_Configuration" xml:space="preserve">
+    <value>Configuration</value>
+  </data>
+  <data name="ModelRevision_DateStamp" xml:space="preserve">
+    <value>Datestamp</value>
+  </data>
+  <data name="ModelRevision_Description" xml:space="preserve">
+    <value>A model revision is an instance of a model used for classification</value>
+  </data>
+  <data name="ModelRevision_FileName" xml:space="preserve">
+    <value>Model File</value>
+  </data>
+  <data name="ModelRevision_Help" xml:space="preserve">
+    <value>A model revision is an instance of a model used for classification</value>
+  </data>
+  <data name="ModelRevision_InputShape" xml:space="preserve">
+    <value>Input Shape</value>
+  </data>
+  <data name="ModelRevision_InputShape_Help" xml:space="preserve">
+    <value>Please specify the input shape of the model, this should be an array of integers that represent the dimmensions of each layer.</value>
+  </data>
+  <data name="ModelRevision_InputType" xml:space="preserve">
+    <value>Input Type</value>
+  </data>
+  <data name="ModelRevision_InputType_Select" xml:space="preserve">
+    <value>-select input type-</value>
+  </data>
+  <data name="ModelRevision_Labels" xml:space="preserve">
+    <value>Labels</value>
+  </data>
+  <data name="ModelRevision_LabelSet" xml:space="preserve">
+    <value>Label Set</value>
+  </data>
+  <data name="ModelRevision_LabelSet_Help" xml:space="preserve">
+    <value>You can select a predefined list of labels that will be used to define the output of the model evaluation.</value>
+  </data>
+  <data name="ModelRevision_Minor_Version_Number" xml:space="preserve">
+    <value>Minor Version Number</value>
+  </data>
+  <data name="ModelRevision_ModelFile" xml:space="preserve">
+    <value>Model File</value>
+  </data>
+  <data name="ModelRevision_Notes" xml:space="preserve">
+    <value>Notes</value>
+  </data>
+  <data name="ModelRevision_Preprocessors" xml:space="preserve">
+    <value>Preprocessors</value>
+  </data>
+  <data name="ModelRevision_Quality" xml:space="preserve">
+    <value>Quality</value>
+  </data>
+  <data name="ModelRevision_Quality_Excellent" xml:space="preserve">
+    <value>Excellent</value>
+  </data>
+  <data name="ModelRevision_Quality_Good" xml:space="preserve">
+    <value>Good</value>
+  </data>
+  <data name="ModelRevision_Quality_Medium" xml:space="preserve">
+    <value>Medium</value>
+  </data>
+  <data name="ModelRevision_Quality_Poor" xml:space="preserve">
+    <value>Poor</value>
+  </data>
+  <data name="ModelRevision_Quality_Select" xml:space="preserve">
+    <value>-select quality-</value>
+  </data>
+  <data name="ModelRevision_Quality_Unknown" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+  <data name="ModelRevision_Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="ModelRevision_Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="ModelRevision_Status_Alpha" xml:space="preserve">
+    <value>Alpha</value>
+  </data>
+  <data name="ModelRevision_Status_Beta" xml:space="preserve">
+    <value>Beta</value>
+  </data>
+  <data name="ModelRevision_Status_Experimental" xml:space="preserve">
+    <value>Experimental</value>
+  </data>
+  <data name="ModelRevision_Status_New" xml:space="preserve">
+    <value>New</value>
+  </data>
+  <data name="ModelRevision_Status_Obsolete" xml:space="preserve">
+    <value>Obsolete</value>
+  </data>
+  <data name="ModelRevision_Status_Production" xml:space="preserve">
+    <value>Production</value>
+  </data>
+  <data name="ModelRevision_Status_Select" xml:space="preserve">
+    <value>-select status-</value>
+  </data>
+  <data name="ModelRevision_Title" xml:space="preserve">
+    <value>Model Revision</value>
+  </data>
+  <data name="ModelRevision_TrainingAccuracy" xml:space="preserve">
+    <value>Training Accuracy</value>
+  </data>
+  <data name="ModelRevision_TrainingSettings" xml:space="preserve">
+    <value>Training Settings</value>
+  </data>
+  <data name="ModelRevision_ValidationAccuracy" xml:space="preserve">
+    <value>Validation Accuracy</value>
+  </data>
+  <data name="ModelRevision_Version" xml:space="preserve">
+    <value>Version</value>
+  </data>
+  <data name="ModelRevision_Version_Number" xml:space="preserve">
+    <value>Version Number</value>
+  </data>
+  <data name="ModelSetting_Description" xml:space="preserve">
+    <value>A model setting is a value used by the inference engine for a model revision.</value>
+  </data>
+  <data name="ModelSetting_Help" xml:space="preserve">
+    <value>A model setting is a value used by the inference engine for a model revision.</value>
+  </data>
+  <data name="ModelSetting_Title" xml:space="preserve">
+    <value>Model Settings</value>
+  </data>
+  <data name="ModelSetting_Value" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="Models_Title" xml:space="preserve">
+    <value>Models</value>
+  </data>
+  <data name="Model_Description" xml:space="preserve">
+    <value>A model is a model type that is used for performing classifications, it consists of revisions that have the actual model.</value>
+  </data>
+  <data name="Model_Experiments" xml:space="preserve">
+    <value>Experiments</value>
+  </data>
+  <data name="Model_Help" xml:space="preserve">
+    <value>A model is a model type that is used for performing classifications, it consists of revisions that have the actual model.</value>
+  </data>
+  <data name="Model_LabelSet" xml:space="preserve">
+    <value>Label Set</value>
+  </data>
+  <data name="Model_LabelSet_Help" xml:space="preserve">
+    <value>You can select a predefined list of labels that will be used to define the output of the model evaluation.</value>
+  </data>
+  <data name="Model_ModelCategory" xml:space="preserve">
+    <value>Model Category</value>
+  </data>
+  <data name="Model_ModelCategory_Select" xml:space="preserve">
+    <value>-select model category-</value>
+  </data>
+  <data name="Model_ModelType" xml:space="preserve">
+    <value>Model Type</value>
+  </data>
+  <data name="Model_PreferredRevision" xml:space="preserve">
+    <value>Preferred Revision</value>
+  </data>
+  <data name="Model_PreferredRevision_Select" xml:space="preserve">
+    <value>-select preferred revision-</value>
+  </data>
+  <data name="Model_Revisions" xml:space="preserve">
+    <value>Revisions</value>
+  </data>
+  <data name="Model_Title" xml:space="preserve">
+    <value>AI - Model</value>
+  </data>
+  <data name="Model_Type" xml:space="preserve">
+    <value>Model Type</value>
+  </data>
+  <data name="Model_Type_Onnx" xml:space="preserve">
+    <value>ONNX</value>
+  </data>
+  <data name="Model_Type_PyTorch" xml:space="preserve">
+    <value>PyTorch</value>
+  </data>
+  <data name="Model_Type_Select" xml:space="preserve">
+    <value>-select model type-</value>
+  </data>
+  <data name="Model_Type_TensorFlow" xml:space="preserve">
+    <value>Tensor Flow</value>
+  </data>
+  <data name="Model_Type_TensorFlow_Lite" xml:space="preserve">
+    <value>Tensor Flow Lite</value>
+  </data>
+  <data name="PreprocessorSetting_Description" xml:space="preserve">
+    <value>A preprocessor setting is a value that is passed to the preprocessor to effect how the preprocessor will run.</value>
+  </data>
+  <data name="PreprocessorSetting_Help" xml:space="preserve">
+    <value>A preprocessor setting is a value that is passed to the preprocessor to effect how the preprocessor will run.</value>
+  </data>
+  <data name="PreprocessorSetting_Title" xml:space="preserve">
+    <value>Preprocessor Setting</value>
+  </data>
+  <data name="PreprocessorSetting_Value" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="Preprocessor_ClassName" xml:space="preserve">
+    <value>ClassName</value>
+  </data>
+  <data name="Preprocessor_Description" xml:space="preserve">
+    <value>A preprocessor is an algorithm that is ran to conditional an input prior to running it through an inference engine.</value>
+  </data>
+  <data name="Preprocessor_Help" xml:space="preserve">
+    <value>A preprocessor is an algorithm that is ran to conditional an input prior to running it through an inference engine.</value>
+  </data>
+  <data name="Preprocessor_Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Preprocessor_Title" xml:space="preserve">
+    <value>Preprocessor</value>
+  </data>
+  <data name="TrainingDataSet_Description" xml:space="preserve">
+    <value>Collection of samples used to build models</value>
+  </data>
+  <data name="TrainingDataSet_Help" xml:space="preserve">
+    <value>Collection of samples used to build models</value>
+  </data>
+  <data name="TrainingDataSet_Title" xml:space="preserve">
+    <value>Training Data Set</value>
+  </data>
+  <data name="VectorDatabase_Description" xml:space="preserve">
+    <value>A vector database contains vectors used by LLM to support RAG (Retrieval-Augmented Generation) it also contains a reference to azure blob storage used to contain the raw content that was indexed to come up with those vectors.</value>
+  </data>
+  <data name="VectorDatabase_Title" xml:space="preserve">
+    <value>Vector Database</value>
+  </data>
+  <data name="VectorDatabase_Uri" xml:space="preserve">
+    <value>Vector Database Uri</value>
+  </data>
+  <data name="VectorDatabase_CollectionName" xml:space="preserve">
+    <value>Collection Name</value>
+  </data>
+  <data name="VectorDatabase_AzureAccountId" xml:space="preserve">
+    <value>Azure Storage Account Id</value>
+  </data>
+  <data name="VectorDatabase_AzureAccountId_Help" xml:space="preserve">
+    <value>Account Id of the Storage Account used to storage raw content that was indexed.</value>
+  </data>
+  <data name="VectorDatabase_AzureApiToken" xml:space="preserve">
+    <value>Azure Storage API Token</value>
+  </data>
+  <data name="VectorDatabase_AzureApiToken_Help" xml:space="preserve">
+    <value>Shared access key for the storage account, this is encrypted on the server.</value>
+  </data>
+  <data name="VectorDatabase_OpenAPI_Token" xml:space="preserve">
+    <value>Open API Token</value>
+  </data>
+  <data name="VectorDatabase_OpenAPI_Token_Help" xml:space="preserve">
+    <value>Open API Token used to create embeddings and query LLM</value>
+  </data>
+  <data name="VectorDatabases_Title" xml:space="preserve">
+    <value>Vector Databases</value>
+  </data>
+  <data name="VectorDatabase_AzureBlobContainerName" xml:space="preserve">
+    <value>Blob Container Name</value>
+  </data>
+  <data name="VectorDatabase_AzureBlobContainerName_Help" xml:space="preserve">
+    <value>Within Azure Storage you need to create a Blob Container that will be used to contain content. </value>
+  </data>
+  <data name="AiConversation_Title" xml:space="preserve">
+    <value>Conversation</value>
+  </data>
+  <data name="AIConversation_Description" xml:space="preserve">
+    <value>A conversation is a collection of interactions between a user and an artificial intelligence agent.</value>
+  </data>
+  <data name="AiConversation_Interaction_Title" xml:space="preserve">
+    <value>Interaction</value>
+  </data>
+  <data name="AiConversation_Interaction_Description" xml:space="preserve">
+    <value>An interaction is a prompt or question provided by a user and the response from the agent..</value>
+  </data>
+  <data name="AiConversations_Title" xml:space="preserve">
+    <value>Conversations</value>
+  </data>
+  <data name="AiAgentContext_Title" xml:space="preserve">
+    <value>Agent Context</value>
+  </data>
+  <data name="AiAgentContext_Description" xml:space="preserve">
+    <value>An agent context is how a generative AI should be implemented to answer questions and create context.  It consists of a vector database, a content database, LLM provide and model as well as basic information about how prompts should be created such as user, role and system contexts. </value>
+  </data>
+  <data name="LlmProvider_OpenAI" xml:space="preserve">
+    <value>OpenAI</value>
+  </data>
+  <data name="AgentContext_LlmProvider" xml:space="preserve">
+    <value>LLM Provider</value>
+  </data>
+  <data name="AgentContext_LlmProvider_Select" xml:space="preserve">
+    <value>-select llm provider-</value>
+  </data>
+  <data name="AgentContext_ConversationContext_Title" xml:space="preserve">
+    <value>Conversation Context</value>
+  </data>
+  <data name="AgentContext_ConversationContext_Description" xml:space="preserve">
+    <value>A conversation context is a specification for how a large language model should be used to interact with user prompts.  It will include things such as role, user, temperature and model</value>
+  </data>
+  <data name="AgentContext_ConversationContext_ModelName" xml:space="preserve">
+    <value>Model Name</value>
+  </data>
+  <data name="AgentContext_ConversationContext_Temperature" xml:space="preserve">
+    <value>Temperature</value>
+  </data>
+  <data name="AgentContext_ConversationContext_System" xml:space="preserve">
+    <value>System</value>
+  </data>
+  <data name="AgentContext_ConversationContext_System_Help" xml:space="preserve">
+    <value>The system is used to instruct the LLM on how to generate the context.  This defines the AI’s identity, role, and behavioral rules before any user input is considered.  It is the “governing policy” for the model. </value>
+  </data>
+  <data name=" AgentContext_ConversationContext_Temperature_Help" xml:space="preserve">
+    <value>Temperature controls how random or deterministic a language model is when generating responses. It affects how “creative” the model’s word choices are.</value>
+  </data>
+  <data name="AgentContext_ConversationContexts" xml:space="preserve">
+    <value>Conversation Contexts</value>
+  </data>
+  <data name="AgentContext_DefaultConversationContext" xml:space="preserve">
+    <value>Default Conversation Context</value>
+  </data>
+  <data name="AgentContext_DefaultConversationContext_Select" xml:space="preserve">
+    <value>-select default conversation context-</value>
+  </data>
+  <data name="AiAgentContexts_Title" xml:space="preserve">
+    <value>Agent Contexts</value>
+  </data>
+  <data name="SourceOrganization_Help" xml:space="preserve">
+    <value>A source organization is the organization within a source management system such as GItHub that contains a number of repositories.</value>
+  </data>
+  <data name="SourceOrganization_Title" xml:space="preserve">
+    <value>Source Organization</value>
+  </data>
+  <data name="SourceOrganizationRepository_Help" xml:space="preserve">
+    <value>A source organization repository is a repository within an organization of a source code repository.  Typically this contains source code, but does not have ot.</value>
+  </data>
+  <data name="SourceOrganizationRepository_Title" xml:space="preserve">
+    <value>Source Organization Repository</value>
+  </data>
+  <data name="SourceOrganization_InstallationId" xml:space="preserve">
+    <value>Installation Id</value>
+  </data>
+  <data name="SourceOrganization_InstallationId_Help" xml:space="preserve">
+    <value>ID of a specific installation of your app (one per org/repo install)</value>
+  </data>
+  <data name="SourceOrganization_AppId" xml:space="preserve">
+    <value>App Id</value>
+  </data>
+  <data name="SourceOrganization_AppId_Help" xml:space="preserve">
+    <value>ID of your GitHub App (single value for the app)</value>
+  </data>
+  <data name="SourceOrganization_ProductName" xml:space="preserve">
+    <value>Product Name</value>
+  </data>
+  <data name="SourceOrganization_ProductName_Help" xml:space="preserve">
+    <value>This is a short name that is unique enough to identify your integration in API logs,  It can only contains letters, numbers and underscore.</value>
+  </data>
+  <data name="SourceOrganization_WebHookSecret" xml:space="preserve">
+    <value>Web Hook Secret</value>
+  </data>
+  <data name="SourceOrganization_PrivateKey" xml:space="preserve">
+    <value>Private Key</value>
+  </data>
+  <data name="SourceOrganization_PrivateKey_Help" xml:space="preserve">
+    <value>Go to GitHub, Settings → Developer settings → GitHub Apps, Click your App, Private Keys Section, Generate a Private Key</value>
+  </data>
+  <data name="SourceOrganization_WebHookSecret_Help" xml:space="preserve">
+    <value>The Webhook Secret is also created in your GitHub App settings, and it's used to verify that incoming webhook requests truly came from GitHub.  </value>
+  </data>
+  <data name="SourceOrganization_Name" xml:space="preserve">
+    <value>Source Organization Name</value>
+  </data>
+  <data name="SourceOrganization_Name_Help" xml:space="preserve">
+    <value>This is the name of the organization as set in the source control system.  It should match exactly in that it will be used to build up the path to identify the repository.</value>
+  </data>
+  <data name="MergeMethod_Merge" xml:space="preserve">
+    <value>Merge</value>
+  </data>
+  <data name="MergeMethod_Squash" xml:space="preserve">
+    <value>Squash</value>
+  </data>
+  <data name="MergeMethod_Rebase" xml:space="preserve">
+    <value>Rebase</value>
+  </data>
+  <data name="SourceOrganizationRepository_RepoPath" xml:space="preserve">
+    <value>Repository Path</value>
+  </data>
+  <data name="SourceOrganizationRepository_RepoPath_Help" xml:space="preserve">
+    <value>This is the exact name of the repository that will be used to build up the full path </value>
+  </data>
+  <data name="SourceOrganizationRepository_MergeMethod" xml:space="preserve">
+    <value>Merge Method</value>
+  </data>
+  <data name="SourceOrganizationRepository_MergeMethod_Select" xml:space="preserve">
+    <value>-select merge method-</value>
+  </data>
+  <data name="SourceOrganizationRepository_DeleteOnMerge" xml:space="preserve">
+    <value>Delete on Merge</value>
+  </data>
+  <data name="SourceOrganizationRepository_DeleteOnMerge_Help" xml:space="preserve">
+    <value>After merging the PR into the source repository, should the branch it came from be removed?</value>
+  </data>
+  <data name="SourceOrganization_Repositories" xml:space="preserve">
+    <value>Repositories</value>
+  </data>
+  <data name="VectorDB_LLMEmbeddingModelName" xml:space="preserve">
+    <value>Embedding Model Name</value>
+  </data>
+  <data name="Common_Status_Pending" xml:space="preserve">
+    <value>Pending</value>
+  </data>
+  <data name="Common_Status_Completed" xml:space="preserve">
+    <value>Completed</value>
+  </data>
+  <data name="Common_Status_Failed" xml:space="preserve">
+    <value>Failed</value>
+  </data>
+  <data name="Common_Status_Aborted" xml:space="preserve">
+    <value>Aborted</value>
+  </data>
+  <data name="OperationKind_Image" xml:space="preserve">
+    <value>Image</value>
+  </data>
+  <data name="OperationKind_Code" xml:space="preserve">
+    <value>Code</value>
+  </data>
+  <data name="OperationKind_Text" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="OperationKind_Domain" xml:space="preserve">
+    <value>Domain</value>
+  </data>
+</root>

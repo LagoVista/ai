@@ -1,0 +1,90 @@
+﻿// --- BEGIN CODE INDEX META (do not edit) ---
+// ContentHash: 3deeacfc4503d772cfa5990528a4649d71c9698541a6f875517981776a79291f
+// IndexVersion: 2
+// --- END CODE INDEX META ---
+using LagoVista.AI.Models;
+using LagoVista.Core.Models.UIMetaData;
+using LagoVista.Core.Validation;
+using LagoVista.IoT.Logging.Loggers;
+using LagoVista.IoT.Web.Common.Attributes;
+using LagoVista.IoT.Web.Common.Controllers;
+using LagoVista.UserAdmin.Models.Users;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.Cosmos.Linq;
+using System.Threading.Tasks;
+
+namespace LagoVista.AI.Rest
+{
+    /// <summary>
+    /// REST Class for Experiments
+    /// </summary>
+    [ConfirmedUser]
+    [AppBuilder]
+    public class VectorDatabaseController : LagoVistaBaseController
+    {
+        private readonly IAgentContextTestManager _agentContextTestManager;
+
+        public VectorDatabaseController(IAgentContextTestManager AgentContextTestMgr, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
+        {
+            this._agentContextTestManager = AgentContextTestMgr;
+        }
+
+
+        [HttpGet("/api/ai/agentContextTest/{id}")]
+        public async Task<DetailResponse<AgentContextTest>> GetVectorDatabase(string id)
+        {
+            var db = await _agentContextTestManager.GetAgentContextTestAsync(id, OrgEntityHeader, UserEntityHeader);
+            return DetailResponse<AgentContextTest>.Create(db);
+        }
+
+        [HttpGet("/api/ai/agentContextTest/factory")]
+        public DetailResponse<AgentContextTest> CreateAgentContextTest()
+        {
+            var result = DetailResponse<AgentContextTest>.Create();
+            SetAuditProperties(result.Model);
+            SetOwnedProperties(result.Model);
+            return result;
+        }
+
+
+        [HttpGet("/api/ai/agentContextTest/{id}/secrets")]
+        public async Task<DetailResponse<AgentContextTest>> GetVectorDatabaseWithSecrets(string id)
+        {
+            var db = await _agentContextTestManager.GetAgentContextTestWithSecretsAsync(id, OrgEntityHeader, UserEntityHeader);
+            return DetailResponse<AgentContextTest>.Create(db);
+        }
+
+        [HttpGet("/api/ai/agentContextTests")]
+        public Task<ListResponse<AgentContextTestSummary>> GetVectorDatabases()
+        {
+            return _agentContextTestManager.GetAgentContextTestsForOrgAsync(OrgEntityHeader, UserEntityHeader, GetListRequestFromHeader());
+        }
+
+        [HttpDelete("/api/ai/agentContextTest/{id}")]
+        public Task<InvokeResult> DeleteAgentContextTestAsync(string id)
+        {
+            return _agentContextTestManager.DeleteAgentContextTestAsync(id, OrgEntityHeader, UserEntityHeader);
+        }
+
+        [HttpPost("/api/ai/agentContextTest")]
+        public Task<InvokeResult> AddAgentContextTest([FromBody] AgentContextTest ctx)
+        {
+            return _agentContextTestManager.AddAgentContextTestAsync(ctx, OrgEntityHeader, UserEntityHeader);
+        }
+
+        [HttpPut("/api/ai/agentContextTest")]
+        public Task<InvokeResult> UpdateAgentContextTest([FromBody] AgentContextTest ctx)
+        {
+            SetUpdatedProperties(ctx);
+            return _agentContextTestManager.UpdateAgentContextTestAsync(ctx, OrgEntityHeader, UserEntityHeader);
+        }
+
+        [HttpGet("/api/ai/agent/conversation/ContextTest/factory")]
+        public DetailResponse<ConversationContextTest> CreateConversationContextTest()
+        {
+            var result = DetailResponse<ConversationContextTest>.Create();
+            return result;
+        }
+    }
+}
