@@ -1,4 +1,5 @@
-﻿using LagoVista.AI.Rag.ContractPacks.Ingestion.Models;
+﻿using LagoVista.AI.Rag.Chunkers.Models;
+using LagoVista.AI.Rag.ContractPacks.Ingestion.Models;
 using LagoVista.AI.Rag.Models;
 using System;
 using System.Collections.Generic;
@@ -13,6 +14,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Interfaces
     {
         Task<IReadOnlyList<NormalizedChunk>> BuildChunksAsync(
              IndexFileContext fileContext,
+             DomainModelCatalog catalog,
              CancellationToken token = default);
     }
 }

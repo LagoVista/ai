@@ -36,6 +36,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
 
         public async Task<IReadOnlyList<NormalizedChunk>> BuildChunksAsync(
             IndexFileContext fileContext,
+            DomainModelCatalog catalog, 
             CancellationToken token = default)
         {
             if (fileContext == null) throw new ArgumentNullException(nameof(fileContext));
