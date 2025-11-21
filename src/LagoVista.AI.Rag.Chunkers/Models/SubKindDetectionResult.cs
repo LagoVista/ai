@@ -12,6 +12,8 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         /// <summary>Relative path of the file this type was found in.</summary>
         public string Path { get; set; }
 
+        public string Summary { get; set; }
+
         /// <summary>The inferred SubKind for this specific type.</summary>
         public CodeSubKind SubKind { get; set; }
 
