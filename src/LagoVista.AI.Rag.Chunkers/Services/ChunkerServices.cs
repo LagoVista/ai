@@ -46,5 +46,10 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 model,
                 cancellationToken);
         }
+
+        public IReadOnlyList<SubKindDetectionResult> DetectForFile(string sourceText, string relativePath)
+        {
+            return SubKindDetector.DetectForFile(sourceText, relativePath);
+        }
     }
 }

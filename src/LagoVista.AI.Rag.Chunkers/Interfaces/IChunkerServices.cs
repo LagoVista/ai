@@ -12,6 +12,8 @@ namespace LagoVista.AI.Rag.Chunkers.Services
     /// </summary>
     public interface IChunkerServices
     {
+        IReadOnlyList<SubKindDetectionResult> DetectForFile(string sourceText, string relativePath);
+
         ModelMetadataDescription BuildMetadataDescriptionForModel(
             string sourceText,
             string relativePath,

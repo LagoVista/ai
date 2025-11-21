@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Text;
 using LagoVista.AI.Rag.Chunkers.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -81,7 +82,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             }
 
             var tree = CSharpSyntaxTree.ParseText(sourceText);
-            var root = tree.GetRoot();
+            var root = (CompilationUnitSyntax)tree.GetRoot();
 
             var segments = (relativePath ?? string.Empty)
                 .Replace('\\', '/')
@@ -224,7 +225,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                     IsMixed = isMixed,
                     Reason = reason,
                     Evidence = evidence,
-                    SymbolText = type.ToFullString()
+                    SymbolText = BuildIsolatedSymbolText(type, root)
                 });
             }
 
@@ -319,7 +320,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 return true;
             }
 
-            if(fileName.ToLower().EndsWith("result") || fileName.ToLower().EndsWith("results"))
+            if (fileName.ToLower().EndsWith("result") || fileName.ToLower().EndsWith("results"))
             {
                 subKind = CodeSubKind.Result;
                 return true;
@@ -779,6 +780,91 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 typeName = typeName.Substring(dotIndex + 1);
 
             return typeName.Trim();
+        }
+
+        /// <summary>
+        /// Builds a self-contained C# snippet for a single type:
+        /// - Includes using directives from the compilation unit and containing namespace.
+        /// - Wraps the type in a namespace block if a namespace is present.
+        /// </summary>
+        private static string BuildIsolatedSymbolText(TypeDeclarationSyntax type, CompilationUnitSyntax root)
+        {
+            var sb = new StringBuilder();
+
+            // 1. Collect using directives from the compilation unit and the containing namespace.
+            var usingNodes = new List<UsingDirectiveSyntax>();
+            usingNodes.AddRange(root.Usings);
+
+            var nsNode = type
+                .Ancestors()
+                .OfType<BaseNamespaceDeclarationSyntax>()
+                .FirstOrDefault();
+
+            if (nsNode != null)
+            {
+                usingNodes.AddRange(nsNode.Usings);
+            }
+
+            // Deduplicate by normalized string.
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var u in usingNodes)
+            {
+                var key = u.ToString().Trim();
+                if (seen.Add(key))
+                {
+                    sb.Append(u.ToFullString());
+                }
+            }
+
+            // 2. Add namespace wrapper (if any) and the type itself.
+            var ns = GetNamespace(type);
+
+            if (!string.IsNullOrEmpty(ns))
+            {
+                // Ensure a blank line between usings and namespace if there were any usings.
+                if (sb.Length > 0 && !sb.ToString().EndsWith(Environment.NewLine, StringComparison.Ordinal))
+                {
+                    sb.AppendLine();
+                }
+
+                sb.Append("namespace ").Append(ns).AppendLine();
+                sb.AppendLine("{");
+
+                var typeText = type.ToFullString();
+                sb.Append(IndentWith(typeText, "    "));
+                sb.AppendLine();
+                sb.AppendLine("}");
+            }
+            else
+            {
+                if (sb.Length > 0)
+                {
+                    sb.AppendLine();
+                }
+
+                sb.Append(type.ToFullString());
+            }
+
+            return sb.ToString();
+        }
+
+        private static string IndentWith(string text, string indent)
+        {
+            if (text == null) return string.Empty;
+
+            // Normalize newlines and then re-join with environment newlines.
+            var normalized = text.Replace("\r\n", "\n");
+            var lines = normalized.Split('\n');
+
+            for (int i = 0; i < lines.Length; i++)
+            {
+                if (lines[i].Length > 0)
+                {
+                    lines[i] = indent + lines[i];
+                }
+            }
+
+            return string.Join(Environment.NewLine, lines);
         }
     }
 }
