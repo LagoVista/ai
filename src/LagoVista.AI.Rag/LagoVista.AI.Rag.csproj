@@ -15,4 +15,10 @@
     <ProjectReference Include="..\LagoVista.AI.Rag.Chunkers\LagoVista.AI.Rag.Chunkers.csproj" />
   </ItemGroup>
 
+  
+  
+  <ItemGroup>
+    <Folder Include="Models\" />
+  </ItemGroup>
+
 </Project>
