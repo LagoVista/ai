@@ -83,7 +83,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
             return issues;
         }
 
-        public IEnumerable<SummarySection> BuildSections()
+        public IEnumerable<SummarySection> BuildSections(DomainModelHeaderInformation headerInfo, int maxTokens = 6500)
         {
             var sb = new StringBuilder();
 

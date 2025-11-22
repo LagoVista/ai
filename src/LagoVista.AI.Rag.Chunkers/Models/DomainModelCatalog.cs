@@ -35,6 +35,16 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         }
     }
 
+    public class DomainModelHeaderInformation
+    {
+        public string DomainName { get; set; }
+        public string DomainKey { get; set; }
+        public string DomainTagLine { get; set; }
+        public string ModelName { get; set; }
+        public string ModelClassName { get; set; }
+        public string ModelTagLine { get; set; }
+    }
+
     /// <summary>
     /// Catalog entry for a single model: location, SubKind, and structured description.
     /// </summary>

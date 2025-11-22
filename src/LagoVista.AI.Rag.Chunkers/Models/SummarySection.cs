@@ -20,6 +20,6 @@ namespace LagoVista.AI.Rag.Chunkers.Models
     /// </summary>
     public interface ISummarySectionBuilder
     {
-        IEnumerable<SummarySection> BuildSections();
+        IEnumerable<SummarySection> BuildSections(DomainModelHeaderInformation headerInfo, int maxTokens = 6500);
     }
 }

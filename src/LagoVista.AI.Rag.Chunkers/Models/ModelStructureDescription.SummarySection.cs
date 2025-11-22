@@ -13,7 +13,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
     /// </summary>
     public sealed partial class ModelStructureDescription : ISummarySectionBuilder
     {
-        public IEnumerable<SummarySection> BuildSections()
+        public IEnumerable<SummarySection> BuildSections(DomainModelHeaderInformation headerInfo, int maxTokens = 6500)
         {
             var symbol = string.IsNullOrWhiteSpace(ModelName) ? "(unknown-model)" : ModelName;
             var sections = new List<SummarySection>();

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+using LagoVista.AI.Rag.Chunkers.Services;
+
 namespace LagoVista.AI.Rag.Chunkers.Models
 {
     /// <summary>
@@ -13,12 +15,47 @@ namespace LagoVista.AI.Rag.Chunkers.Models
     /// </summary>
     public sealed partial class ManagerDescription : ISummarySectionBuilder
     {
-        public IEnumerable<SummarySection> BuildSections()
+        /// <summary>
+        /// Builds human-readable summary sections for this manager, enriched with
+        /// domain/model context and respecting a token budget.
+        /// </summary>
+        /// <param name="headerInfo">
+        /// Domain/model context used for taglines and method summaries. May be null.
+        /// </param>
+        /// <param name="maxTokens">
+        /// Approximate token budget per SummarySection. Used to decide when to
+        /// split manager-methods into multiple sections. Final RagChunk slicing
+        /// still happens downstream.
+        /// </param>
+        public IEnumerable<SummarySection> BuildSections(
+            DomainModelHeaderInformation headerInfo,
+            int maxTokens = 6500)
         {
+            if (maxTokens <= 0)
+            {
+                maxTokens = 6500;
+            }
+
             var symbol = string.IsNullOrWhiteSpace(ClassName) ? "(unknown-manager)" : ClassName;
             var sections = new List<SummarySection>();
 
+            // ---------------------------------------------------------------------
+            // manager-overview
+            // ---------------------------------------------------------------------
             var overview = new StringBuilder();
+
+            var domainLine = BuildDomainLine(headerInfo);
+            var modelLine = BuildModelLine(headerInfo);
+
+            if (!string.IsNullOrWhiteSpace(domainLine))
+                overview.AppendLine(domainLine);
+
+            if (!string.IsNullOrWhiteSpace(modelLine))
+                overview.AppendLine(modelLine);
+
+            if (!string.IsNullOrWhiteSpace(domainLine) || !string.IsNullOrWhiteSpace(modelLine))
+                overview.AppendLine();
+
             overview.AppendLine($"Manager: {symbol}");
 
             if (!string.IsNullOrWhiteSpace(Namespace))
@@ -27,7 +64,8 @@ namespace LagoVista.AI.Rag.Chunkers.Models
             if (!string.IsNullOrWhiteSpace(BaseTypeName))
                 overview.AppendLine($"Base Type: {BaseTypeName}");
 
-            overview.AppendLine($"Manager Type: {ManagerType}");
+            if (ManagerType != null)
+                overview.AppendLine($"Manager Type: {ManagerType.ToString()}");
 
             if (!string.IsNullOrWhiteSpace(PrimaryEntity))
                 overview.AppendLine($"Primary Entity: {PrimaryEntity}");
@@ -48,14 +86,6 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                 overview.AppendLine(Summary.Trim());
             }
 
-            if (!string.IsNullOrWhiteSpace(DocId) || !string.IsNullOrWhiteSpace(FileName))
-            {
-                overview.AppendLine();
-                overview.AppendLine("Source:");
-                if (!string.IsNullOrWhiteSpace(DocId)) overview.AppendLine($" - DocId: {DocId}");
-                if (!string.IsNullOrWhiteSpace(FileName)) overview.AppendLine($" - File: {FileName}");
-            }
-
             sections.Add(new SummarySection
             {
                 SectionKey = "manager-overview",
@@ -64,6 +94,9 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                 SectionNormalizedText = overview.ToString().Trim()
             });
 
+            // ---------------------------------------------------------------------
+            // manager-constructors
+            // ---------------------------------------------------------------------
             var ctorText = new StringBuilder();
             ctorText.AppendLine($"Constructors for manager {symbol}:");
 
@@ -99,53 +132,201 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                 SectionNormalizedText = ctorText.ToString().Trim()
             });
 
-            var methodsText = new StringBuilder();
-            methodsText.AppendLine($"Methods for manager {symbol}:");
+            // ---------------------------------------------------------------------
+            // manager-methods (uses MethodSummaryBuilder + domain/model info)
+            // Now: split into multiple SummarySections if we exceed maxTokens.
+            // ---------------------------------------------------------------------
 
-            if (Methods == null || Methods.Count == 0)
+            var methodsHeader = BuildManagerMethodsHeader(symbol, headerInfo);
+            var headerTokens = TokenEstimator.EstimateTokens(methodsHeader);
+
+            var orderedMethods = (Methods ?? new List<ManagerMethodDescription>())
+                .OrderBy(m => m.MethodName)
+                .ToList();
+
+            if (orderedMethods.Count == 0)
             {
-                methodsText.AppendLine("No methods discovered.");
-            }
-            else
-            {
-                foreach (var m in Methods.OrderBy(m => m.MethodName))
+                var emptyText = new StringBuilder();
+                emptyText.Append(methodsHeader);
+                emptyText.AppendLine("No methods discovered.");
+
+                sections.Add(new SummarySection
                 {
-                    var visibility = m.IsPublic
-                        ? "public"
-                        : m.IsProtectedOrInternal
-                            ? "protected/internal"
-                            : m.IsPrivate ? "private" : "unknown";
+                    SectionKey = "manager-methods",
+                    Symbol = symbol,
+                    SymbolType = "Manager",
+                    SectionNormalizedText = emptyText.ToString().Trim()
+                });
 
-                    var parameters = m.Parameters != null && m.Parameters.Count > 0
-                        ? string.Join(", ", m.Parameters.Select(p => $"{p.TypeName} {p.Name}"))
-                        : "no parameters";
-
-                    methodsText.AppendLine();
-                    methodsText.AppendLine($"- {m.MethodName}");
-                    methodsText.AppendLine($"  Kind: {m.MethodKind}, {visibility}, {(m.IsSignificant ? "significant" : "non-significant")}");
-                    methodsText.AppendLine($"  Returns: {m.ReturnType}");
-                    methodsText.AppendLine($"  Params: {parameters}");
-
-                    if (m.LineStart.HasValue || m.LineEnd.HasValue)
-                        methodsText.AppendLine($"  Lines: {m.LineStart ?? 0}-{m.LineEnd ?? 0}");
-
-                    if (!string.IsNullOrWhiteSpace(m.Summary))
-                    {
-                        methodsText.AppendLine("  Summary:");
-                        methodsText.AppendLine("  " + m.Summary.Trim());
-                    }
-                }
+                return sections;
             }
 
-            sections.Add(new SummarySection
+            var currentText = new StringBuilder();
+            currentText.Append(methodsHeader);
+            var currentTokens = headerTokens;
+
+            foreach (var method in orderedMethods)
             {
-                SectionKey = "manager-methods",
-                Symbol = symbol,
-                SymbolType = "Manager",
-                SectionNormalizedText = methodsText.ToString().Trim()
-            });
+                var visibility =
+                    method.IsPublic ? "public" :
+                    method.IsProtectedOrInternal ? "protected/internal" :
+                    method.IsPrivate ? "private" :
+                    "unknown";
+
+                var paramListRaw = (method.Parameters != null && method.Parameters.Count > 0)
+                    ? string.Join(", ", method.Parameters.Select(p => $"{p.TypeName} {p.Name}"))
+                    : string.Empty;
+
+                var parametersForDisplay = string.IsNullOrWhiteSpace(paramListRaw)
+                    ? "no parameters"
+                    : paramListRaw;
+
+                var signature = string.IsNullOrWhiteSpace(method.ReturnType)
+                    ? $"{method.MethodName}({paramListRaw})"
+                    : $"{method.ReturnType} {method.MethodName}({paramListRaw})";
+
+                // Build method summary sentence without re-injecting taglines or signature,
+                // since those are already covered by the section header and metadata.
+                var summaryContext = new MethodSummaryContext
+                {
+                    MethodName = method.MethodName,
+                    SubKind = "ManagerMethod",
+                    ModelName = headerInfo != null
+                        ? (!string.IsNullOrWhiteSpace(headerInfo.ModelClassName)
+                            ? headerInfo.ModelClassName
+                            : (!string.IsNullOrWhiteSpace(headerInfo.ModelName)
+                                ? headerInfo.ModelName
+                                : PrimaryEntity))
+                        : PrimaryEntity,
+                    DomainName = headerInfo?.DomainName,
+                    // Avoid repeating long taglines per method; header already has them.
+                    DomainTagline = null,
+                    ModelTagline = null,
+                    Signature = null
+                };
+
+                var summarySentence = MethodSummaryBuilder.BuildSummary(summaryContext);
+
+                var methodBlock = new StringBuilder();
+                methodBlock.AppendLine();
+                methodBlock.AppendLine($"- {summarySentence}");
+                methodBlock.AppendLine($"  Kind: {method.MethodKind}, {visibility}, {(method.IsSignificant ? "significant" : "non-significant")}");
+                methodBlock.AppendLine($"  Returns: {method.ReturnType}");
+                methodBlock.AppendLine($"  Params: {parametersForDisplay}");
+
+                if (method.LineStart.HasValue || method.LineEnd.HasValue)
+                    methodBlock.AppendLine($"  Lines: {method.LineStart ?? 0}-{method.LineEnd ?? 0}");
+
+                if (!string.IsNullOrWhiteSpace(method.Summary))
+                {
+                    methodBlock.AppendLine("  XML Summary:");
+                    methodBlock.AppendLine("  " + method.Summary.Trim());
+                }
+
+                var methodBlockText = methodBlock.ToString();
+                var methodBlockTokens = TokenEstimator.EstimateTokens(methodBlockText);
+
+                // If adding this method would exceed the budget and we already have
+                // some methods in the current section, flush the current section and
+                // start a new one with the same header.
+                if (currentTokens + methodBlockTokens > maxTokens && currentTokens > headerTokens)
+                {
+                    sections.Add(new SummarySection
+                    {
+                        SectionKey = "manager-methods",
+                        Symbol = symbol,
+                        SymbolType = "Manager",
+                        SectionNormalizedText = currentText.ToString().Trim()
+                    });
+
+                    currentText.Clear();
+                    currentText.Append(methodsHeader);
+                    currentTokens = headerTokens;
+                }
+
+                // If the method block by itself is larger than the budget, we still
+                // append it to avoid losing information. In that case, the section
+                // will slightly exceed maxTokens, which is preferable to dropping it.
+                currentText.Append(methodBlockText);
+                currentTokens = TokenEstimator.EstimateTokens(currentText.ToString());
+            }
+
+            // Flush the final section.
+            if (currentTokens > 0)
+            {
+                sections.Add(new SummarySection
+                {
+                    SectionKey = "manager-methods",
+                    Symbol = symbol,
+                    SymbolType = "Manager",
+                    SectionNormalizedText = currentText.ToString().Trim()
+                });
+            }
 
             return sections;
+        }
+
+        private static string BuildDomainLine(DomainModelHeaderInformation header)
+        {
+            if (header == null) return null;
+
+            var hasName = !string.IsNullOrWhiteSpace(header.DomainName);
+            var hasTagline = !string.IsNullOrWhiteSpace(header.DomainTagLine);
+
+            if (!hasName && !hasTagline) return null;
+
+            if (hasName && hasTagline)
+                return $"Domain: {header.DomainName} — {header.DomainTagLine}";
+
+            if (hasName)
+                return $"Domain: {header.DomainName}";
+
+            return header.DomainTagLine;
+        }
+
+        private static string BuildModelLine(DomainModelHeaderInformation header)
+        {
+            if (header == null) return null;
+
+            var modelName = !string.IsNullOrWhiteSpace(header.ModelName)
+                ? header.ModelName
+                : header.ModelClassName;
+
+            var hasName = !string.IsNullOrWhiteSpace(modelName);
+            var hasTagline = !string.IsNullOrWhiteSpace(header.ModelTagLine);
+
+            if (!hasName && !hasTagline) return null;
+
+            if (hasName && hasTagline)
+                return $"Model: {modelName} — {header.ModelTagLine}";
+
+            if (hasName)
+                return $"Model: {modelName}";
+
+            return header.ModelTagLine;
+        }
+
+        private static string BuildManagerMethodsHeader(
+            string symbol,
+            DomainModelHeaderInformation headerInfo)
+        {
+            var sb = new StringBuilder();
+
+            var domainLine = BuildDomainLine(headerInfo);
+            var modelLine = BuildModelLine(headerInfo);
+
+            if (!string.IsNullOrWhiteSpace(domainLine))
+                sb.AppendLine(domainLine);
+
+            if (!string.IsNullOrWhiteSpace(modelLine))
+                sb.AppendLine(modelLine);
+
+            if (!string.IsNullOrWhiteSpace(domainLine) || !string.IsNullOrWhiteSpace(modelLine))
+                sb.AppendLine();
+
+            sb.AppendLine($"Methods for manager {symbol}:");
+
+            return sb.ToString();
         }
     }
 }

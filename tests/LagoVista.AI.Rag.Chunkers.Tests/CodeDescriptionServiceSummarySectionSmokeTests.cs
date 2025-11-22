@@ -86,6 +86,18 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             file.Close();
         }
 
+
+        public DomainModelHeaderInformation headerInfo = new DomainModelHeaderInformation()
+        {
+            DomainName = "AI Servics",
+            DomainKey = "aidomain",
+            DomainTagLine = "The AI services provide both a mechanism to interact with an LLM and create inferences on models.",
+            ModelClassName = "AgentContextTest",
+            ModelName = "Agent Context",
+            ModelTagLine = "The Agent Context model provides context information about an AI agent's operational environment."
+
+        };
+
         [Test]
         public void ModelStructureDescription_BuildSections_Smoke()
         {
@@ -97,7 +109,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             var description = _service.BuildModelStructureDescription(modelSource, resources);
             Assert.That(description, Is.Not.Null);
 
-            var sections = description.BuildSections().ToList();
+            var sections = description.BuildSections(headerInfo).ToList();
             Assert.That(sections.Count, Is.GreaterThan(0), "Expected at least one SummarySection for ModelStructureDescription.");
 
             DumpSections("ModelStructureDescription", sections);
@@ -115,7 +127,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             var description = _service.BuildModelMetadataDescription(modelSource, resources);
             Assert.That(description, Is.Not.Null);
 
-            var sections = description.BuildSections().ToList();
+            var sections = description.BuildSections(headerInfo).ToList();
             Assert.That(sections.Count, Is.GreaterThan(0), "Expected at least one SummarySection for ModelMetadataDescription.");
 
             DumpSections("ModelMetadataDescription", sections);
@@ -132,7 +144,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             var description = _service.BuildManagerDescription(managerSource);
             Assert.That(description, Is.Not.Null);
 
-            var sections = description.BuildSections().ToList();
+            var sections = description.BuildSections(headerInfo).ToList();
             Assert.That(sections.Count, Is.GreaterThan(0), "Expected at least one SummarySection for ManagerDescription.");
 
             DumpSections("ManagerDescription", sections);
@@ -149,7 +161,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             var description = _service.BuildRepositoryDescription(repoSource);
             Assert.That(description, Is.Not.Null);
 
-            var sections = description.BuildSections().ToList();
+            var sections = description.BuildSections(headerInfo).ToList();
             Assert.That(sections.Count, Is.GreaterThan(0), "Expected at least one SummarySection for RepositoryDescription.");
 
             DumpSections("RepositoryDescription", sections);
@@ -170,7 +182,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             var index = 0;
             foreach (var endpoint in endpoints)
             {
-                var sections = endpoint.BuildSections().ToList();
+                var sections = endpoint.BuildSections(headerInfo).ToList();
                 Assert.That(sections.Count, Is.GreaterThan(0), $"Expected at least one SummarySection for EndpointDescription #{index}.");
                 DumpSections($"EndpointDescription[{index}]", sections);
                 DumpSectionsToFile($"EndpointDescription[{index}]", sections);
@@ -189,7 +201,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             var description = _service.BuildInterfaceDescription(interfaceSource);
             Assert.That(description, Is.Not.Null);
 
-            var sections = description.BuildSections().ToList();
+            var sections = description.BuildSections(headerInfo).ToList();
             Assert.That(sections.Count, Is.GreaterThan(0), "Expected at least one SummarySection for InterfaceDescription.");
 
             DumpSections("InterfaceDescription", sections);

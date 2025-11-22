@@ -13,7 +13,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
     /// </summary>
     public partial class RepositoryDescription : ISummarySectionBuilder
     {
-        public IEnumerable<SummarySection> BuildSections()
+        public IEnumerable<SummarySection> BuildSections(DomainModelHeaderInformation headerInfo, int maxTokens = 6500)
         {
             var symbol = string.IsNullOrWhiteSpace(ClassName) ? "(unknown-repo)" : ClassName;
             var sections = new List<SummarySection>();

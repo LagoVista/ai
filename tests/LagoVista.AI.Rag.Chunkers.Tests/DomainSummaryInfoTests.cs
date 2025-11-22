@@ -20,7 +20,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
                 sourceTypeName: "LagoVista.AI.Models.AIDomain",
                 sourcePropertyName: "AIAdminDescription");
 
-            var section = info.BuildSections().Single();
+            var section = info.BuildSections(null).Single();
 
             Assert.Multiple(() =>
             {

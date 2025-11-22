@@ -13,7 +13,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
     /// </summary>
     public partial class InterfaceDescription : ISummarySectionBuilder
     {
-        public IEnumerable<SummarySection> BuildSections()
+        public IEnumerable<SummarySection> BuildSections(DomainModelHeaderInformation headerInfo, int maxTokens = 6500)
         {
             var symbol = string.IsNullOrWhiteSpace(InterfaceName) ? "(unknown-interface)" : InterfaceName;
             var sections = new List<SummarySection>();
