@@ -65,6 +65,27 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             }
         }
 
+        private static void DumpSectionsToFile(string label, IEnumerable<SummarySection> sections)
+        {
+            var file = System.IO.File.CreateText(@$"x:\{label}.txt");
+
+            file.WriteLine(new string('=', 80));
+            file.WriteLine($"SUMMARY SECTIONS: {label}");
+            file.WriteLine(new string('=', 80));
+
+            foreach (var section in sections)
+            {
+                file.WriteLine($"-- SectionKey: {section.SectionKey}");
+                file.WriteLine($"   Symbol: {section.Symbol}  (SymbolType: {section.SymbolType})");
+                file.WriteLine();
+                file.WriteLine(section.SectionNormalizedText ?? string.Empty);
+                file.WriteLine();
+                file.WriteLine(new string('-', 80));
+            }
+
+            file.Close();
+        }
+
         [Test]
         public void ModelStructureDescription_BuildSections_Smoke()
         {
@@ -80,6 +101,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             Assert.That(sections.Count, Is.GreaterThan(0), "Expected at least one SummarySection for ModelStructureDescription.");
 
             DumpSections("ModelStructureDescription", sections);
+            DumpSectionsToFile("ModelStructureDescription", sections);
         }
 
         [Test]
@@ -97,6 +119,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             Assert.That(sections.Count, Is.GreaterThan(0), "Expected at least one SummarySection for ModelMetadataDescription.");
 
             DumpSections("ModelMetadataDescription", sections);
+            DumpSectionsToFile("ModelMetadataDescription", sections);
         }
 
         [Test]
@@ -113,6 +136,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             Assert.That(sections.Count, Is.GreaterThan(0), "Expected at least one SummarySection for ManagerDescription.");
 
             DumpSections("ManagerDescription", sections);
+            DumpSectionsToFile("ManagerDescription", sections);
         }
 
         [Test]
@@ -129,6 +153,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             Assert.That(sections.Count, Is.GreaterThan(0), "Expected at least one SummarySection for RepositoryDescription.");
 
             DumpSections("RepositoryDescription", sections);
+            DumpSectionsToFile("RepositoryDescription", sections);
         }
 
         [Test]
@@ -148,6 +173,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
                 var sections = endpoint.BuildSections().ToList();
                 Assert.That(sections.Count, Is.GreaterThan(0), $"Expected at least one SummarySection for EndpointDescription #{index}.");
                 DumpSections($"EndpointDescription[{index}]", sections);
+                DumpSectionsToFile($"EndpointDescription[{index}]", sections);
                 index++;
             }
         }
@@ -167,6 +193,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             Assert.That(sections.Count, Is.GreaterThan(0), "Expected at least one SummarySection for InterfaceDescription.");
 
             DumpSections("InterfaceDescription", sections);
+            DumpSectionsToFile("InterfaceDescription", sections);
         }
     }
 }
