@@ -32,7 +32,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             var resources = ResxLabelScanner.GetSingleResourceDictionary(".");
 
             // FromSource is a static method
-            var description = ModelStructureDescriptionBuilder.FromSource(source, "src/Models/Device.cs", resources);
+            var description = ModelStructureDescriptionBuilder.FromSource(source, resources);
 
             Assert.Multiple(() =>
             {
@@ -115,7 +115,6 @@ namespace LagoVista.AI.Models
 
             var description = ModelStructureDescriptionBuilder.FromSource(
                 source,
-                "src/Models/SampleEntityBaseModel.cs",
                 resources);
 
             // All properties
@@ -187,7 +186,6 @@ namespace LagoVista.AI.Models
 
             var description = ModelStructureDescriptionBuilder.FromSource(
                 source,
-                "src/Models/SampleEntityBaseModelWithName.cs",
                 resources);
 
             var allProps = description.Properties.ToList();

@@ -41,7 +41,7 @@ namespace LagoVista.AI.Models
 }
 ";
 
-            var result = DomainDescriptorSummaryExtractor.Extract(source, "src/Models/AIDomain.cs");
+            var result = DomainDescriptorSummaryExtractor.Extract(source);
 
             Assert.That(result, Is.Not.Null);
             Assert.That(result.Count, Is.EqualTo(1));
@@ -89,7 +89,7 @@ namespace LagoVista.Notifications.Models
 }
 ";
 
-            var result = DomainDescriptorSummaryExtractor.Extract(source, "src/Models/NotificationDomain.cs");
+            var result = DomainDescriptorSummaryExtractor.Extract(source);
 
             Assert.That(result.Count, Is.EqualTo(1));
             var summary = result.Single();
@@ -137,7 +137,7 @@ namespace LagoVista.AI.Models
 }
 ";
 
-            var result = DomainDescriptorSummaryExtractor.Extract(source, "src/Models/ExperimentalDomain.cs");
+            var result = DomainDescriptorSummaryExtractor.Extract(source);
 
             Assert.That(result.Count, Is.EqualTo(1));
             var summary = result.Single();

@@ -19,7 +19,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             var source = File.ReadAllText(modelPath);
             var resources = ResxLabelScanner.GetSingleResourceDictionary(".");
 
-            var metadata = ModelMetadataDescriptionBuilder.FromSource(source, "src/Models/Device.cs", resources);
+            var metadata = ModelMetadataDescriptionBuilder.FromSource(source,resources);
 
             Assert.Multiple(() =>
             {
@@ -68,7 +68,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             var source = File.ReadAllText(modelPath);
             var resources = ResxLabelScanner.GetSingleResourceDictionary(".");
 
-            var metadata = ModelMetadataDescriptionBuilder.FromSource(source, "src/Models/Device.cs", resources);
+            var metadata = ModelMetadataDescriptionBuilder.FromSource(source, resources);
 
             Assert.Multiple(() =>
             {
@@ -111,7 +111,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             var source = File.ReadAllText(modelPath);
             var resources = ResxLabelScanner.GetSingleResourceDictionary(".");
 
-            var metadata = ModelMetadataDescriptionBuilder.FromSource(source, "src/Models/LayoutSampleModel.cs", resources);
+            var metadata = ModelMetadataDescriptionBuilder.FromSource(source,  resources);
 
             Assert.That(metadata, Is.Not.Null);
             Assert.That(metadata.Layouts, Is.Not.Null);

@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Threading;
 using LagoVista.Core.Utils.Types;
+using LagoVista.Core.Validation;
 
 namespace LagoVista.AI.Rag.Chunkers.Services
 {
@@ -17,28 +18,23 @@ namespace LagoVista.AI.Rag.Chunkers.Services
 
         int EstimateTokens(string s);
 
-        RagChunkPlan ChunkCSharpWithRoslyn(
+        InvokeResult<RagChunkPlan> ChunkCSharpWithRoslyn(
             string text,
-            string relPath,
-            string blobPath,
+            string fileName,
             int maxTokensPerChunk = 6500,
             int overlapLines = 6);
 
         ModelMetadataDescription BuildMetadataDescriptionForModel(
             string sourceText,
-            string relativePath,
             IReadOnlyDictionary<string, string> resources);
 
         ModelStructureDescription BuildStructuredDescriptionForModel(
             string sourceText,
-            string relativePath,
             IReadOnlyDictionary<string, string> resources);
 
         string BuildSummaryForMethod(MethodSummaryContext ctx);
 
-        IReadOnlyList<DomainSummaryInfo> ExtractDomains(
-            string source,
-            string filePath);
+        IReadOnlyList<DomainSummaryInfo> ExtractDomains(string filePath);
 
         string BuildModelSummary(ModelMetadataDescription metadata)
         {

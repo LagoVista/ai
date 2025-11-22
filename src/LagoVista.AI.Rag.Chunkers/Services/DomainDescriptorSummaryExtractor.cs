@@ -17,7 +17,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
     /// </summary>
     public static class DomainDescriptorSummaryExtractor
     {
-        public static IReadOnlyList<DomainSummaryInfo> Extract(string source, string filePath)
+        public static IReadOnlyList<DomainSummaryInfo> Extract(string source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
 
@@ -31,7 +31,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 if (!HasAttribute(classDecl.AttributeLists, "DomainDescriptor"))
                     continue;
 
-                ExtractFromDomainClass(classDecl, filePath, summaries);
+                ExtractFromDomainClass(classDecl, summaries);
             }
 
             return summaries;
@@ -39,7 +39,6 @@ namespace LagoVista.AI.Rag.Chunkers.Services
 
         private static void ExtractFromDomainClass(
             ClassDeclarationSyntax classDecl,
-            string filePath,
             List<DomainSummaryInfo> target)
         {
             var typeName = classDecl.Identifier.Text;

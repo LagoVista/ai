@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using LagoVista.Core.Utils.Types;
+using LagoVista.Core.Validation;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -25,18 +26,15 @@ namespace LagoVista.AI.Rag.Chunkers.Services
         /// Chunk a C# file into symbol-aligned, token-budgeted chunks.
         /// </summary>
         /// <param name="text">Raw C# source text.</param>
-        /// <param name="relPath">Relative path of the file (used for metadata only).</param>
-        /// <param name="blobPath">Suggested blob path for the raw artifact.</param>
         /// <param name="maxTokensPerChunk">
         /// Soft token budget per chunk. Will be clamped to at least 128.
         /// </param>
         /// <param name="overlapLines">
         /// Number of overlapping lines between consecutive chunks. Will be clamped to >= 0.
         /// </param>
-        public static RagChunkPlan Chunk(
+        public static InvokeResult< RagChunkPlan> Chunk(
             string text,
-            string relPath,
-            string blobPath,
+            string fileName,
             int maxTokensPerChunk = 6500,
             int overlapLines = 6)
         {
@@ -48,7 +46,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             var lines = text.Split('\n');
             var chunks = new List<RagChunk>();
 
-            foreach (var summary in BuildFileSummaryChunk(tree, relPath, lines, effectiveMaxTokens))
+            foreach (var summary in BuildFileSummaryChunk(fileName, tree, lines, effectiveMaxTokens))
             {
                 chunks.Add(summary);
             }
@@ -59,27 +57,27 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 switch (node)
                 {
                     case BaseMethodDeclarationSyntax m: // method, ctor, destructor, operator
-                        foreach (var ch in BuildNodeChunks(tree, lines, relPath, m, kind: "method", effectiveMaxTokens, effectiveOverlapLines))
+                        foreach (var ch in BuildNodeChunks(tree, lines,  m, kind: "method", effectiveMaxTokens, effectiveOverlapLines))
                             chunks.Add(ch);
                         break;
 
                     case PropertyDeclarationSyntax p:
-                        foreach (var ch in BuildNodeChunks(tree, lines, relPath, p, kind: "property", effectiveMaxTokens, effectiveOverlapLines))
+                        foreach (var ch in BuildNodeChunks(tree, lines, p, kind: "property", effectiveMaxTokens, effectiveOverlapLines))
                             chunks.Add(ch);
                         break;
 
                     case FieldDeclarationSyntax f when f.Parent is TypeDeclarationSyntax:
-                        foreach (var ch in BuildNodeChunks(tree, lines, relPath, f, kind: "field", effectiveMaxTokens, effectiveOverlapLines))
+                        foreach (var ch in BuildNodeChunks(tree, lines, f, kind: "field", effectiveMaxTokens, effectiveOverlapLines))
                             chunks.Add(ch);
                         break;
 
                     case EventDeclarationSyntax e:
-                        foreach (var ch in BuildNodeChunks(tree, lines, relPath, e, kind: "event", effectiveMaxTokens, effectiveOverlapLines))
+                        foreach (var ch in BuildNodeChunks(tree, lines, e, kind: "event", effectiveMaxTokens, effectiveOverlapLines))
                             chunks.Add(ch);
                         break;
 
                     case TypeDeclarationSyntax t: // class/record/struct/interface
-                        foreach (var ch in BuildNodeChunks(tree, lines, relPath, t, kind: t.Keyword.ValueText, effectiveMaxTokens, effectiveOverlapLines))
+                        foreach (var ch in BuildNodeChunks(tree, lines, t, kind: t.Keyword.ValueText, effectiveMaxTokens, effectiveOverlapLines))
                             chunks.Add(ch);
                         break;
                 }
@@ -92,22 +90,21 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 chunk.PartTotal = chunks.Count;
             }
 
-            return new RagChunkPlan
+            return InvokeResult<RagChunkPlan>.Create(new RagChunkPlan
             {
                 Chunks = chunks,
                 Raw = new RawArtifact
                 {
                     IsText = true,
                     MimeType = "text/x-csharp",
-                    SuggestedBlobPath = blobPath,
                     Text = text
                 }
-            };
+            }); 
         }
 
         private static IEnumerable<RagChunk> BuildFileSummaryChunk(
+            string fileName,
             SyntaxTree tree,
-            string relPath,
             string[] lines,
             int maxTokensPerChunk)
         {
@@ -152,8 +149,8 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                     TextNormalized = text,
                     LineStart = 1,
                     LineEnd = Math.Min(lines.Length, 200),
-                    Symbol = System.IO.Path.GetFileName(relPath),
                     SymbolType = "file",
+                    Symbol = fileName,
                     SectionKey = "file"
                 };
             }
@@ -162,7 +159,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
         private static IEnumerable<RagChunk> BuildNodeChunks(
             SyntaxTree tree,
             string[] lines,
-            string relPath,
+       //     string relPath,
             SyntaxNode node,
             string kind,
             int maxTokensPerChunk,
@@ -210,7 +207,6 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                         {
                             var parts = SliceVeryLongLine(
                                 lines[localEnd],
-                                relPath,
                                 kind,
                                 GetBestSymbolName(node),
                                 localEnd + 1,
@@ -261,7 +257,6 @@ namespace LagoVista.AI.Rag.Chunkers.Services
         /// </summary>
         private static IEnumerable<RagChunk> SliceVeryLongLine(
             string line,
-            string relPath,
             string kind,
             string symbol,
             int lineNumber,

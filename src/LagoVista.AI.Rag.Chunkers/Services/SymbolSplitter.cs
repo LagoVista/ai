@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using LagoVista.Core.Validation;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -18,7 +19,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
     /// </summary>
     public static class SymbolSplitter
     {
-        public static IReadOnlyList<SplitSymbolResult> Split(string sourceText, string relativePath = null)
+        public static InvokeResult<IReadOnlyList<SplitSymbolResult>> Split(string sourceText)
         {
             if (string.IsNullOrWhiteSpace(sourceText)) throw new ArgumentNullException(nameof(sourceText));
 
@@ -26,7 +27,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             var root = tree.GetRoot() as CompilationUnitSyntax;
 
             if (root == null)
-                return Array.Empty<SplitSymbolResult>();
+                return InvokeResult<IReadOnlyList<SplitSymbolResult>>.FromError("Could not identify root in source code");
 
             var symbols = root.DescendantNodes()
                 .Where(n => n is TypeDeclarationSyntax || n is EnumDeclarationSyntax)
@@ -43,7 +44,6 @@ namespace LagoVista.AI.Rag.Chunkers.Services
 
                 results.Add(new SplitSymbolResult
                 {
-                    RelativePath = relativePath,
                     SymbolName = name,
                     SymbolKind = kind,
                     Text = isolated
@@ -53,16 +53,10 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             // Handle no type case
             if (results.Count == 0)
             {
-                results.Add(new SplitSymbolResult
-                {
-                    RelativePath = relativePath,
-                    SymbolName = null,
-                    SymbolKind = "None",
-                    Text = sourceText
-                });
+                return InvokeResult<IReadOnlyList<SplitSymbolResult>>.FromError("Did not identify any symbols within source code text");
             }
 
-            return results;
+            return  InvokeResult<IReadOnlyList<SplitSymbolResult>>.Create(results);
         }
 
         private static string GetSymbolName(SyntaxNode node)
@@ -148,7 +142,6 @@ namespace LagoVista.AI.Rag.Chunkers.Services
 
     public sealed class SplitSymbolResult
     {
-        public string RelativePath { get; set; }
         public string SymbolName { get; set; }
         public string SymbolKind { get; set; }
         public string Text { get; set; }

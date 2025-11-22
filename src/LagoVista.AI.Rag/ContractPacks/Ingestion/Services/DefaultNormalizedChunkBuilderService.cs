@@ -1,132 +1,186 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
+using System.Linq;
+using System.Security.Authentication.ExtendedProtection;
 using System.Threading;
 using System.Threading.Tasks;
-using LagoVista.AI.Rag.Chunkers.Interfaces;
 using LagoVista.AI.Rag.Chunkers.Models;
 using LagoVista.AI.Rag.Chunkers.Services;
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Interfaces;
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Models;
 using LagoVista.AI.Rag.Models;
+using LagoVista.Core.Validation;
+using ZstdSharp.Unsafe;
 
 namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
 {
     /// <summary>
-    /// Default implementation of <see cref="IFileChunkingService"/>.
-    ///
-    /// Mode 1: symbol-centric chunking using <see cref="IChunkerServices.DetectForFile"/>.
-    ///
-    /// For each <see cref="SubKindDetectionResult"/> returned by the chunker, this service
-    /// produces a <see cref="NormalizedChunk"/> that:
-    ///  - Has a canonical <see cref="DocumentIdentity"/> (DocId + SectionKey + ChunkId).
-    ///  - Includes a standard header (Org/Project/Repo/Path/SubKind/Symbol).
-    ///  - Includes an optional human-readable summary (result.Summary).
-    ///  - Includes the symbol-level code text (result.SymbolText).
+    /// Default implementation of INormalizedChunkBuilderService.
+    /// Drives the Item 7 pipeline from raw source file to NormalizedChunk BuildChunksAsyncinstances.
     /// </summary>
-    public sealed class DefaultNormalizedChunkBuilderService : INormalizedChunkBuilder
+    public class DefaultNormalizedChunkBuilderService : INormalizedChunkBuilderService
     {
-        private readonly IChunkerServices _chunkerServices;
+        private readonly IChunkerServices _chunkerServics;
 
         public DefaultNormalizedChunkBuilderService(IChunkerServices chunkerServices)
         {
-            _chunkerServices = chunkerServices ?? throw new ArgumentNullException(nameof(chunkerServices));
         }
 
-        public async Task<IReadOnlyList<NormalizedChunk>> BuildChunksAsync(
-            IndexFileContext fileContext,
-            DomainModelCatalog catalog, 
-            CancellationToken token = default)
+        /// <summary>
+        /// Entry point: orchestrates the 7.x steps for a single file.
+        /// </summary>
+        public InvokeResult<List<NormalizedChunk>> BuildChunks(string filePath, DomainModelCatalog catalog, IReadOnlyDictionary<string, string> resources)
         {
-            if (fileContext == null) throw new ArgumentNullException(nameof(fileContext));
-            if (string.IsNullOrWhiteSpace(fileContext.FullPath))
-                throw new ArgumentException("IndexFileContext.FullPath is required.", nameof(fileContext));
-
-            token.ThrowIfCancellationRequested();
-
-            if (!File.Exists(fileContext.FullPath))
+            if (string.IsNullOrWhiteSpace(filePath))
             {
-                throw new FileNotFoundException(
-                    $"Source file not found for chunking: {fileContext.FullPath}",
-                    fileContext.FullPath);
+                throw new ArgumentException("File path is required.", nameof(filePath));
             }
 
-            var sourceText = await File.ReadAllTextAsync(fileContext.FullPath, token)
-                .ConfigureAwait(false);
+            var loadSourceResult = LoadSourceAsync(filePath);
+            if(!loadSourceResult.Successful) return InvokeResult<List<NormalizedChunk>>.FromInvokeResult(loadSourceResult.ToInvokeResult());
 
-            var relativePath = (fileContext.RelativePath ?? fileContext.FullPath)
-                .Replace('\\', '/');
+            var fullFileSourceCode = loadSourceResult.Result;
 
-            var result = _chunkerServices.DetectForFile(sourceText, relativePath);   
-            var chunks = new List<NormalizedChunk>();
-            var index = 0;
+            var symbolSplitsResult = SplitSymbols(fullFileSourceCode);
+            if (!symbolSplitsResult.Successful) return InvokeResult<List<NormalizedChunk>>.FromInvokeResult(symbolSplitsResult.ToInvokeResult());
 
-            token.ThrowIfCancellationRequested();
+            var normalizedChunks = new List<NormalizedChunk>();
 
-            var symbolName = string.IsNullOrWhiteSpace(result.PrimaryTypeName)
-                ? $"symbol-{index}"
-                : result.PrimaryTypeName;
+            var fileInfo = new FileInfo(filePath);
 
-            var identity = new DocumentIdentity
+
+            var splitSymbols = symbolSplitsResult.Result;
+            foreach(var splitSymbol in splitSymbols)
             {
-                OrgId = fileContext.OrgId,
-                ProjectId = fileContext.ProjectId,
-                RepoId = fileContext.RepoId,
-                RelativePath = relativePath,
-                Symbol = symbolName,
-                SymbolType = result.SubKindString
-            };
+                var subKindResult = AnalyzeSubKinds(splitSymbol.Text, filePath);
+                var symbolText = splitSymbol.Text;
 
-            identity.ComputeDocId();
+                var symbols = _chunkerServics.ChunkCSharpWithRoslyn(symbolText, fileInfo.Name);
+                foreach(var symbolChunk in symbols.Result.Chunks)
+                {
+                    switch(subKindResult.SubKind)
+                    {
+                        case CodeSubKind.Model:
+                            var modelStructureDescription = _chunkerServics.BuildStructuredDescriptionForModel(symbolText, resources);
+                            var modelMetaDataDescription = _chunkerServics.BuildMetadataDescriptionForModel(symbolText, resources);
 
-            var sectionKeyBase = symbolName.ToLowerInvariant();
-            identity.SectionKey = $"symbol-{sectionKeyBase}";
-            identity.ComputeChunkId();
+                            break;
+                        case CodeSubKind.Manager:
+                            foreach(var method in symbols.Result.Chunks.Where(cnk=>cnk.SymbolType == "Method"))
+                            {
+                                _chunkerServics.BuildSummaryForMethod(new MethodSummaryContext()
+                                {
+                                     
+                                });
+                            }
 
-            var sb = new StringBuilder();
+                            break;
 
-            sb.AppendLine($"OrgId: {fileContext.OrgId}");
-            sb.AppendLine($"ProjectId: {fileContext.ProjectId}");
-            sb.AppendLine($"RepoId: {fileContext.RepoId}");
-            sb.AppendLine($"Path: {relativePath}");
-            sb.AppendLine($"SubKind: {result.SubKindString}");
-            sb.AppendLine($"Symbol: {symbolName}");
-
-            if (!string.IsNullOrWhiteSpace(result.Summary))
-            {
-                sb.AppendLine();
-                sb.AppendLine("Summary:");
-                sb.AppendLine(result.Summary.Trim());
+                    }
+                    // Build NormalizedChunk here
+                }
             }
 
-            if (!string.IsNullOrWhiteSpace(result.Reason))
-            {
-                sb.AppendLine();
-                sb.AppendLine("Detection Reason:");
-                sb.AppendLine(result.Reason.Trim());
-            }
 
-            if (!string.IsNullOrWhiteSpace(result.SymbolText))
-            {
-                sb.AppendLine();
-                sb.AppendLine("Code:");
-                sb.AppendLine(result.SymbolText.Trim());
-            }
 
-            var chunk = new NormalizedChunk
-            {
-                Identity = identity,
-                Kind = "SourceCode",
-                SubKind = result.SubKindString,
-                NormalizedText = sb.ToString()
-            };
+            return InvokeResult<List<NormalizedChunk>>.Create(normalizedChunks);
+        }
+    
 
-            chunks.Add(chunk);
-            index++;
-            
+        private InvokeResult<string> LoadSourceAsync(string filePath)
+        {
+            if(!System.IO.File.Exists(filePath)) 
+                return InvokeResult<string>.FromError($"File not found: {filePath}");
 
-            return chunks;
+            return InvokeResult<string>.Create( System.IO.File.ReadAllText(filePath));
+        }
+
+        
+        private InvokeResult<IReadOnlyList<SplitSymbolResult>> SplitSymbols(string sourceText)
+        {
+            return SymbolSplitter.Split(sourceText);
+        }
+
+        // 7.2 - Source Kind Analysis ---------------------------------------
+
+        private SourceKindResult AnalyzeSubKinds(
+            string sourceText,
+            string fileName)
+        {
+            return _chunkerServics.DetectForFile(sourceText, fileName);
+        }
+
+
+        private IReadOnlyList<EnrichedSymbol> EnrichDomainModelMetadata(
+            IReadOnlyList<SplitSymbolResult> symbolSplits,
+            IReadOnlyList<SubKindDetectionResult> subKindResults)
+        {
+            // TODO: Use _domainModelCatalog to enrich symbols.
+            // - Attach domain name, model name, EntityDescription, etc.
+            throw new NotImplementedException();
+        }
+
+        // 7.4 - Roslyn Chunking --------------------------------------------
+
+        private IReadOnlyList<SymbolChunkContext> BuildSymbolChunks(
+            string sourceText,
+            IReadOnlyList<EnrichedSymbol> enrichedSymbols)
+        {
+            // TODO: Use Roslyn-based chunker per symbol.
+            // - Split into methods, properties, regions, etc.
+            // - Preserve enough context to build normalized text later.
+            throw new NotImplementedException();
+        }
+
+        // 7.5 - Normalized Text Construction -------------------------------
+
+        private IReadOnlyList<SymbolChunkContext> BuildNormalizedSymbolChunks(
+            string sourceText,
+            IReadOnlyList<SymbolChunkContext> symbolChunks)
+        {
+            // TODO: For each chunk, build the final normalized text:
+            // - Standard header (namespace + usings).
+            // - Short semantic preface (placeholder for now).
+            // - Symbol/region body with cleaned whitespace.
+            throw new NotImplementedException();
+        }
+
+        // 7.6 - NormalizedChunk Creation -----------------------------------
+
+        private IReadOnlyList<NormalizedChunk> CreateNormalizedChunks(
+            string relativePath,
+            IReadOnlyList<SymbolChunkContext> normalizedSymbolChunks)
+        {
+            // TODO: Map SymbolChunkContext -> NormalizedChunk.
+            // - Deterministic Id.
+            // - File path + symbol info.
+            // - Hash, Kind/SubKind.
+            // - Domain/model metadata.
+            // - NormalizedText.
+            throw new NotImplementedException();
+        }
+
+        // ------------------------------------------------------------------
+        // Local helper models for the pipeline.
+        // These keep the internal flow explicit without leaking extra types
+        // outside the service.
+        // ------------------------------------------------------------------
+
+        private sealed class EnrichedSymbol
+        {
+            public SplitSymbolResult Symbol { get; set; }
+            public SubKindDetectionResult SubKind { get; set; }
+            public string DomainName { get; set; }
+            public string ModelName { get; set; }
+            public string EntityDisplayName { get; set; }
+        }
+
+        private sealed class SymbolChunkContext
+        {
+            public EnrichedSymbol Symbol { get; set; }
+            public string ChunkIdHint { get; set; }
+            public string NormalizedText { get; set; }
         }
     }
 }

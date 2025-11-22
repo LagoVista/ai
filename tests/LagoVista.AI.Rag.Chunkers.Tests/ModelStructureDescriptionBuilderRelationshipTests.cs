@@ -56,9 +56,7 @@ namespace MyApp.Models
             var resources = BuildResources();
 
             var description = ModelStructureDescriptionBuilder.FromSource(
-                source,
-                "src/Models/RelationshipModel.cs",
-                resources);
+                source, resources);
 
             Assert.Multiple(() =>
             {
@@ -120,7 +118,6 @@ namespace MyApp.Models
 
             var description = ModelStructureDescriptionBuilder.FromSource(
                 source,
-                "src/Models/RelationshipModelWithCollection.cs",
                 resources);
 
             Assert.Multiple(() =>
@@ -205,7 +202,6 @@ namespace LagoVista.AI.Models
 
             var description = ModelStructureDescriptionBuilder.FromSource(
                 source,
-                "src/Models/AgentContextTestData.cs",
                 resources);
 
             Assert.Multiple(() =>
@@ -326,7 +322,6 @@ namespace LagoVista.AI.Models
 
             var description = ModelStructureDescriptionBuilder.FromSource(
                 source,
-                "src/Models/ParentModel.cs",
                 resources);
 
             Assert.Multiple(() =>
@@ -438,7 +433,6 @@ namespace LagoVista.AI.Models
 
             var description = ModelStructureDescriptionBuilder.FromSource(
                 source,
-                "src/Models/ParentModel.cs",
                 resources);
 
             Assert.Multiple(() =>

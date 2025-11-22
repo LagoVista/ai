@@ -92,7 +92,6 @@ namespace LagoVista.AI.Rag.Chunkers.Services
     {
         public static ModelSourceAnalysisResult Analyze(
             string sourceText,
-            string relativePath,
             IReadOnlyDictionary<string, string> resources)
         {
             if (sourceText == null) throw new ArgumentNullException(nameof(sourceText));

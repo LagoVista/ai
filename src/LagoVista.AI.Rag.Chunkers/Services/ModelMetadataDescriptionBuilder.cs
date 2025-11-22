@@ -19,10 +19,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
     {
         // ---------- Public API ----------
 
-        public static ModelMetadataDescription FromSource(
-            string sourceText,
-            string relativePath,
-            IReadOnlyDictionary<string, string> resources)
+        public static ModelMetadataDescription FromSource( string sourceText, IReadOnlyDictionary<string, string> resources)
         {
             if (sourceText == null) throw new ArgumentNullException(nameof(sourceText));
             if (resources == null) throw new ArgumentNullException(nameof(resources));

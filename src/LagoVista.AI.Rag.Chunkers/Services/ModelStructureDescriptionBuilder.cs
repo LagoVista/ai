@@ -19,14 +19,13 @@ namespace LagoVista.AI.Rag.Chunkers.Services
     {
         public static ModelStructureDescription FromSource(
             string sourceText,
-            string relativePath,
             IReadOnlyDictionary<string, string> resources)
         {
             if (sourceText == null) throw new ArgumentNullException(nameof(sourceText));
             if (resources == null) throw new ArgumentNullException(nameof(resources));
 
             // Core analysis (EntityDescription + FormField metadata)
-            var analysis = ModelSourceAnalyzer.Analyze(sourceText, relativePath, resources);
+            var analysis = ModelSourceAnalyzer.Analyze(sourceText, resources);
 
             var result = new ModelStructureDescription
             {

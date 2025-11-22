@@ -20,12 +20,12 @@ namespace TestSpace
     }
 }";
 
-            var results = SymbolSplitter.Split(source, "Customer.cs");
+            var results = SymbolSplitter.Split(source);
 
-            Assert.That(results.Count, Is.EqualTo(1));
-            Assert.That(results[0].SymbolName, Is.EqualTo("Customer"));
-            Assert.That(results[0].Text, Does.Contain("class Customer"));
-            Assert.That(results[0].Text, Does.Contain("namespace TestSpace"));
+            Assert.That(results.Result.Count, Is.EqualTo(1));
+            Assert.That(results.Result[0].SymbolName, Is.EqualTo("Customer"));
+            Assert.That(results.Result[0].Text, Does.Contain("class Customer"));
+            Assert.That(results.Result[0].Text, Does.Contain("namespace TestSpace"));
         }
 
         [Test]
@@ -41,10 +41,10 @@ namespace TestSpace
 
             var results = SymbolSplitter.Split(source);
 
-            Assert.That(results.Count, Is.EqualTo(3));
-            Assert.That(results.Any(r => r.SymbolName == "A"));
-            Assert.That(results.Any(r => r.SymbolName == "IB"));
-            Assert.That(results.Any(r => r.SymbolName == "C"));
+            Assert.That(results.Result.Count, Is.EqualTo(3));
+            Assert.That(results.Result.Any(r => r.SymbolName == "A"));
+            Assert.That(results.Result.Any(r => r.SymbolName == "IB"));
+            Assert.That(results.Result.Any(r => r.SymbolName == "C"));
         }
 
         [Test]
@@ -59,7 +59,7 @@ namespace TestSpace
     public class Device { }
 }";
 
-            var result = SymbolSplitter.Split(source).First();
+            var result = SymbolSplitter.Split(source).Result.First();
 
             Assert.That(result.Text, Does.Contain("using System;"));
             Assert.That(result.Text, Does.Contain("using System.Collections.Generic;"));
@@ -73,9 +73,9 @@ namespace TestSpace
 
             var results = SymbolSplitter.Split(source);
 
-            Assert.That(results.Count, Is.EqualTo(1));
-            Assert.That(results[0].SymbolKind, Is.EqualTo("None"));
-            Assert.That(results[0].Text, Does.Contain("no types"));
+            Assert.That(results.Result.Count, Is.EqualTo(1));
+            Assert.That(results.Result[0].SymbolKind, Is.EqualTo("None"));
+            Assert.That(results.Result[0].Text, Does.Contain("no types"));
         }
     }
 }

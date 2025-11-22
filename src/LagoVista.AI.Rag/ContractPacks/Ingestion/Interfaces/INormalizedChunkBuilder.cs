@@ -1,20 +1,15 @@
 ﻿using LagoVista.AI.Rag.Chunkers.Models;
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Models;
 using LagoVista.AI.Rag.Models;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
+using LagoVista.Core.Validation;
 using System.Threading.Tasks;
 
 namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Interfaces
 {
-    public interface INormalizedChunkBuilder
+    public interface INormalizedChunkBuilderService
     {
-        Task<IReadOnlyList<NormalizedChunk>> BuildChunksAsync(
-             IndexFileContext fileContext,
-             DomainModelCatalog catalog,
-             CancellationToken token = default);
+        InvokeResult<List<NormalizedChunk>> BuildChunks(string filePath, DomainModelCatalog catalog, IReadOnlyDictionary<string, string> resources);
     }
 }

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Rag.Chunkers.Models;
@@ -59,7 +58,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Infrastructure.Services
                     : result.SymbolText;
 
                 // 1) Domains: ExtractDomains will return empty for non-domain snippets.
-                var domainInfos = _chunkerServices.ExtractDomains(snippet, file.RelativePath);
+                var domainInfos = _chunkerServices.ExtractDomains(snippet);
                 if (domainInfos != null)
                 {
                     foreach (var domain in domainInfos)
@@ -77,7 +76,6 @@ namespace LagoVista.AI.Rag.ContractPacks.Infrastructure.Services
                 // 2) Models: BuildStructuredDescriptionForModel returns null for non-model snippets.
                 var modelStructure = _chunkerServices.BuildStructuredDescriptionForModel(
                     snippet,
-                    file.RelativePath,
                     resources: new Dictionary<string, string>());
 
                 if (modelStructure != null && !string.IsNullOrWhiteSpace(modelStructure.QualifiedName))
