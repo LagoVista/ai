@@ -12,7 +12,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
     /// structural graph, properties, entity header references, child objects,
     /// relationships, and operational affordances.
     /// </summary>
-    public sealed class ModelStructureDescription
+    public sealed partial class ModelStructureDescription
     {
         // ---------- Identity / Domain ----------
         public string ModelName { get; set; }

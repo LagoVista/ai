@@ -73,9 +73,9 @@ namespace TestSpace
 
             var results = SymbolSplitter.Split(source);
 
-            Assert.That(results.Result.Count, Is.EqualTo(1));
-            Assert.That(results.Result[0].SymbolKind, Is.EqualTo("None"));
-            Assert.That(results.Result[0].Text, Does.Contain("no types"));
+            Assert.That(results.Successful, Is.False);
+
+            Assert.That(results.ErrorMessage, Does.Contain("Did not identify any symbols within source code text"));
         }
     }
 }

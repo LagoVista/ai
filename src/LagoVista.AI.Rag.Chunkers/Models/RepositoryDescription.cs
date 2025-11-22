@@ -8,7 +8,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
     /// No chunking/indexing concerns here – this is the input to later
     /// chunk builders and RAG payload generators.
     /// </summary>
-    public class RepositoryDescription
+    public partial class RepositoryDescription
     {
         /// <summary>
         /// Simple name of the repository class, e.g. AgentContextRepo.

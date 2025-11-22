@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <IsPackable>false</IsPackable>
@@ -42,16 +42,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="LagoVista.Core.TestBase" Version="3.0.3111.0728" />
+    <PackageReference Include="LagoVista.Core.TestBase" Version="3.0.3111.1254" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\LagoVista.AI.Models\LagoVista.AI.Models.csproj" />
     <ProjectReference Include="..\..\src\LagoVista.AI.Rag.Chunkers\LagoVista.AI.Rag.Chunkers.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Infrastructure\" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,172 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using LagoVista.AI.Rag.Chunkers.Models;
+using LagoVista.AI.Rag.Chunkers.Services;
+using NUnit.Framework;
+
+namespace LagoVista.AI.Rag.Chunkers.Tests
+{
+    /// <summary>
+    /// Smoke tests that exercise CodeDescriptionService, call BuildSections()
+    /// on all supported description types, and dump the results to the console.
+    ///
+    /// These are intentionally coarse-grained and aimed at making it easy
+    /// to visually inspect the normalized SummarySection output.
+    /// </summary>
+    [TestFixture]
+    public class CodeDescriptionServiceSummarySectionSmokeTests
+    {
+        private const string ModelPath = "./Content/AgentContextTest.txt";
+        private const string ManagerPath = "./Content/AgentContextTestManager.txt";
+        private const string RepoPath = "./Content/AgentContextTestRepository.txt";
+        private const string ControllerPath = "./Content/AgentContextTestController.txt";
+        private const string ResourcePath = "./Content/resources.resx";
+
+        private CodeDescriptionService _service;
+
+        [SetUp]
+        public void SetUp()
+        {
+            _service = new CodeDescriptionService();
+        }
+
+        private static void EnsureFixturesExist()
+        {
+            Assert.That(File.Exists(ModelPath), Is.True, $"Model content file not found at {ModelPath}");
+            Assert.That(File.Exists(ResourcePath), Is.True, $"Resource content file not found at {ResourcePath}");
+            Assert.That(File.Exists(ManagerPath), Is.True, $"Manager content file not found at {ManagerPath}");
+            Assert.That(File.Exists(ControllerPath), Is.True, $"Controller content file not found at {ControllerPath}");
+            Assert.That(File.Exists(RepoPath), Is.True, $"Repository content file not found at {RepoPath}");
+        }
+
+        private static IReadOnlyDictionary<string, string> LoadResources()
+        {
+            // Uses ResxLabelScanner helper to load a single resource dictionary
+            // from the current directory (expects resources.resx in ./Content).
+            return ResxLabelScanner.GetSingleResourceDictionary(".");
+        }
+
+        private static void DumpSections(string label, IEnumerable<SummarySection> sections)
+        {
+            Console.WriteLine(new string('=', 80));
+            Console.WriteLine($"SUMMARY SECTIONS: {label}");
+            Console.WriteLine(new string('=', 80));
+
+            foreach (var section in sections)
+            {
+                Console.WriteLine($"-- SectionKey: {section.SectionKey}");
+                Console.WriteLine($"   Symbol: {section.Symbol}  (SymbolType: {section.SymbolType})");
+                Console.WriteLine();
+                Console.WriteLine(section.SectionNormalizedText ?? string.Empty);
+                Console.WriteLine();
+                Console.WriteLine(new string('-', 80));
+            }
+        }
+
+        [Test]
+        public void ModelStructureDescription_BuildSections_Smoke()
+        {
+            EnsureFixturesExist();
+
+            var modelSource = File.ReadAllText(ModelPath);
+            var resources = LoadResources();
+
+            var description = _service.BuildModelStructureDescription(modelSource, resources);
+            Assert.That(description, Is.Not.Null);
+
+            var sections = description.BuildSections().ToList();
+            Assert.That(sections.Count, Is.GreaterThan(0), "Expected at least one SummarySection for ModelStructureDescription.");
+
+            DumpSections("ModelStructureDescription", sections);
+        }
+
+        [Test]
+        public void ModelMetadataDescription_BuildSections_Smoke()
+        {
+            EnsureFixturesExist();
+
+            var modelSource = File.ReadAllText(ModelPath);
+            var resources = LoadResources();
+
+            var description = _service.BuildModelMetadataDescription(modelSource, resources);
+            Assert.That(description, Is.Not.Null);
+
+            var sections = description.BuildSections().ToList();
+            Assert.That(sections.Count, Is.GreaterThan(0), "Expected at least one SummarySection for ModelMetadataDescription.");
+
+            DumpSections("ModelMetadataDescription", sections);
+        }
+
+        [Test]
+        public void ManagerDescription_BuildSections_Smoke()
+        {
+            EnsureFixturesExist();
+
+            var managerSource = File.ReadAllText(ManagerPath);
+
+            var description = _service.BuildManagerDescription(managerSource);
+            Assert.That(description, Is.Not.Null);
+
+            var sections = description.BuildSections().ToList();
+            Assert.That(sections.Count, Is.GreaterThan(0), "Expected at least one SummarySection for ManagerDescription.");
+
+            DumpSections("ManagerDescription", sections);
+        }
+
+        [Test]
+        public void RepositoryDescription_BuildSections_Smoke()
+        {
+            EnsureFixturesExist();
+
+            var repoSource = File.ReadAllText(RepoPath);
+
+            var description = _service.BuildRepositoryDescription(repoSource);
+            Assert.That(description, Is.Not.Null);
+
+            var sections = description.BuildSections().ToList();
+            Assert.That(sections.Count, Is.GreaterThan(0), "Expected at least one SummarySection for RepositoryDescription.");
+
+            DumpSections("RepositoryDescription", sections);
+        }
+
+        [Test]
+        public void EndpointDescription_BuildSections_Smoke()
+        {
+            EnsureFixturesExist();
+
+            var controllerSource = File.ReadAllText(ControllerPath);
+
+            var endpoints = _service.BuildEndpointDescriptions(controllerSource);
+            Assert.That(endpoints, Is.Not.Null);
+            Assert.That(endpoints.Count, Is.GreaterThan(0), "Expected at least one EndpointDescription.");
+
+            var index = 0;
+            foreach (var endpoint in endpoints)
+            {
+                var sections = endpoint.BuildSections().ToList();
+                Assert.That(sections.Count, Is.GreaterThan(0), $"Expected at least one SummarySection for EndpointDescription #{index}.");
+                DumpSections($"EndpointDescription[{index}]", sections);
+                index++;
+            }
+        }
+
+        [Test]
+        public void InterfaceDescription_BuildSections_Smoke()
+        {
+            const string interfacePath = "./Content/IAgentContextManager.txt";
+            Assert.That(File.Exists(interfacePath), Is.True, $"Interface content file not found at {interfacePath}");
+
+            var interfaceSource = File.ReadAllText(interfacePath);
+
+            var description = _service.BuildInterfaceDescription(interfaceSource);
+            Assert.That(description, Is.Not.Null);
+
+            var sections = description.BuildSections().ToList();
+            Assert.That(sections.Count, Is.GreaterThan(0), "Expected at least one SummarySection for InterfaceDescription.");
+
+            DumpSections("InterfaceDescription", sections);
+        }
+    }
+}

@@ -83,7 +83,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
             return issues;
         }
 
-        public IEnumerable<SummarySection> BuildSummarySections()
+        public IEnumerable<SummarySection> BuildSections()
         {
             var sb = new StringBuilder();
 
@@ -100,10 +100,8 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                 new SummarySection
                 {
                     SectionKey = $"domain-{(DomainKey ?? Title ?? SourcePropertyName).Replace(" ", "-").ToLowerInvariant()}",
-                    SectionType = "Overview",
                     Symbol = SourceTypeName,                  // e.g. LagoVista.AI.Models.AIDomain
                     SymbolType = "Domain",                    // your logical kind
-                    Title = $"{Title} - Domain Overview",
                     SectionNormalizedText = sb.ToString()
                 }
             };

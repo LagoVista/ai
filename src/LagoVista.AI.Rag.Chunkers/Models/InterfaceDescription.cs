@@ -8,7 +8,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
     ///
     /// This is contract-focused metadata only; no chunking/indexing concerns.
     /// </summary>
-    public class InterfaceDescription
+    public partial class InterfaceDescription
     {
         /// <summary>
         /// Simple interface name, e.g. IDeviceManager.

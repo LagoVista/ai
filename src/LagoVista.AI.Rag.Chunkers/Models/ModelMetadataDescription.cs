@@ -11,7 +11,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
     /// IDX-0038: Model Metadata & UI Description
     /// Detailed UI, validation, picker, layout, labeling, and metadata for model entities.
     /// </summary>
-    public sealed class ModelMetadataDescription
+    public sealed partial class ModelMetadataDescription
     {
         // ---------- Identity / Domain ----------
         public string ModelName { get; set; }

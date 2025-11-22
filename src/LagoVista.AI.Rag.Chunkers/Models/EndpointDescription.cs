@@ -11,7 +11,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
     /// semantics, without encoding chunking/indexing concerns
     /// (no PartIndex, no ContentHash, etc.).
     /// </summary>
-    public sealed class EndpointDescription
+    public sealed partial class EndpointDescription
     {
         /// <summary>
         /// Logical document identifier (IDX-001) for the controller source file.

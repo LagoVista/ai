@@ -42,7 +42,7 @@
   </ItemGroup>
  
   <ItemGroup>
-    <PackageReference Include="LagoVista.Core.TestBase" Version="3.0.3111.0728" />
+    <PackageReference Include="LagoVista.Core.TestBase" Version="3.0.3111.1254" />
   </ItemGroup>
 
   <ItemGroup>
@@ -51,6 +51,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Chunking\" />
     <Folder Include="Services\" />
   </ItemGroup>
 
