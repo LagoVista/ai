@@ -58,7 +58,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
 
             foreach (var ep in entityEndpoints)
             {
-                Assert.That(ep.PrimaryEntity, Is.EqualTo("VectorDatabase"));
+                Assert.That(ep.PrimaryEntity, Is.AnyOf("AgentContextTest", "AgentContextTestSummary", "InvokeResult", "ConversationContextTest"));
             }
         }
 

@@ -80,14 +80,14 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                         LineEnd = GetLine(method.GetLocation()?.GetLineSpan().EndLinePosition.Line)
                     };
 
-                    // Summary & Description
-                    endpoint.Summary = GetXmlSummary(method) 
+                    // PrimaryEntity heuristics – prefer return type model over controller name
+                    endpoint.PrimaryEntity = DetectPrimaryEntity(controllerName, route, method, semanticModel);
+
+                    // Summary & Description (after PrimaryEntity is established)
+                    endpoint.Summary = GetXmlSummary(method)
                                        ?? SynthesizeSummary(httpMethods, endpoint.PrimaryEntity, endpoint.ActionName);
 
                     endpoint.Description = GetXmlRemarks(method);
-
-                    // PrimaryEntity heuristics
-                    endpoint.PrimaryEntity = DetectPrimaryEntity(controllerName, route, method, semanticModel);
 
                     // Handler (Manager linkage)
                     endpoint.Handler = DetectHandler(controller, method, semanticModel);
@@ -139,6 +139,9 @@ namespace LagoVista.AI.Rag.Chunkers.Services
 
                     // Responses
                     endpoint.Responses = DetectResponses(method, semanticModel, httpMethods);
+
+                    // UI pattern classification (FormLoad / FormFactory / List / Command / Detail)
+                    ClassifyUiPattern(endpoint, method, semanticModel, httpMethods);
 
                     // Authorization
                     endpoint.Authorization = DetectAuthorization(method, controller);
@@ -224,7 +227,6 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             return null;
         }
 
-
         private static string GetApiVersion(SyntaxList<AttributeListSyntax> attributes)
         {
             foreach (var attr in attributes.SelectMany(a => a.Attributes))
@@ -253,10 +255,10 @@ namespace LagoVista.AI.Rag.Chunkers.Services
 
         private static string CombineRoutes(string classRoute, string methodRoute)
         {
-            if (String.IsNullOrEmpty(classRoute)) return methodRoute;
-            if (String.IsNullOrEmpty(methodRoute)) return classRoute;
+            if (string.IsNullOrEmpty(classRoute)) return methodRoute;
+            if (string.IsNullOrEmpty(methodRoute)) return classRoute;
 
-            return $"{classRoute.TrimEnd('/')}/{methodRoute.TrimStart('/')}";
+            return classRoute.TrimEnd('/') + "/" + methodRoute.TrimStart('/');
         }
 
         private static string BuildEndpointKey(string controller, string action)
@@ -264,7 +266,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             if (action.EndsWith("Async"))
                 action = action.Substring(0, action.Length - 5);
 
-            return $"{controller}.{action}";
+            return controller + "." + action;
         }
 
         private static string GetXmlSummary(MemberDeclarationSyntax member)
@@ -320,7 +322,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                                      e.StartTag.Attributes.ToString().Contains(paramName));
 
             return param?.ToString()
-                .Replace($"<param name=\"{paramName}\">", "")
+                .Replace("<param name=\"" + paramName + "\">", "")
                 .Replace("</param>", "")
                 .Trim();
         }
@@ -328,9 +330,9 @@ namespace LagoVista.AI.Rag.Chunkers.Services
         private static string SynthesizeSummary(List<string> httpMethods, string entity, string action)
         {
             var method = httpMethods.FirstOrDefault() ?? "UNKNOWN";
-            var target = entity ?? action;
+            var target = !string.IsNullOrWhiteSpace(entity) ? entity : action;
 
-            return $"{method} {target}";
+            return method + " " + target;
         }
 
         private static string DetectPrimaryEntity(
@@ -339,18 +341,38 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             MethodDeclarationSyntax method,
             SemanticModel model)
         {
-            if (controllerName.EndsWith("Controller"))
-                return controllerName.Substring(0, controllerName.Length - 10);
-
-            if (!String.IsNullOrWhiteSpace(route))
+            // 1) Prefer logical model from return type (DetailResponse<T>, ListResponse<T>, InvokeResult<T>, etc.)
+            var rawReturnType = model.GetTypeInfo(method.ReturnType).Type as ITypeSymbol;
+            var analysis = AnalyzeReturnType(rawReturnType);
+            if (!string.IsNullOrWhiteSpace(analysis.ModelType))
             {
-                var parts = route.Split('/');
-                if (parts.Length > 1)
-                    return parts[parts.Length - 1].Trim('{', '}');
+                return analysis.ModelType;
             }
 
-            var returnType = model.GetTypeInfo(method.ReturnType).Type as INamedTypeSymbol;
-            return returnType?.TypeArguments.FirstOrDefault()?.Name;
+            // 2) Fall back to route last segment (ignoring {id})
+            if (!string.IsNullOrWhiteSpace(route))
+            {
+                var parts = route
+                    .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+
+                if (parts.Length > 0)
+                {
+                    var last = parts[parts.Length - 1].Trim('{', '}');
+                    if (!string.IsNullOrWhiteSpace(last) &&
+                        !string.Equals(last, "id", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return last;
+                    }
+                }
+            }
+
+            // 3) Finally, fall back to controller name (strip "Controller" suffix)
+            if (controllerName.EndsWith("Controller", StringComparison.Ordinal))
+            {
+                return controllerName.Substring(0, controllerName.Length - "Controller".Length);
+            }
+
+            return null;
         }
 
         private static EndpointHandlerDescription DetectHandler(
@@ -512,6 +534,62 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             return analysis;
         }
 
+        private static void ClassifyUiPattern(
+            EndpointDescription ep,
+            MethodDeclarationSyntax method,
+            SemanticModel semanticModel,
+            List<string> httpMethods)
+        {
+            ep.UiPattern = null;
+            ep.IsFormFactory = false;
+            ep.IsFormLoad = false;
+            ep.IsListEndpoint = false;
+            ep.IsCommandEndpoint = false;
+
+            var rawReturnType = semanticModel.GetTypeInfo(method.ReturnType).Type as ITypeSymbol;
+            var analysis = AnalyzeReturnType(rawReturnType);
+
+            var wrapper = analysis.WrapperType ?? string.Empty;
+            var route = ep.RouteTemplate ?? string.Empty;
+            var actionName = ep.ActionName ?? string.Empty;
+
+            // DetailResponse<T> → form load/factory/detail
+            if (!string.IsNullOrEmpty(wrapper) && wrapper.Contains("DetailResponse"))
+            {
+                // /factory route or *Factory action → blank form model
+                if (route.EndsWith("/factory", StringComparison.OrdinalIgnoreCase) ||
+                    actionName.EndsWith("Factory", StringComparison.OrdinalIgnoreCase))
+                {
+                    ep.UiPattern = "FormFactory";
+                    ep.IsFormFactory = true;
+                }
+                // {id} route → load existing record
+                else if (route.Contains("{id}", StringComparison.OrdinalIgnoreCase))
+                {
+                    ep.UiPattern = "FormLoad";
+                    ep.IsFormLoad = true;
+                }
+                else
+                {
+                    ep.UiPattern = "Detail";
+                }
+            }
+            // ListResponse<T> or explicit collection model
+            else if ((!string.IsNullOrEmpty(wrapper) && wrapper.Contains("ListResponse")) ||
+                     analysis.IsCollection == true)
+            {
+                ep.UiPattern = "List";
+                ep.IsListEndpoint = true;
+            }
+            // Non-generic InvokeResult → command-style endpoint
+            else if (!string.IsNullOrEmpty(wrapper) &&
+                     wrapper.Contains("InvokeResult") &&
+                     analysis.ModelType == null)
+            {
+                ep.UiPattern = "Command";
+                ep.IsCommandEndpoint = true;
+            }
+        }
 
         private static EndpointAuthorizationDescription DetectAuthorization(
             MethodDeclarationSyntax method,
@@ -542,7 +620,6 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             };
         }
 
-
         private static EndpointParameterSource DetectParameterSource(
            ParameterSyntax param,
            string route,
@@ -557,7 +634,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 if (name.Contains("FromHeader")) return EndpointParameterSource.Header;
             }
 
-            if (!String.IsNullOrWhiteSpace(route) && route.Contains($"{{{param.Identifier.Text}}}"))
+            if (!string.IsNullOrWhiteSpace(route) && route.Contains("{" + param.Identifier.Text + "}"))
                 return EndpointParameterSource.Route;
 
             if (httpMethods.Contains("GET") || httpMethods.Contains("DELETE"))

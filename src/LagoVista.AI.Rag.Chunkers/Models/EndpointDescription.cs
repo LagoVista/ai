@@ -118,6 +118,37 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         public EndpointAuthorizationDescription Authorization { get; set; }
 
         /// <summary>
+        /// High-level UI/interaction pattern inferred from response & route,
+        /// e.g. "FormLoad", "FormFactory", "List", "Command", "Detail".
+        /// </summary>
+        public string UiPattern { get; set; }
+
+        /// <summary>
+        /// True if this endpoint returns a blank, initialized model intended
+        /// to hydrate a client-side create form (typically DetailResponse<T>
+        /// with a /factory route).
+        /// </summary>
+        public bool IsFormFactory { get; set; }
+
+        /// <summary>
+        /// True if this endpoint loads an existing model instance for editing,
+        /// typically DetailResponse<T> plus an {id} route parameter.
+        /// </summary>
+        public bool IsFormLoad { get; set; }
+
+        /// <summary>
+        /// True if this endpoint returns a list of models suitable for list
+        /// or grid rendering, typically ListResponse<T>.
+        /// </summary>
+        public bool IsListEndpoint { get; set; }
+
+        /// <summary>
+        /// True if this endpoint is a command-style operation that returns an
+        /// InvokeResult indicating success or failure without a model payload.
+        /// </summary>
+        public bool IsCommandEndpoint { get; set; }
+
+        /// <summary>
         /// Inclusive 1-based line where the action method starts in the
         /// source file (IDX-020).
         /// </summary>
@@ -197,7 +228,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         public bool IsRequired { get; set; }
 
         /// <summary>
-        /// True when the parameter is a collection (List&lt;T&gt;, T[], etc.).
+        /// True when the parameter is a collection (List<T>, T[], etc.).
         /// </summary>
         public bool IsCollection { get; set; }
 
@@ -208,7 +239,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
 
         /// <summary>
         /// Human-readable description for the parameter, typically sourced
-        /// from XML documentation (&lt;param name="..."&gt;).
+        /// from XML documentation (<param name="...">).
         /// </summary>
         public string Description { get; set; }
     }
@@ -226,7 +257,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         public string ModelType { get; set; }
 
         /// <summary>
-        /// True if the body is a collection (List&lt;T&gt;, T[], etc.).
+        /// True if the body is a collection (List<T>, T[], etc.).
         /// </summary>
         public bool IsCollection { get; set; }
 
@@ -265,24 +296,24 @@ namespace LagoVista.AI.Rag.Chunkers.Models
 
         /// <summary>
         /// Logical payload model type inside any framework wrapper, e.g.
-        /// Device for Task&lt;InvokeResult&lt;Device&gt;&gt;.
+        /// Device for Task<InvokeResult<Device>>.
         /// May be null for responses that have no payload model.
         /// </summary>
         public string ModelType { get; set; }
 
         /// <summary>
-        /// True if the payload is a collection (List&lt;T&gt;, T[], etc.).
+        /// True if the payload is a collection (List<T>, T[], etc.).
         /// </summary>
         public bool? IsCollection { get; set; }
 
         /// <summary>
         /// True when the payload is wrapped in a standard wrapper type,
-        /// e.g. InvokeResult or InvokeResult&lt;T&gt;.
+        /// e.g. InvokeResult or InvokeResult<T>.
         /// </summary>
         public bool? IsWrapped { get; set; }
 
         /// <summary>
-        /// Wrapper type name, e.g. InvokeResult&lt;Device&gt;.
+        /// Wrapper type name, e.g. InvokeResult<Device>.
         /// </summary>
         public string WrapperType { get; set; }
 
