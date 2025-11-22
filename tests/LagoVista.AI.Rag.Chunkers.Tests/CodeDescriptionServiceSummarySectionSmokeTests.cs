@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using LagoVista.AI.Rag.Chunkers.Models;
 using LagoVista.AI.Rag.Chunkers.Services;
+using LagoVista.Core.Utils;
 using NUnit.Framework;
 
 namespace LagoVista.AI.Rag.Chunkers.Tests
@@ -75,8 +76,12 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
 
             foreach (var section in sections)
             {
-                file.WriteLine($"-- SectionKey: {section.SectionKey}");
+                file.WriteLine("-- START Section Summary Fields:");
+                file.WriteLine($"   SectionKey: {section.SectionKey}, SectionType: {section.SectionType}");
                 file.WriteLine($"   Symbol: {section.Symbol}  (SymbolType: {section.SymbolType})");
+                file.WriteLine($"   Flavor: {section.Flavor}");
+                file.WriteLine($"   DomainKey: {section.DomainKey}  (ModelName: {section.ModelName}) (ModelClassName:{section.ModelClassName})");
+                file.WriteLine("-- END Section Summary Fields:");
                 file.WriteLine();
                 file.WriteLine(section.SectionNormalizedText ?? string.Empty);
                 file.WriteLine();
@@ -89,7 +94,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
 
         public DomainModelHeaderInformation headerInfo = new DomainModelHeaderInformation()
         {
-            DomainName = "AI Servics",
+            DomainName = "AI Services",
             DomainKey = "aidomain",
             DomainTagLine = "The AI services provide both a mechanism to interact with an LLM and create inferences on models.",
             ModelClassName = "AgentContextTest",

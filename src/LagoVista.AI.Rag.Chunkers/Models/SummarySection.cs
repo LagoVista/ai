@@ -9,8 +9,16 @@ namespace LagoVista.AI.Rag.Chunkers.Models
     public sealed class SummarySection
     {
         public string SectionKey { get; set; }
+        public string SectionType { get; set; }
+        public string Flavor { get; set; }
+
         public string Symbol { get; set; }
         public string SymbolType { get; set; }
+
+        public string DomainKey { get; set; }
+        public string ModelClassName { get; set; }
+        public string ModelName { get; set; }
+
         public string SectionNormalizedText { get; set; }
     }
 

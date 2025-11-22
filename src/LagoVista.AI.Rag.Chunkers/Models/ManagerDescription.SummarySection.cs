@@ -65,7 +65,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                 overview.AppendLine($"Base Type: {BaseTypeName}");
 
             if (ManagerType != null)
-                overview.AppendLine($"Manager Type: {ManagerType.ToString()}");
+                overview.AppendLine($"Manager Type: {ManagerType}");
 
             if (!string.IsNullOrWhiteSpace(PrimaryEntity))
                 overview.AppendLine($"Primary Entity: {PrimaryEntity}");
@@ -89,15 +89,33 @@ namespace LagoVista.AI.Rag.Chunkers.Models
             sections.Add(new SummarySection
             {
                 SectionKey = "manager-overview",
+                SectionType = "Overview",
+                Flavor = "ManagerDescription",
                 Symbol = symbol,
                 SymbolType = "Manager",
+                DomainKey = headerInfo?.DomainKey,
+                ModelClassName = headerInfo?.ModelClassName,
+                ModelName = headerInfo?.ModelName,
                 SectionNormalizedText = overview.ToString().Trim()
             });
 
             // ---------------------------------------------------------------------
-            // manager-constructors
+            // manager-constructors (now also grounded with Domain/Model header)
             // ---------------------------------------------------------------------
             var ctorText = new StringBuilder();
+
+            var ctorDomainLine = BuildDomainLine(headerInfo);
+            var ctorModelLine = BuildModelLine(headerInfo);
+
+            if (!string.IsNullOrWhiteSpace(ctorDomainLine))
+                ctorText.AppendLine(ctorDomainLine);
+
+            if (!string.IsNullOrWhiteSpace(ctorModelLine))
+                ctorText.AppendLine(ctorModelLine);
+
+            if (!string.IsNullOrWhiteSpace(ctorDomainLine) || !string.IsNullOrWhiteSpace(ctorModelLine))
+                ctorText.AppendLine();
+
             ctorText.AppendLine($"Constructors for manager {symbol}:");
 
             if (Constructors == null || Constructors.Count == 0)
@@ -127,8 +145,13 @@ namespace LagoVista.AI.Rag.Chunkers.Models
             sections.Add(new SummarySection
             {
                 SectionKey = "manager-constructors",
+                SectionType = "Constructors",
+                Flavor = "ManagerDescription",
                 Symbol = symbol,
                 SymbolType = "Manager",
+                DomainKey = headerInfo?.DomainKey,
+                ModelClassName = headerInfo?.ModelClassName,
+                ModelName = headerInfo?.ModelName,
                 SectionNormalizedText = ctorText.ToString().Trim()
             });
 
@@ -153,8 +176,13 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                 sections.Add(new SummarySection
                 {
                     SectionKey = "manager-methods",
+                    SectionType = "Methods",
+                    Flavor = "ManagerDescription",
                     Symbol = symbol,
                     SymbolType = "Manager",
+                    DomainKey = headerInfo?.DomainKey,
+                    ModelClassName = headerInfo?.ModelClassName,
+                    ModelName = headerInfo?.ModelName,
                     SectionNormalizedText = emptyText.ToString().Trim()
                 });
 
@@ -199,7 +227,6 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                                 : PrimaryEntity))
                         : PrimaryEntity,
                     DomainName = headerInfo?.DomainName,
-                    // Avoid repeating long taglines per method; header already has them.
                     DomainTagline = null,
                     ModelTagline = null,
                     Signature = null
@@ -234,8 +261,13 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                     sections.Add(new SummarySection
                     {
                         SectionKey = "manager-methods",
+                        SectionType = "Methods",
+                        Flavor = "ManagerDescription",
                         Symbol = symbol,
                         SymbolType = "Manager",
+                        DomainKey = headerInfo?.DomainKey,
+                        ModelClassName = headerInfo?.ModelClassName,
+                        ModelName = headerInfo?.ModelName,
                         SectionNormalizedText = currentText.ToString().Trim()
                     });
 
@@ -257,8 +289,13 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                 sections.Add(new SummarySection
                 {
                     SectionKey = "manager-methods",
+                    SectionType = "Methods",
+                    Flavor = "ManagerDescription",
                     Symbol = symbol,
                     SymbolType = "Manager",
+                    DomainKey = headerInfo?.DomainKey,
+                    ModelClassName = headerInfo?.ModelClassName,
+                    ModelName = headerInfo?.ModelName,
                     SectionNormalizedText = currentText.ToString().Trim()
                 });
             }
