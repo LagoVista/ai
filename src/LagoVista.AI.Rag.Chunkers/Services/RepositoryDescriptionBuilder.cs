@@ -9,16 +9,16 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace LagoVista.AI.Rag.Chunkers.Services
 {
     /// <summary>
-    /// IDX-0039: Builds a semantic ManagerDescription from raw C# source text.
+    /// IDX-0040: Builds a semantic RepositoryDescription from raw C# source text.
     ///
-    /// Pure description only – no chunking/indexing concerns here. This is the
-    /// upstream description used later for chunk builders and RAG payloads.
-    /// Mirrors RepositoryDescriptionBuilder patterns: multiple ctors, aggregated
-    /// dependency interfaces, method shapes, and PrimaryEntity heuristics.
+    /// Pure description only – no chunking concerns (no PartIndex, ContentHash, etc.).
+    /// Mirrors ManagerDescriptionBuilder patterns: multiple constructors, dependency
+    /// interface aggregation, method shapes, primary entity heuristics, and
+    /// RepositoryKind derived from the base type.
     /// </summary>
-    public static class ManagerDescriptionBuilder
+    public static class RepositoryDescriptionBuilder
     {
-        public static ManagerDescription CreateManagerDescription(string sourceText)
+        public static RepositoryDescription CreateRepositoryDescription(string sourceText)
         {
             if (string.IsNullOrWhiteSpace(sourceText))
                 throw new ArgumentNullException(nameof(sourceText));
@@ -27,7 +27,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             var root = syntaxTree.GetCompilationUnitRoot();
 
             var compilation = CSharpCompilation.Create(
-                "ManagerAnalysis",
+                "RepositoryAnalysis",
                 syntaxTrees: new[] { syntaxTree },
                 references: new[]
                 {
@@ -46,39 +46,42 @@ namespace LagoVista.AI.Rag.Chunkers.Services
 
             var symbol = semanticModel.GetDeclaredSymbol(classDecl) as INamedTypeSymbol;
             var baseType = symbol?.BaseType as INamedTypeSymbol;
+            var baseTypeName = baseType?.Name;
 
-            var description = new ManagerDescription
+            var description = new RepositoryDescription
             {
                 ClassName = classDecl.Identifier.Text,
                 Namespace = GetNamespace(classDecl),
                 Summary = GetXmlSummary(classDecl),
-                BaseTypeName = baseType?.Name,
                 ImplementedInterfaces = GetImplementedInterfaces(classDecl, semanticModel),
-                Methods = new List<ManagerMethodDescription>(),
-                Constructors = new List<ManagerConstructorDescription>(),
-                DependencyInterfaces = Array.Empty<string>()
+                BaseTypeName = baseTypeName,
+                RepositoryKind = DetectRepositoryKind(baseType),
+                Methods = new List<RepositoryMethodDescription>(),
+                Constructors = new List<RepositoryConstructorDescription>(),
+                DependencyInterfaces = Array.Empty<string>(),
+                StorageProfile = null
             };
 
-            // PrimaryEntity detection (IDX-0039 heuristics)
-            description.PrimaryEntity = DetectPrimaryEntity(classDecl, semanticModel);
+            // PrimaryEntity detection (IDX-0040 heuristics)
+            description.PrimaryEntity = DetectPrimaryEntity(classDecl, semanticModel, baseType);
 
             // Constructors + dependency interfaces (union across all ctors)
             PopulateConstructorsAndDependencies(classDecl, semanticModel, description);
 
             // Methods
-            var methods = new List<ManagerMethodDescription>();
+            var methodList = new List<RepositoryMethodDescription>();
 
             foreach (var method in classDecl.Members.OfType<MethodDeclarationSyntax>())
             {
                 var parameters = method.ParameterList.Parameters
-                    .Select(p => new ManagerMethodParameterDescription
+                    .Select(p => new RepositoryMethodParameterDescription
                     {
                         Name = p.Identifier.Text,
                         TypeName = semanticModel.GetTypeInfo(p.Type).Type?.Name ?? p.Type.ToString()
                     })
                     .ToArray();
 
-                var desc = new ManagerMethodDescription
+                var descriptor = new RepositoryMethodDescription
                 {
                     MethodName = method.Identifier.Text,
                     Summary = GetXmlSummary(method),
@@ -94,10 +97,13 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                     BodyText = method.Body?.ToString() ?? method.ExpressionBody?.ToString()
                 };
 
-                methods.Add(desc);
+                methodList.Add(descriptor);
             }
 
-            description.Methods = methods;
+            description.Methods = methodList;
+
+            // Optional: future StorageProfile inference hook – left null for now
+            // description.StorageProfile = DetectStorageProfile(baseType, description.PrimaryEntity);
 
             return description;
         }
@@ -105,7 +111,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
         private static void PopulateConstructorsAndDependencies(
             ClassDeclarationSyntax classDecl,
             SemanticModel semanticModel,
-            ManagerDescription description)
+            RepositoryDescription description)
         {
             var ctorSyntaxes = classDecl.Members
                 .OfType<ConstructorDeclarationSyntax>()
@@ -114,20 +120,20 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             if (ctorSyntaxes.Count == 0)
                 return;
 
-            var ctorDescriptions = new List<ManagerConstructorDescription>();
+            var ctorDescriptions = new List<RepositoryConstructorDescription>();
             var dependencies = new HashSet<string>(StringComparer.Ordinal);
 
             foreach (var ctor in ctorSyntaxes)
             {
                 var ctorParams = ctor.ParameterList.Parameters
-                    .Select(p => new ManagerMethodParameterDescription
+                    .Select(p => new RepositoryMethodParameterDescription
                     {
                         Name = p.Identifier.Text,
                         TypeName = semanticModel.GetTypeInfo(p.Type).Type?.Name ?? p.Type.ToString()
                     })
                     .ToArray();
 
-                var ctorDesc = new ManagerConstructorDescription
+                var ctorDesc = new RepositoryConstructorDescription
                 {
                     Parameters = ctorParams,
                     LineStart = GetLine(ctor.GetLocation()?.GetLineSpan().StartLinePosition.Line),
@@ -137,29 +143,11 @@ namespace LagoVista.AI.Rag.Chunkers.Services
 
                 ctorDescriptions.Add(ctorDesc);
 
-                // Aggregate dependency interfaces across ALL constructors
                 foreach (var param in ctor.ParameterList.Parameters)
                 {
-                    var typeInfo = semanticModel.GetTypeInfo(param.Type);
-                    var typeSymbol = typeInfo.Type as INamedTypeSymbol;
-
-                    // If Roslyn can resolve it as an interface, great.
+                    var typeSymbol = semanticModel.GetTypeInfo(param.Type).Type as INamedTypeSymbol;
                     if (typeSymbol?.TypeKind == TypeKind.Interface)
-                    {
                         dependencies.Add(typeSymbol.Name);
-                        continue;
-                    }
-
-                    // Fallback for error types / unresolved symbols – use naming convention.
-                    var typeName = param.Type.ToString();
-                    var simpleName = StripGenericSuffix(typeName);
-
-                    if (LooksLikeInterfaceName(simpleName))
-                    {
-                        // SimpleName may include namespace; strip it to match tests.
-                        var shortName = simpleName.Split('.').Last();
-                        dependencies.Add(shortName);
-                    }
                 }
             }
 
@@ -203,23 +191,64 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 : symbol.AllInterfaces.Select(i => i.Name).Distinct(StringComparer.Ordinal).ToArray();
         }
 
-        private static string DetectPrimaryEntity(ClassDeclarationSyntax classDecl, SemanticModel model)
+        private static RepositoryKind DetectRepositoryKind(INamedTypeSymbol baseType)
+        {
+            if (baseType == null)
+                return RepositoryKind.Unknown;
+
+            var name = baseType.Name;
+            var full = baseType.ToDisplayString();
+
+            // Tune these mappings as you add more concrete base types.
+            if (name.Equals("DocumentDBRepoBase", StringComparison.Ordinal)
+                || full.Contains("DocumentDBRepoBase", StringComparison.Ordinal))
+                return RepositoryKind.DocumentDb;
+
+            if (name.Contains("TableStorage", StringComparison.Ordinal)
+                || full.Contains("TableStorageRepoBase", StringComparison.Ordinal))
+                return RepositoryKind.TableStorage;
+
+            if (name.Contains("Sql", StringComparison.Ordinal)
+                || full.Contains("SqlRepoBase", StringComparison.Ordinal))
+                return RepositoryKind.Sql;
+
+            if (name.Contains("InMemory", StringComparison.Ordinal)
+                || full.Contains("InMemoryRepo", StringComparison.Ordinal))
+                return RepositoryKind.InMemory;
+
+            return RepositoryKind.Other;
+        }
+
+        private static string DetectPrimaryEntity(
+            ClassDeclarationSyntax classDecl,
+            SemanticModel model,
+            INamedTypeSymbol baseType)
         {
             var className = classDecl.Identifier.Text;
 
-            // 1. Class Name Pattern (Strongest): <EntityName>Manager
-            if (className.EndsWith("Manager", StringComparison.Ordinal))
+            // 1. Base class generic argument (strongest)
+            if (baseType != null && baseType.IsGenericType && baseType.TypeArguments.Length > 0)
             {
-                var entityName = className.Substring(0, className.Length - "Manager".Length);
-                if (!string.IsNullOrWhiteSpace(entityName))
-                    return entityName;
+                // e.g., DocumentDBRepoBase<AgentContext> -> AgentContext
+                var entityArg = baseType.TypeArguments[0] as INamedTypeSymbol;
+                if (entityArg != null)
+                    return entityArg.Name;
             }
 
-            // 2. Add/Create first parameter heuristic
+            // 2. Class name pattern: <EntityName>Repository or <EntityName>Repo
+            if (className.EndsWith("Repository", StringComparison.Ordinal))
+                return className.Substring(0, className.Length - "Repository".Length);
+
+            if (className.EndsWith("Repo", StringComparison.Ordinal))
+                return className.Substring(0, className.Length - "Repo".Length);
+
+            // 3. Add/Insert/Upsert/Save first parameter heuristic
             var candidateMethods = classDecl.Members
                 .OfType<MethodDeclarationSyntax>()
                 .Where(m => m.Identifier.Text.StartsWith("Add", StringComparison.Ordinal)
-                         || m.Identifier.Text.StartsWith("Create", StringComparison.Ordinal));
+                         || m.Identifier.Text.StartsWith("Insert", StringComparison.Ordinal)
+                         || m.Identifier.Text.StartsWith("Upsert", StringComparison.Ordinal)
+                         || m.Identifier.Text.StartsWith("Save", StringComparison.Ordinal));
 
             foreach (var method in candidateMethods)
             {
@@ -231,7 +260,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                     return type.Name;
             }
 
-            // 3. Method signature dominance (parameters + return types)
+            // 4. Method signature dominance (parameter and return types)
             var typeCounts = new Dictionary<string, int>(StringComparer.Ordinal);
 
             foreach (var method in classDecl.Members.OfType<MethodDeclarationSyntax>())
@@ -265,46 +294,46 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             return method.Body != null && method.Body.Statements.Count > 1;
         }
 
-        private static ManagerMethodKind ClassifyMethodKind(string methodName)
+        private static RepositoryMethodKind ClassifyMethodKind(string methodName)
         {
-            if (string.IsNullOrWhiteSpace(methodName)) return ManagerMethodKind.Unknown;
+            if (string.IsNullOrWhiteSpace(methodName)) return RepositoryMethodKind.Unknown;
+
+            // Query-like methods first
+            if (methodName.StartsWith("Query", StringComparison.OrdinalIgnoreCase)
+                || methodName.StartsWith("List", StringComparison.OrdinalIgnoreCase))
+            {
+                return RepositoryMethodKind.Query;
+            }
+
+            // "Get" methods that clearly look like list/query operations
+            if (methodName.StartsWith("Get", StringComparison.OrdinalIgnoreCase))
+            {
+                if (methodName.IndexOf("Summaries", StringComparison.OrdinalIgnoreCase) >= 0
+                    || methodName.IndexOf("List", StringComparison.OrdinalIgnoreCase) >= 0
+                    || methodName.IndexOf("ForOrg", StringComparison.OrdinalIgnoreCase) >= 0
+                    || methodName.IndexOf("ForOrganisation", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return RepositoryMethodKind.Query;
+                }
+
+                // Fallback: treat remaining Get* methods as GetById-style
+                return RepositoryMethodKind.GetById;
+            }
 
             if (methodName.StartsWith("Add", StringComparison.OrdinalIgnoreCase)
-                || methodName.StartsWith("Create", StringComparison.OrdinalIgnoreCase))
-                return ManagerMethodKind.Create;
+                || methodName.StartsWith("Insert", StringComparison.OrdinalIgnoreCase)
+                || methodName.StartsWith("Save", StringComparison.OrdinalIgnoreCase))
+                return RepositoryMethodKind.Insert;
 
             if (methodName.StartsWith("Update", StringComparison.OrdinalIgnoreCase)
                 || methodName.StartsWith("Upsert", StringComparison.OrdinalIgnoreCase))
-                return ManagerMethodKind.Update;
+                return RepositoryMethodKind.Update;
 
             if (methodName.StartsWith("Delete", StringComparison.OrdinalIgnoreCase)
                 || methodName.StartsWith("Remove", StringComparison.OrdinalIgnoreCase))
-                return ManagerMethodKind.Delete;
+                return RepositoryMethodKind.Delete;
 
-            if (methodName.StartsWith("Validate", StringComparison.OrdinalIgnoreCase)
-                || methodName.IndexOf("Validation", StringComparison.OrdinalIgnoreCase) >= 0)
-                return ManagerMethodKind.Validation;
-
-            if (methodName.StartsWith("Get", StringComparison.OrdinalIgnoreCase)
-                || methodName.StartsWith("List", StringComparison.OrdinalIgnoreCase)
-                || methodName.StartsWith("Query", StringComparison.OrdinalIgnoreCase))
-                return ManagerMethodKind.Query;
-
-            return ManagerMethodKind.Other;
-        }
-
-        private static string StripGenericSuffix(string typeName)
-        {
-            if (string.IsNullOrWhiteSpace(typeName)) return typeName;
-            var idx = typeName.IndexOf('<');
-            return idx >= 0 ? typeName.Substring(0, idx) : typeName;
-        }
-
-        private static bool LooksLikeInterfaceName(string name)
-        {
-            if (string.IsNullOrWhiteSpace(name)) return false;
-            var simple = name.Split('.').Last();
-            return simple.Length > 1 && simple[0] == 'I' && char.IsUpper(simple[1]);
+            return RepositoryMethodKind.Other;
         }
 
         private static void Increment(Dictionary<string, int> dict, string key)

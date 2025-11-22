@@ -47,6 +47,8 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         /// </summary>
         public string Summary { get; set; }
 
+        public string BaseTypeName { get; set; }
+
         /// <summary>
         /// Primary entity name that this Manager orchestrates, e.g. "Device".
         /// May be null if heuristics cannot determine a clear entity.
@@ -122,7 +124,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         /// view; ManagerDescription.DependencyInterfaces is the flattened
         /// union across all constructors.
         /// </summary>
-        public IReadOnlyList<string> DependencyInterfaces { get; set; }
+        public IReadOnlyList<ManagerMethodParameterDescription> Parameters { get; set; }
     }
 
     /// <summary>
