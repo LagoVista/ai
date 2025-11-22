@@ -3,38 +3,111 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+using LagoVista.AI.Rag.Chunkers.Services;
+
 namespace LagoVista.AI.Rag.Chunkers.Models
 {
     /// <summary>
     /// SummarySection implementation for ModelStructureDescription (IDX-0037).
     ///
-    /// NOTE: primary declaration should be:
-    ///   public sealed partial class ModelStructureDescription
+    /// Converts structured model metadata (properties, relationships, affordances)
+    /// into human-readable sections suitable for embedding, while propagating
+    /// domain/model taglines per the structured summary DDRs.
     /// </summary>
     public sealed partial class ModelStructureDescription : ISummarySectionBuilder
     {
-        public IEnumerable<SummarySection> BuildSections(DomainModelHeaderInformation headerInfo, int maxTokens = 6500)
+        /// <summary>
+        /// Builds human-readable summary sections for this model structure,
+        /// enriched with domain/model context.
+        ///
+        /// For V1 we emit three sections:
+        /// - model-structure-overview
+        /// - model-structure-properties
+        /// - model-structure-relationships
+        ///
+        /// Sections are kept as single blocks; maxTokens is accepted for
+        /// contract consistency but not used for intra-section splitting yet.
+        /// </summary>
+        public IEnumerable<SummarySection> BuildSections(
+            DomainModelHeaderInformation headerInfo,
+            int maxTokens = 6500)
         {
-            var symbol = string.IsNullOrWhiteSpace(ModelName) ? "(unknown-model)" : ModelName;
+            if (maxTokens <= 0)
+            {
+                maxTokens = 6500;
+            }
+
             var sections = new List<SummarySection>();
 
+            // Symbol: prefer logical model name; fall back to CLR model name.
+            var symbol = !string.IsNullOrWhiteSpace(headerInfo?.ModelName)
+                ? headerInfo.ModelName
+                : !string.IsNullOrWhiteSpace(ModelName)
+                    ? ModelName
+                    : "(unknown-model)";
+
+            // =====================================================================
+            // model-structure-overview
+            // =====================================================================
             var overview = new StringBuilder();
-            overview.AppendLine($"Model: {symbol}");
+
+            var domainLine = BuildDomainLine(headerInfo);
+            var modelLine = BuildModelLine(headerInfo);
+
+            if (!string.IsNullOrWhiteSpace(domainLine))
+            {
+                overview.AppendLine(domainLine);
+            }
+
+            if (!string.IsNullOrWhiteSpace(modelLine))
+            {
+                overview.AppendLine(modelLine);
+            }
+
+            // Explicit DomainKey line from header info when available.
+            if (!string.IsNullOrWhiteSpace(headerInfo?.DomainKey))
+            {
+                overview.AppendLine($"Domain Key: {headerInfo.DomainKey}");
+            }
+
+            if (!string.IsNullOrWhiteSpace(domainLine) ||
+                !string.IsNullOrWhiteSpace(modelLine) ||
+                !string.IsNullOrWhiteSpace(headerInfo?.DomainKey))
+            {
+                overview.AppendLine();
+            }
+
+            // High-level identity / semantics
+            if (!string.IsNullOrWhiteSpace(ModelName))
+            {
+                overview.AppendLine($"Model: {ModelName}");
+            }
 
             if (!string.IsNullOrWhiteSpace(Namespace))
+            {
                 overview.AppendLine($"Namespace: {Namespace}");
+            }
 
             if (!string.IsNullOrWhiteSpace(QualifiedName))
+            {
                 overview.AppendLine($"Qualified Name: {QualifiedName}");
+            }
 
+            // Domain classification from the model itself (may differ from DomainKey).
             if (!string.IsNullOrWhiteSpace(Domain))
-                overview.AppendLine($"Domain: {Domain}");
+            {
+                overview.AppendLine($"Domain Classification: {Domain}");
+            }
 
             if (!string.IsNullOrWhiteSpace(Title))
+            {
                 overview.AppendLine($"Title: {Title}");
+            }
 
             if (!string.IsNullOrWhiteSpace(Description))
-                overview.AppendLine($"Description: {Description}");
+            {
+                overview.AppendLine($"Description: {Description.Trim()}");
+            }
 
             if (!string.IsNullOrWhiteSpace(Help))
             {
@@ -42,128 +115,384 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                 overview.AppendLine(Help.Trim());
             }
 
-            overview.AppendLine($"Cloneable: {Cloneable}, Import: {CanImport}, Export: {CanExport}");
+            // Capabilities
+            overview.AppendLine();
+            overview.AppendLine("Capabilities:");
+            overview.AppendLine($"  Cloneable: {Cloneable}");
+            overview.AppendLine($"  CanImport: {CanImport}");
+            overview.AppendLine($"  CanExport: {CanExport}");
 
-            var urls = new[]
-            {
-                ListUIUrl,
-                EditUIUrl,
-                CreateUIUrl,
-                HelpUrl,
-                InsertUrl,
-                SaveUrl,
-                UpdateUrl,
-                FactoryUrl,
-                GetUrl,
-                GetListUrl,
-                DeleteUrl
-            }
-            .Where(u => !string.IsNullOrWhiteSpace(u))
-            .Distinct()
-            .ToList();
+            // UI / API affordances including URLs (List/Detail/factory and API endpoints).
+            var affordanceLines = new List<string>();
 
-            if (urls.Count > 0)
+            if (!string.IsNullOrWhiteSpace(ListUIUrl)) affordanceLines.Add($"List UI: {ListUIUrl}");
+            if (!string.IsNullOrWhiteSpace(EditUIUrl)) affordanceLines.Add($"Edit UI: {EditUIUrl}");
+            if (!string.IsNullOrWhiteSpace(CreateUIUrl)) affordanceLines.Add($"Create UI: {CreateUIUrl}");
+            if (!string.IsNullOrWhiteSpace(HelpUrl)) affordanceLines.Add($"Help: {HelpUrl}");
+
+            if (!string.IsNullOrWhiteSpace(InsertUrl)) affordanceLines.Add($"Insert: {InsertUrl}");
+            if (!string.IsNullOrWhiteSpace(SaveUrl)) affordanceLines.Add($"Save: {SaveUrl}");
+            if (!string.IsNullOrWhiteSpace(UpdateUrl)) affordanceLines.Add($"Update: {UpdateUrl}");
+            if (!string.IsNullOrWhiteSpace(FactoryUrl)) affordanceLines.Add($"Factory: {FactoryUrl}");
+            if (!string.IsNullOrWhiteSpace(GetUrl)) affordanceLines.Add($"Get: {GetUrl}");
+            if (!string.IsNullOrWhiteSpace(GetListUrl)) affordanceLines.Add($"Get List: {GetListUrl}");
+            if (!string.IsNullOrWhiteSpace(DeleteUrl)) affordanceLines.Add($"Delete: {DeleteUrl}");
+
+            if (affordanceLines.Count > 0)
             {
                 overview.AppendLine();
-                overview.AppendLine("URLs:");
-                foreach (var url in urls)
-                    overview.AppendLine($" - {url}");
+                overview.AppendLine("UI / API Affordances:");
+                foreach (var line in affordanceLines)
+                {
+                    overview.AppendLine("- " + line);
+                }
             }
 
             sections.Add(new SummarySection
             {
                 SectionKey = "model-structure-overview",
+                SectionType = "Overview",
+                Flavor = "ModelStructureDescription",
                 Symbol = symbol,
                 SymbolType = "Model",
+                DomainKey = headerInfo?.DomainKey,
+                ModelClassName = headerInfo?.ModelClassName,
+                ModelName = headerInfo?.ModelName,
                 SectionNormalizedText = overview.ToString().Trim()
             });
 
-            var props = new StringBuilder();
-            props.AppendLine($"Properties for model {symbol}:");
+            // =====================================================================
+            // model-structure-properties
+            // =====================================================================
+            var propsSection = new StringBuilder();
 
-            if (Properties == null || Properties.Count == 0)
+            domainLine = BuildDomainLine(headerInfo);
+            modelLine = BuildModelLine(headerInfo);
+
+            if (!string.IsNullOrWhiteSpace(domainLine))
             {
-                props.AppendLine("No properties defined.");
+                propsSection.AppendLine(domainLine);
+            }
+
+            if (!string.IsNullOrWhiteSpace(modelLine))
+            {
+                propsSection.AppendLine(modelLine);
+            }
+
+            if (!string.IsNullOrWhiteSpace(headerInfo?.DomainKey))
+            {
+                propsSection.AppendLine($"Domain Key: {headerInfo.DomainKey}");
+            }
+
+            if (!string.IsNullOrWhiteSpace(domainLine) ||
+                !string.IsNullOrWhiteSpace(modelLine) ||
+                !string.IsNullOrWhiteSpace(headerInfo?.DomainKey))
+            {
+                propsSection.AppendLine();
+            }
+
+            propsSection.AppendLine($"Properties for model {ModelName ?? symbol}:");
+
+            var props = Properties ?? new List<ModelPropertyDescription>();
+
+            if (props.Count == 0)
+            {
+                propsSection.AppendLine("  (no properties detected)");
             }
             else
             {
-                foreach (var p in Properties.OrderBy(p => p.Name))
+                foreach (var prop in props)
                 {
-                    props.AppendLine($"- {p.Name} : {p.ClrType}");
-                    if (p.IsCollection) props.AppendLine("  Collection: true");
-                    if (p.IsValueType) props.AppendLine("  ValueType: true");
-                    if (p.IsEnum) props.AppendLine("  Enum: true");
-                    if (p.IsKey) props.AppendLine("  Key: true");
-                    if (!string.IsNullOrWhiteSpace(p.Group)) props.AppendLine($"  Group: {p.Group}");
-                    if (!string.IsNullOrWhiteSpace(p.EntityHeaderRefKey)) props.AppendLine($"  EntityHeaderRef: {p.EntityHeaderRefKey}");
-                    if (!string.IsNullOrWhiteSpace(p.ChildObjectKey)) props.AppendLine($"  ChildObject: {p.ChildObjectKey}");
+                    if (prop == null)
+                    {
+                        continue;
+                    }
+
+                    // Line 1: Name : Type
+                    propsSection.AppendLine($"- {prop.Name} : {SummarizeClrType(prop)}");
+
+                    // Line 2: structural flags
+                    var flags = new List<string>();
+
+                    if (prop.IsKey) flags.Add("Key: true");
+                    if (prop.IsCollection) flags.Add("Collection: true");
+                    if (prop.IsValueType) flags.Add("ValueType: true");
+                    if (prop.IsEnum) flags.Add("Enum: true");
+                    if (!string.IsNullOrWhiteSpace(prop.Group)) flags.Add("Group: " + prop.Group);
+
+                    if (!string.IsNullOrWhiteSpace(prop.EntityHeaderRefKey))
+                    {
+                        flags.Add("EntityHeaderRefKey: " + prop.EntityHeaderRefKey);
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(prop.ChildObjectKey))
+                    {
+                        flags.Add("ChildObjectKey: " + prop.ChildObjectKey);
+                    }
+
+                    if (flags.Count > 0)
+                    {
+                        propsSection.AppendLine("  " + string.Join(", ", flags));
+                    }
                 }
             }
 
             sections.Add(new SummarySection
             {
                 SectionKey = "model-structure-properties",
+                SectionType = "Properties",
+                Flavor = "ModelStructureDescription",
                 Symbol = symbol,
                 SymbolType = "Model",
-                SectionNormalizedText = props.ToString().Trim()
+                DomainKey = headerInfo?.DomainKey,
+                ModelClassName = headerInfo?.ModelClassName,
+                ModelName = headerInfo?.ModelName,
+                SectionNormalizedText = propsSection.ToString().Trim()
             });
 
-            var relationships = new StringBuilder();
-            relationships.AppendLine($"Relationships for model {symbol}:");
+            // =====================================================================
+            // model-structure-relationships
+            // =====================================================================
+            var relSection = new StringBuilder();
 
-            var hasContent = false;
+            domainLine = BuildDomainLine(headerInfo);
+            modelLine = BuildModelLine(headerInfo);
 
-            if (EntityHeaderRefs != null && EntityHeaderRefs.Count > 0)
+            if (!string.IsNullOrWhiteSpace(domainLine))
             {
-                hasContent = true;
-                relationships.AppendLine("EntityHeader references:");
-                foreach (var eh in EntityHeaderRefs)
+                relSection.AppendLine(domainLine);
+            }
+
+            if (!string.IsNullOrWhiteSpace(modelLine))
+            {
+                relSection.AppendLine(modelLine);
+            }
+
+            if (!string.IsNullOrWhiteSpace(headerInfo?.DomainKey))
+            {
+                relSection.AppendLine($"Domain Key: {headerInfo.DomainKey}");
+            }
+
+            if (!string.IsNullOrWhiteSpace(domainLine) ||
+                !string.IsNullOrWhiteSpace(modelLine) ||
+                !string.IsNullOrWhiteSpace(headerInfo?.DomainKey))
+            {
+                relSection.AppendLine();
+            }
+
+            relSection.AppendLine($"Relationships for model {ModelName ?? symbol}:");
+
+            // EntityHeader references
+            relSection.AppendLine();
+            relSection.AppendLine("EntityHeader references:");
+
+            var headerRefs = EntityHeaderRefs ?? new List<ModelEntityHeaderRefDescription>();
+            if (headerRefs.Count == 0)
+            {
+                relSection.AppendLine("  (none)");
+            }
+            else
+            {
+                foreach (var hdr in headerRefs)
                 {
-                    relationships.AppendLine($"- {eh.Key}: {eh.PropertyName} -> {eh.TargetType} (Domain={eh.Domain}, Collection={eh.IsCollection})");
+                    if (hdr == null)
+                    {
+                        continue;
+                    }
+
+                    relSection.Append("- ");
+                    relSection.Append(hdr.PropertyName);
+                    relSection.Append(" -> ");
+                    relSection.Append(hdr.TargetType);
+                    relSection.Append(" (Domain=");
+                    relSection.Append(hdr.Domain ?? string.Empty);
+                    relSection.Append(", Collection=");
+                    relSection.Append(hdr.IsCollection);
+                    relSection.AppendLine(")");
                 }
             }
 
-            if (ChildObjects != null && ChildObjects.Count > 0)
+            // Child objects
+            relSection.AppendLine();
+            relSection.AppendLine("Child objects:");
+
+            var children = ChildObjects ?? new List<ModelChildObjectDescription>();
+            if (children.Count == 0)
             {
-                hasContent = true;
-                relationships.AppendLine();
-                relationships.AppendLine("Child objects:");
-                foreach (var child in ChildObjects)
+                relSection.AppendLine("  (none)");
+            }
+            else
+            {
+                foreach (var child in children)
                 {
-                    relationships.AppendLine($"- {child.Key}: {child.PropertyName} : {child.ClrType} (Collection={child.IsCollection})");
-                    if (!string.IsNullOrWhiteSpace(child.Title)) relationships.AppendLine($"  Title: {child.Title}");
-                    if (!string.IsNullOrWhiteSpace(child.Description)) relationships.AppendLine($"  Description: {child.Description}");
+                    if (child == null)
+                    {
+                        continue;
+                    }
+
+                    relSection.Append("- ");
+                    relSection.Append(child.PropertyName);
+                    relSection.Append(" : ");
+                    relSection.Append(child.ClrType);
+                    relSection.Append(" (Collection=");
+                    relSection.Append(child.IsCollection);
+                    relSection.AppendLine(")");
+
+                    if (!string.IsNullOrWhiteSpace(child.Title))
+                    {
+                        relSection.AppendLine("  Title: " + child.Title);
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(child.Description))
+                    {
+                        relSection.AppendLine("  " + child.Description.Trim());
+                    }
                 }
             }
 
-            if (Relationships != null && Relationships.Count > 0)
-            {
-                hasContent = true;
-                relationships.AppendLine();
-                relationships.AppendLine("Explicit relationships:");
-                foreach (var rel in Relationships)
-                {
-                    relationships.AppendLine($"- {rel.Name}: {rel.FromModel} -> {rel.ToModel} ({rel.Cardinality})");
-                    if (!string.IsNullOrWhiteSpace(rel.SourceProperty)) relationships.AppendLine($"  SourceProperty: {rel.SourceProperty}");
-                    if (!string.IsNullOrWhiteSpace(rel.TargetProperty)) relationships.AppendLine($"  TargetProperty: {rel.TargetProperty}");
-                    if (!string.IsNullOrWhiteSpace(rel.Description)) relationships.AppendLine($"  Description: {rel.Description}");
-                }
-            }
+            // Explicit relationships
+            relSection.AppendLine();
+            relSection.AppendLine("Explicit relationships:");
 
-            if (!hasContent)
+            var relationships = Relationships ?? new List<ModelRelationshipDescription>();
+            if (relationships.Count == 0)
             {
-                relationships.AppendLine("No relationships modeled.");
+                relSection.AppendLine("  (none)");
+            }
+            else
+            {
+                foreach (var rel in relationships)
+                {
+                    if (rel == null)
+                    {
+                        continue;
+                    }
+
+                    var name = !string.IsNullOrWhiteSpace(rel.Name) ? rel.Name : "(unnamed)";
+
+                    relSection.Append("- ");
+                    relSection.Append(name);
+                    relSection.Append(": ");
+                    relSection.Append(rel.FromModel);
+                    relSection.Append(" -> ");
+                    relSection.Append(rel.ToModel);
+
+                    if (!string.IsNullOrWhiteSpace(rel.Cardinality))
+                    {
+                        relSection.Append(" (");
+                        relSection.Append(rel.Cardinality);
+                        relSection.Append(")");
+                    }
+
+                    relSection.AppendLine();
+
+                    if (!string.IsNullOrWhiteSpace(rel.SourceProperty))
+                    {
+                        relSection.AppendLine("  SourceProperty: " + rel.SourceProperty);
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(rel.TargetProperty))
+                    {
+                        relSection.AppendLine("  TargetProperty: " + rel.TargetProperty);
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(rel.Description))
+                    {
+                        relSection.AppendLine("  " + rel.Description.Trim());
+                    }
+                }
             }
 
             sections.Add(new SummarySection
             {
                 SectionKey = "model-structure-relationships",
+                SectionType = "Relationships",
+                Flavor = "ModelStructureDescription",
                 Symbol = symbol,
                 SymbolType = "Model",
-                SectionNormalizedText = relationships.ToString().Trim()
+                DomainKey = headerInfo?.DomainKey,
+                ModelClassName = headerInfo?.ModelClassName,
+                ModelName = headerInfo?.ModelName,
+                SectionNormalizedText = relSection.ToString().Trim()
             });
 
             return sections;
+        }
+
+        // ---------------------------------------------------------------------
+        // Domain/model header helpers (aligned with Manager/Endpoint flavors)
+        // ---------------------------------------------------------------------
+
+        private static string BuildDomainLine(DomainModelHeaderInformation header)
+        {
+            if (header == null)
+            {
+                return null;
+            }
+
+            var hasName = !string.IsNullOrWhiteSpace(header.DomainName);
+            var hasTagline = !string.IsNullOrWhiteSpace(header.DomainTagLine);
+
+            if (!hasName && !hasTagline)
+            {
+                return null;
+            }
+
+            if (hasName && hasTagline)
+            {
+                return $"Domain: {header.DomainName} — {header.DomainTagLine}";
+            }
+
+            if (hasName)
+            {
+                return $"Domain: {header.DomainName}";
+            }
+
+            return header.DomainTagLine;
+        }
+
+        private static string BuildModelLine(DomainModelHeaderInformation header)
+        {
+            if (header == null)
+            {
+                return null;
+            }
+
+            var modelName = !string.IsNullOrWhiteSpace(header.ModelName)
+                ? header.ModelName
+                : header.ModelClassName;
+
+            var hasName = !string.IsNullOrWhiteSpace(modelName);
+            var hasTagline = !string.IsNullOrWhiteSpace(header.ModelTagLine);
+
+            if (!hasName && !hasTagline)
+            {
+                return null;
+            }
+
+            if (hasName && hasTagline)
+            {
+                return $"Model: {modelName} — {header.ModelTagLine}";
+            }
+
+            if (hasName)
+            {
+                return $"Model: {modelName}";
+            }
+
+            return header.ModelTagLine;
+        }
+
+        private static string SummarizeClrType(ModelPropertyDescription prop)
+        {
+            if (prop == null || string.IsNullOrWhiteSpace(prop.ClrType))
+            {
+                return "(unknown-type)";
+            }
+
+            // For now we just return the CLR type string; later we can
+            // normalize common patterns (List<T>, EntityHeader<T>, etc.).
+            return prop.ClrType;
         }
     }
 }
