@@ -416,6 +416,8 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                 SectionNormalizedText = relSection.ToString().Trim()
             });
 
+            _summarySections = sections;
+
             return sections;
         }
 

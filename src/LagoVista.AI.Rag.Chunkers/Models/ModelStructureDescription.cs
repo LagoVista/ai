@@ -2,8 +2,14 @@
 // ContentHash: TBD
 // IndexVersion: 1
 // --- END CODE INDEX META ---
+using LagoVista.Core.AI.Interfaces;
+using LagoVista.Core.Interfaces;
+using LagoVista.Core.Utils.Types.Nuviot.RagIndexing;
+using LagoVista.Core.Validation;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace LagoVista.AI.Rag.Chunkers.Models
 {
@@ -12,13 +18,8 @@ namespace LagoVista.AI.Rag.Chunkers.Models
     /// structural graph, properties, entity header references, child objects,
     /// relationships, and operational affordances.
     /// </summary>
-    public sealed partial class ModelStructureDescription
+    public sealed partial class ModelStructureDescription : SummaryFacts
     {
-        // ---------- Identity / Domain ----------
-        public string ModelName { get; set; }
-        public string Namespace { get; set; }
-        public string QualifiedName { get; set; }   // Namespace + ModelName
-        public string Domain { get; set; }          // e.g. "Devices", "Alerts"
 
         // ---------- UX Strings ----------
         public string Title { get; set; }
@@ -56,6 +57,8 @@ namespace LagoVista.AI.Rag.Chunkers.Models
 
         public List<ModelRelationshipDescription> Relationships { get; set; } =
             new List<ModelRelationshipDescription>();
+
+
     }
 
     /// <summary>
