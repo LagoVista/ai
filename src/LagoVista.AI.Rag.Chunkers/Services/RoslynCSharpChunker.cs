@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using LagoVista.AI.Rag.Chunkers.Models;
 using LagoVista.Core.Utils.Types;
 using LagoVista.Core.Validation;
 using Microsoft.CodeAnalysis;
@@ -18,90 +19,143 @@ namespace LagoVista.AI.Rag.Chunkers.Services
     /// extreme settings (e.g., tiny token budgets or large overlaps).
     ///
     /// Refactored as a static helper so callers can specify token budget and
-    /// overlap per call via optional parameters.
+    /// overlap in a consistent way across repos.
     /// </summary>
     public static class RoslynCSharpChunker
     {
         /// <summary>
-        /// Chunk a C# file into symbol-aligned, token-budgeted chunks.
+        /// Chunk a C# file into a plan of RagChunks, including:
+        /// - A file-level summary chunk (header comments + using directives)
+        /// - Symbol-level chunks for types/members (methods, properties, fields, etc.)
+        ///
+        /// Chunks are roughly bounded by maxTokensPerChunk using a simple token estimator.
+        /// Overlap is applied between symbol chunks to give the embedder continuity.
         /// </summary>
-        /// <param name="text">Raw C# source text.</param>
-        /// <param name="maxTokensPerChunk">
-        /// Soft token budget per chunk. Will be clamped to at least 128.
-        /// </param>
-        /// <param name="overlapLines">
-        /// Number of overlapping lines between consecutive chunks. Will be clamped to >= 0.
-        /// </param>
-        public static InvokeResult< RagChunkPlan> Chunk(
+        public static InvokeResult<RagChunkPlan> Chunk(
             string text,
             string fileName,
-            int maxTokensPerChunk = 6500,
+            int maxTokensPerChunk = 4096,
             int overlapLines = 6)
         {
-            var effectiveMaxTokens = Math.Max(128, maxTokensPerChunk);
-            var effectiveOverlapLines = Math.Max(0, overlapLines);
-
-            var tree = CSharpSyntaxTree.ParseText(text, new CSharpParseOptions(LanguageVersion.Preview));
-            var root = tree.GetRoot();
-            var lines = text.Split('\n');
-            var chunks = new List<RagChunk>();
-
-            foreach (var summary in BuildFileSummaryChunk(fileName, tree, lines, effectiveMaxTokens))
+            if (string.IsNullOrWhiteSpace(text))
             {
-                chunks.Add(summary);
+                return InvokeResult<RagChunkPlan>.FromError("Text is required.");
             }
 
-            // Walk declarations and emit symbol-level chunks
-            foreach (var node in root.DescendantNodes())
+            if (string.IsNullOrWhiteSpace(fileName))
             {
-                switch (node)
+                fileName = "unknown.cs";
+            }
+
+            if (maxTokensPerChunk <= 0)
+            {
+                maxTokensPerChunk = 4096;
+            }
+
+            if (overlapLines < 0)
+            {
+                overlapLines = 0;
+            }
+
+            var result = new InvokeResult<RagChunkPlan>();
+
+            try
+            {
+                var tree = CSharpSyntaxTree.ParseText(text);
+                var root = tree.GetRoot();
+                var lines = text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
+
+                var chunks = new List<RagChunk>();
+
+                // 1) File-level summary chunk for header comments + using directives
+                foreach (var summary in BuildFileSummaryChunk(fileName, tree, lines, maxTokensPerChunk))
                 {
-                    case BaseMethodDeclarationSyntax m: // method, ctor, destructor, operator
-                        foreach (var ch in BuildNodeChunks(tree, lines,  m, kind: "method", effectiveMaxTokens, effectiveOverlapLines))
-                            chunks.Add(ch);
-                        break;
-
-                    case PropertyDeclarationSyntax p:
-                        foreach (var ch in BuildNodeChunks(tree, lines, p, kind: "property", effectiveMaxTokens, effectiveOverlapLines))
-                            chunks.Add(ch);
-                        break;
-
-                    case FieldDeclarationSyntax f when f.Parent is TypeDeclarationSyntax:
-                        foreach (var ch in BuildNodeChunks(tree, lines, f, kind: "field", effectiveMaxTokens, effectiveOverlapLines))
-                            chunks.Add(ch);
-                        break;
-
-                    case EventDeclarationSyntax e:
-                        foreach (var ch in BuildNodeChunks(tree, lines, e, kind: "event", effectiveMaxTokens, effectiveOverlapLines))
-                            chunks.Add(ch);
-                        break;
-
-                    case TypeDeclarationSyntax t: // class/record/struct/interface
-                        foreach (var ch in BuildNodeChunks(tree, lines, t, kind: t.Keyword.ValueText, effectiveMaxTokens, effectiveOverlapLines))
-                            chunks.Add(ch);
-                        break;
+                    chunks.Add(summary);
                 }
-            }
 
-            var idx = 1;
-            foreach (var chunk in chunks)
-            {
-                chunk.PartIndex = idx++;
-                chunk.PartTotal = chunks.Count;
-            }
-
-            return InvokeResult<RagChunkPlan>.Create(new RagChunkPlan
-            {
-                Chunks = chunks,
-                Raw = new RawArtifact
+                // 2) Symbol-level chunks
+                foreach (var node in root.DescendantNodes())
                 {
-                    IsText = true,
-                    MimeType = "text/x-csharp",
-                    Text = text
+                    switch (node)
+                    {
+                        case MethodDeclarationSyntax method:
+                        case ConstructorDeclarationSyntax ctor:
+                        case LocalFunctionStatementSyntax localFunc:
+                        case OperatorDeclarationSyntax op:
+                        case ConversionOperatorDeclarationSyntax conv:
+                            foreach (var ch in BuildNodeChunks(tree, lines, node, "method", maxTokensPerChunk, overlapLines))
+                            {
+                                chunks.Add(ch);
+                            }
+                            break;
+
+                        case PropertyDeclarationSyntax prop:
+                            foreach (var ch in BuildNodeChunks(tree, lines, prop, "property", maxTokensPerChunk, overlapLines))
+                            {
+                                chunks.Add(ch);
+                            }
+                            break;
+
+                        case FieldDeclarationSyntax field:
+                            foreach (var ch in BuildNodeChunks(tree, lines, field, "field", maxTokensPerChunk, overlapLines))
+                            {
+                                chunks.Add(ch);
+                            }
+                            break;
+
+                        case EventDeclarationSyntax evt:
+                        case EventFieldDeclarationSyntax evtField:
+                            foreach (var ch in BuildNodeChunks(tree, lines, node, "event", maxTokensPerChunk, overlapLines))
+                            {
+                                chunks.Add(ch);
+                            }
+                            break;
+
+                        case ClassDeclarationSyntax cls:
+                        case StructDeclarationSyntax str:
+                        case RecordDeclarationSyntax rec:
+                        case InterfaceDeclarationSyntax iface:
+                            foreach (var ch in BuildNodeChunks(tree, lines, node, "type", maxTokensPerChunk, overlapLines))
+                            {
+                                chunks.Add(ch);
+                            }
+                            break;
+                    }
                 }
-            }); 
+
+                // Assign PartIndex/PartTotal deterministically
+                var idx = 1;
+                foreach (var chunk in chunks)
+                {
+                    chunk.PartIndex = idx++;
+                    chunk.PartTotal = chunks.Count;
+                }
+
+                result.Result = new RagChunkPlan
+                {
+                    Chunks = chunks,
+                    Raw = new RawArtifact
+                    {
+                        IsText = true,
+                        MimeType = "text/x-csharp",
+                        Text = text
+                    }
+                };
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.ToString());
+                return InvokeResult<RagChunkPlan>.FromException("Failed to chunk C# source.", ex);
+            }
         }
 
+        /// <summary>
+        /// Builds a file-level summary chunk that includes:
+        /// - Leading comments (license header, file description, etc.)
+        /// - Using directives
+        /// </summary>
         private static IEnumerable<RagChunk> BuildFileSummaryChunk(
             string fileName,
             SyntaxTree tree,
@@ -111,55 +165,81 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             var root = tree.GetRoot();
             var sb = new StringBuilder();
 
-            var headerTrivia = root.GetLeadingTrivia()
-                .FirstOrDefault(t => t.IsKind(SyntaxKind.SingleLineCommentTrivia) || t.IsKind(SyntaxKind.MultiLineCommentTrivia));
-            if (headerTrivia != default)
+            // Collect leading comments
+            var leadingTrivia = root.GetLeadingTrivia();
+            foreach (var trivia in leadingTrivia)
             {
-                sb.AppendLine("// file header comment:");
-                sb.AppendLine(headerTrivia.ToString());
-                sb.AppendLine();
+                if (trivia.IsKind(SyntaxKind.SingleLineCommentTrivia) ||
+                    trivia.IsKind(SyntaxKind.MultiLineCommentTrivia) ||
+                    trivia.IsKind(SyntaxKind.SingleLineDocumentationCommentTrivia) ||
+                    trivia.IsKind(SyntaxKind.MultiLineDocumentationCommentTrivia))
+                {
+                    sb.Append(trivia.ToFullString());
+                }
+                else if (trivia.IsKind(SyntaxKind.WhitespaceTrivia) ||
+                         trivia.IsKind(SyntaxKind.EndOfLineTrivia))
+                {
+                    sb.Append(trivia.ToFullString());
+                }
+                else
+                {
+                    // Stop once we hit non-comment, non-whitespace trivia
+                    break;
+                }
             }
 
-            var usings = root.DescendantNodes().OfType<UsingDirectiveSyntax>().Select(u => u.ToString()).ToList();
+            // Collect using directives
+            var usings = root.DescendantNodes().OfType<UsingDirectiveSyntax>().ToList();
             if (usings.Count > 0)
             {
-                sb.AppendLine("// usings:");
-                foreach (var u in usings.Take(20)) sb.AppendLine(u);
-            }
-
-            var text = sb.ToString().TrimEnd();
-            if (text.Length > 0x7fff)
-            {
-                Debugger.Break();
-                text = text.Substring(0, 0x7fff);
-            }
-
-            if (!string.IsNullOrWhiteSpace(text))
-            {
-                var estTokens = TokenEstimator.EstimateTokens(text); // +1 newline
-                while (estTokens > maxTokensPerChunk)
+                if (sb.Length > 0)
                 {
-                    text = text.Substring(0, Convert.ToInt32(text.Length * 0.90));
-                    estTokens = TokenEstimator.EstimateTokens(text); // +1 newline
+                    sb.AppendLine();
                 }
 
-                yield return new RagChunk
+                foreach (var u in usings)
                 {
-                    EstimatedTokens = TokenEstimator.EstimateTokens(text),
-                    TextNormalized = text,
-                    LineStart = 1,
-                    LineEnd = Math.Min(lines.Length, 200),
-                    SymbolType = "file",
-                    Symbol = fileName,
-                    SectionKey = "file"
-                };
+                    sb.Append(u.ToFullString());
+                }
             }
+
+            var headerText = sb.ToString().Trim();
+            if (string.IsNullOrWhiteSpace(headerText))
+            {
+                yield break;
+            }
+
+            // Enforce token budget by trimming if necessary (rare)
+            var estTokens = TokenEstimator.EstimateTokens(headerText);
+            while (estTokens > maxTokensPerChunk && headerText.Length > 0)
+            {
+                var newLen = (int)(headerText.Length * 0.9);
+                if (newLen <= 0) break;
+                headerText = headerText.Substring(0, newLen);
+                estTokens = TokenEstimator.EstimateTokens(headerText);
+            }
+
+            if (string.IsNullOrWhiteSpace(headerText))
+            {
+                yield break;
+            }
+
+            yield return new RagChunk
+            {
+                EstimatedTokens = TokenEstimator.EstimateTokens(headerText),
+                TextNormalized = headerText,
+                LineStart = 1,
+                LineEnd = Math.Min(lines.Length, 200),
+                SymbolType = "file",
+                Symbol = fileName,
+                SectionKey = "file"
+            };
         }
 
         private static IEnumerable<RagChunk> BuildNodeChunks(
             SyntaxTree tree,
             string[] lines,
-       //     string relPath,
+            //     string relPath,
             SyntaxNode node,
             string kind,
             int maxTokensPerChunk,
@@ -228,10 +308,48 @@ namespace LagoVista.AI.Rag.Chunkers.Services
 
                 // Emit normal chunk
                 var slice = string.Join('\n', lines[localStart..Math.Min(localEnd, lines.Length)]);
+
+                var textForChunk = slice;
+
+                // Optionally prepend a natural-language summary header for methods
+                if (kind == "method" && node is BaseMethodDeclarationSyntax methodNode)
+                {
+                    string methodName;
+                    string signature;
+
+                    if (methodNode is MethodDeclarationSyntax m)
+                    {
+                        methodName = m.Identifier.ValueText;
+                        signature = $"{m.ReturnType} {m.Identifier.ValueText}{m.ParameterList}";
+                    }
+                    else if (methodNode is ConstructorDeclarationSyntax c)
+                    {
+                        methodName = c.Identifier.ValueText;
+                        signature = $"{c.Identifier.ValueText}{c.ParameterList}";
+                    }
+                    else
+                    {
+                        methodName = GetBestSymbolName(node);
+                        signature = methodNode.ToString();
+                    }
+
+                    var ctx = new MethodSummaryContext
+                    {
+                        MethodName = methodName,
+                        Signature = signature
+                        // DomainName, ModelName, SubKind, etc. can be threaded in later
+                    };
+
+                    var headerComment = MethodSummaryBuilder.BuildHeaderComment(ctx);
+                    textForChunk = headerComment + Environment.NewLine + slice;
+                }
+
+                var estimatedTokens = TokenEstimator.EstimateTokens(textForChunk);
+
                 yield return new RagChunk
                 {
-                    EstimatedTokens = TokenEstimator.EstimateTokens(slice),
-                    TextNormalized = slice,
+                    EstimatedTokens = estimatedTokens,
+                    TextNormalized = textForChunk,
                     LineStart = localStart + 1,
                     LineEnd = Math.Min(localEnd, lines.Length),
                     Symbol = GetBestSymbolName(node),
@@ -245,7 +363,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 if (nextCursor <= cursor) nextCursor = cursor + 1;
                 cursor = nextCursor;
 
-            nextIteration: ;
+            nextIteration:;
             }
         }
 
@@ -262,36 +380,57 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             int lineNumber,
             int maxTokensPerChunk)
         {
-            // Rough char window derived from token budget (tokens ≈ bytes/4 ≈ chars for ASCII-ish)
-            // Keep it conservative and leave headroom.
-            int windowChars = Math.Max(512, maxTokensPerChunk * 3); // 3x is a safe heuristic
-            int idx = 0;
-            int seg = 1;
-
-            // Try to break at natural boundaries inside each window
-            while (idx < line.Length)
+            if (string.IsNullOrEmpty(line))
             {
-                int remaining = line.Length - idx;
-                int take = Math.Min(windowChars, remaining);
+                yield break;
+            }
 
-                // Look for a soft break near the end of the window to avoid cutting identifiers
-                int softBreak = FindSoftBreak(line, idx, take);
-                if (softBreak > 0) take = softBreak;
+            int cursor = 0;
+            int safety = 0;
+            const int safetyCap = 1_000_000;
 
-                var piece = line.AsSpan(idx, take).ToString();
+            while (cursor < line.Length)
+            {
+                if (safety++ > safetyCap) yield break;
+
+                int remaining = line.Length - cursor;
+                if (remaining <= 0) yield break;
+
+                // Start with a rough char window (tokens ~ chars/4 as a simple heuristic)
+                int window = Math.Min(remaining, maxTokensPerChunk * 4);
+
+                var segment = line.Substring(cursor, window);
+                int segmentTokens = TokenEstimator.EstimateTokens(segment);
+
+                // If still too big, shrink; if quite small, we can attempt to expand (but we keep it simple here).
+                while (segmentTokens > maxTokensPerChunk && window > 1)
+                {
+                    window = (int)(window * 0.9);
+                    segment = line.Substring(cursor, window);
+                    segmentTokens = TokenEstimator.EstimateTokens(segment);
+                }
+
+                // Try to find a soft break: whitespace or punctuation near the end of the window
+                int softBreak = FindSoftBreak(line, cursor, window);
+                if (softBreak > 0)
+                {
+                    window = softBreak;
+                    segment = line.Substring(cursor, window);
+                    segmentTokens = TokenEstimator.EstimateTokens(segment);
+                }
+
                 yield return new RagChunk
                 {
-                    EstimatedTokens = TokenEstimator.EstimateTokens(piece),
-                    TextNormalized = piece,
+                    EstimatedTokens = segmentTokens,
+                    TextNormalized = segment,
                     LineStart = lineNumber,
                     LineEnd = lineNumber,
                     Symbol = symbol,
-                    SectionKey = kind,
-                    SymbolType = kind // same symbol; UI can show "(continued)" if needed
+                    SymbolType = kind,
+                    SectionKey = kind
                 };
 
-                idx += take;
-                seg++;
+                cursor += window;
             }
         }
 
@@ -308,12 +447,12 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             {
                 var endLimitChars = new List<char> { ',', ';', ')', ']', '}' };
 
-                char c = s[i];
-                if (char.IsWhiteSpace(c) || endLimitChars.Contains(c))
+                if (char.IsWhiteSpace(s[i]) || endLimitChars.Contains(s[i]))
                 {
-                    return (i + 1) - start;
+                    return i - start + 1;
                 }
             }
+
             return 0;
         }
 
