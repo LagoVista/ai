@@ -152,6 +152,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                         case StructDeclarationSyntax:
                         case RecordDeclarationSyntax:
                         case InterfaceDeclarationSyntax:
+                        case EnumDeclarationSyntax:
                             foreach (var ch in BuildNodeChunks(
                                          tree,
                                          lines,
