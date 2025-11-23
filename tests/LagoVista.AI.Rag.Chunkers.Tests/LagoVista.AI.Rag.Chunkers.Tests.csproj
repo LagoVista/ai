@@ -13,6 +13,7 @@
     <None Remove="Content\AgentContextTestController.txt" />
     <None Remove="Content\AgentContextTestRepository.txt" />
     <None Remove="Content\IAgentContextManager.txt" />
+    <None Remove="Content\Model_AIModel.txt" />
     <None Remove="Content\sample-device.resources.txt" />
   </ItemGroup>
   <ItemGroup>
@@ -31,6 +32,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\LayoutSampleModel.cs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Model_AIModel.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\resources.resx">
