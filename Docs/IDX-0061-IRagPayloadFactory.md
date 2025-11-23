@@ -12,12 +12,14 @@
 ---
 
 ## 2. Purpose
-Defines a minimal interface that guarantees an implementing class can create a fully-formed **`RagVectorPayload`** based solely on the state it already holds. No parameters are passed into the `Create()` method; instead, the implementer is responsible for possessing the necessary normalized text, metadata, and identifiers.
+Defines a minimal interface that guarantees an implementing class can create a fully-formed **`RagVectorPayload`** based solely on its internally owned state.
 
-This ensures:
-- Consistent payload creation
-- Implementation-specific flexibility
-- Strong decoupling between parsing, normalization, and vectorization
+The factory:
+- Holds all necessary context (normalized text, IDs, metadata, file paths).
+- Performs validation rules specific to the artifact type.
+- Returns an **`InvokeResult<RagVectorPayload>`** wrapping the created payload.
+
+This pattern ensures consistent, self-contained payload generation across all RAG pipeline components.
 
 ---
 
@@ -25,90 +27,100 @@ This ensures:
 This interface applies to any component responsible for constructing a **`RagVectorPayload`**, including:
 - Normalized chunk builders
 - Description builders
-- Artifact-specific processors
+- Interface or class overview builders
+- Method-level description generators
+- Resource/RESX processors
 - Higher-level indexing orchestrators
+
+Each implementation is expected to know the rules, required fields, and validations applicable to its specific artifact type.
 
 ---
 
 ## 4. Requirements
 ### 4.1 Minimal surface area
-- Interface contains **one** method.
+- Single method.
 - No parameters.
-- The implementation must rely on data it already holds.
+- Implementations must rely on pre-existing state.
 
-### 4.2 No external context
-- Callers do not supply input at creation time.
-- Factories must fully own the data required to produce the payload.
+### 4.2 No caller-provided context
+- All state needed for payload construction must be owned and managed by the implementing class.
 
 ### 4.3 Output contract
-- Returns a non-null **`RagVectorPayload`**.
-- Payload must contain stable identifying information and normalized text.
+- Returns a non-null **`InvokeResult<RagVectorPayload>`**.
+- Payload must include stable identifying information and normalized text.
 
-### 4.4 No side effects
-- Factory creation should not write to disk or mutate external state.
+### 4.4 Internal validation behavior
+- `CreateVectorPayload()` performs validation for the specific artifact type.
+- Implementations know what fields are required vs. optional.
+- Missing required fields should cause exceptions or domain-appropriate errors.
+
+### 4.5 No side effects
+- No file writes, registry updates, or direct DB interactions.
 
 ---
 
 ## 5. Interface Specification
-### Name
-`IRagPayloadFactory`
-
-### Namespace (recommended)
-`LagoVista.AI.Rag.Contracts`
-
-### Method
+### Method Signature
 ```csharp
-RagVectorPayload Create();
+InvokeResult<RagVectorPayload> CreateVectorPayload();
 ```
 
 ### Inputs
-None — the factory must own all required context.
+None — factory owns all relevant context.
 
 ### Outputs
-A fully-formed **`RagVectorPayload`** ready for embedding or vector DB storage.
+An `InvokeResult<RagVectorPayload>` representing a fully-formed vector payload.
 
 ---
 
 ## 6. Rules & Guarantees
-1. `Create()` must never return null.
-2. Payload must be structurally complete.
-3. Implementations must guarantee deterministic identifiers.
-4. No I/O or side effects.
+1. Must not return null.
+2. Must generate a structurally complete `RagVectorPayload`.
+3. Must validate all required inputs before payload creation.
+4. Must ensure deterministic identifiers when applicable.
+5. Must not perform I/O operations.
 
 ---
 
 ## 7. Example Implementation Skeleton
 ```csharp
+using System;
 using LagoVista.AI.Rag.Contracts;
 using LagoVista.AI.Rag.Models;
+using LagoVista.Core.Models;
 
 namespace LagoVista.AI.Rag.Services
 {
-    public class DefaultRagPayloadFactory : IRagPayloadFactory
+    public class ExampleRagPayloadFactory : IRagPayloadFactory
     {
         private readonly string _id;
         private readonly string _normalizedText;
         private readonly string _filePath;
-        private readonly Dictionary<string, object> _metadata;
 
-        public DefaultRagPayloadFactory(string id, string normalizedText, string filePath,
-                                        Dictionary<string, object> metadata = null)
+        public ExampleRagPayloadFactory(string id, string normalizedText, string filePath)
         {
             _id = id;
             _normalizedText = normalizedText;
             _filePath = filePath;
-            _metadata = metadata ?? new Dictionary<string, object>();
         }
 
-        public RagVectorPayload Create()
+        public InvokeResult<RagVectorPayload> CreateVectorPayload()
         {
-            return new RagVectorPayload
+            if (string.IsNullOrWhiteSpace(_id))
+                throw new InvalidOperationException("RagVectorPayload Id is required.");
+
+            if (string.IsNullOrWhiteSpace(_normalizedText))
+                throw new InvalidOperationException("Normalized text is required.");
+
+            var payload = new RagVectorPayload
             {
                 Id = _id,
                 FilePath = _filePath,
-                NormalizedText = _normalizedText,
-                Metadata = _metadata
+                NormalizedText = _normalizedText
             };
+
+            // Construct and return an InvokeResult<RagVectorPayload>
+            throw new NotImplementedException();
         }
     }
 }
@@ -116,7 +128,7 @@ namespace LagoVista.AI.Rag.Services
 
 ---
 
-## 8. Notes for Future Extensions
-- Async variants may be added if embedding logic moves inside the payload factory.
-- Additional metadata (token count, domain, model identifiers) may be incorporated.
-- Implementers may enforce validation rules before payload construction.
+## 8. Extension Notes
+- Async variants may be needed if embedding or dynamic metadata resolution is added.
+- Additional fields (e.g., token counts, domain/model identifiers) can be integrated.
+- Implementations may provide diagnostic info or structured validation results.
