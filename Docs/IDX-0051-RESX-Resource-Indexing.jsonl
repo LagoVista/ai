@@ -1,0 +1,59 @@
+{
+  "id": "IDX-0051",
+  "title": "RESX Resource Indexing",
+  "status": "Accepted",
+  "version": "1.0",
+  "layer": "Ingestion",
+  "summary": "Defines how .resx files are detected, parsed, normalized, and indexed as 1:1 resource chunks (Reference/Resource) for RAG.",
+  "goals": [
+    "Treat each RESX <data> element as its own chunk",
+    "Classify resource chunks as RagContentType=Reference, SubKind=Resource",
+    "Capture key, value, comment, culture, and light usage aggregates",
+    "Integrate RESX processing into the normalized chunk builder workflow"
+  ],
+  "nonGoals": [
+    "Modeling full resource-to-code usage maps (handled by IDX-0052)",
+    "Translation workflows",
+    "Style and wording linting rules"
+  ],
+  "chunkModel": {
+    "name": "ResxResourceChunk",
+    "fields": [
+      "ResourceKey",
+      "ResourceValue",
+      "Comment",
+      "SourceFile",
+      "RelativePath",
+      "Culture",
+      "ResourceSubKind",
+      "UsageCount",
+      "PrimaryUsageKinds",
+      "IsDuplicate",
+      "IsUiSharedCandidate"
+    ]
+  },
+  "classification": {
+    "ragContentType": "Reference",
+    "kind": "Reference",
+    "subKind": "Resource",
+    "resourceSubKindEnum": [
+      "Unknown",
+      "UiString",
+      "ErrorMessage",
+      "StatusLabel",
+      "ValidationMessage",
+      "CommandLabel",
+      "HelpText",
+      "Other"
+    ]
+  },
+  "integration": {
+    "pipelineStep": "Step 7.x – RESX extraction",
+    "notes": "Runs as a non-Roslyn XML parser that produces 1:1 ResxResourceChunk instances for each <data> element."
+  },
+  "futureWork": [
+    "IDX-0052 – Resource Usage Map (RESX → Code)",
+    "Translation workflows",
+    "Resource wording style/lint rules"
+  ]
+}
