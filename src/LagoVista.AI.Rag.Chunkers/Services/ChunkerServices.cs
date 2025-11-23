@@ -54,7 +54,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             return TokenEstimator.EstimateTokens(s);
         }
 
-        public  InvokeResult<RagChunkPlan> ChunkCSharpWithRoslyn(string text, string fileName, int maxTokensPerChunk = 6500, int overlapLines = 6)
+        public  InvokeResult<IReadOnlyList<CSharpComponentChunk>> ChunkCSharpWithRoslyn(string text, string fileName, int maxTokensPerChunk = 6500, int overlapLines = 6)
         {
             return RoslynCSharpChunker.Chunk(text, fileName, maxTokensPerChunk, overlapLines);
         }

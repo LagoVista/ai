@@ -57,7 +57,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                 var symbolText = splitSymbol.Text;
 
                 var symbols = _chunkerServics.ChunkCSharpWithRoslyn(symbolText, fileInfo.Name);
-                foreach(var symbolChunk in symbols.Result.Chunks)
+                foreach(var symbolChunk in symbols.Result)
                 {
                     switch(subKindResult.SubKind)
                     {
@@ -67,7 +67,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
 
                             break;
                         case CodeSubKind.Manager:
-                            foreach(var method in symbols.Result.Chunks.Where(cnk=>cnk.SymbolType == "Method"))
+                            foreach(var method in symbols.Result.Where(cnk=>cnk.SymbolKind == "Method"))
                             {
                                 _chunkerServics.BuildSummaryForMethod(new MethodSummaryContext()
                                 {

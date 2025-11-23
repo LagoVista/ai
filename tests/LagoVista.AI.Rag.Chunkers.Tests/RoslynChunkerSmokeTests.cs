@@ -1,4 +1,5 @@
-﻿using LagoVista.AI.Rag.Chunkers.Services;
+﻿using LagoVista.AI.Rag.Chunkers.Models;
+using LagoVista.AI.Rag.Chunkers.Services;
 using LagoVista.Core.PlatformSupport;
 using LagoVista.Core.Utils.Types;
 using NUnit.Framework;
@@ -33,7 +34,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             Assert.That(File.Exists(RepoPath), Is.True, $"Repository content file not found at {RepoPath}");
         }
 
-        private void WriteChunks(IEnumerable<RagChunk> chunks, string label)
+        private void WriteChunks(IReadOnlyList<CSharpComponentChunk> chunks, string label)
         {
             var file = System.IO.File.CreateText(@$"x:\{label}.txt");
 
@@ -44,14 +45,15 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             foreach (var chunk in chunks)
             {
                 file.WriteLine("-- START Section Summary Fields:");
-                file.WriteLine($"   Title: {chunk.Title}");
                 file.WriteLine($"   SectionKey: {chunk.SectionKey}");
-                file.WriteLine($"   Symbol: {chunk.Symbol}  (SymbolType: {chunk.SymbolType})");
+                file.WriteLine($"   Estimated Tokens: {chunk.EstimatedTokens}");
+                file.WriteLine($"   Part: {chunk.PartIndex} of {chunk.PartTotal}");
+                file.WriteLine($"   Symbol: {chunk.SymbolName}  (SymbolType: {chunk.SymbolKind})");
                 file.WriteLine($"   Line Start: {chunk.LineStart}, Line End: {chunk.LineEnd}");
-                if(chunk.CharStart.HasValue && chunk.CharEnd.HasValue)
-                    file.WriteLine($"   Line Start: {chunk.CharStart}, Line End: {chunk.CharEnd}");
+                file.WriteLine($"   Char Start: {chunk.StartCharacter}, Line End: {chunk.EndCharacter}");
+                file.WriteLine($"   Text Length: {chunk.Text?.Length ?? 0}");
                 file.WriteLine("-- END Section Summary Fields:");
-                file.WriteLine(chunk.TextNormalized);
+                file.WriteLine(chunk.Text);
 
             }
         }
@@ -63,7 +65,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             var modelSource = File.ReadAllText(ModelPath);
 
             var plan = RoslynCSharpChunker.Chunk(modelSource, "AgentContextTest.cs");
-            WriteChunks(plan.Result.Chunks, "AgentContextTest.Raw");
+            WriteChunks(plan.Result, "AgentContextTest.Raw");
         }
 
 
@@ -75,7 +77,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             var interfaceSource = File.ReadAllText(interfacePath);
 
             var plan = RoslynCSharpChunker.Chunk(interfaceSource, "IAgentContextManager.cs");
-            WriteChunks(plan.Result.Chunks, "IAgentContextManager.Raw");
+            WriteChunks(plan.Result, "IAgentContextManager.Raw");
         }
 
         [Test]
@@ -86,7 +88,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             var controllerSource = File.ReadAllText(ControllerPath);
 
             var plan = RoslynCSharpChunker.Chunk(controllerSource, "AgentContextTestController.cs");
-            WriteChunks(plan.Result.Chunks, "AgentContextTestController.Raw");
+            WriteChunks(plan.Result, "AgentContextTestController.Raw");
         }
 
         [Test]
@@ -97,7 +99,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             var managerSource = File.ReadAllText(ManagerPath);
 
             var plan = RoslynCSharpChunker.Chunk(managerSource, "AgentContextTestManager.cs");
-            WriteChunks(plan.Result.Chunks, "AgentContextTestManager.Raw");
+            WriteChunks(plan.Result, "AgentContextTestManager.Raw");
         }
 
 
@@ -109,7 +111,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             var repoSource = File.ReadAllText(RepoPath);
 
             var plan = RoslynCSharpChunker.Chunk(repoSource, "AgentContextTestRepository.cs");
-            WriteChunks(plan.Result.Chunks, "AgentContextTestRepository.Raw");
+            WriteChunks(plan.Result, "AgentContextTestRepository.Raw");
         }
 
 

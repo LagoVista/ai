@@ -18,7 +18,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
 
         int EstimateTokens(string s);
 
-        InvokeResult<RagChunkPlan> ChunkCSharpWithRoslyn(string text, string fileName, int maxTokensPerChunk = 6500, int overlapLines = 6);
+        InvokeResult<IReadOnlyList<CSharpComponentChunk>> ChunkCSharpWithRoslyn(string text, string fileName, int maxTokensPerChunk = 6500, int overlapLines = 6);
 
         ModelMetadataDescription BuildMetadataDescriptionForModel(string sourceText, IReadOnlyDictionary<string, string> resources);
 
