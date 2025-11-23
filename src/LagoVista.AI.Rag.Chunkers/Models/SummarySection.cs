@@ -45,8 +45,6 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         public InvokeResult PopulateRagPayload(RagVectorPayload payload)
         {
             payload.EmbeddingModel = EmbeddingModel;
-            payload.
-
             return InvokeResult.Success;
         }
     }
