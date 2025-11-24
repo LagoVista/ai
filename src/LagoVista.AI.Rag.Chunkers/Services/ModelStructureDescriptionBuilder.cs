@@ -20,7 +20,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
 
         public static ModelStructureDescription FromSource(IndexFileContext ctx, string sourceText, IReadOnlyDictionary<string, string> resources)
         {
-            var description = FromSource(sourceText, new Dictionary<string, string>());
+            var description = FromSource(sourceText, resources);
             /* populate ctx fields */
 
             return description;

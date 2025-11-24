@@ -11,16 +11,17 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         [Test]
         public void Chunk_CRLF_And_LF_Produce_Equivalent_Structure()
         {
-            var sourceLf = @"using System;
-
-public class Newlines
-{
-    public void DoWork()
-    {
-        Console.WriteLine(""hi"");
-    }
-}
-";
+  
+            var sourceLf =
+    "using System;\n" +
+    "\n" +
+    "public class Newlines\n" +
+    "{\n" +
+    "    public void DoWork()\n" +
+    "    {\n" +
+    "        Console.WriteLine(\"hi\");\n" +
+    "    }\n" +
+    "}\n";
 
             // Same code, but with CRLF instead of LF.
             var sourceCrLf = sourceLf.Replace("\n", "\r\n");

@@ -24,6 +24,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Infrastructure.Services
         public DomainModelCatalogBuilder(IChunkerServices chunkerServices, ICodeDescriptionService codeDescriptionService)
         {
             _chunkerServices = chunkerServices ?? throw new ArgumentNullException(nameof(chunkerServices));
+            _codeDescriptionService = codeDescriptionService ?? throw new ArgumentNullException(nameof(codeDescriptionService));
         }
 
         public async Task<DomainModelCatalog> BuildAsync(

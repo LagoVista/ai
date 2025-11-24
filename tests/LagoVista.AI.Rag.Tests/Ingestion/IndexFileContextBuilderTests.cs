@@ -74,7 +74,11 @@ namespace LagoVista.AI.Rag.Tests.Ingestion
 
             };
 
-            var builder = new IndexFileContextBuilder(new Mock<IIndexIdServices>().Object);
+            var idxMock = new Mock<IIndexIdServices>();
+            idxMock.Setup(i => i.ComputeDocId(It.IsAny<string>(), It.IsAny<string>())).Returns("SOMEDOCID");
+            idxMock.Setup(i => i.ComputeDocId(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns("SOMEDOCID");
+
+            var builder = new IndexFileContextBuilder(idxMock.Object);
 
             var ctx = await builder.BuildAsync(config, repoInfo, _repoId, planned, localIndex, CancellationToken.None);
 
@@ -84,7 +88,7 @@ namespace LagoVista.AI.Rag.Tests.Ingestion
             Assert.That(ctx.Language, Is.EqualTo("csharp"));
 
             Assert.That(ctx.DocumentIdentity, Is.Not.Null);
-            Assert.That(string.IsNullOrWhiteSpace(ctx.DocumentIdentity.DocId), Is.False);
+            Assert.That(string.IsNullOrWhiteSpace(ctx.DocumentIdentity.DocId), Is.False, $"Doc Id: {ctx.DocumentIdentity.DocId} ");
 
             Assert.That(localIndex.TryGet(_fileRelativePath, out var record), Is.True);
             Assert.That(record.DocId, Is.EqualTo(ctx.DocumentIdentity.DocId));
