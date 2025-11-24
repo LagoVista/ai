@@ -10,6 +10,7 @@ using LagoVista.AI.Rag.Chunkers.Services;
 using LagoVista.AI.Rag.ContractPacks.Infrastructure.Services;
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Models;
 using LagoVista.Core.Models.UIMetaData;
+using LagoVista.Core.Validation;
 using Moq;
 using NUnit.Framework;
 
@@ -145,7 +146,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
                 descriptorMock
                     .Setup(c => c.BuildModelStructureDescription(
                         sourceText))
-                    .Returns(modelStructure);
+                    .Returns(InvokeResult<ModelStructureDescription>.Create( modelStructure));
 
                 var catalog = await sut.BuildAsync(RepoId, files);
 

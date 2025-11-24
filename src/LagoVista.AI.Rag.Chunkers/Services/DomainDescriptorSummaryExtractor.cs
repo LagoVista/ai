@@ -5,6 +5,7 @@ using System.Text;
 using LagoVista.AI.Rag.Chunkers.Models;
 using LagoVista.Core.Attributes; // DomainDescriptorAttribute, DomainDescriptionAttribute
 using LagoVista.Core.Models.UIMetaData; // DomainDescription
+using LagoVista.Core.Validation;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -17,7 +18,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
     /// </summary>
     public static class DomainDescriptorSummaryExtractor
     {
-        public static IReadOnlyList<DomainSummaryInfo> Extract(string source)
+        public static InvokeResult<IReadOnlyList<DomainSummaryInfo>> Extract(string source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
 
@@ -34,7 +35,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 ExtractFromDomainClass(classDecl, summaries);
             }
 
-            return summaries;
+            return InvokeResult<IReadOnlyList<DomainSummaryInfo>>.Create(summaries);
         }
 
         private static void ExtractFromDomainClass(

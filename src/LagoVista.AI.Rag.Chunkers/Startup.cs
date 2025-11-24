@@ -3,11 +3,6 @@ using LagoVista.AI.Rag.Chunkers.Services;
 using LagoVista.Core.IOC;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.IoT.Logging.Utils;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LagoVista.AI.Rag.Chunkers
 {
@@ -17,6 +12,8 @@ namespace LagoVista.AI.Rag.Chunkers
         {
             SLWIOC.RegisterSingleton<IChunkerServices, ChunkerServices>();
             SLWIOC.RegisterSingleton<ICodeDescriptionService, CodeDescriptionService>();
+            SLWIOC.RegisterSingleton<IResourceExtractor, ResxResourceExtractor>();
+            SLWIOC.RegisterSingleton<IResxLabelScanner, ResxLabelScanner>();
             SLWIOC.RegisterSingleton<IAdminLogger>(new AdminLogger(new ConsoleLogWriter()));
         }
     }

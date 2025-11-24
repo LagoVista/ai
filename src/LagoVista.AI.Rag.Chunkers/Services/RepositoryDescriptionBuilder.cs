@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using LagoVista.AI.Rag.Chunkers.Models;
+using LagoVista.Core.Validation;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -18,7 +19,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
     /// </summary>
     public static class RepositoryDescriptionBuilder
     {
-        public static RepositoryDescription CreateRepositoryDescription(IndexFileContext ctx, string sourceText)
+        public static InvokeResult<RepositoryDescription> CreateRepositoryDescription(IndexFileContext ctx, string sourceText)
         {
             if (string.IsNullOrWhiteSpace(sourceText))
                 throw new ArgumentNullException(nameof(sourceText));
@@ -107,7 +108,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             // Optional: future StorageProfile inference hook – left null for now
             // description.StorageProfile = DetectStorageProfile(baseType, description.PrimaryEntity);
 
-            return description;
+            return InvokeResult<RepositoryDescription>.Create(description);
         }
 
         private static void PopulateConstructorsAndDependencies(

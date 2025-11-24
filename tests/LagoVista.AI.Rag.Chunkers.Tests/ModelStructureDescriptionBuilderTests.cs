@@ -44,10 +44,11 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             Assert.That(File.Exists(repoPath), Is.True, $"Model content file not found at {repoPath}");
 
             var source = File.ReadAllText(modelPath);
-            var resources = ResxLabelScanner.GetSingleResourceDictionary(".");
+            var scanner = new ResxLabelScanner();
+            var resources = scanner.GetSingleResourceDictionary(".");
 
             // FromSource is a static method
-            var description = ModelStructureDescriptionBuilder.FromSource(GetIndexFileContext(), source, resources);
+            var description = ModelStructureDescriptionBuilder.FromSource(GetIndexFileContext(), source, resources).Result;
 
             Assert.Multiple(() =>
             {
@@ -130,7 +131,7 @@ namespace LagoVista.AI.Models
 
             var description = ModelStructureDescriptionBuilder.FromSource(GetIndexFileContext(),
                 source,
-                resources);
+                resources).Result;
 
             // All properties
             var allProps = description.Properties.ToList();
@@ -201,7 +202,7 @@ namespace LagoVista.AI.Models
 
             var description = ModelStructureDescriptionBuilder.FromSource( GetIndexFileContext(),
                 source,
-                resources);
+                resources).Result;
 
             var allProps = description.Properties.ToList();
             Assert.That(allProps, Is.Not.Empty, "Expected some properties in the description.");

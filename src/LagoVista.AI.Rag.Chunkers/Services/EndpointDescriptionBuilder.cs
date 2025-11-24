@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using LagoVista.AI.Rag.Chunkers.Models;
+using LagoVista.Core.Validation;
 
 namespace LagoVista.AI.Rag.Chunkers.Services
 {
@@ -24,7 +25,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
         /// </summary>
         /// <param name="sourceText">Full C# source of the controller file.</param>
         /// <returns>Read-only list of EndpointDescription objects.</returns>
-        public static IReadOnlyList<EndpointDescription> CreateEndpointDescriptions(IndexFileContext ctx, string sourceText)
+        public static  InvokeResult<IReadOnlyList<EndpointDescription>> CreateEndpointDescriptions(IndexFileContext ctx, string sourceText)
         {
             if (string.IsNullOrWhiteSpace(sourceText))
                 throw new ArgumentNullException(nameof(sourceText));
@@ -152,7 +153,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 }
             }
 
-            return results;
+            return InvokeResult<IReadOnlyList<EndpointDescription>>.Create(results);
         }
 
         #region Detection Helpers

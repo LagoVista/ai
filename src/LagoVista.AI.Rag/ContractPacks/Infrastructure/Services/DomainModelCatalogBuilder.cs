@@ -77,7 +77,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Infrastructure.Services
                 }
 
                 // 2) Models: BuildStructuredDescriptionForModel returns null for non-model snippets.
-                var modelStructure = _codeDescriptionService.BuildModelStructureDescription(snippet);
+                var modelStructure = _codeDescriptionService.BuildModelStructureDescription(snippet).Result;
 
                 if (modelStructure != null && !string.IsNullOrWhiteSpace(modelStructure.QualifiedName))
                 {

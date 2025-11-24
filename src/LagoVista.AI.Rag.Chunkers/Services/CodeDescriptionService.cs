@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using LagoVista.AI.Rag.Chunkers.Interfaces;
 using LagoVista.AI.Rag.Chunkers.Models;
+using LagoVista.Core.Validation;
 
 namespace LagoVista.AI.Rag.Chunkers.Services
 {
@@ -20,47 +21,47 @@ namespace LagoVista.AI.Rag.Chunkers.Services
     public class CodeDescriptionService : ICodeDescriptionService
     {
         /// <inheritdoc />
-        public ModelStructureDescription BuildModelStructureDescription(IndexFileContext ctx, string sourceText, IReadOnlyDictionary<string, string> resources)
+        public InvokeResult<ModelStructureDescription> BuildModelStructureDescription(IndexFileContext ctx, string sourceText, IReadOnlyDictionary<string, string> resources)
         {
             return ModelStructureDescriptionBuilder.FromSource(ctx, sourceText, resources);
         }
 
         /// <inheritdoc />
-        public ModelMetadataDescription BuildModelMetadataDescription(IndexFileContext ctx, string sourceText, IReadOnlyDictionary<string, string> resources)
+        public InvokeResult<ModelMetadataDescription> BuildModelMetadataDescription(IndexFileContext ctx, string sourceText, IReadOnlyDictionary<string, string> resources)
         {
             return ModelMetadataDescriptionBuilder.FromSource(ctx, sourceText, resources);
         }
 
         /// <inheritdoc />
-        public ManagerDescription BuildManagerDescription(IndexFileContext ctx, string sourceText)
+        public InvokeResult<ManagerDescription> BuildManagerDescription(IndexFileContext ctx, string sourceText)
         {
             return ManagerDescriptionBuilder.CreateManagerDescription(ctx, sourceText);
         }
 
         /// <inheritdoc />
-        public RepositoryDescription BuildRepositoryDescription(IndexFileContext ctx, string sourceText)
+        public InvokeResult<RepositoryDescription> BuildRepositoryDescription(IndexFileContext ctx, string sourceText)
         {
             return RepositoryDescriptionBuilder.CreateRepositoryDescription(ctx, sourceText);
         }
 
         /// <inheritdoc />
-        public InterfaceDescription BuildInterfaceDescription(IndexFileContext ctx, string sourceText)
+        public InvokeResult<InterfaceDescription> BuildInterfaceDescription(IndexFileContext ctx, string sourceText)
         {
             return InterfaceDescriptionBuilder.CreateInterfaceDescription(ctx, sourceText);
         }
 
         /// <inheritdoc />
-        public IReadOnlyList<EndpointDescription> BuildEndpointDescriptions(IndexFileContext ctx, string sourceText)
+        public InvokeResult<IReadOnlyList<EndpointDescription>> BuildEndpointDescriptions(IndexFileContext ctx, string sourceText)
         {
             return EndpointDescriptionBuilder.CreateEndpointDescriptions(ctx, sourceText);
         }
 
-        public IReadOnlyList<DomainSummaryInfo> ExtractDomainSummary(string source)
+        public InvokeResult<IReadOnlyList<DomainSummaryInfo>> ExtractDomainSummary(string source)
         {
             return DomainDescriptorSummaryExtractor.Extract(source);
         }
 
-        public ModelStructureDescription BuildModelStructureDescription(string sourceText)
+        public InvokeResult<ModelStructureDescription> BuildModelStructureDescription(string sourceText)
         {
             return ModelStructureDescriptionBuilder.FromSource(sourceText);
         }

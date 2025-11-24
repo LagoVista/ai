@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using LagoVista.AI.Rag.Chunkers.Models;
+using LagoVista.Core.Validation;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -18,7 +19,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
     /// </summary>
     public static class ManagerDescriptionBuilder
     {
-        public static ManagerDescription CreateManagerDescription(IndexFileContext ctx, string sourceText)
+        public static InvokeResult<ManagerDescription> CreateManagerDescription(IndexFileContext ctx, string sourceText)
         {
             if (string.IsNullOrWhiteSpace(sourceText))
                 throw new ArgumentNullException(nameof(sourceText));
@@ -101,7 +102,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
 
             description.Methods = methods;
 
-            return description;
+            return InvokeResult<ManagerDescription>.Create(description);
         }
 
         private static void PopulateConstructorsAndDependencies(

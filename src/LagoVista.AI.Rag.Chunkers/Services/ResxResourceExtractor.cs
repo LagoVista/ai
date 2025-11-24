@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using LagoVista.AI.Rag.Chunkers.Interfaces;
 using LagoVista.AI.Rag.Chunkers.Models;
 
 namespace LagoVista.AI.Rag.Chunkers.Services
@@ -15,7 +16,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
     /// Output: collection of ResxResourceChunk objects that contain everything
     ///         needed to build embedding text and RagVectorPayload metadata.
     /// </summary>
-    public static class ResxResourceExtractor
+    public class ResxResourceExtractor : IResourceExtractor
     {
         /// <summary>
         /// Extracts RESX resource entries from XML text.
@@ -23,7 +24,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
         /// <param name="xmlText">Raw .resx XML content.</param>
         /// <param name="relativePath">Repo-relative path to the .resx file.</param>
         /// <returns>Immutable list of <see cref="ResxResourceChunk"/>.</returns>
-        public static IReadOnlyList<ResxResourceChunk> Extract(string xmlText, string relativePath)
+        public IReadOnlyList<ResxResourceChunk> Extract(string xmlText, string relativePath)
         {
             if (string.IsNullOrWhiteSpace(xmlText))
             {

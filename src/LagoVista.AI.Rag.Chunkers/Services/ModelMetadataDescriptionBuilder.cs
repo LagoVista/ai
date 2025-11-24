@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using LagoVista.AI.Rag.Chunkers.Models;
+using LagoVista.Core.Validation;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -19,7 +20,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
     {
         // ---------- Public API ----------
 
-        public static ModelMetadataDescription FromSource(IndexFileContext context, string sourceText, IReadOnlyDictionary<string, string> resources)
+        public static InvokeResult<ModelMetadataDescription> FromSource(IndexFileContext context, string sourceText, IReadOnlyDictionary<string, string> resources)
         {
 
             if (sourceText == null) throw new ArgumentNullException(nameof(sourceText));
@@ -212,7 +213,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
 
             // Advanced TabFields and other layout variants can be layered in later.
 
-            return metadata;
+            return InvokeResult<ModelMetadataDescription>.Create(metadata);
         }
 
         // ---------- Layout helpers ----------

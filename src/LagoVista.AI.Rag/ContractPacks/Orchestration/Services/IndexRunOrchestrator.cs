@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using LagoVista.AI.Rag.Chunkers.Interfaces;
+using LagoVista.AI.Rag.Chunkers.Services;
 using LagoVista.AI.Rag.ContractPacks.Infrastructure.Interfaces;
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Interfaces;
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Models;
@@ -41,17 +43,24 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
         private readonly IMetadataRegistryClient _metadataRegistryClient;
         private readonly IAdminLogger _adminLogger;
         private readonly IGitRepoInspector _gitRepoInspector;
+        private readonly ISourceFileProcessor _sourceFileProcessor;
+        private readonly IDomainModelCatalogBuilder _domainModelCatalogBuilder;
+        private readonly IResxLabelScanner _resxLabelScanner;
+
 
         public IndexRunOrchestrator(
             IIngestionConfigProvider configProvider,
             IAdminLogger adminLogger,
+            ISourceFileProcessor sourceFileProcessor,
             IFileDiscoveryService discoveryService,
             IFileIngestionPlanner ingestionPlanner,
             ILocalIndexStore localIndexStore,
             IIndexingPipeline pipeline,
             IGitRepoInspector gitRepoInspector,
             IFacetAccumulator facetAccumulator,
+            IDomainModelCatalogBuilder domainModelCatalogBuilder,
             IIndexFileContextBuilder indexFileContextBuilder,
+            IResxLabelScanner resxLabelScanner,
             IMetadataRegistryClient metadataRegistryClient)
         {
             _indexFileContextBuilder = indexFileContextBuilder ?? throw new ArgumentNullException(nameof(indexFileContextBuilder));
@@ -64,6 +73,9 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
             _facetAccumulator = facetAccumulator ?? throw new ArgumentNullException(nameof(facetAccumulator));
             _metadataRegistryClient = metadataRegistryClient ?? throw new ArgumentNullException(nameof(metadataRegistryClient));
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
+            _sourceFileProcessor = sourceFileProcessor ?? throw new ArgumentNullException(nameof(sourceFileProcessor));
+            _domainModelCatalogBuilder = domainModelCatalogBuilder ?? throw new ArgumentNullException(nameof(domainModelCatalogBuilder));
+            _resxLabelScanner = resxLabelScanner ?? throw new ArgumentNullException(nameof(resxLabelScanner));
         }
 
         public async Task RunAsync(IngestionConfig config, string mode = null, string processRepo = null, bool verbose = false, bool dryrun = false, CancellationToken cancellationToken = default)
@@ -90,6 +102,8 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
                 var repoRoot = string.IsNullOrWhiteSpace(sourceRoot)
                     ? repoId
                     : Path.Combine(sourceRoot, repoId);
+
+                var resources = _resxLabelScanner.GetSingleResourceDictionary(repoRoot);
 
                 var gitInfo = _gitRepoInspector.GetRepoInfo(repoRoot);
                 if (!gitInfo.Successful)
@@ -122,6 +136,9 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
                     }
                 }
 
+                var domainCatalog = _domainModelCatalogBuilder.BuildAsync(repoId, discoveredFiles);
+
+
                 var plan = await _ingestionPlanner.BuildPlanAsync(repoId, relativePaths, localIndex, cancellationToken);
 
                 _adminLogger.Trace($"[IndexRunOrchestrator_RunAsync] Found {plan.FilesToIndex.Count} files to index.");
@@ -133,7 +150,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
                         continue;
 
                     var  fileContext = await _indexFileContextBuilder.BuildAsync(config, gitInfo.Result, repoId, filePlan, localIndex, cancellationToken);
-           
+                    var fileProcessResult = _sourceFileProcessor.BuildChunks(fileContext, domainCatalog.Result, resources);
 
 
                 }

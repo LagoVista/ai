@@ -71,7 +71,7 @@ namespace MyApp.Models
 
             var resources = BuildResources();
 
-            var description = ModelStructureDescriptionBuilder.FromSource(GetIndexFileContext(), source, resources);
+            var description = ModelStructureDescriptionBuilder.FromSource(GetIndexFileContext(), source, resources).Result;
 
             Assert.Multiple(() =>
             {
@@ -133,7 +133,7 @@ namespace MyApp.Models
 
             var description = ModelStructureDescriptionBuilder.FromSource(GetIndexFileContext(),
                 source,
-                resources);
+                resources).Result;
 
             Assert.Multiple(() =>
             {
@@ -217,7 +217,7 @@ namespace LagoVista.AI.Models
 
             var description = ModelStructureDescriptionBuilder.FromSource(GetIndexFileContext(),
                 source,
-                resources);
+                resources).Result;
 
             Assert.Multiple(() =>
             {
@@ -337,7 +337,7 @@ namespace LagoVista.AI.Models
 
             var description = ModelStructureDescriptionBuilder.FromSource(GetIndexFileContext(),
                 source,
-                resources);
+                resources).Result;
 
             Assert.Multiple(() =>
             {
@@ -448,7 +448,7 @@ namespace LagoVista.AI.Models
 
             var description = ModelStructureDescriptionBuilder.FromSource(GetIndexFileContext(),
                 source,
-                resources);
+                resources).Result;
 
             Assert.Multiple(() =>
             {

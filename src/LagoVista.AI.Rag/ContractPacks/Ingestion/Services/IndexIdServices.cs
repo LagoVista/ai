@@ -1,11 +1,8 @@
 ﻿using LagoVista.AI.Rag.ContractPacks.Ingestion.Interfaces;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
 {

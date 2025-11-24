@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using LagoVista.AI.Rag.Chunkers.Models;
 using LagoVista.AI.Rag.Chunkers.Services;
+using LagoVista.Core.Validation;
 
 namespace LagoVista.AI.Rag.Chunkers.Interfaces
 {
@@ -19,10 +20,10 @@ namespace LagoVista.AI.Rag.Chunkers.Interfaces
         /// </summary>
         /// <param name="sourceText">Full C# source text for the model file.</param>
         /// <returns>A populated <see cref="ModelStructureDescription"/>.</returns>
-        ModelStructureDescription BuildModelStructureDescription(IndexFileContext ctx, string sourceText, IReadOnlyDictionary<string, string> resources);
+        InvokeResult<ModelStructureDescription> BuildModelStructureDescription(IndexFileContext ctx, string sourceText, IReadOnlyDictionary<string, string> resources);
 
 
-        ModelStructureDescription BuildModelStructureDescription(string sourceText);
+        InvokeResult<ModelStructureDescription> BuildModelStructureDescription(string sourceText);
 
         /// <summary>
         /// Build a semantic metadata description (IDX-0038) of a Model class
@@ -30,7 +31,7 @@ namespace LagoVista.AI.Rag.Chunkers.Interfaces
         /// </summary>
         /// <param name="sourceText">Full C# source text for the model file.</param>
         /// <returns>A populated <see cref="ModelMetadataDescription"/>.</returns>
-        ModelMetadataDescription BuildModelMetadataDescription(IndexFileContext ctx, string sourceText, IReadOnlyDictionary<string, string> resources);
+        InvokeResult<ModelMetadataDescription> BuildModelMetadataDescription(IndexFileContext ctx, string sourceText, IReadOnlyDictionary<string, string> resources);
 
         /// <summary>
         /// Build a semantic description of a Manager class from its C# source
@@ -38,7 +39,7 @@ namespace LagoVista.AI.Rag.Chunkers.Interfaces
         /// </summary>
         /// <param name="sourceText">Full C# source text for the manager file.</param>
         /// <returns>A populated <see cref="ManagerDescription"/>.</returns>
-        ManagerDescription BuildManagerDescription(IndexFileContext ctx, string sourceText);
+        InvokeResult<ManagerDescription> BuildManagerDescription(IndexFileContext ctx, string sourceText);
 
         /// <summary>
         /// Build a semantic description of a Repository class from its C# source
@@ -46,7 +47,7 @@ namespace LagoVista.AI.Rag.Chunkers.Interfaces
         /// </summary>
         /// <param name="sourceText">Full C# source text for the repository file.</param>
         /// <returns>A populated <see cref="RepositoryDescription"/>.</returns>
-        RepositoryDescription BuildRepositoryDescription(IndexFileContext ctx, string sourceText);
+        InvokeResult<RepositoryDescription> BuildRepositoryDescription(IndexFileContext ctx, string sourceText);
 
         /// <summary>
         /// Build a semantic description of an interface from its C# source
@@ -54,7 +55,7 @@ namespace LagoVista.AI.Rag.Chunkers.Interfaces
         /// </summary>
         /// <param name="sourceText">Full C# source text containing the interface.</param>
         /// <returns>A populated <see cref="InterfaceDescription"/>.</returns>
-        InterfaceDescription BuildInterfaceDescription(IndexFileContext ctx, string sourceText);
+        InvokeResult<InterfaceDescription> BuildInterfaceDescription(IndexFileContext ctx, string sourceText);
 
         /// <summary>
         /// Build EndpointDescription records for all HTTP endpoints defined in
@@ -62,14 +63,14 @@ namespace LagoVista.AI.Rag.Chunkers.Interfaces
         /// </summary>
         /// <param name="sourceText">Full C# source text for the controller file.</param>
         /// <returns>A read-only list of <see cref="EndpointDescription"/> items, one per endpoint.</returns>
-        IReadOnlyList<EndpointDescription> BuildEndpointDescriptions(IndexFileContext ctx, string sourceText);
+        InvokeResult<IReadOnlyList<EndpointDescription>> BuildEndpointDescriptions(IndexFileContext ctx, string sourceText);
 
         /// <summary>
         /// Ceate a set of descriptions for domains withing the code model.
         /// </summary>
         /// <param name="source"></param>
         /// <returns></returns>
-        IReadOnlyList<DomainSummaryInfo> ExtractDomainSummary(string source);
+        InvokeResult<IReadOnlyList<DomainSummaryInfo>> ExtractDomainSummary(string source);
 
     }
 }

@@ -1,3 +1,4 @@
+using LagoVista.AI.Rag.Chunkers.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,7 +12,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
     ///
     /// This is text/XML based only – no reflection or ResourceManager usage.
     /// </summary>
-    public static class ResxLabelScanner
+    public class ResxLabelScanner : IResxLabelScanner
     {
         /// <summary>
         /// Scans a directory tree for *.resx files and returns a map:
@@ -19,8 +20,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
         /// 
         /// rootDirectory must exist; throws if not.
         /// </summary>
-        public static IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>> ScanResxTree(
-            string rootDirectory)
+        public IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>> ScanResxTree(string rootDirectory)
         {
             if (string.IsNullOrWhiteSpace(rootDirectory))
                 throw new ArgumentNullException(nameof(rootDirectory));
@@ -55,7 +55,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
         /// 
         /// rootDirectory must exist; throws if not.
         /// </summary>
-        public static IReadOnlyDictionary<string, string> GetSingleResourceDictionary(string rootDirectory)
+        public IReadOnlyDictionary<string, string> GetSingleResourceDictionary(string rootDirectory)
         {
             var dictionaries = ScanResxTree(rootDirectory);
 

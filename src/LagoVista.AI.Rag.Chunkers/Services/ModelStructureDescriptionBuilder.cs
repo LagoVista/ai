@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using LagoVista.AI.Rag.Chunkers.Models;
+using LagoVista.Core.Validation;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -18,24 +19,23 @@ namespace LagoVista.AI.Rag.Chunkers.Services
     public static class ModelStructureDescriptionBuilder
     {
 
-        public static ModelStructureDescription FromSource(IndexFileContext ctx, string sourceText, IReadOnlyDictionary<string, string> resources)
+        public static InvokeResult<ModelStructureDescription> FromSource(IndexFileContext ctx, string sourceText, IReadOnlyDictionary<string, string> resources)
         {
             var description = FromSource(sourceText, resources);
             /* populate ctx fields */
-            description.SetCommonProperties(ctx);
+            description.Result.SetCommonProperties(ctx);
 
             return description;
         }
 
-        public static ModelStructureDescription FromSource(string sourceText)
+        public static InvokeResult<ModelStructureDescription> FromSource(string sourceText)
         {
             return FromSource(sourceText, new Dictionary<string, string>());
         }
 
 
-        public static ModelStructureDescription FromSource(string sourceText, IReadOnlyDictionary<string, string> resources)
+        public static InvokeResult<ModelStructureDescription> FromSource(string sourceText, IReadOnlyDictionary<string, string> resources)
         {
-
             if (sourceText == null) throw new ArgumentNullException(nameof(sourceText));
             if (resources == null) throw new ArgumentNullException(nameof(resources));
 
@@ -151,7 +151,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             // Append EntityBase properties (via reflection) when applicable
             AppendEntityBasePropertiesIfApplicable(sourceText, result);
 
-            return result;
+            return InvokeResult<ModelStructureDescription>.Create(result);
         }
 
         // ---------- helpers ----------

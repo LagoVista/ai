@@ -35,9 +35,10 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             Assert.That(File.Exists(modelPath), Is.True, $"Model content file not found at {modelPath}");
 
             var source = File.ReadAllText(modelPath);
-            var resources = ResxLabelScanner.GetSingleResourceDictionary(".");
+            var scanner = new ResxLabelScanner();
+            var resources = scanner.GetSingleResourceDictionary(".");
 
-            var metadata = ModelMetadataDescriptionBuilder.FromSource(GetIndexFileContext(), source,resources);
+            var metadata = ModelMetadataDescriptionBuilder.FromSource(GetIndexFileContext(), source,resources).Result;
 
             Assert.Multiple(() =>
             {
@@ -84,9 +85,10 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             Assert.That(File.Exists(modelPath), Is.True, $"Model content file not found at {modelPath}");
 
             var source = File.ReadAllText(modelPath);
-            var resources = ResxLabelScanner.GetSingleResourceDictionary(".");
+            var scanner = new ResxLabelScanner();
+            var resources = scanner.GetSingleResourceDictionary(".");
 
-            var metadata = ModelMetadataDescriptionBuilder.FromSource(GetIndexFileContext(), source, resources);
+            var metadata = ModelMetadataDescriptionBuilder.FromSource(GetIndexFileContext(), source, resources).Result;
 
             Assert.Multiple(() =>
             {
@@ -127,9 +129,10 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             Assert.That(File.Exists(modelPath), Is.True, $"Layout sample content file not found at {modelPath}");
 
             var source = File.ReadAllText(modelPath);
-            var resources = ResxLabelScanner.GetSingleResourceDictionary(".");
+            var scanner = new ResxLabelScanner();
+            var resources = scanner.GetSingleResourceDictionary(".");
 
-            var metadata = ModelMetadataDescriptionBuilder.FromSource(GetIndexFileContext(), source,  resources);
+            var metadata = ModelMetadataDescriptionBuilder.FromSource(GetIndexFileContext(), source,  resources).Result;
 
             Assert.That(metadata, Is.Not.Null);
             Assert.That(metadata.Layouts, Is.Not.Null);

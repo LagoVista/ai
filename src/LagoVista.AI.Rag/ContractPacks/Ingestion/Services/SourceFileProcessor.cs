@@ -61,7 +61,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                         break;
                     case CodeSubKind.Manager:
                         var managerDescription = _descriptionServices.BuildManagerDescription(ctx, symbolText);
-                        var rangePointResults = managerDescription.CreateIRagPoints();
+                        var rangePointResults = managerDescription.Result.CreateIRagPoints();
                         result.Result.RagPoints.AddRange(rangePointResults.Select(rp=>rp.Result));
                         break;
 

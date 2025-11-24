@@ -37,7 +37,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         [Test]
         public void Builds_Basic_Interface_Metadata_Correctly()
         {
-            var description = InterfaceDescriptionBuilder.CreateInterfaceDescription(GetIndexFileContext(), SourceText);
+            var description = InterfaceDescriptionBuilder.CreateInterfaceDescription(GetIndexFileContext(), SourceText).Result;
 
             Assert.Multiple(() =>
             {
@@ -67,7 +67,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         [Test]
         public void Discovers_Methods_And_Method_Surface()
         {
-            var description = InterfaceDescriptionBuilder.CreateInterfaceDescription(GetIndexFileContext(), SourceText);
+            var description = InterfaceDescriptionBuilder.CreateInterfaceDescription(GetIndexFileContext(), SourceText).Result;
 
             Assert.That(description.Methods, Is.Not.Null);
             Assert.That(description.Methods.Count, Is.EqualTo(6), "Expected 6 methods on IAgentContextManager.");
@@ -122,7 +122,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         [Test]
         public void Records_Method_Line_Numbers()
         {
-            var description = InterfaceDescriptionBuilder.CreateInterfaceDescription(GetIndexFileContext(), SourceText);
+            var description = InterfaceDescriptionBuilder.CreateInterfaceDescription(GetIndexFileContext(), SourceText).Result;
 
             Assert.That(description.Methods, Is.Not.Null);
 

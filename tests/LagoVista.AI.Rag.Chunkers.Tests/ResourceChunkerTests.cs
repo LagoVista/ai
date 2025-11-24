@@ -29,7 +29,8 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
 
             var file = System.IO.File.CreateText(@"X:\Resource.txt");
 
-            var chunks = LagoVista.AI.Rag.Chunkers.Services.ResxResourceExtractor.Extract(content, ResourcePath);
+            var extractor = new ResxResourceExtractor(); 
+            var chunks = extractor.Extract(content, ResourcePath);
             Assert.That(chunks, Is.Not.Null);
             Assert.That(chunks.Count, Is.GreaterThan(0));
             // Optional: Output sections for visual inspection

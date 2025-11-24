@@ -46,7 +46,8 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         {
             // Uses ResxLabelScanner helper to load a single resource dictionary
             // from the current directory (expects resources.resx in ./Content).
-            return ResxLabelScanner.GetSingleResourceDictionary(".");
+            var scanner = new ResxLabelScanner();
+            return scanner.GetSingleResourceDictionary(".");
         }
 
         private static void DumpSections(string label, IEnumerable<SummarySection> sections)
@@ -126,7 +127,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             var modelSource = File.ReadAllText(ModelPath);
             var resources = LoadResources();
 
-            var description = _service.BuildModelStructureDescription(GetIndexFileContext(),modelSource, resources);
+            var description = _service.BuildModelStructureDescription(GetIndexFileContext(),modelSource, resources).Result;
             Assert.That(description, Is.Not.Null);
 
             var sections = description.BuildSections(headerInfo).ToList();
@@ -144,7 +145,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             var modelSource = File.ReadAllText(ModelPath);
             var resources = LoadResources();
 
-            var description = _service.BuildModelMetadataDescription(GetIndexFileContext(), modelSource, resources);
+            var description = _service.BuildModelMetadataDescription(GetIndexFileContext(), modelSource, resources).Result;
             Assert.That(description, Is.Not.Null);
 
             var sections = description.BuildSections(headerInfo).ToList();
@@ -161,7 +162,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
 
             var managerSource = File.ReadAllText(ManagerPath);
 
-            var description = _service.BuildManagerDescription(GetIndexFileContext(), managerSource);
+            var description = _service.BuildManagerDescription(GetIndexFileContext(), managerSource).Result;
             Assert.That(description, Is.Not.Null);
 
             var sections = description.BuildSections(headerInfo).ToList();
@@ -178,7 +179,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
 
             var repoSource = File.ReadAllText(RepoPath);
 
-            var description = _service.BuildRepositoryDescription(GetIndexFileContext(), repoSource);
+            var description = _service.BuildRepositoryDescription(GetIndexFileContext(), repoSource).Result;
             Assert.That(description, Is.Not.Null);
 
             var sections = description.BuildSections(headerInfo).ToList();
@@ -195,7 +196,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
 
             var controllerSource = File.ReadAllText(ControllerPath);
 
-            var endpoints = _service.BuildEndpointDescriptions(GetIndexFileContext(), controllerSource);
+            var endpoints = _service.BuildEndpointDescriptions(GetIndexFileContext(), controllerSource).Result;
             Assert.That(endpoints, Is.Not.Null);
             Assert.That(endpoints.Count, Is.GreaterThan(0), "Expected at least one EndpointDescription.");
 
@@ -218,7 +219,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
 
             var interfaceSource = File.ReadAllText(interfacePath);
 
-            var description = _service.BuildInterfaceDescription(GetIndexFileContext(), interfaceSource);
+            var description = _service.BuildInterfaceDescription(GetIndexFileContext(), interfaceSource).Result;
             Assert.That(description, Is.Not.Null);
 
             var sections = description.BuildSections(headerInfo).ToList();

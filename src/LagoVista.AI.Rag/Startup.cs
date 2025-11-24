@@ -9,11 +9,6 @@ using LagoVista.AI.Rag.ContractPacks.Registry.Interfaces;
 using LagoVista.AI.Rag.ContractPacks.Registry.Services;
 using LagoVista.AI.Rag.Models;
 using LagoVista.Core.IOC;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LagoVista.AI.Rag
 {
@@ -21,15 +16,17 @@ namespace LagoVista.AI.Rag
     {
         public static void Init()
         {
+            SLWIOC.RegisterSingleton<IIndexIdServices, IndexIdServices>();
             SLWIOC.RegisterSingleton<IIngestionConfigProvider, JsonIngestionConfigProvider>();
             SLWIOC.RegisterSingleton<IIndexFileContextBuilder, IndexFileContextBuilder>();
             SLWIOC.RegisterSingleton<IFileDiscoveryService, FileDiscoveryService>();
             SLWIOC.RegisterSingleton<IFileIngestionPlanner, DefaultIngestionPlanner>();
+            SLWIOC.RegisterSingleton<IDomainModelCatalogBuilder, DomainModelCatalogBuilder>();
             SLWIOC.RegisterSingleton<ILocalIndexStore, JsonLocalIndexStore>();
+            SLWIOC.RegisterSingleton<ISourceFileProcessor, SourceFileProcessor>();
             SLWIOC.RegisterSingleton<IIndexingPipeline, DefaultIndexingPipeline>();
             SLWIOC.RegisterSingleton<IFacetAccumulator, InMemoryFacetAccumulator>();
             SLWIOC.RegisterSingleton<IGitRepoInspector, GitRepoInspector>();
-            SLWIOC.RegisterSingleton<IIndexIdServices, IndexIdServices>();
             SLWIOC.RegisterSingleton<IMetadataRegistryClient, NuvIoTMetadataRegistryClient>();
             SLWIOC.Register<IIndexRunOrchestrator, IndexRunOrchestrator>();
         }
