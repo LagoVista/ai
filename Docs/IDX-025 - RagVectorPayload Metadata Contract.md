@@ -23,7 +23,7 @@ It provides:
 
 - Tenant & project identity  
 - Deterministic semantic identity (`SemanticId`)  
-- Domain classification (`DomainKey`, `DomainArea`)  
+- BusinessDomain classification (`BusinessDomainKey`, `BusinessDomainArea`)  
 - Content type / subtype / subtype flavor  
 - Chunking & section structure  
 - Raw pointers to source content  
@@ -72,18 +72,18 @@ These form the **isolation boundary** for all chunk metadata.
 
 ---
 
-### 3.2 Domain Classification
+### 3.2 BusinessDomain Classification
 
 These fields identify the **business domain** and optional **sub-area** the content belongs to.
 
 | Field        | Required     | Description |
 |--------------|--------------|-------------|
-| `DomainKey`  | Recommended  | Primary business domain — e.g., `billing`, `customers`, `iot`, `hr`, `alerts` |
-| `DomainArea` | Optional     | Sub-area within a domain — e.g., `payments`, `onboarding`, `invoicing` |
+| `BusinessDomainKey`  | Recommended  | Primary business domain — e.g., `billing`, `customers`, `iot`, `hr`, `alerts` |
+| `BusinessDomainArea` | Optional     | Sub-area within a domain — e.g., `payments`, `onboarding`, `invoicing` |
 
-`DomainKey` is strongly recommended for all indexed content and may be enforced as required by individual pipelines. 
+`BusinessDomainKey` is strongly recommended for all indexed content and may be enforced as required by individual pipelines. 
 
-`ValidateForIndex()` will emit a **warning** (not an error) if `DomainKey` is not set.
+`ValidateForIndex()` will emit a **warning** (not an error) if `BusinessDomainKey` is not set.
 
 ---
 
@@ -249,7 +249,7 @@ Validation responsibilities:
 2. **Normalize** section/chunk fields.
 3. **Apply defaults** for index metadata.
 4. **Ensure `SemanticId`** is set or report an error.
-5. **Advise on `DomainKey`** via a warning if missing.
+5. **Advise on `BusinessDomainKey`** via a warning if missing.
 
 ### 4.1 Errors (Block Indexing)
 
@@ -270,7 +270,7 @@ If any errors are present, the payload is **not** safe to index and the caller m
 - `EmbeddingModel` empty → set to `"text-embedding-3-large"`
 - `IndexedUtc` default → set to current UTC
 - `SemanticId` empty but `DocId` present → generated via `BuildSemanticId()`
-- `DomainKey` empty → warning: domain classification is strongly recommended
+- `BusinessDomainKey` empty → warning: domain classification is strongly recommended
 
 Warnings indicate non-fatal issues that were auto-corrected; errors must be resolved before indexing.
 
@@ -297,8 +297,8 @@ Example fragment:
   "ProjectId": "proj-abc",
   "DocId": "IDX-025",
   "SemanticId": "IDX-025:sec:index-embedding-metadata#p1",
-  "DomainKey": "billing",
-  "DomainArea": "payments",
+  "BusinessDomainKey": "billing",
+  "BusinessDomainArea": "payments",
   "ContentTypeId": 10,
   "ContentType": "Spec",
   "Subtype": "Model",
@@ -398,7 +398,7 @@ Minimum set the pipeline relies on:
 
 Strongly recommended (but not hard-blocking at the core level):
 
-- `DomainKey`
+- `BusinessDomainKey`
 - `ContentHash`
 - `Subtype` / `SubtypeFlavor`
 
@@ -412,7 +412,7 @@ Typical indexing flow:
 
 1. Construct a `RagVectorPayload` with:
    - Identity (Org/Project/Doc)
-   - Domain info (DomainKey/DomainArea)
+   - Domain info (BusinessDomainKey/BusinessDomainArea)
    - Classification (ContentTypeId, Subtype, SubtypeFlavor)
    - Section & chunk info (SectionKey, PartIndex, PartTotal)
    - Optional extra metadata

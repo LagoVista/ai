@@ -33,7 +33,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 ModelName = analysis.ModelName,
                 Namespace = analysis.Namespace,
                 QualifiedName = analysis.QualifiedName,
-                Domain = analysis.Domain,
+                BusinessDomainKey = analysis.Domain,
 
                 // UX strings
                 Title = analysis.Title,

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-
+using LagoVista.AI.Rag.Chunkers.Interfaces;
 using LagoVista.AI.Rag.Chunkers.Services;
 
 namespace LagoVista.AI.Rag.Chunkers.Models
@@ -94,9 +94,9 @@ namespace LagoVista.AI.Rag.Chunkers.Models
             }
 
             // Domain classification from the model itself (may differ from DomainKey).
-            if (!string.IsNullOrWhiteSpace(Domain))
+            if (!string.IsNullOrWhiteSpace(BusinessDomainKey))
             {
-                overview.AppendLine($"Domain Classification: {Domain}");
+                overview.AppendLine($"Domain Classification: {BusinessDomainKey}");
             }
 
             if (!string.IsNullOrWhiteSpace(Title))

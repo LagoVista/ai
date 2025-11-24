@@ -12,18 +12,33 @@ namespace LagoVista.AI.Rag.Chunkers.Models
 {
     public abstract class SummaryFacts : IRagableEntity
     {
-        IEnumerable<SummarySection> _summarySections;
-
+        protected IEnumerable<SummarySection> _summarySections;
+        /// <summary>
+        /// Logical document identifier (IDX-001) for the source file.
+        /// </summary>
         public string DocId { get; set; }
+
         // ---------- Identity / Domain ----------
-        public string ModelName { get; set; }
         public string Namespace { get; set; }
         public string QualifiedName { get; set; }   // Namespace + ModelName
-        public string Domain { get; set; }          // e.g. "Devices", "Alerts"
 
-        public abstract RagContentType ContentType { get; }
-        public abstract string Subtype { get; set; }
-        public virtual string SubtypeFlavor { get; set; }
+        public string BusinessDomainKey { get; set; }          // e.g. "Devices", "Alerts"
+
+        public RagContentType ContentTypeId { get => RagContentType.SourceCode; }
+        public abstract string Subtype { get;  }
+        public virtual string SubtypeFlavor { get;  }
+
+        public string OrgId { get; set; }
+        public string ProjectId { get; set; }
+
+        public string Repo { get; set; }
+        public string Branch { get; set; }
+        public string CommitSha { get; set; }
+        public string Path { get; set; }
+
+
+        public string SourceSystem { get; set; } = "GitHub";
+        public string SourceObjectId { get; set; }
 
         public async Task<InvokeResult> CreateEmbeddingsAsync(IEmbedder embeddingService)
         {
@@ -44,9 +59,9 @@ namespace LagoVista.AI.Rag.Chunkers.Models
             // Override in derived classes to populate additional properties
         }   
 
-        public IEnumerable<InvokeResult<RagVectorPayload>> CreateRagPayloads()
+        public IEnumerable<InvokeResult<IRagPoint>> CreateIRagPoints()
         {
-            var payloadResults = new List<InvokeResult<RagVectorPayload>>();
+            var payloadResults = new List<InvokeResult<IRagPoint>>();
 
             foreach (var section in _summarySections)
             {
@@ -54,13 +69,14 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                 {
                     DocId = this.DocId,
                     EmbeddingModel =  section.EmbeddingModel,
-                    DomainKey = Domain,
-                    ContentType = ContentType.ToString(),
+                    BusinessDomainKey = BusinessDomainKey,
+                    ContentTypeId = ContentTypeId,
                     Subtype = this.Subtype,
                     SubtypeFlavor = this.SubtypeFlavor,
-                    PartIndex = section.PartIndex,
-                    PartTotal = section.PartTotal,
+                    Language = "en-US",
                 };
+
+                section.PopulateRagPayload(payload);
 
                 var result = PopulateAdditionalRagProperties(payload);
             }

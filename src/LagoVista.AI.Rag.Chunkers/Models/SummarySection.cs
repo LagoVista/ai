@@ -44,18 +44,15 @@ namespace LagoVista.AI.Rag.Chunkers.Models
 
         public InvokeResult PopulateRagPayload(RagVectorPayload payload)
         {
+            payload.Symbol = Symbol;
+            payload.SymbolType = SymbolType;
+            payload.SectionKey = SectionKey;
+            payload.PartIndex = PartIndex;
+            payload.PartTotal = PartTotal;
             payload.EmbeddingModel = EmbeddingModel;
             return InvokeResult.Success;
         }
     }
 
 
-    /// <summary>
-    /// Contract implemented by structured description models that know
-    /// how to project themselves into SummarySection instances.
-    /// </summary>
-    public interface ISummarySectionBuilder
-    {
-        IEnumerable<SummarySection> BuildSections(DomainModelHeaderInformation headerInfo, int maxTokens = 6500);
-    }
 }

@@ -8,13 +8,13 @@ namespace LagoVista.AI.Rag.Chunkers.Interfaces
     /// as one or more SummarySection instances ready for token-budgeted chunking
     /// and embedding.
     /// </summary>
+
+    /// <summary>
+    /// Contract implemented by structured description models that know
+    /// how to project themselves into SummarySection instances.
+    /// </summary>
     public interface ISummarySectionBuilder
     {
-        /// <summary>
-        /// Build the logical summary sections for this flavor instance.
-        /// Each section should be self-contained, human-readable text that the
-        /// embedding pipeline can further split if needed.
-        /// </summary>
-        IEnumerable<SummarySection> BuildSummarySections();
+        IEnumerable<SummarySection> BuildSections(DomainModelHeaderInformation headerInfo, int maxTokens = 6500);
     }
 }

@@ -13,22 +13,15 @@ namespace LagoVista.AI.Rag.Chunkers.Models
     /// The chunking pipeline is expected to consume ManagerDescription and
     /// then project it into NormalizedChunk instances as a separate step.
     /// </summary>
-    public sealed partial class ManagerDescription
+    public sealed partial class ManagerDescription : SummaryFacts
     {
-        /// <summary>
-        /// Logical document identifier (IDX-001) for the source file.
-        /// </summary>
-        public string DocId { get; set; }
+
+        public override string Subtype { get => "Manager"; }
 
         /// <summary>
         /// Source file path or name used to locate the Manager in the repo.
         /// </summary>
         public string FileName { get; set; }
-
-        /// <summary>
-        /// Namespace that contains the Manager class.
-        /// </summary>
-        public string Namespace { get; set; }
 
         /// <summary>
         /// Simple class name of the Manager (e.g., DeviceManager).

@@ -20,6 +20,10 @@ namespace LagoVista.AI.Rag.Chunkers.Models
     /// </summary>
     public sealed partial class ModelStructureDescription : SummaryFacts
     {
+        public override string Subtype { get => "Model"; }
+
+
+        public string ModelName { get; set; }
 
         // ---------- UX Strings ----------
         public string Title { get; set; }
