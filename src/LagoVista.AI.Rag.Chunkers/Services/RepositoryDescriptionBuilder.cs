@@ -62,6 +62,8 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 StorageProfile = null
             };
 
+            description.SetCommonProperties(ctx);
+
             // PrimaryEntity detection (IDX-0040 heuristics)
             description.PrimaryEntity = DetectPrimaryEntity(classDecl, semanticModel, baseType);
 

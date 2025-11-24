@@ -8,17 +8,13 @@ namespace LagoVista.AI.Rag.Chunkers.Models
     ///
     /// This is contract-focused metadata only; no chunking/indexing concerns.
     /// </summary>
-    public partial class InterfaceDescription
+    public partial class InterfaceDescription : SummaryFacts
     {
         /// <summary>
         /// Simple interface name, e.g. IDeviceManager.
         /// </summary>
         public string InterfaceName { get; set; }
 
-        /// <summary>
-        /// Namespace containing the interface, e.g. LagoVista.AI.Managers.
-        /// </summary>
-        public string Namespace { get; set; }
 
         /// <summary>
         /// Fully qualified name, e.g. LagoVista.AI.Managers.IDeviceManager.
@@ -76,6 +72,8 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         /// 1-based line where the interface ends (inclusive).
         /// </summary>
         public int? LineEnd { get; set; }
+
+        public override string Subtype => "Interface";
     }
 
     /// <summary>

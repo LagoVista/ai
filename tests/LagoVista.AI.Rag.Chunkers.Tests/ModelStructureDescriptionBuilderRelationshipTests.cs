@@ -14,7 +14,14 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         {
             return new IndexFileContext()
             {
+                DocumentIdentity = new DocumentIdentity()
+                {
 
+                },
+                GitRepoInfo = new GitRepoInfo()
+                {
+
+                }
             };
         }
 

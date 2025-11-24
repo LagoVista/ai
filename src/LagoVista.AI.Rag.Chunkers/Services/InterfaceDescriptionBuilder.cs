@@ -64,6 +64,8 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 LineEnd = GetLine(interfaceDecl.GetLocation()?.GetLineSpan().EndLinePosition.Line)
             };
 
+            description.SetCommonProperties(ctx);
+
             var methods = new List<InterfaceMethodDescription>();
 
             foreach (var method in interfaceDecl.Members.OfType<MethodDeclarationSyntax>())

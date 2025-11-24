@@ -38,7 +38,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
             var filePath = ctx.FullPath;
 
 
-            var result = new ProcessedFileResults();
+            var result = new InvokeResult<ProcessedFileResults>();
 
             var fullFileSourceCode =  System.Text.ASCIIEncoding.ASCII.GetString(ctx.Contents);
 
@@ -58,13 +58,11 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                     case CodeSubKind.Model:
                         var modelStructureDescription = _descriptionServices.BuildModelStructureDescription(ctx, symbolText, resources);
                         var modelMetaDataDescription = _descriptionServices.BuildModelMetadataDescription(ctx, symbolText, resources);
-
-
                         break;
                     case CodeSubKind.Manager:
                         var managerDescription = _descriptionServices.BuildManagerDescription(ctx, symbolText);
                         var rangePointResults = managerDescription.CreateIRagPoints();
-                        result.RagPoints.AddRange(rangePointResults.Select(rp=>rp.Result));
+                        result.Result.RagPoints.AddRange(rangePointResults.Select(rp=>rp.Result));
                         break;
 
                     case CodeSubKind.Interface:
@@ -82,11 +80,10 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                 var chunks = _chunkerServics.ChunkCSharpWithRoslyn(symbolText, fileInfo.Name);
             }
 
-            result.OriginalFileBlobUri = ctx.BlobUri;
-            result.OriginalFileContents = ctx.Contents;
+            result.Result.OriginalFileBlobUri = ctx.BlobUri;
+            result.Result.OriginalFileContents = ctx.Contents;
 
-
-            return InvokeResult<ProcessedFileResults>.Create(result);
+            return result;
         }
         
         private InvokeResult<IReadOnlyList<SplitSymbolResult>> SplitSymbols(string sourceText)

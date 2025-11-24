@@ -11,14 +11,8 @@ namespace LagoVista.AI.Rag.Chunkers.Models
     /// semantics, without encoding chunking/indexing concerns
     /// (no PartIndex, no ContentHash, etc.).
     /// </summary>
-    public sealed partial class EndpointDescription
+    public sealed partial class EndpointDescription : SummaryFacts
     {
-        /// <summary>
-        /// Logical document identifier (IDX-001) for the controller source file.
-        /// Optional at this layer but useful when the description is
-        /// associated with a specific DocId.
-        /// </summary>
-        public string DocId { get; set; }
 
         /// <summary>
         /// Source file path or name used to locate the controller in the repo.
@@ -62,6 +56,8 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         /// Logical area for this endpoint, e.g. Admin, DeviceManagement.
         /// </summary>
         public string Area { get; set; }
+
+        public override string Subtype { get => "Endpoint"; }
 
         /// <summary>
         /// Primary entity type this endpoint operates on, e.g. "Device".

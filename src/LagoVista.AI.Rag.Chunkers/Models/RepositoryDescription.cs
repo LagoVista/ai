@@ -8,17 +8,13 @@ namespace LagoVista.AI.Rag.Chunkers.Models
     /// No chunking/indexing concerns here – this is the input to later
     /// chunk builders and RAG payload generators.
     /// </summary>
-    public partial class RepositoryDescription
+    public partial class RepositoryDescription : SummaryFacts
     {
         /// <summary>
         /// Simple name of the repository class, e.g. AgentContextRepo.
         /// </summary>
         public string ClassName { get; set; }
 
-        /// <summary>
-        /// Namespace that contains the repository.
-        /// </summary>
-        public string Namespace { get; set; }
 
         /// <summary>
         /// XML summary (if present) on the repository class.
@@ -67,6 +63,8 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         /// (e.g. from base class generics, constants, attributes).
         /// </summary>
         public RepositoryStorageProfileDescription StorageProfile { get; set; }
+
+        public override string Subtype => "Repository";
     }
 
     /// <summary>

@@ -80,6 +80,8 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                         LineEnd = GetLine(method.GetLocation()?.GetLineSpan().EndLinePosition.Line)
                     };
 
+                    endpoint.SetCommonProperties(ctx);
+
                     // PrimaryEntity heuristics – prefer return type model over controller name
                     endpoint.PrimaryEntity = DetectPrimaryEntity(controllerName, route, method, semanticModel);
 

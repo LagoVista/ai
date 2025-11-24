@@ -22,6 +22,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
         {
             var description = FromSource(sourceText, resources);
             /* populate ctx fields */
+            description.SetCommonProperties(ctx);
 
             return description;
         }
@@ -77,6 +78,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 ChildObjects = new List<ModelChildObjectDescription>(),
                 Relationships = new List<ModelRelationshipDescription>()
             };
+
 
             // Wire per-field structure from analysis.Fields
             foreach (var field in analysis.Fields)

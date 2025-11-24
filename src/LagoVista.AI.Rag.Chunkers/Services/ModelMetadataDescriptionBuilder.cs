@@ -21,6 +21,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
 
         public static ModelMetadataDescription FromSource(IndexFileContext context, string sourceText, IReadOnlyDictionary<string, string> resources)
         {
+
             if (sourceText == null) throw new ArgumentNullException(nameof(sourceText));
             if (resources == null) throw new ArgumentNullException(nameof(resources));
 
@@ -107,6 +108,8 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 Fields = new List<ModelFieldMetadataDescription>(),
                 Layouts = new ModelFormLayouts()
             };
+
+            metadata.SetCommonProperties(context);
 
             // ---------- Field metadata (FormFieldAttribute-driven) ----------
 

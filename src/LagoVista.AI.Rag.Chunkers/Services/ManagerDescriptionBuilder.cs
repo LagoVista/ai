@@ -59,6 +59,8 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 DependencyInterfaces = Array.Empty<string>()
             };
 
+            description.SetCommonProperties(ctx);
+
             // PrimaryEntity detection (IDX-0039 heuristics)
             description.PrimaryEntity = DetectPrimaryEntity(classDecl, semanticModel);
 
