@@ -13,6 +13,7 @@ using LagoVista.AI.Rag.ContractPacks.Infrastructure.Services;
 using LagoVista.Core.IOC;
 using LagoVista.AI.Rag.ContractPacks.Orchestration.Interfaces;
 using LagoVista.AI.Rag;
+using Svg;
 
 namespace LagoVista.AI.RagConsole
 {
@@ -23,6 +24,8 @@ namespace LagoVista.AI.RagConsole
         static string mode = "index";
         static string repoId = null;
         static bool showHelp = false;
+        static bool verbose = false;
+        static bool dryRun = false;
 
         public static async Task Main(string[] args)
         {
@@ -61,6 +64,17 @@ namespace LagoVista.AI.RagConsole
                 else if (arg.Equals("--repo", StringComparison.OrdinalIgnoreCase))
                 {
                     showHelp = true;
+                    Console.WriteLine("RepoId");
+                }
+                else if(arg.Equals("--verbose"))
+                {
+                    verbose = true;
+                    Console.WriteLine("Verbose Logging");
+                }
+                else if (arg.Equals("--vdryrun"))
+                {
+                    dryRun = true;
+                    Console.WriteLine("Dry Run Mode");
                 }
                 else
                 {
@@ -90,7 +104,7 @@ namespace LagoVista.AI.RagConsole
             Console.WriteLine($"Repo: {repoId}");
 
             var orchestrator = SLWIOC.Create<IIndexRunOrchestrator>();
-            await orchestrator.RunAsync(result.Result);
+            await orchestrator.RunAsync(result.Result, mode, repoId, verbose, dryRun);
 
 
         }

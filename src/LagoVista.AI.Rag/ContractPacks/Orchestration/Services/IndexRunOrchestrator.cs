@@ -38,6 +38,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
         private readonly IFacetAccumulator _facetAccumulator;
         private readonly IMetadataRegistryClient _metadataRegistryClient;
         private readonly IAdminLogger _adminLogger;
+        private readonly IGitRepoInspector _gitRepoInspector;
 
         public IndexRunOrchestrator(
             IIngestionConfigProvider configProvider,
@@ -46,9 +47,11 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
             IFileIngestionPlanner ingestionPlanner,
             ILocalIndexStore localIndexStore,
             IIndexingPipeline pipeline,
+            IGitRepoInspector gitRepoInspector,
             IFacetAccumulator facetAccumulator,
             IMetadataRegistryClient metadataRegistryClient)
         {
+            _gitRepoInspector = gitRepoInspector ?? throw new ArgumentNullException(nameof(gitRepoInspector));
             _configProvider = configProvider ?? throw new ArgumentNullException(nameof(configProvider));
             _discoveryService = discoveryService ?? throw new ArgumentNullException(nameof(discoveryService));
             _ingestionPlanner = ingestionPlanner ?? throw new ArgumentNullException(nameof(ingestionPlanner));
@@ -76,6 +79,12 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
             foreach (var repoId in repos)
             {
                 cancellationToken.ThrowIfCancellationRequested();
+
+                var gitInfo = _gitRepoInspector.GetRepoInfo(repoId);
+                if(verbose)
+                {
+                    _adminLogger.Trace($"[IndexRunOrchestrator_RunAsync] - Git Info {gitInfo}");
+                }
 
                 // 2. Resolve repo root
                 var sourceRoot = config.Ingestion?.SourceRoot ?? string.Empty;
