@@ -2,8 +2,11 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using LagoVista.AI.Rag.ContractPacks.Ingestion.Interfaces;
+using LagoVista.AI.Rag.ContractPacks.Ingestion.Models;
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Services;
 using LagoVista.AI.Rag.Models;
+using Moq;
 using NUnit.Framework;
 
 namespace LagoVista.AI.Rag.Tests.Ingestion
@@ -65,9 +68,14 @@ namespace LagoVista.AI.Rag.Tests.Ingestion
                 IsActive = true
             };
 
-            var builder = new IndexFileContextBuilder();
+            var repoInfo = new GitRepoInfo()
+            {
 
-            var ctx = await builder.BuildAsync(config, _repoId, planned, localIndex, CancellationToken.None);
+            };
+
+            var builder = new IndexFileContextBuilder(new Mock<IIndexIdServices>().Object);
+
+            var ctx = await builder.BuildAsync(config, repoInfo, _repoId, planned, localIndex, CancellationToken.None);
 
             Assert.That(ctx, Is.Not.Null);
             Assert.That(ctx.FullPath, Is.EqualTo(_fileFullPath));
@@ -100,10 +108,17 @@ namespace LagoVista.AI.Rag.Tests.Ingestion
                 IsActive = true
             };
 
-            var builder = new IndexFileContextBuilder();
+            var repoInfo = new GitRepoInfo()
+            {
+
+            };
+
+
+
+            var builder = new IndexFileContextBuilder(new Mock<IIndexIdServices>().Object);
 
             Assert.ThrowsAsync<FileNotFoundException>(async () =>
-                await builder.BuildAsync(config, _repoId, planned, localIndex, CancellationToken.None));
+                await builder.BuildAsync(config, repoInfo, _repoId, planned, localIndex, CancellationToken.None));
         }
     }
 }

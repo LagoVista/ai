@@ -5,6 +5,6 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Interfaces
 {
     public interface IGitRepoInspector
     {
-        InvokeResult<RepoInfo> GetRepoInfo(string workingDirectory);
+        InvokeResult<GitRepoInfo> GetRepoInfo(string workingDirectory);
     }
 }

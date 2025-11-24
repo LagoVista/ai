@@ -1,6 +1,6 @@
 ﻿namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Models
 {
-    public sealed class RepoInfo
+    public sealed class GitRepoInfo
     {
         public string RepositoryRoot { get; set; }
         public string RemoteUrl { get; set; }      // origin if available; else first remote

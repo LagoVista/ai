@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Interfaces;
+using LagoVista.AI.Rag.ContractPacks.Ingestion.Models;
 using LagoVista.AI.Rag.Models;
 
 namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
@@ -20,8 +21,15 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
     /// </summary>
     public sealed class IndexFileContextBuilder : IIndexFileContextBuilder
     {
+        IIndexIdServices _indexIdServices;
+        public IndexFileContextBuilder(IIndexIdServices indexIdServices)
+        {
+            _indexIdServices = indexIdServices ?? throw new ArgumentNullException(nameof(indexIdServices));
+        }
+
         public async Task<IndexFileContext> BuildAsync(
             IngestionConfig config,
+            GitRepoInfo gitRepoInfo,
             string repoId,
             PlannedFileIngestion plannedFile,
             LocalIndexStore localIndex,
@@ -53,9 +61,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                 throw new FileNotFoundException($"File not found for indexing context: {fullPath}", fullPath);
             }
 
-            var contentHash = await ContentHashUtil
-                .ComputeFileContentHashAsync(fullPath, token)
-                .ConfigureAwait(false);
+            var contentHash = await ContentHashUtil.ComputeFileContentHashAsync(fullPath, token);
 
             var identity = new DocumentIdentity
             {
@@ -64,8 +70,9 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                 RepoId = repoId,
                 RelativePath = relativePath
             };
-            identity.ComputeDocId();
 
+            identity.DocId = _indexIdServices.ComputeDocId(gitRepoInfo.RemoteUrl, projectId, relativePath);
+           
             var localRecord = localIndex.GetOrAdd(relativePath, identity.DocId);
             localRecord.ActiveContentHash = contentHash;
 

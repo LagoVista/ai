@@ -1,5 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
+using LagoVista.AI.Rag.ContractPacks.Ingestion.Models;
 using LagoVista.AI.Rag.Models;
 
 namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Interfaces
@@ -22,6 +23,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Interfaces
         /// <returns>Indexing context for the file.</returns>
         Task<IndexFileContext> BuildAsync(
             IngestionConfig config,
+            GitRepoInfo gitRepoInfo,
             string repoId,
             PlannedFileIngestion plannedFile,
             LocalIndexStore localIndex,

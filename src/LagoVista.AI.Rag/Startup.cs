@@ -29,6 +29,7 @@ namespace LagoVista.AI.Rag
             SLWIOC.RegisterSingleton<IIndexingPipeline, DefaultIndexingPipeline>();
             SLWIOC.RegisterSingleton<IFacetAccumulator, InMemoryFacetAccumulator>();
             SLWIOC.RegisterSingleton<IGitRepoInspector, GitRepoInspector>();
+            SLWIOC.RegisterSingleton<IIndexIdServices, IndexIdServices>();
             SLWIOC.RegisterSingleton<IMetadataRegistryClient, NuvIoTMetadataRegistryClient>();
             SLWIOC.Register<IIndexRunOrchestrator, IndexRunOrchestrator>();
         }

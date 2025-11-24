@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using LagoVista.AI.Rag.ContractPacks.Infrastructure.Interfaces;
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Interfaces;
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Models;
+using LagoVista.AI.Rag.ContractPacks.Ingestion.Services;
 using LagoVista.AI.Rag.ContractPacks.Orchestration.Interfaces;
 using LagoVista.AI.Rag.ContractPacks.Registry.Interfaces;
 using LagoVista.AI.Rag.Models;
@@ -35,6 +36,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
         private readonly IFileIngestionPlanner _ingestionPlanner;
         private readonly ILocalIndexStore _localIndexStore;
         private readonly IIndexingPipeline _pipeline;
+        private readonly IIndexFileContextBuilder _indexFileContextBuilder;
         private readonly IFacetAccumulator _facetAccumulator;
         private readonly IMetadataRegistryClient _metadataRegistryClient;
         private readonly IAdminLogger _adminLogger;
@@ -49,8 +51,10 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
             IIndexingPipeline pipeline,
             IGitRepoInspector gitRepoInspector,
             IFacetAccumulator facetAccumulator,
+            IIndexFileContextBuilder indexFileContextBuilder,
             IMetadataRegistryClient metadataRegistryClient)
         {
+            _indexFileContextBuilder = indexFileContextBuilder ?? throw new ArgumentNullException(nameof(indexFileContextBuilder));
             _gitRepoInspector = gitRepoInspector ?? throw new ArgumentNullException(nameof(gitRepoInspector));
             _configProvider = configProvider ?? throw new ArgumentNullException(nameof(configProvider));
             _discoveryService = discoveryService ?? throw new ArgumentNullException(nameof(discoveryService));
@@ -109,9 +113,6 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
                     }
                 }
 
-                idx++;
-
-
                 var relativePaths = new List<string>();
                 foreach (var file in discoveredFiles)
                 {
@@ -121,9 +122,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
                     }
                 }
 
-                var plan = await _ingestionPlanner
-                    .BuildPlanAsync(repoId, relativePaths, localIndex, cancellationToken)
-                    .ConfigureAwait(false);
+                var plan = await _ingestionPlanner.BuildPlanAsync(repoId, relativePaths, localIndex, cancellationToken);
 
                 _adminLogger.Trace($"[IndexRunOrchestrator_RunAsync] Found {plan.FilesToIndex.Count} files to index.");
 
@@ -133,96 +132,34 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
                     if (!File.Exists(fullPath))
                         continue;
 
-                    var ctx = new IndexFileContext
-                    {
-                        OrgId = config.OrgId,
-                        ProjectId = plan.ProjectId,
-                        RepoId = repoId,
-                        FullPath = fullPath,
-                        RelativePath = filePlan.CanonicalPath,
-                        Metadata = new System.Collections.Generic.Dictionary<string, object>()
-                    };
+                    var  fileContext = await _indexFileContextBuilder.BuildAsync(config, gitInfo.Result, repoId, filePlan, localIndex, cancellationToken);
+           
+
+
                 }
 
 
-                //    if (!Directory.Exists(repoRoot))
-                //    {
-                //        // No local repo folder; skip for now.
-                //        continue;
-                //    }
-
-                //    // 3. Load local index for this repo
-                //    var localIndex = await _localIndexStore.LoadAsync(repoId, cancellationToken).ConfigureAwait(false);
-
-                //    // 4. Discover files
-                //    var discovered = await _discoveryService
-                //        .DiscoverAsync(repoRoot, cancellationToken)
-                //        .ConfigureAwait(false);
-
-                //    var relativePaths = new List<string>();
-                //    foreach (var file in discovered)
-                //    {
-                //        if (!string.IsNullOrWhiteSpace(file.RelativePath))
-                //        {
-                //            relativePaths.Add(file.RelativePath);
-                //        }
-                //    }
-
-                //    // 5. Build ingestion plan
-                //    var plan = await _ingestionPlanner
-                //        .BuildPlanAsync(repoId, relativePaths, localIndex, cancellationToken)
-                //        .ConfigureAwait(false);
-
-                //    // 6. Index files according to plan
-                //    foreach (var filePlan in plan.FilesToIndex)
-                //    {
-                //        cancellationToken.ThrowIfCancellationRequested();
-
-                //        var fullPath = Path.Combine(repoRoot, filePlan.CanonicalPath ?? string.Empty);
-                //        if (!File.Exists(fullPath))
-                //            continue;
-
-                //        var ctx = new IndexFileContext
-                //        {
-                //            OrgId = config.OrgId,
-                //            ProjectId = plan.ProjectId,
-                //            RepoId = repoId,
-                //            FullPath = fullPath,
-                //            RelativePath = filePlan.CanonicalPath,
-                //            Metadata = new System.Collections.Generic.Dictionary<string, object>()
-                //        };
-
-                //        await _pipeline.IndexFileAsync(ctx, cancellationToken).ConfigureAwait(false);
-
-                //        // TODO: update localIndex for this file (hash, facets, LastIndexedUtc)
-                //        // and immediately persist via _localIndexStore.SaveAsync to be crash-safe.
-                //        // TODO: accumulate facets via _facetAccumulator as the pipeline begins
-                //        // returning them (once that contract is in place).
-                //    }
-
-                //    // TODO: handle plan.DocsToDelete by calling IQdrantVectorStore (via pipeline or
-                //    // a dedicated deletion path) and updating localIndex accordingly.
-
-                //    // Finally, persist local index for this repo.
-                //    await _localIndexStore.SaveAsync(repoId, localIndex, cancellationToken).ConfigureAwait(false);
-                //}
-
-                //// After all repos, flush accumulated facets to metadata registry.
-                //var allFacets = _facetAccumulator.GetAll();
-                //if (allFacets.Count > 0)
-                //{
-                //    // Note: ProjectId / RepoId here may need to be expanded to a per-repo
-                //    // call in future. For now, we use the last config.ProjectId and leave
-                //    // the aggregation semantics to the implementation.
-                //    await _metadataRegistryClient
-                //        .ReportFacetsAsync(
-                //            orgId: null,            // TODO: supply org id when facet aggregation is wired
-                //            projectId: null,        // TODO: supply project id
-                //            repoId: null,           // TODO: supply repo id or support multi-repo aggregation
-                //            facets: allFacets,
-                //            cancellationToken: cancellationToken)
-                //        .ConfigureAwait(false);
+                await _localIndexStore.SaveAsync(config, repoId, localIndex, cancellationToken).ConfigureAwait(false);
+                idx++;
             }
+
+            // After all repos, flush accumulated facets to metadata registry.
+            var allFacets = _facetAccumulator.GetAll();
+            if (allFacets.Count > 0)
+            {
+                // Note: ProjectId / RepoId here may need to be expanded to a per-repo
+                // call in future. For now, we use the last config.ProjectId and leave
+                // the aggregation semantics to the implementation.
+                await _metadataRegistryClient
+                    .ReportFacetsAsync(
+                        orgId: null,            // TODO: supply org id when facet aggregation is wired
+                        projectId: null,        // TODO: supply project id
+                        repoId: null,           // TODO: supply repo id or support multi-repo aggregation
+                        facets: allFacets,
+                        cancellationToken: cancellationToken)
+                    .ConfigureAwait(false);
+            }
+
 
             _adminLogger.Trace($"[IndexRunOrchestrator_RunAsync] - Total Files Found {totalFilesFound} files.");
         }

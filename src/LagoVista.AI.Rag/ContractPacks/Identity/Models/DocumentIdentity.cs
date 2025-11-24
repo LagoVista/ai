@@ -57,15 +57,6 @@ namespace LagoVista.AI.Rag.Models
         public string SectionKey { get; set; }
 
         /// <summary>
-        /// Compute the canonical DocId. This is deterministic and stable
-        /// across machines and time.
-        /// </summary>
-        public void ComputeDocId()
-        {
-            DocId = BuildId(OrgId, ProjectId, RepoId, RelativePath);
-        }
-
-        /// <summary>
         /// Compute the canonical ChunkId.
         /// </summary>
         public void ComputeChunkId()

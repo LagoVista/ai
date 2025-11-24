@@ -27,13 +27,13 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
         /// Try to read repo info from a working directory (or any subdir under it).
         /// Returns true on success; false and error message on failure.
         /// </summary>
-        public InvokeResult<RepoInfo> GetRepoInfo(string workingDirectory)
+        public InvokeResult<GitRepoInfo> GetRepoInfo(string workingDirectory)
         {
 
             if (string.IsNullOrWhiteSpace(workingDirectory) || !Directory.Exists(workingDirectory))
             {
 
-                return InvokeResult<RepoInfo>.FromError("Working directory not found.");
+                return InvokeResult<GitRepoInfo>.FromError("Working directory not found.");
             }
 
             try
@@ -42,13 +42,13 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                 var repoRoot = FindRepoRoot(workingDirectory, out var gitDirPath);
                 if (repoRoot == null || gitDirPath == null)
                 {
-                    return InvokeResult<RepoInfo>.FromError($"Not inside a Git repository - {workingDirectory}.");
+                    return InvokeResult<GitRepoInfo>.FromError($"Not inside a Git repository - {workingDirectory}.");
                 }
 
                 // 2) Attempt git.exe fast-path first (if present) for maximum compatibility
                 if (TryGitCli(repoRoot, out var urlCli, out var shaCli, out var branchCli))
                 {
-                    return InvokeResult<RepoInfo>.Create(new RepoInfo
+                    return InvokeResult<GitRepoInfo>.Create(new GitRepoInfo
                     {
                         RepositoryRoot = repoRoot,
                         RemoteUrl = urlCli,
@@ -61,7 +61,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                 var headRefOrSha = ReadFirstLine(Path.Combine(gitDirPath, "HEAD"))?.Trim();
                 if (string.IsNullOrWhiteSpace(headRefOrSha))
                 {
-                    return InvokeResult<RepoInfo>.FromError("Could not read HEAD.");
+                    return InvokeResult<GitRepoInfo>.FromError("Could not read HEAD.");
                 }
 
                 string branchRef = null;
@@ -73,7 +73,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                     branchRef = headRefOrSha.Substring(5).Trim(); // e.g., refs/heads/main
                     commitSha = ResolveRefToSha(gitDirPath, branchRef);
 
-                    return InvokeResult<RepoInfo>.FromError($"Could not resolve ref '{branchRef}' to a commit.");
+                    return InvokeResult<GitRepoInfo>.FromError($"Could not resolve ref '{branchRef}' to a commit.");
                 }
                 else
                 {
@@ -84,7 +84,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                 // Remote URL from config: prefer remote "origin", else first remote url
                 string remoteUrl = ReadRemoteUrlFromConfig(Path.Combine(gitDirPath, "config"));
 
-                return InvokeResult<RepoInfo>.Create(new RepoInfo
+                return InvokeResult<GitRepoInfo>.Create(new GitRepoInfo
                 {
                     RepositoryRoot = repoRoot,
                     RemoteUrl = remoteUrl,
@@ -94,7 +94,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
             }
             catch (Exception ex)
             {
-                return InvokeResult<RepoInfo>.FromException("[GitRepoInspector_GetRepoInfo]", ex);
+                return InvokeResult<GitRepoInfo>.FromException("[GitRepoInspector_GetRepoInfo]", ex);
             }
         }
 
