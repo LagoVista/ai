@@ -7,5 +7,11 @@
         public string CommitSha { get; set; }      // 40-hex commit
         public string BranchRef { get; set; }      // e.g. "refs/heads/main" or null if detached
         public bool IsDetachedHead => string.IsNullOrWhiteSpace(BranchRef);
+
+        public override string ToString()
+        {
+            return $"Repository Root: {RepositoryRoot}, Remote Url: {RemoteUrl}, Commit SHA: {CommitSha}, Branch Ref: {BranchRef}";
+        }
+
     }
  }

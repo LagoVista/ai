@@ -5,6 +5,7 @@
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Interfaces;
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Models;
 using LagoVista.Core.Validation;
+using LagoVista.IoT.Logging.Loggers;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -16,12 +17,19 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
 
     public class GitRepoInspector : IGitRepoInspector
     {
+        private readonly IAdminLogger _adminLogger;
+        public GitRepoInspector(IAdminLogger adminLogger)
+        {
+            _adminLogger = adminLogger;
+        }
+
         /// <summary>
         /// Try to read repo info from a working directory (or any subdir under it).
         /// Returns true on success; false and error message on failure.
         /// </summary>
         public InvokeResult<RepoInfo> GetRepoInfo(string workingDirectory)
         {
+
             if (string.IsNullOrWhiteSpace(workingDirectory) || !Directory.Exists(workingDirectory))
             {
 
@@ -34,7 +42,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                 var repoRoot = FindRepoRoot(workingDirectory, out var gitDirPath);
                 if (repoRoot == null || gitDirPath == null)
                 {
-                    return InvokeResult<RepoInfo>.FromError("Not inside a Git repository.");    
+                    return InvokeResult<RepoInfo>.FromError($"Not inside a Git repository - {workingDirectory}.");
                 }
 
                 // 2) Attempt git.exe fast-path first (if present) for maximum compatibility
@@ -46,7 +54,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                         RemoteUrl = urlCli,
                         CommitSha = shaCli,
                         BranchRef = branchCli
-                    }); 
+                    });
                 }
 
                 // 3) Fallback: read from files in .git

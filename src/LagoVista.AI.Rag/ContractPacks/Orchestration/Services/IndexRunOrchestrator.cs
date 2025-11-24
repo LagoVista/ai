@@ -80,17 +80,20 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var gitInfo = _gitRepoInspector.GetRepoInfo(repoId);
-                if(verbose)
-                {
-                    _adminLogger.Trace($"[IndexRunOrchestrator_RunAsync] - Git Info {gitInfo}");
-                }
-
+              
                 // 2. Resolve repo root
                 var sourceRoot = config.Ingestion?.SourceRoot ?? string.Empty;
                 var repoRoot = string.IsNullOrWhiteSpace(sourceRoot)
                     ? repoId
                     : Path.Combine(sourceRoot, repoId);
+
+                var gitInfo = _gitRepoInspector.GetRepoInfo(repoRoot);
+                if (!gitInfo.Successful)
+                {
+                    _adminLogger.AddError($"[IndexRunOrchestrator_RunAsync]", $"Git - {gitInfo.ErrorMessage}");
+                }
+                _adminLogger.Trace($"[IndexRunOrchestrator_RunAsync] - Git Info {gitInfo.Result}");
+
 
                 _adminLogger.Trace($"[IndexRunOrchestrator_RunAsync] - Starting repo {repoId}; in folder {repoRoot} - {idx} of {repos.Count}.");
                 var localIndex = await _localIndexStore.LoadAsync(config, repoId, cancellationToken);
@@ -121,6 +124,8 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
                 var plan = await _ingestionPlanner
                     .BuildPlanAsync(repoId, relativePaths, localIndex, cancellationToken)
                     .ConfigureAwait(false);
+
+                _adminLogger.Trace($"[IndexRunOrchestrator_RunAsync] Found {plan.FilesToIndex.Count} files to index.");
 
                 foreach(var filePlan in plan.FilesToIndex)
                 {
