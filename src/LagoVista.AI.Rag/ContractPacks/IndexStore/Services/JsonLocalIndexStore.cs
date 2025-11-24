@@ -15,7 +15,6 @@ namespace LagoVista.AI.Rag.ContractPacks.IndexStore.Services
     /// </summary>
     public sealed class JsonLocalIndexStore : ILocalIndexStore
     {
-        private readonly string _rootFolder;
         private static readonly JsonSerializerSettings Settings = new JsonSerializerSettings
         {
             ContractResolver = new CamelCasePropertyNamesContractResolver(),
@@ -28,21 +27,13 @@ namespace LagoVista.AI.Rag.ContractPacks.IndexStore.Services
 
         }
 
-        public JsonLocalIndexStore(string rootFolder)
-        {
-            if (string.IsNullOrWhiteSpace(rootFolder))
-                throw new ArgumentNullException(nameof(rootFolder));
-
-            _rootFolder = rootFolder;
-        }
-
-        public async Task<LocalIndexStore> LoadAsync(string repoId, CancellationToken token = default)
+     
+        public async Task<LocalIndexStore> LoadAsync(IngestionConfig config, string repoId, CancellationToken token = default)
         {
             if (string.IsNullOrWhiteSpace(repoId))
                 throw new ArgumentNullException(nameof(repoId));
 
-            Directory.CreateDirectory(_rootFolder);
-            var path = GetIndexPath(repoId);
+            var path = GetIndexPath(config, repoId);
 
             if (!File.Exists(path))
             {
@@ -64,15 +55,14 @@ namespace LagoVista.AI.Rag.ContractPacks.IndexStore.Services
             return store;
         }
 
-        public async Task SaveAsync(string repoId, LocalIndexStore store, CancellationToken token = default)
+        public async Task SaveAsync(IngestionConfig config, string repoId, LocalIndexStore store, CancellationToken token = default)
         {
             if (string.IsNullOrWhiteSpace(repoId))
                 throw new ArgumentNullException(nameof(repoId));
             if (store == null)
                 throw new ArgumentNullException(nameof(store));
 
-            Directory.CreateDirectory(_rootFolder);
-            var path = GetIndexPath(repoId);
+            var path = GetIndexPath(config, repoId);
 
             store.RepoId = repoId;
             var json = JsonConvert.SerializeObject(store, Settings);
@@ -93,10 +83,10 @@ namespace LagoVista.AI.Rag.ContractPacks.IndexStore.Services
             return list;
         }
 
-        private string GetIndexPath(string repoId)
+        private string GetIndexPath(IngestionConfig config, string repoId)
         {
             var safeRepoId = repoId.Replace('\\', '_').Replace('/', '_');
-            return Path.Combine(_rootFolder, safeRepoId + ".local-index.json");
+            return Path.Combine(config.Ingestion.SourceRoot, safeRepoId + ".local-index.json");
         }
     }
 }

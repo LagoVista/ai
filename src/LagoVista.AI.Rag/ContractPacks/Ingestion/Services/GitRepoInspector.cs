@@ -2,6 +2,8 @@
 // ContentHash: a3652352a1255299185f2493953a29896f9404fcb215d603964723548022a739
 // IndexVersion: 2
 // --- END CODE INDEX META ---
+using LagoVista.AI.Rag.ContractPacks.Ingestion.Interfaces;
+using LagoVista.AI.Rag.ContractPacks.Ingestion.Models;
 using LagoVista.Core.Validation;
 using System;
 using System.Diagnostics;
@@ -12,13 +14,13 @@ using System.Text;
 namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
 {
 
-    public static class GitRepoInspector
+    public class GitRepoInspector : IGitRepoInspector
     {
         /// <summary>
         /// Try to read repo info from a working directory (or any subdir under it).
         /// Returns true on success; false and error message on failure.
         /// </summary>
-        public static InvokeResult<RepoInfo> GetRepoInfo(string workingDirectory)
+        public InvokeResult<RepoInfo> GetRepoInfo(string workingDirectory)
         {
             if (string.IsNullOrWhiteSpace(workingDirectory) || !Directory.Exists(workingDirectory))
             {

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using LagoVista.AI.Rag.ContractPacks.IndexStore.Services;
 using LagoVista.AI.Rag.Models;
 using NUnit.Framework;
+using ZstdSharp.Unsafe;
 
 namespace LagoVista.AI.Rag.Tests.IndexStore
 {
@@ -39,12 +40,24 @@ namespace LagoVista.AI.Rag.Tests.IndexStore
             }
         }
 
+        private IngestionConfig GetConfig()
+        {
+            return new IngestionConfig()
+            {
+                Ingestion = new FileIngestionConfig()
+                {
+                    SourceRoot = _rootFolder
+                }
+            };
+        }
+
+
         [Test]
         public async Task LoadAsync_WhenFileMissing_ReturnsEmptyStoreWithRepoId()
         {
-            var store = new JsonLocalIndexStore(_rootFolder);
+            var store = new JsonLocalIndexStore();
 
-            var result = await store.LoadAsync(_repoId, CancellationToken.None);
+            var result = await store.LoadAsync(GetConfig(), _repoId, CancellationToken.None);
 
             Assert.That(result, Is.Not.Null);
             Assert.That(result.RepoId, Is.EqualTo(_repoId));
@@ -55,7 +68,7 @@ namespace LagoVista.AI.Rag.Tests.IndexStore
         [Test]
         public async Task SaveAsync_ThenLoadAsync_RoundTripsRecords()
         {
-            var jsonStore = new JsonLocalIndexStore(_rootFolder);
+            var jsonStore = new JsonLocalIndexStore();
 
             var local = new LocalIndexStore
             {
@@ -76,10 +89,10 @@ namespace LagoVista.AI.Rag.Tests.IndexStore
                 Value = "SourceCode"
             });
 
-            await jsonStore.SaveAsync(_repoId, local, CancellationToken.None);
+            await jsonStore.SaveAsync(GetConfig(), _repoId, local, CancellationToken.None);
 
             // Now load it back
-            var loaded = await jsonStore.LoadAsync(_repoId, CancellationToken.None);
+            var loaded = await jsonStore.LoadAsync(GetConfig(), _repoId, CancellationToken.None);
 
             Assert.That(loaded, Is.Not.Null);
             Assert.That(loaded.RepoId, Is.EqualTo(_repoId));
@@ -110,7 +123,7 @@ namespace LagoVista.AI.Rag.Tests.IndexStore
             local.GetOrAdd("Models/Device.cs", "doc-device-001");
             local.GetOrAdd("Managers/DeviceManager.cs", "doc-device-manager-001");
 
-            var store = new JsonLocalIndexStore(_rootFolder);
+            var store = new JsonLocalIndexStore();
 
             var all = store.GetAll(local);
 
@@ -121,7 +134,7 @@ namespace LagoVista.AI.Rag.Tests.IndexStore
         [Test]
         public async Task SaveAsync_Creates_File_On_Disk()
         {
-            var jsonStore = new JsonLocalIndexStore(_rootFolder);
+            var jsonStore = new JsonLocalIndexStore();
 
             var local = new LocalIndexStore
             {
@@ -131,7 +144,7 @@ namespace LagoVista.AI.Rag.Tests.IndexStore
 
             local.GetOrAdd("Models/Device.cs", "doc-device-001");
 
-            await jsonStore.SaveAsync(_repoId, local, CancellationToken.None);
+            await jsonStore.SaveAsync(GetConfig(), _repoId, local, CancellationToken.None);
 
             var expectedPath = Path.Combine(_rootFolder, _repoId + ".local-index.json").Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
 

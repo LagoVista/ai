@@ -13,7 +13,6 @@ namespace LagoVista.AI.Rag.ContractPacks.Infrastructure.Services
 {
     public class FileDiscoveryService : IFileDiscoveryService
     {
-        private readonly IngestionConfig _config;
 
         private static readonly HashSet<string> BinaryExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -24,22 +23,17 @@ namespace LagoVista.AI.Rag.ContractPacks.Infrastructure.Services
             ".woff", ".woff2", ".eot", ".ttf", ".otf"
         };
 
-        public FileDiscoveryService(IngestionConfig config)
-        {
-            _config = config ?? throw new ArgumentNullException(nameof(config));
-        }
-
-        public async Task<IReadOnlyList<DiscoveredFile>> DiscoverAsync(string repoId, CancellationToken token = default)
+        public async Task<IReadOnlyList<DiscoveredFile>> DiscoverAsync(IngestionConfig config, string repoId, CancellationToken token = default)
         {
             if (string.IsNullOrWhiteSpace(repoId))
                 throw new ArgumentNullException(nameof(repoId));
 
-            if (_config.Ingestion?.Repositories == null || !_config.Ingestion.Repositories.Contains(repoId))
+            if (config.Ingestion?.Repositories == null || !config.Ingestion.Repositories.Contains(repoId))
                 throw new InvalidOperationException($"Repository '{repoId}' is not configured for ingestion.");
 
-            var sourceRoot = _config.Ingestion.SourceRoot;
-            var include = _config.Ingestion.Include;
-            var exclude = _config.Ingestion.Exclude;
+            var sourceRoot = config.Ingestion.SourceRoot;
+            var include = config.Ingestion.Include;
+            var exclude = config.Ingestion.Exclude;
 
             var repoRoot = Path.Combine(sourceRoot, repoId);
 

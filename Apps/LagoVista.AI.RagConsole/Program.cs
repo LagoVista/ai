@@ -90,7 +90,7 @@ namespace LagoVista.AI.RagConsole
             Console.WriteLine($"Repo: {repoId}");
 
             var orchestrator = SLWIOC.Create<IIndexRunOrchestrator>();
-
+            await orchestrator.RunAsync(result.Result);
 
 
         }

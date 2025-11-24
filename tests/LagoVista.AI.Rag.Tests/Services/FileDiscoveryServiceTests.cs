@@ -47,9 +47,9 @@ namespace LagoVista.AI.Rag.Tests.Services
                 }
             };
 
-            var svc = new FileDiscoveryService(config);
+            var svc = new FileDiscoveryService();
 
-            var files = await svc.DiscoverAsync("Repo1");
+            var files = await svc.DiscoverAsync(config, "Repo1");
 
             Assert.That(files.Count, Is.EqualTo(2));
             Assert.That(files.Any(f => f.RelativePath == "test1.cs"), Is.True);
@@ -70,8 +70,8 @@ namespace LagoVista.AI.Rag.Tests.Services
                 }
             };
 
-            var svc = new FileDiscoveryService(config);
-            var files = await svc.DiscoverAsync("Repo1");
+            var svc = new FileDiscoveryService();
+            var files = await svc.DiscoverAsync(config, "Repo1");
 
             Assert.That(files.Any(f => f.RelativePath.Contains("test.dll")), Is.False);
         }
@@ -88,9 +88,9 @@ namespace LagoVista.AI.Rag.Tests.Services
                 }
             };
 
-            var svc = new FileDiscoveryService(config);
+            var svc = new FileDiscoveryService();
 
-            Assert.ThrowsAsync<InvalidOperationException>(async () => await svc.DiscoverAsync("BadRepo"));
+            Assert.ThrowsAsync<InvalidOperationException>(async () => await svc.DiscoverAsync(config, "BadRepo"));
         }
     }
 }

@@ -1,4 +1,5 @@
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Models;
+using LagoVista.AI.Rag.Models;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,7 +13,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Interfaces
     /// </summary>
     public interface IFileDiscoveryService
     {
-        Task<IReadOnlyList<DiscoveredFile>> DiscoverAsync(string repoId, CancellationToken token = default);
+        Task<IReadOnlyList<DiscoveredFile>> DiscoverAsync(IngestionConfig config, string repoId, CancellationToken token = default);
     }
     
 }

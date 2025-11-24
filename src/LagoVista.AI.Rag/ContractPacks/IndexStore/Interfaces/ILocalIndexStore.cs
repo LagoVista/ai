@@ -15,12 +15,12 @@ namespace LagoVista.AI.Rag.Models
         /// <summary>
         /// Load the local index for the specified repo id.
         /// </summary>
-        Task<LocalIndexStore> LoadAsync(string repoId, CancellationToken token = default);
+        Task<LocalIndexStore> LoadAsync(IngestionConfig config, string repoId, CancellationToken token = default);
 
         /// <summary>
         /// Persist the updated local index for the specified repo id.
         /// </summary>
-        Task SaveAsync(string repoId, LocalIndexStore store, CancellationToken token = default);
+        Task SaveAsync(IngestionConfig config, string repoId, LocalIndexStore store, CancellationToken token = default);
 
         /// <summary>
         /// Enumerate all records in the local index.
