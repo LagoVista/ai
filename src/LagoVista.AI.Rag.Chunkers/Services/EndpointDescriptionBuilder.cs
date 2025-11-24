@@ -24,7 +24,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
         /// </summary>
         /// <param name="sourceText">Full C# source of the controller file.</param>
         /// <returns>Read-only list of EndpointDescription objects.</returns>
-        public static IReadOnlyList<EndpointDescription> CreateEndpointDescriptions(string sourceText)
+        public static IReadOnlyList<EndpointDescription> CreateEndpointDescriptions(IndexFileContext ctx, string sourceText)
         {
             if (string.IsNullOrWhiteSpace(sourceText))
                 throw new ArgumentNullException(nameof(sourceText));

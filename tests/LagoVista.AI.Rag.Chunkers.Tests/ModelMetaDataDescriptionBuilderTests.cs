@@ -1,4 +1,5 @@
 using LagoVista.AI.Models;
+using LagoVista.AI.Rag.Chunkers.Models;
 using LagoVista.AI.Rag.Chunkers.Services;
 using NUnit.Framework;
 using System.Collections.Generic;
@@ -9,6 +10,15 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
     [TestFixture]
     public class ModelMetaDataDescriptionBuilderTests
     {
+        private IndexFileContext GetIndexFileContext()
+        {
+            return new IndexFileContext()
+            {
+
+            };
+        }
+
+
         [Test]
         public void Builds_Metadata_From_Device_Model_Source()
         {
@@ -19,7 +29,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             var source = File.ReadAllText(modelPath);
             var resources = ResxLabelScanner.GetSingleResourceDictionary(".");
 
-            var metadata = ModelMetadataDescriptionBuilder.FromSource(source,resources);
+            var metadata = ModelMetadataDescriptionBuilder.FromSource(GetIndexFileContext(), source,resources);
 
             Assert.Multiple(() =>
             {
@@ -68,7 +78,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             var source = File.ReadAllText(modelPath);
             var resources = ResxLabelScanner.GetSingleResourceDictionary(".");
 
-            var metadata = ModelMetadataDescriptionBuilder.FromSource(source, resources);
+            var metadata = ModelMetadataDescriptionBuilder.FromSource(GetIndexFileContext(), source, resources);
 
             Assert.Multiple(() =>
             {
@@ -111,7 +121,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             var source = File.ReadAllText(modelPath);
             var resources = ResxLabelScanner.GetSingleResourceDictionary(".");
 
-            var metadata = ModelMetadataDescriptionBuilder.FromSource(source,  resources);
+            var metadata = ModelMetadataDescriptionBuilder.FromSource(GetIndexFileContext(), source,  resources);
 
             Assert.That(metadata, Is.Not.Null);
             Assert.That(metadata.Layouts, Is.Not.Null);

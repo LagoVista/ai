@@ -11,6 +11,15 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
     {
         private string SourceText;
 
+
+        private IndexFileContext GetIndexFileContext()
+        {
+            return new IndexFileContext()
+            {
+
+            };
+        }
+
         [SetUp]
         public void Setup()
         {
@@ -22,7 +31,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         [Test]
         public void Builds_Basic_Manager_Metadata_Correctly()
         {
-            var description = ManagerDescriptionBuilder.CreateManagerDescription(SourceText);
+            var description = ManagerDescriptionBuilder.CreateManagerDescription(GetIndexFileContext(), SourceText);
 
             Assert.Multiple(() =>
             {
@@ -42,7 +51,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         [Test]
         public void Captures_Constructors_And_Dependency_Interfaces()
         {
-            var description = ManagerDescriptionBuilder.CreateManagerDescription(SourceText);
+            var description = ManagerDescriptionBuilder.CreateManagerDescription(GetIndexFileContext(), SourceText);
 
             Assert.That(description.Constructors, Is.Not.Null);
             Assert.That(description.Constructors.Count, Is.EqualTo(1));
@@ -86,7 +95,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         [Test]
         public void Discovers_Manager_Methods_And_MethodKinds()
         {
-            var description = ManagerDescriptionBuilder.CreateManagerDescription(SourceText);
+            var description = ManagerDescriptionBuilder.CreateManagerDescription(GetIndexFileContext(), SourceText);
 
             Assert.That(description.Methods, Is.Not.Null);
             Assert.That(description.Methods.Count, Is.EqualTo(7));
@@ -129,7 +138,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         [Test]
         public void Records_Method_Line_Numbers_And_BodyText()
         {
-            var description = ManagerDescriptionBuilder.CreateManagerDescription(SourceText);
+            var description = ManagerDescriptionBuilder.CreateManagerDescription(GetIndexFileContext(), SourceText);
 
             Assert.That(description.Methods, Is.Not.Null);
 

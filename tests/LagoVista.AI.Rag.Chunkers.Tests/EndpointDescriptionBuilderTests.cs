@@ -11,6 +11,14 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
     {
         private string SourceText;
 
+        private IndexFileContext GetIndexFileContext()
+        {
+            return new IndexFileContext()
+            {
+
+            };
+        }
+
         [SetUp]
         public void Setup()
         {
@@ -24,7 +32,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         [Test]
         public void Creates_All_Endpoint_Descriptions()
         {
-            var endpoints = EndpointDescriptionBuilder.CreateEndpointDescriptions(SourceText);
+            var endpoints = EndpointDescriptionBuilder.CreateEndpointDescriptions(GetIndexFileContext(), SourceText);
 
             Assert.That(endpoints, Is.Not.Null);
             Assert.That(endpoints.Count, Is.EqualTo(8), "Expected 8 endpoints to be discovered.");
@@ -33,7 +41,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         [Test]
         public void Extracts_Basic_Identity_Correctly()
         {
-            var endpoints = EndpointDescriptionBuilder.CreateEndpointDescriptions(SourceText);
+            var endpoints = EndpointDescriptionBuilder.CreateEndpointDescriptions(GetIndexFileContext(), SourceText);
 
             var get = endpoints.Single(e => e.ActionName == "GetVectorDatabase");
 
@@ -50,7 +58,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         [Test]
         public void Detects_Primary_Entity()
         {
-            var endpoints = EndpointDescriptionBuilder.CreateEndpointDescriptions(SourceText);
+            var endpoints = EndpointDescriptionBuilder.CreateEndpointDescriptions(GetIndexFileContext(), SourceText);
 
             var entityEndpoints = endpoints.Where(e => e.PrimaryEntity != null).ToList();
 
@@ -65,7 +73,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         [Test]
         public void Extracts_Handler_Metadata()
         {
-            var endpoints = EndpointDescriptionBuilder.CreateEndpointDescriptions(SourceText);
+            var endpoints = EndpointDescriptionBuilder.CreateEndpointDescriptions(GetIndexFileContext(), SourceText);
 
             var get = endpoints.Single(e => e.ActionName == "GetVectorDatabase");
             var add = endpoints.Single(e => e.ActionName == "AddAgentContextTest");
@@ -88,7 +96,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         [Test]
         public void Groups_Parameters_And_RequestBody_Correctly()
         {
-            var endpoints = EndpointDescriptionBuilder.CreateEndpointDescriptions(SourceText);
+            var endpoints = EndpointDescriptionBuilder.CreateEndpointDescriptions(GetIndexFileContext(), SourceText);
 
             var get = endpoints.Single(e => e.ActionName == "GetVectorDatabase");
             var create = endpoints.Single(e => e.ActionName == "AddAgentContextTest");
@@ -116,7 +124,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         [Test]
         public void Detects_Response_Shape()
         {
-            var endpoints = EndpointDescriptionBuilder.CreateEndpointDescriptions(SourceText);
+            var endpoints = EndpointDescriptionBuilder.CreateEndpointDescriptions(GetIndexFileContext(), SourceText);
 
             var get = endpoints.Single(e => e.ActionName == "GetVectorDatabase");
             var create = endpoints.Single(e => e.ActionName == "AddAgentContextTest");
@@ -137,7 +145,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         [Test]
         public void Captures_Authorization_Context()
         {
-            var endpoints = EndpointDescriptionBuilder.CreateEndpointDescriptions(SourceText);
+            var endpoints = EndpointDescriptionBuilder.CreateEndpointDescriptions(GetIndexFileContext(), SourceText);
 
             foreach (var endpoint in endpoints)
             {
@@ -151,7 +159,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         [Test]
         public void Captures_Line_Positions()
         {
-            var endpoints = EndpointDescriptionBuilder.CreateEndpointDescriptions(SourceText);
+            var endpoints = EndpointDescriptionBuilder.CreateEndpointDescriptions(GetIndexFileContext(), SourceText);
 
             foreach (var endpoint in endpoints)
             {

@@ -1,5 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
+using LagoVista.AI.Rag.Chunkers.Models;
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Models;
 using LagoVista.AI.Rag.Models;
 

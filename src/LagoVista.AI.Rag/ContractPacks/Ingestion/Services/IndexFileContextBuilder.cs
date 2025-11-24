@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using LagoVista.AI.Rag.Chunkers.Models;
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Interfaces;
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Models;
 using LagoVista.AI.Rag.Models;
@@ -95,19 +96,10 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
 
             var ctx = new IndexFileContext
             {
-                OrgId = orgId,
-                ProjectId = projectId,
-                RepoId = repoId,
                 FullPath = fullPath,
                 RelativePath = relativePath,
                 Language = DetectLanguage(relativePath),
                 DocumentIdentity = identity,
-                Metadata = new Dictionary<string, object>
-                {
-                    ["RepoRoot"] = repoRoot,
-                    ["ContentHash"] = contentHash,
-                    ["PlannedReindex"] = plannedFile.Reindex
-                }
             };
 
             return ctx;

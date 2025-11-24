@@ -12,6 +12,14 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
     {
         private string SourceText;
 
+        IndexFileContext GetIndexFileContext()
+        {
+            return new IndexFileContext()
+            {
+
+            };
+        }
+
         [SetUp]
         public void Setup()
         {
@@ -23,7 +31,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         [Test]
         public void Builds_Basic_Repository_Metadata_Correctly()
         {
-            var description = RepositoryDescriptionBuilder.CreateRepositoryDescription(SourceText);
+            var description = RepositoryDescriptionBuilder.CreateRepositoryDescription(GetIndexFileContext(), SourceText);
 
             Assert.Multiple(() =>
             {
@@ -40,7 +48,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         [Test]
         public void Captures_Implemented_Interfaces_And_RepositoryKind()
         {
-            var description = RepositoryDescriptionBuilder.CreateRepositoryDescription(SourceText);
+            var description = RepositoryDescriptionBuilder.CreateRepositoryDescription(GetIndexFileContext(), SourceText);
 
             Assert.That(description.ImplementedInterfaces, Is.Not.Null);
             Assert.That(description.ImplementedInterfaces, Is.Not.Empty);
@@ -60,7 +68,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         [Test]
         public void Discovers_Repository_Methods_And_MethodKinds()
         {
-            var description = RepositoryDescriptionBuilder.CreateRepositoryDescription(SourceText);
+            var description = RepositoryDescriptionBuilder.CreateRepositoryDescription(GetIndexFileContext(), SourceText);
 
             Assert.That(description.Methods, Is.Not.Null);
             Assert.That(description.Methods.Count, Is.EqualTo(6), "Expected 6 repository methods.");
@@ -96,7 +104,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         [Test]
         public void Records_Method_Line_Numbers_And_BodyText()
         {
-            var description = RepositoryDescriptionBuilder.CreateRepositoryDescription(SourceText);
+            var description = RepositoryDescriptionBuilder.CreateRepositoryDescription(GetIndexFileContext(), SourceText);
 
             Assert.That(description.Methods, Is.Not.Null);
 

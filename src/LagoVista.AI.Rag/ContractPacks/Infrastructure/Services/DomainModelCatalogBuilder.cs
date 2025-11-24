@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using LagoVista.AI.Rag.Chunkers.Interfaces;
 using LagoVista.AI.Rag.Chunkers.Models;
 using LagoVista.AI.Rag.Chunkers.Services;
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Interfaces;
@@ -18,8 +19,9 @@ namespace LagoVista.AI.Rag.ContractPacks.Infrastructure.Services
     public class DomainModelCatalogBuilder : IDomainModelCatalogBuilder
     {
         private readonly IChunkerServices _chunkerServices;
+        private readonly ICodeDescriptionService _codeDescriptionService;
 
-        public DomainModelCatalogBuilder(IChunkerServices chunkerServices)
+        public DomainModelCatalogBuilder(IChunkerServices chunkerServices, ICodeDescriptionService codeDescriptionService)
         {
             _chunkerServices = chunkerServices ?? throw new ArgumentNullException(nameof(chunkerServices));
         }
@@ -74,9 +76,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Infrastructure.Services
                 }
 
                 // 2) Models: BuildStructuredDescriptionForModel returns null for non-model snippets.
-                var modelStructure = _chunkerServices.BuildStructuredDescriptionForModel(
-                    snippet,
-                    resources: new Dictionary<string, string>());
+                var modelStructure = _codeDescriptionService.BuildModelStructureDescription(snippet);
 
                 if (modelStructure != null && !string.IsNullOrWhiteSpace(modelStructure.QualifiedName))
                 {

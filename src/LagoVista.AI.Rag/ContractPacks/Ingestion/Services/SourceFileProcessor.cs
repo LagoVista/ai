@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing.Text;
 using System.IO;
 using System.Linq;
 using System.Security.Authentication.ExtendedProtection;
 using System.Threading;
 using System.Threading.Tasks;
+using LagoVista.AI.Rag.Chunkers.Interfaces;
 using LagoVista.AI.Rag.Chunkers.Models;
 using LagoVista.AI.Rag.Chunkers.Services;
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Interfaces;
@@ -22,32 +24,28 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
     public class SourceFileProcessor : ISourceFileProcessor
     {
         private readonly IChunkerServices _chunkerServics;
+        private readonly ICodeDescriptionService _descriptionServices;
 
-        public SourceFileProcessor(IChunkerServices chunkerServices)
+        public SourceFileProcessor(IChunkerServices chunkerServices, ICodeDescriptionService descriptionServices)
         {
         }
 
         /// <summary>
         /// Entry point: orchestrates the 7.x steps for a single file.
         /// </summary>
-        public InvokeResult<List<NormalizedChunk>> BuildChunks(string filePath, DomainModelCatalog catalog, IReadOnlyDictionary<string, string> resources)
+        public InvokeResult<ProcessedFileResults> BuildChunks(IndexFileContext ctx, DomainModelCatalog catalog, IReadOnlyDictionary<string, string> resources)
         {
-            if (string.IsNullOrWhiteSpace(filePath))
-            {
-                throw new ArgumentException("File path is required.", nameof(filePath));
-            }
+            var filePath = ctx.FullPath;
 
-            var loadSourceResult = LoadSourceAsync(filePath);
-            if(!loadSourceResult.Successful) return InvokeResult<List<NormalizedChunk>>.FromInvokeResult(loadSourceResult.ToInvokeResult());
 
-            var fullFileSourceCode = loadSourceResult.Result;
+            var result = new ProcessedFileResults();
+
+            var fullFileSourceCode =  System.Text.ASCIIEncoding.ASCII.GetString(ctx.Contents);
 
             var symbolSplitsResult = SplitSymbols(fullFileSourceCode);
-            if (!symbolSplitsResult.Successful) return InvokeResult<List<NormalizedChunk>>.FromInvokeResult(symbolSplitsResult.ToInvokeResult());
+            if (!symbolSplitsResult.Successful) return InvokeResult<ProcessedFileResults>.FromInvokeResult(symbolSplitsResult.ToInvokeResult());
 
-            var normalizedChunks = new List<NormalizedChunk>();
-
-            var fileInfo = new FileInfo(filePath);
+           var fileInfo = new FileInfo(filePath);
 
             var splitSymbols = symbolSplitsResult.Result;
             foreach(var splitSymbol in splitSymbols)
@@ -55,46 +53,41 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                 var subKindResult = AnalyzeSubKinds(splitSymbol.Text, filePath);
                 var symbolText = splitSymbol.Text;
 
-                var symbols = _chunkerServics.ChunkCSharpWithRoslyn(symbolText, fileInfo.Name);
-                foreach(var symbolChunk in symbols.Result)
+                switch(subKindResult.SubKind)
                 {
-                    switch(subKindResult.SubKind)
-                    {
-                        case CodeSubKind.Model:
-                            var modelStructureDescription = _chunkerServics.BuildStructuredDescriptionForModel(symbolText, resources);
-                            var modelMetaDataDescription = _chunkerServics.BuildMetadataDescriptionForModel(symbolText, resources);
+                    case CodeSubKind.Model:
+                        var modelStructureDescription = _descriptionServices.BuildModelStructureDescription(ctx, symbolText, resources);
+                        var modelMetaDataDescription = _descriptionServices.BuildModelMetadataDescription(ctx, symbolText, resources);
 
-                            break;
-                        case CodeSubKind.Manager:
-                            foreach(var method in symbols.Result.Where(cnk=>cnk.SymbolKind == "Method"))
-                            {
-                                _chunkerServics.BuildSummaryForMethod(new MethodSummaryContext()
-                                {
-                                     
-                                });
-                            }
 
-                            break;
+                        break;
+                    case CodeSubKind.Manager:
+                        var managerDescription = _descriptionServices.BuildManagerDescription(ctx, symbolText);
+                        var rangePointResults = managerDescription.CreateIRagPoints();
+                        result.RagPoints.AddRange(rangePointResults.Select(rp=>rp.Result));
+                        break;
 
-                    }
-                    // Build NormalizedChunk here
+                    case CodeSubKind.Interface:
+                        var interfaceDescription = _descriptionServices.BuildInterfaceDescription(ctx, symbolText);
+                        break;
+
+                    case CodeSubKind.Repository:
+                        var repoDescription = _descriptionServices.BuildInterfaceDescription(ctx, symbolText);
+                        break;
+                    case CodeSubKind.Controller:
+                        var controllerDescription = _descriptionServices.BuildEndpointDescriptions(ctx, symbolText);
+                        break;
                 }
+              
+                var chunks = _chunkerServics.ChunkCSharpWithRoslyn(symbolText, fileInfo.Name);
             }
 
+            result.OriginalFileBlobUri = ctx.BlobUri;
+            result.OriginalFileContents = ctx.Contents;
 
 
-            return InvokeResult<List<NormalizedChunk>>.Create(normalizedChunks);
+            return InvokeResult<ProcessedFileResults>.Create(result);
         }
-    
-
-        private InvokeResult<string> LoadSourceAsync(string filePath)
-        {
-            if(!System.IO.File.Exists(filePath)) 
-                return InvokeResult<string>.FromError($"File not found: {filePath}");
-
-            return InvokeResult<string>.Create( System.IO.File.ReadAllText(filePath));
-        }
-
         
         private InvokeResult<IReadOnlyList<SplitSymbolResult>> SplitSymbols(string sourceText)
         {

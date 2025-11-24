@@ -15,7 +15,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
     /// </summary>
     public static class InterfaceDescriptionBuilder
     {
-        public static InterfaceDescription CreateInterfaceDescription(string sourceText)
+        public static InterfaceDescription CreateInterfaceDescription(IndexFileContext ctx, string sourceText)
         {
             if (string.IsNullOrWhiteSpace(sourceText))
                 throw new ArgumentNullException(nameof(sourceText));

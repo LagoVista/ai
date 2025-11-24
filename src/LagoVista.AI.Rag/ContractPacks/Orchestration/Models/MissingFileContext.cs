@@ -1,3 +1,5 @@
+using LagoVista.AI.Rag.Chunkers.Models;
+
 namespace LagoVista.AI.Rag.Models
 {
     /// <summary>

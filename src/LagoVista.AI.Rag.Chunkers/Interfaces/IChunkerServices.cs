@@ -20,18 +20,9 @@ namespace LagoVista.AI.Rag.Chunkers.Services
 
         InvokeResult<IReadOnlyList<CSharpComponentChunk>> ChunkCSharpWithRoslyn(string text, string fileName, int maxTokensPerChunk = 6500, int overlapLines = 6);
 
-        ModelMetadataDescription BuildMetadataDescriptionForModel(string sourceText, IReadOnlyDictionary<string, string> resources);
-
-        ModelStructureDescription BuildStructuredDescriptionForModel(string sourceText, IReadOnlyDictionary<string, string> resources);
-
         string BuildSummaryForMethod(MethodSummaryContext ctx);
 
         IReadOnlyList<DomainSummaryInfo> ExtractDomains(string filePath);
-
-        string BuildModelSummary(ModelMetadataDescription metadata)
-        {
-            return ModelMetadataSummaryBuilder.BuildSummary(metadata);
-        }
 
         Task<TitleDescriptionReviewResult> ReviewTitleAndDescriptionAsync(
             SummaryObjectKind kind,

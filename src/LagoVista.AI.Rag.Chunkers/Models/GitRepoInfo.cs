@@ -1,4 +1,4 @@
-﻿namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Models
+﻿namespace LagoVista.AI.Rag.Chunkers.Models
 {
     public sealed class GitRepoInfo
     {

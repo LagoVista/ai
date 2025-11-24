@@ -12,6 +12,14 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
     [TestFixture]
     public class ModelStructureDescriptionBuilderTests
     {
+        private IndexFileContext GetIndexFileContext()
+        {
+            return new IndexFileContext()
+            {
+
+            };
+        }
+
         [Test]
         public void Builds_Structure_From_Device_Model_Source()
         {
@@ -32,7 +40,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             var resources = ResxLabelScanner.GetSingleResourceDictionary(".");
 
             // FromSource is a static method
-            var description = ModelStructureDescriptionBuilder.FromSource(source, resources);
+            var description = ModelStructureDescriptionBuilder.FromSource(GetIndexFileContext(), source, resources);
 
             Assert.Multiple(() =>
             {
@@ -113,7 +121,7 @@ namespace LagoVista.AI.Models
                 { "Common_Name", "Name" }
             };
 
-            var description = ModelStructureDescriptionBuilder.FromSource(
+            var description = ModelStructureDescriptionBuilder.FromSource(GetIndexFileContext(),
                 source,
                 resources);
 
@@ -184,7 +192,7 @@ namespace LagoVista.AI.Models
                 { "Common_Name", "Name" }
             };
 
-            var description = ModelStructureDescriptionBuilder.FromSource(
+            var description = ModelStructureDescriptionBuilder.FromSource( GetIndexFileContext(),
                 source,
                 resources);
 

@@ -20,39 +20,49 @@ namespace LagoVista.AI.Rag.Chunkers.Services
     public class CodeDescriptionService : ICodeDescriptionService
     {
         /// <inheritdoc />
-        public ModelStructureDescription BuildModelStructureDescription(string sourceText, IReadOnlyDictionary<string, string> resources)
+        public ModelStructureDescription BuildModelStructureDescription(IndexFileContext ctx, string sourceText, IReadOnlyDictionary<string, string> resources)
         {
-            return ModelStructureDescriptionBuilder.FromSource(sourceText, resources);
+            return ModelStructureDescriptionBuilder.FromSource(ctx, sourceText, resources);
         }
 
         /// <inheritdoc />
-        public ModelMetadataDescription BuildModelMetadataDescription(string sourceText, IReadOnlyDictionary<string, string> resources)
+        public ModelMetadataDescription BuildModelMetadataDescription(IndexFileContext ctx, string sourceText, IReadOnlyDictionary<string, string> resources)
         {
-            return ModelMetadataDescriptionBuilder.FromSource(sourceText, resources);
+            return ModelMetadataDescriptionBuilder.FromSource(ctx, sourceText, resources);
         }
 
         /// <inheritdoc />
-        public ManagerDescription BuildManagerDescription(string sourceText)
+        public ManagerDescription BuildManagerDescription(IndexFileContext ctx, string sourceText)
         {
-            return ManagerDescriptionBuilder.CreateManagerDescription(sourceText);
+            return ManagerDescriptionBuilder.CreateManagerDescription(ctx, sourceText);
         }
 
         /// <inheritdoc />
-        public RepositoryDescription BuildRepositoryDescription(string sourceText)
+        public RepositoryDescription BuildRepositoryDescription(IndexFileContext ctx, string sourceText)
         {
-            return RepositoryDescriptionBuilder.CreateRepositoryDescription(sourceText);
+            return RepositoryDescriptionBuilder.CreateRepositoryDescription(ctx, sourceText);
         }
 
         /// <inheritdoc />
-        public InterfaceDescription BuildInterfaceDescription(string sourceText)
+        public InterfaceDescription BuildInterfaceDescription(IndexFileContext ctx, string sourceText)
         {
-            return InterfaceDescriptionBuilder.CreateInterfaceDescription(sourceText);
+            return InterfaceDescriptionBuilder.CreateInterfaceDescription(ctx, sourceText);
         }
 
         /// <inheritdoc />
-        public IReadOnlyList<EndpointDescription> BuildEndpointDescriptions(string sourceText)
+        public IReadOnlyList<EndpointDescription> BuildEndpointDescriptions(IndexFileContext ctx, string sourceText)
         {
-            return EndpointDescriptionBuilder.CreateEndpointDescriptions(sourceText);
+            return EndpointDescriptionBuilder.CreateEndpointDescriptions(ctx, sourceText);
+        }
+
+        public IReadOnlyList<DomainSummaryInfo> ExtractDomainSummary(string source)
+        {
+            return DomainDescriptorSummaryExtractor.Extract(source);
+        }
+
+        public ModelStructureDescription BuildModelStructureDescription(string sourceText)
+        {
+            return ModelStructureDescriptionBuilder.FromSource(sourceText);
         }
     }
 }

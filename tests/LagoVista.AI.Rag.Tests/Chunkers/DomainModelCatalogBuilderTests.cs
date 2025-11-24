@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using LagoVista.AI.Rag.Chunkers.Interfaces;
 using LagoVista.AI.Rag.Chunkers.Models;
 using LagoVista.AI.Rag.Chunkers.Services;
 using LagoVista.AI.Rag.ContractPacks.Infrastructure.Services;
@@ -22,14 +23,16 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         [Test]
         public void Ctor_NullChunkerServices_Throws()
         {
-            Assert.Throws<ArgumentNullException>(() => new DomainModelCatalogBuilder(null));
+            Assert.Throws<ArgumentNullException>(() => new DomainModelCatalogBuilder(null, null));
         }
 
         [Test]
         public void BuildAsync_NullRepoId_Throws()
         {
             var chunkerMock = new Mock<IChunkerServices>();
-            var sut = new DomainModelCatalogBuilder(chunkerMock.Object);
+            var descriptorMock = new Mock<ICodeDescriptionService>(MockBehavior.Strict);
+
+            var sut = new DomainModelCatalogBuilder(chunkerMock.Object, descriptorMock.Object);
 
             Assert.ThrowsAsync<ArgumentNullException>(async () =>
                 await sut.BuildAsync(null, new List<DiscoveredFile>()));
@@ -39,7 +42,9 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         public void BuildAsync_NullFiles_Throws()
         {
             var chunkerMock = new Mock<IChunkerServices>();
-            var sut = new DomainModelCatalogBuilder(chunkerMock.Object);
+            var descriptorMock = new Mock<ICodeDescriptionService>(MockBehavior.Strict);
+
+            var sut = new DomainModelCatalogBuilder(chunkerMock.Object, descriptorMock.Object);
 
             Assert.ThrowsAsync<ArgumentNullException>(async () =>
                 await sut.BuildAsync(RepoId, null));
@@ -49,7 +54,9 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         public async Task BuildAsync_Skips_NonCs_And_MissingFiles()
         {
             var chunkerMock = new Mock<IChunkerServices>(MockBehavior.Strict);
-            var sut = new DomainModelCatalogBuilder(chunkerMock.Object);
+            var descriptorMock = new Mock<ICodeDescriptionService>(MockBehavior.Strict);
+
+            var sut = new DomainModelCatalogBuilder(chunkerMock.Object, descriptorMock.Object);
 
             var tempDir = CreateTempDirectory();
 
@@ -76,9 +83,8 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
 
                 chunkerMock.Verify(c => c.DetectForFile(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
                 chunkerMock.Verify(c => c.ExtractDomains(It.IsAny<string>()), Times.Never);
-                chunkerMock.Verify(c => c.BuildStructuredDescriptionForModel(
-                    It.IsAny<string>(),
-                    It.IsAny<IReadOnlyDictionary<string, string>>()), Times.Never);
+                descriptorMock.Verify(d => d.BuildModelStructureDescription(
+                    It.IsAny<string>()), Times.Never);
             }
             finally
             {
@@ -90,7 +96,9 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         public async Task BuildAsync_Populates_Domains_And_Models()
         {
             var chunkerMock = new Mock<IChunkerServices>();
-            var sut = new DomainModelCatalogBuilder(chunkerMock.Object);
+            var descriptorMock = new Mock<ICodeDescriptionService>(MockBehavior.Strict);
+
+            var sut = new DomainModelCatalogBuilder(chunkerMock.Object, descriptorMock.Object);
 
             var tempDir = CreateTempDirectory();
 
@@ -134,10 +142,9 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
                     BusinessDomainKey = "Devices"
                 };
 
-                chunkerMock
-                    .Setup(c => c.BuildStructuredDescriptionForModel(
-                        sourceText,
-                        It.IsAny<IReadOnlyDictionary<string, string>>()))
+                descriptorMock
+                    .Setup(c => c.BuildModelStructureDescription(
+                        sourceText))
                     .Returns(modelStructure);
 
                 var catalog = await sut.BuildAsync(RepoId, files);
@@ -160,9 +167,8 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
 
                 chunkerMock.Verify(c => c.DetectForFile(sourceText, "Models/Device.cs"), Times.Once);
                 chunkerMock.Verify(c => c.ExtractDomains(sourceText), Times.Once);
-                chunkerMock.Verify(c => c.BuildStructuredDescriptionForModel(
-                    sourceText,
-                    It.IsAny<IReadOnlyDictionary<string, string>>()), Times.Once);
+                descriptorMock.Verify(d => d.BuildModelStructureDescription(
+                    sourceText), Times.Once);
             }
             finally
             {
@@ -174,7 +180,9 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         public void BuildAsync_Honors_CancellationToken()
         {
             var chunkerMock = new Mock<IChunkerServices>(MockBehavior.Strict);
-            var sut = new DomainModelCatalogBuilder(chunkerMock.Object);
+            var descriptorMock = new Mock<ICodeDescriptionService>(MockBehavior.Strict);
+
+            var sut = new DomainModelCatalogBuilder(chunkerMock.Object, descriptorMock.Object);
 
             var tempDir = CreateTempDirectory();
 
@@ -200,9 +208,8 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
 
                 chunkerMock.Verify(c => c.DetectForFile(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
                 chunkerMock.Verify(c => c.ExtractDomains(It.IsAny<string>()), Times.Never);
-                chunkerMock.Verify(c => c.BuildStructuredDescriptionForModel(
-                    It.IsAny<string>(),
-                    It.IsAny<IReadOnlyDictionary<string, string>>()), Times.Never);
+                descriptorMock.Verify(c => c.BuildModelStructureDescription(
+                    It.IsAny<string>()), Times.Never);
             }
             finally
             {

@@ -9,6 +9,15 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
     [TestFixture]
     public class ModelStructureDescriptionBuilderRelationshipTests
     {
+
+        private IndexFileContext GetIndexFileContext()
+        {
+            return new IndexFileContext()
+            {
+
+            };
+        }
+
         private static IReadOnlyDictionary<string, string> BuildResources()
         {
             // Keys are what ExtractResourceKey() produces (segment after ".Names.")
@@ -55,8 +64,7 @@ namespace MyApp.Models
 
             var resources = BuildResources();
 
-            var description = ModelStructureDescriptionBuilder.FromSource(
-                source, resources);
+            var description = ModelStructureDescriptionBuilder.FromSource(GetIndexFileContext(), source, resources);
 
             Assert.Multiple(() =>
             {
@@ -116,7 +124,7 @@ namespace MyApp.Models
 
             var resources = BuildResources();
 
-            var description = ModelStructureDescriptionBuilder.FromSource(
+            var description = ModelStructureDescriptionBuilder.FromSource(GetIndexFileContext(),
                 source,
                 resources);
 
@@ -200,7 +208,7 @@ namespace LagoVista.AI.Models
                 ["AiAgentContext_Description"] = "AI Agent Context Description"
             };
 
-            var description = ModelStructureDescriptionBuilder.FromSource(
+            var description = ModelStructureDescriptionBuilder.FromSource(GetIndexFileContext(),
                 source,
                 resources);
 
@@ -320,7 +328,7 @@ namespace LagoVista.AI.Models
                 ["Common_Street"] = "Street"
             };
 
-            var description = ModelStructureDescriptionBuilder.FromSource(
+            var description = ModelStructureDescriptionBuilder.FromSource(GetIndexFileContext(),
                 source,
                 resources);
 
@@ -431,7 +439,7 @@ namespace LagoVista.AI.Models
                 ["Common_Street"] = "Street"
             };
 
-            var description = ModelStructureDescriptionBuilder.FromSource(
+            var description = ModelStructureDescriptionBuilder.FromSource(GetIndexFileContext(),
                 source,
                 resources);
 

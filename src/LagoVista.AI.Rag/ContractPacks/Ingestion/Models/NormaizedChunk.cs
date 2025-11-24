@@ -1,4 +1,5 @@
-﻿using LagoVista.AI.Rag.Models;
+﻿using LagoVista.AI.Rag.Chunkers.Models;
+using LagoVista.AI.Rag.Models;
 using System;
 using System.Collections.Generic;
 

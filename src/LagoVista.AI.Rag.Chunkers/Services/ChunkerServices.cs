@@ -10,16 +10,6 @@ namespace LagoVista.AI.Rag.Chunkers.Services
 {
     public class ChunkerServices : IChunkerServices
     {
-        public ModelStructureDescription BuildStructuredDescriptionForModel(string sourceText, IReadOnlyDictionary<string, string> resources)
-        {
-            return ModelStructureDescriptionBuilder.FromSource(sourceText, resources);
-        }
-
-        public ModelMetadataDescription BuildMetadataDescriptionForModel(string sourceText, IReadOnlyDictionary<string, string> resources)
-        {
-            return ModelMetadataDescriptionBuilder.FromSource(sourceText, resources);
-        }
-
         public string BuildSummaryForMethod(MethodSummaryContext ctx)
         {
             return MethodSummaryBuilder.BuildSummary(ctx);

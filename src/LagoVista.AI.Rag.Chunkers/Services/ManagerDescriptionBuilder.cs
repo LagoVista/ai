@@ -18,7 +18,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
     /// </summary>
     public static class ManagerDescriptionBuilder
     {
-        public static ManagerDescription CreateManagerDescription(string sourceText)
+        public static ManagerDescription CreateManagerDescription(IndexFileContext ctx, string sourceText)
         {
             if (string.IsNullOrWhiteSpace(sourceText))
                 throw new ArgumentNullException(nameof(sourceText));

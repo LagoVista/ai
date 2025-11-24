@@ -18,7 +18,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
     /// </summary>
     public static class RepositoryDescriptionBuilder
     {
-        public static RepositoryDescription CreateRepositoryDescription(string sourceText)
+        public static RepositoryDescription CreateRepositoryDescription(IndexFileContext ctx, string sourceText)
         {
             if (string.IsNullOrWhiteSpace(sourceText))
                 throw new ArgumentNullException(nameof(sourceText));

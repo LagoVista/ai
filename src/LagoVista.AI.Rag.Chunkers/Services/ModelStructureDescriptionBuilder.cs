@@ -17,10 +17,24 @@ namespace LagoVista.AI.Rag.Chunkers.Services
     /// </summary>
     public static class ModelStructureDescriptionBuilder
     {
-        public static ModelStructureDescription FromSource(
-            string sourceText,
-            IReadOnlyDictionary<string, string> resources)
+
+        public static ModelStructureDescription FromSource(IndexFileContext ctx, string sourceText, IReadOnlyDictionary<string, string> resources)
         {
+            var description = FromSource(sourceText, new Dictionary<string, string>());
+            /* populate ctx fields */
+
+            return description;
+        }
+
+        public static ModelStructureDescription FromSource(string sourceText)
+        {
+            return FromSource(sourceText, new Dictionary<string, string>());
+        }
+
+
+        public static ModelStructureDescription FromSource(string sourceText, IReadOnlyDictionary<string, string> resources)
+        {
+
             if (sourceText == null) throw new ArgumentNullException(nameof(sourceText));
             if (resources == null) throw new ArgumentNullException(nameof(resources));
 

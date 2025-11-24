@@ -1,5 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
+using LagoVista.AI.Rag.Chunkers.Models;
 using LagoVista.AI.Rag.Models;
 
 namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Interfaces

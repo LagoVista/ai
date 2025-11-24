@@ -1,8 +1,6 @@
-using System;
-using System.Collections.Generic;
 using System.Text;
 
-namespace LagoVista.AI.Rag.Models
+namespace LagoVista.AI.Rag.Chunkers.Models
 {
     /// <summary>
     /// Canonical document identity used across all RAG and indexing operations.
