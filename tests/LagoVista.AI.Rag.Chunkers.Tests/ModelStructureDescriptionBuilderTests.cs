@@ -40,7 +40,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
                 Assert.That(description.ModelName, Is.EqualTo("AgentContextTestData"));
                 Assert.That(description.Namespace, Is.EqualTo("LagoVista.AI.Models"));
                 Assert.That(description.QualifiedName, Is.EqualTo("LagoVista.AI.Models.AgentContextTestData"));
-                Assert.That(description.Domain, Is.EqualTo("AIAdmin"));
+                Assert.That(description.BusinessDomainKey, Is.EqualTo("AIAdmin"));
                 Assert.That(description.Title, Is.EqualTo("Agent Context"));
                 Assert.That(description.Description, Is.EqualTo("An agent context is how a generative AI should be implemented to answer questions and create context.  It consists of a vector database, a content database, LLM provide and model as well as basic information about how prompts should be created such as user, role and system contexts."));
                 Assert.That(description.Help, Is.EqualTo("An agent context is how a generative AI should be implemented to answer questions and create context.  It consists of a vector database, a content database, LLM provide and model as well as basic information about how prompts should be created such as user, role and system contexts."));

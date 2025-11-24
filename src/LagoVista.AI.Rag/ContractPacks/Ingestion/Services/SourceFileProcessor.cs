@@ -19,11 +19,11 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
     /// Default implementation of INormalizedChunkBuilderService.
     /// Drives the Item 7 pipeline from raw source file to NormalizedChunk BuildChunksAsyncinstances.
     /// </summary>
-    public class DefaultNormalizedChunkBuilderService : INormalizedChunkBuilderService
+    public class SourceFileProcessor : ISourceFileProcessor
     {
         private readonly IChunkerServices _chunkerServics;
 
-        public DefaultNormalizedChunkBuilderService(IChunkerServices chunkerServices)
+        public SourceFileProcessor(IChunkerServices chunkerServices)
         {
         }
 
@@ -48,7 +48,6 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
             var normalizedChunks = new List<NormalizedChunk>();
 
             var fileInfo = new FileInfo(filePath);
-
 
             var splitSymbols = symbolSplitsResult.Result;
             foreach(var splitSymbol in splitSymbols)

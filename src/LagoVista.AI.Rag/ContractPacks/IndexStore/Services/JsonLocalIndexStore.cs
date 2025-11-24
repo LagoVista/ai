@@ -23,6 +23,11 @@ namespace LagoVista.AI.Rag.ContractPacks.IndexStore.Services
             NullValueHandling = NullValueHandling.Ignore
         };
 
+        public JsonLocalIndexStore()
+        {
+
+        }
+
         public JsonLocalIndexStore(string rootFolder)
         {
             if (string.IsNullOrWhiteSpace(rootFolder))

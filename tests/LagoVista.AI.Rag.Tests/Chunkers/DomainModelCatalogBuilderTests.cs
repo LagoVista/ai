@@ -131,7 +131,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
                     ModelName = "Device",
                     Namespace = "LagoVista.Devices",
                     QualifiedName = "LagoVista.Devices.Device",
-                    Domain = "Devices"
+                    BusinessDomainKey = "Devices"
                 };
 
                 chunkerMock

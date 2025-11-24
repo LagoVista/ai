@@ -64,8 +64,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
             if (!string.IsNullOrWhiteSpace(BaseTypeName))
                 overview.AppendLine($"Base Type: {BaseTypeName}");
 
-            if (ManagerType != null)
-                overview.AppendLine($"Manager Type: {ManagerType}");
+            overview.AppendLine($"Manager Type: {ManagerType}");
 
             if (!string.IsNullOrWhiteSpace(PrimaryEntity))
                 overview.AppendLine($"Primary Entity: {PrimaryEntity}");
