@@ -18,6 +18,7 @@ using LagoVista.AI.Services;
 using LagoVista.AI.Interfaces;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.IoT.Logging.Utils;
+using LagoVista.Core.Interfaces;
 
 namespace LagoVista.AI.RagConsole
 {
@@ -102,9 +103,15 @@ namespace LagoVista.AI.RagConsole
                 return;
             }
 
-            SLWIOC.RegisterSingleton<IAdminLogger>(new AdminLogger(new ConsoleLogWriter()));
+
+
+            var adminLogger = new AdminLogger(new ConsoleLogWriter());
+            SLWIOC.RegisterSingleton<IAdminLogger>(adminLogger);
             var openAISettings = new OpenAISettings(result.Result.Embeddings.BaseUrl, result.Result.Embeddings.ApiKey, result.Result.Embeddings.Model);
             var qdrantSettings = new QdrantSettings(result.Result.Qdrant.Endpoint, result.Result.Qdrant.ApiKey);
+
+            var embedder = new OpenAIEmbedder(openAISettings, adminLogger);
+
             SLWIOC.RegisterSingleton<IOpenAISettings>(openAISettings);
             SLWIOC.RegisterSingleton<IQdrantSettings>(qdrantSettings);
             

@@ -13,6 +13,7 @@ using LagoVista.AI.Rag.ContractPacks.Ingestion.Services;
 using LagoVista.AI.Rag.ContractPacks.Orchestration.Interfaces;
 using LagoVista.AI.Rag.ContractPacks.Registry.Interfaces;
 using LagoVista.AI.Rag.Models;
+using LagoVista.Core.Interfaces;
 using LagoVista.IoT.Logging.Loggers;
 using Microsoft.CodeAnalysis.CSharp;
 
@@ -47,6 +48,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
         private readonly ISourceFileProcessor _sourceFileProcessor;
         private readonly IDomainModelCatalogBuilder _domainModelCatalogBuilder;
         private readonly IResxLabelScanner _resxLabelScanner;
+        private readonly IEmbedder _embedder;
 
 
         public IndexRunOrchestrator(
@@ -62,6 +64,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
             IDomainModelCatalogBuilder domainModelCatalogBuilder,
             IIndexFileContextBuilder indexFileContextBuilder,
             IResxLabelScanner resxLabelScanner,
+            IEmbedder embedder,
             IMetadataRegistryClient metadataRegistryClient)
         {
             _indexFileContextBuilder = indexFileContextBuilder ?? throw new ArgumentNullException(nameof(indexFileContextBuilder));
@@ -77,6 +80,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
             _sourceFileProcessor = sourceFileProcessor ?? throw new ArgumentNullException(nameof(sourceFileProcessor));
             _domainModelCatalogBuilder = domainModelCatalogBuilder ?? throw new ArgumentNullException(nameof(domainModelCatalogBuilder));
             _resxLabelScanner = resxLabelScanner ?? throw new ArgumentNullException(nameof(resxLabelScanner));
+            _embedder = embedder ?? throw new ArgumentNullException(nameof(embedder));
         }
 
         public async Task RunAsync(IngestionConfig config, string mode = null, string processRepo = null, bool verbose = false, bool dryrun = false, CancellationToken cancellationToken = default)
@@ -93,6 +97,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
             int idx = 1;
 
             var totalFilesFound = 0;
+            var totalPartsToIndex = 0;
             foreach (var repoId in repos)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -161,6 +166,15 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
 
                         foreach (var result in fileProcessResult.Result.RagPoints)
                         {
+                            totalPartsToIndex++;
+                            if (String.IsNullOrEmpty(result.Payload.DocId))
+                                throw new ArgumentNullException("DocId");
+
+                            var embedResult = await _embedder.EmbedAsync(System.Text.ASCIIEncoding.ASCII.GetString(result.Contents));
+                            result.Vector = embedResult.Result.Vector;
+                            result.Payload.EmbeddingModel = embedResult.Result.EmbeddingModel;
+
+                            Console.WriteLine(result.Payload.DocId);
                             Console.WriteLine(result.Payload.Title);
                             Console.WriteLine(result.Payload.SemanticId);
                         }
@@ -196,7 +210,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
             }
 
 
-            _adminLogger.Trace($"[IndexRunOrchestrator_RunAsync] - Total Files Found {totalFilesFound} files.");
+            _adminLogger.Trace($"[IndexRunOrchestrator_RunAsync] - Total Files Found {totalFilesFound} files, created {totalPartsToIndex} indexes.");
         }
     }
 }

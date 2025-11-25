@@ -39,11 +39,6 @@ namespace LagoVista.AI.Services
             public float[] Embedding { get; set; }
         }
 
-        public OpenAIEmbedder(IAdminLogger adminLogger)
-        {
-            _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
-        }
-
         public OpenAIEmbedder(IOpenAISettings aiSettings, IAdminLogger adminLogger)
         {
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
