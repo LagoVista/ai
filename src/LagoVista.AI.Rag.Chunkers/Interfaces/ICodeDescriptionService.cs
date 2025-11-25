@@ -72,5 +72,14 @@ namespace LagoVista.AI.Rag.Chunkers.Interfaces
         /// <returns></returns>
         InvokeResult<IReadOnlyList<DomainSummaryInfo>> ExtractDomainSummary(string source);
 
+
+        /// <summary>
+        /// Create a set of descriptions for summary SummaryData objects.
+        /// </summary>
+        /// <param name="ctx"></param>
+        /// <param name="sourceText"></param>
+        /// <param name="resources"></param>
+        /// <returns></returns>
+        InvokeResult<SummaryDataDescription> BuildSummaryDescription(IndexFileContext ctx, string sourceText, IReadOnlyDictionary<string, string> resources);
     }
 }

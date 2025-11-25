@@ -32,6 +32,11 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             return ModelMetadataDescriptionBuilder.FromSource(ctx, sourceText, resources);
         }
 
+        public InvokeResult<SummaryDataDescription> BuildSummaryDescription(IndexFileContext ctx, string sourceText, IReadOnlyDictionary<string, string> resources)
+        {
+            return SummaryDataDescriptionBuilder.FromSource(ctx, sourceText, resources);
+        }
+
         /// <inheritdoc />
         public InvokeResult<ManagerDescription> BuildManagerDescription(IndexFileContext ctx, string sourceText)
         {

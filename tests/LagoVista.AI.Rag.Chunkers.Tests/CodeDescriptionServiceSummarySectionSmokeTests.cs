@@ -24,6 +24,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         private const string RepoPath = "./Content/AgentContextTestRepository.txt";
         private const string ControllerPath = "./Content/AgentContextTestController.txt";
         private const string ResourcePath = "./Content/resources.resx";
+        private const string SummaryPath = "./Content/SummaryModel.txt";
 
         private CodeDescriptionService _service;
 
@@ -40,6 +41,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             Assert.That(File.Exists(ManagerPath), Is.True, $"Manager content file not found at {ManagerPath}");
             Assert.That(File.Exists(ControllerPath), Is.True, $"Controller content file not found at {ControllerPath}");
             Assert.That(File.Exists(RepoPath), Is.True, $"Repository content file not found at {RepoPath}");
+            Assert.That(File.Exists(SummaryPath), Is.True, $"Repository content file not found at {SummaryPath}");
         }
 
         private static IReadOnlyDictionary<string, string> LoadResources()
@@ -116,8 +118,26 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             ModelClassName = "AgentContextTest",
             ModelName = "Agent Context",
             ModelTagLine = "The Agent Context model provides context information about an AI agent's operational environment."
-
         };
+
+        [Test]
+        public void SummaryDescription_BuildSections_Smoke()
+        {
+            EnsureFixturesExist();
+
+            var modelSource = File.ReadAllText(SummaryPath);
+            var resources = LoadResources();
+
+            var description = _service.BuildSummaryDescription(GetIndexFileContext(), modelSource, resources).Result;
+            Assert.That(description, Is.Not.Null);
+
+            var sections = description.BuildSections(headerInfo).ToList();
+            Assert.That(sections.Count, Is.GreaterThan(0), "Expected at least one SummarySection for ModelStructureDescription.");
+
+            DumpSections("SummaryListDescription", sections);
+            DumpSectionsToFile("SummaryListDescription", sections);
+        }
+
 
         [Test]
         public void ModelStructureDescription_BuildSections_Smoke()
