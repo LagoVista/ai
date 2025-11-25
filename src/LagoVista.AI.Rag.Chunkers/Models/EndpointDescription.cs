@@ -60,12 +60,6 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         public override string Subtype { get => "Endpoint"; }
 
         /// <summary>
-        /// Primary entity type this endpoint operates on, e.g. "Device".
-        /// May be null if a clear entity cannot be inferred.
-        /// </summary>
-        public string PrimaryEntity { get; set; }
-
-        /// <summary>
         /// Handler linkage information (e.g., Manager interface and method)
         /// for this endpoint.
         /// </summary>

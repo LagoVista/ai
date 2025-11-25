@@ -18,9 +18,9 @@ namespace LagoVista.AI.AgentClient
     public class AgentExecutionClient : IAgentExecutionClient
     {
         private readonly HttpClient _httpClient;
-        private readonly IAdminLogger _adminLogger;
+        private readonly IAdminLogger? _adminLogger;
 
-        public AgentExecutionClient(HttpClient httpClient, IAdminLogger adminLogger = null)
+        public AgentExecutionClient(HttpClient httpClient, IAdminLogger? adminLogger = null)
         {
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             _adminLogger = adminLogger; // can be null for simple callers like CLI
@@ -145,8 +145,8 @@ namespace LagoVista.AI.AgentClient
         }
 
         public Task<AgentExecuteResponse> AskAsync(EntityHeader agentContext, EntityHeader conversationContext,
-            string instruction, string conversationId = null, string workspaceId = null, string repo = null,
-            string language = null, string ragScope = null, IEnumerable<ActiveFile> activeFiles = null,
+            string instruction, string? conversationId = null, string? workspaceId = null, string? repo = null,
+            string? language = null, string? ragScope = null, IEnumerable<ActiveFile>? activeFiles = null,
             CancellationToken cancellationToken = default)
         {
             if (agentContext == null || EntityHeader.IsNullOrEmpty(agentContext))
@@ -179,8 +179,8 @@ namespace LagoVista.AI.AgentClient
         }
 
         public Task<AgentExecuteResponse> EditAsync(EntityHeader agentContext, EntityHeader conversationContext,
-            string instruction, IEnumerable<ActiveFile> activeFiles, string conversationId = null,
-            string workspaceId = null, string repo = null, string language = null, string ragScope = null,
+            string instruction, IEnumerable<ActiveFile> activeFiles, string? conversationId = null,
+            string? workspaceId = null, string? repo = null, string? language = null, string? ragScope = null,
             CancellationToken cancellationToken = default)
         {
             if (agentContext == null || EntityHeader.IsNullOrEmpty(agentContext))

@@ -17,7 +17,7 @@ namespace LagoVista.AI.Models.TrainingData
 
         public long ContentSize { get; set; }
 
-        public List<EntityHeader> Labels { get; set; }
+        public new List<EntityHeader> Labels { get; set; }
 
         public static SampleDetail FromSample(Sample sample)
         {

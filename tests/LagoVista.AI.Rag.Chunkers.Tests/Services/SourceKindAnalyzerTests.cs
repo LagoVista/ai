@@ -66,6 +66,49 @@ public class AIDomain
         }
 
         [Test]
+        public void AnalyzeFile_Model_From_EntityBase()
+        {
+            var source = @"namespace LagoVista.AI.Models
+{
+    public class AgentContext : EntityBase
+    {
+    }
+}
+";
+
+            var result = SourceKindAnalyzer.AnalyzeFile(source, "src/LagoVista.AI.Models/AgentContext.cs");
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.SubKind, Is.EqualTo(CodeSubKind.Model));
+                Assert.That(result.PrimaryTypeName, Is.EqualTo("AgentContext"));
+                Assert.That(result.Reason, Does.Contain("EntityBase"));
+            });
+        }
+
+
+        [Test]
+        public void AnalyzeFile_Summary_From_SummaryData()
+        {
+            var source = @"namespace LagoVista.AI.Models
+{
+    public class AgentContextSummary : SummaryData
+    {
+    }
+}
+";
+
+            var result = SourceKindAnalyzer.AnalyzeFile(source, "src/LagoVista.AI.Models/AgentContext.cs");
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.SubKind, Is.EqualTo(CodeSubKind.SummaryListModel));
+                Assert.That(result.PrimaryTypeName, Is.EqualTo("AgentContextSummary"));
+                Assert.That(result.Reason, Does.Contain("SummaryData"));
+            });
+        }
+
+        [Test]
         public void AnalyzeFile_Manager_From_BaseType_And_Namespace()
         {
             var source = @"namespace LagoVista.AI.Managers

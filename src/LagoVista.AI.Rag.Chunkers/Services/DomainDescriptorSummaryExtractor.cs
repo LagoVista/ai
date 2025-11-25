@@ -85,6 +85,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
 
                 var info = new DomainSummaryInfo(
                     domainKey: !string.IsNullOrWhiteSpace(domainKey) ? domainKey : title,
+                    domainKeyName: ResolveDomainKeyName(domainAttr, constStringFields),    
                     title: title,
                     description: description ?? string.Empty,
                     domainType: domainType,
@@ -187,6 +188,22 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 {
                     return value;
                 }
+            }
+
+            return null;
+        }
+
+        private static string ResolveDomainKeyName(AttributeSyntax attr, Dictionary<string, string> constStrings)
+        {
+            if (attr.ArgumentList == null || attr.ArgumentList.Arguments.Count == 0)
+                return null;
+
+            var argExpr = attr.ArgumentList.Arguments[0].Expression;
+
+
+            if (argExpr is IdentifierNameSyntax ident)
+            {
+                return ident.Identifier.Text;
             }
 
             return null;

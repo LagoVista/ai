@@ -36,7 +36,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 .FirstOrDefault(c => HasAttribute(c, "EntityDescription"));
 
             if (modelType == null)
-                throw new InvalidOperationException("No class with [EntityDescription] attribute was found in the provided source.");
+                return InvokeResult<ModelMetadataDescription>.FromError("No class with [EntityDescription] attribute was found in the provided source.");
 
             var ns = GetNamespace(modelType);
             var modelName = modelType.Identifier.ValueText;
@@ -79,6 +79,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             {
                 // Identity
                 ModelName = modelName,
+                PrimaryEntity = modelName,
                 Namespace = ns,
                 Domain = domain,
 

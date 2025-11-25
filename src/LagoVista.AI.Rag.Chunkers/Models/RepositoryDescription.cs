@@ -38,11 +38,6 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         public IReadOnlyList<string> ImplementedInterfaces { get; set; }
 
         /// <summary>
-        /// Logical entity type this repository persists (IDX-0040 PrimaryEntity).
-        /// </summary>
-        public string PrimaryEntity { get; set; }
-
-        /// <summary>
         /// Unique set of interface-typed dependencies pulled from ALL constructors.
         /// e.g. IAdminLogger, IMLRepoSettings, etc.
         /// </summary>

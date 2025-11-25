@@ -35,6 +35,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
 
             var symbol = string.IsNullOrWhiteSpace(ClassName) ? "(unknown-repository)" : ClassName;
             var sections = new List<SummarySection>();
+            _summarySections = sections;
 
             // -----------------------------------------------------------------
             // repository-overview
@@ -112,6 +113,8 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                     ModelName = headerInfo?.ModelName,
                     SectionNormalizedText = emptyText.ToString().Trim()
                 });
+
+               
 
                 return sections;
             }

@@ -19,9 +19,6 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Interfaces
         /// <param name="repoId">Repository identifier (must match discovery step).</param>
         /// <param name="files">Discovered files from the repository.</param>
         /// <param name="token">Cancellation token.</param>
-        Task<DomainModelCatalog> BuildAsync(
-            string repoId,
-            IReadOnlyList<DiscoveredFile> files,
-            CancellationToken token = default);
+        Task<DomainModelCatalog> BuildAsync(string repoId, IReadOnlyList<DiscoveredFile> files, IReadOnlyDictionary<string, string> resources, CancellationToken token = default);
     }
 }

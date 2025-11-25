@@ -114,7 +114,7 @@ namespace LagoVista.AI.Services
 
                     resp.Dispose();
                 }
-                catch (TaskCanceledException ex)
+                catch (TaskCanceledException)
                 {
                     _adminLogger.AddError("[OpenAIEmbedder__PostWithRetryAsync]", $"[OpenAIEmbedder__PostWithRetryAsync] - Timeout Exception - Attempt {attempt} of 5, will retry");
                 }

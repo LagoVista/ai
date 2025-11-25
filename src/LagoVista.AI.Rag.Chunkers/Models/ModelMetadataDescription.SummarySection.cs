@@ -17,6 +17,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
             if (maxTokens <= 0) maxTokens = 6500;
 
             var sections = new List<SummarySection>();
+            _summarySections = sections;
 
             var symbol = !string.IsNullOrWhiteSpace(headerInfo?.ModelName)
                 ? headerInfo.ModelName

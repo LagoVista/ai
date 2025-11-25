@@ -50,9 +50,6 @@ namespace LagoVista.AI.Models
         public string Icon { get; set; }
 
 
-        [FormField(LabelResource: AIResources.Names.Common_Description, FieldType: FieldTypes.MultiLineText, ResourceType: typeof(AIResources))]
-        public string Description { get; set; }
-
         [FormField(LabelResource: AIResources.Names.Model_ModelCategory, FieldType: FieldTypes.EntityHeaderPicker, EntityHeaderPickerUrl: "/api/ml/modelcategories", IsRequired: true, WaterMark: AIResources.Names.Model_ModelCategory_Select, ResourceType: typeof(AIResources))]
         public EntityHeader ModelCategory { get; set; }
 

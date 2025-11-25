@@ -1,0 +1,74 @@
+﻿// --- BEGIN CODE INDEX META (do not edit) ---
+// ContentHash: 5b54b8b6454b88a29b7346898ce3dacf8b15740ca7d90a88928cfc27e529e2ff
+// IndexVersion: 2
+// --- END CODE INDEX META ---
+using System;
+using System.Collections.Generic;
+using System.Data.Common;
+using System.Text;
+
+namespace LagoVista.IoT.Billing.Models
+{
+    public class YearEndTaxes
+    {
+        public int TaxYear { get; set; }
+
+        public string StartDate { get; set; }
+        public string EndDate { get; set; }
+
+        public List<TransactionRecord> Transactions { get; set; } = new List<TransactionRecord>();
+
+        public List<TaxCategory> TaxCategories { get; set; } = new List<TaxCategory>();
+
+        public class TaxCategory
+        {
+            public bool Passthrough { get; set; } = false;
+            public string Category { get; set; }
+            public double Total { get; set; }
+            public List<Category> Amounts { get; set; } = new List<Category>();
+            public List<TransactionRecord> Transactions { get; set; }
+        }
+
+        public class Category
+        {
+            public string Name { get; set; }
+            public double Amount { get; set; }
+            public List<TransactionRecord> Transactions { get; set; }
+        }
+
+        public class TransactionRecord
+        {
+            public static TransactionRecord Create(DbDataReader rdr)
+            {
+                return new TransactionRecord()
+                {
+                    Id = rdr["Id"].ToString(),
+                    AccountId = rdr["AccountId"].ToString(),
+                    UserId = rdr["UserId"].ToString(),
+                    Description = rdr["Description"].ToString(),
+                    Category = rdr["Category"].ToString(),
+                    EncryptedAmount = rdr["EncryptedAmount"].ToString(),
+                    Type = rdr["Type"].ToString(),
+                    Invert = Convert.ToBoolean(rdr["Invert"]),
+                    TaxCategory = rdr["TaxCategory"].ToString(),
+                    TxDate = rdr["TxDate"].ToString(),
+                    Passthrough = Convert.ToBoolean(rdr["Passthrough"])
+                };
+            }
+
+            public string Id { get; set; }
+            public string UserId { get; set; }
+            public string AccountId { get; set; }
+            public string TaxCategory { get; set; }
+            public string Description { get; set; }
+            public string Category { get; set; }
+            public string EncryptedAmount { get; set; }
+            public double Amount { get; set; }
+            public string Type { get; set; }
+            public string Error { get; set; }
+            public bool Invert { get; set; }
+            public bool Passthrough { get; set; }
+            public string TxDate { get; set; }
+        }
+    }
+}

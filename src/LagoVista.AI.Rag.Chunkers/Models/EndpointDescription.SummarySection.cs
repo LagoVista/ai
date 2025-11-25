@@ -29,7 +29,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
             }
 
             var sections = new List<SummarySection>();
-
+            _summarySections = sections;
             // Prefer EndpointKey, then Controller.Action, then Controller, then fallback.
             string symbol;
             if (!string.IsNullOrWhiteSpace(EndpointKey))

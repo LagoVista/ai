@@ -43,12 +43,6 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         public string BaseTypeName { get; set; }
 
         /// <summary>
-        /// Primary entity name that this Manager orchestrates, e.g. "Device".
-        /// May be null if heuristics cannot determine a clear entity.
-        /// </summary>
-        public string PrimaryEntity { get; set; }
-
-        /// <summary>
         /// Simple names of all interfaces implemented by the Manager class,
         /// e.g. ["IDeviceManager", "IDisposable"].
         /// </summary>

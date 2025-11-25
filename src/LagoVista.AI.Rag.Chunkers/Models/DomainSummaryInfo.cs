@@ -20,6 +20,12 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         public string DomainKey { get; }
 
         /// <summary>
+        /// Emtities refer to the domain key by a constant, when we are statically parsing each
+        /// entity, we only have the name of the constant, capture that here so we can do a lookup.
+        /// </summary>
+        public string DomainKeyName { get; set; }
+
+        /// <summary>
         /// User-facing domain title/name (e.g. "AI Admin").
         /// </summary>
         public string Title { get; }
@@ -46,6 +52,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
 
         public DomainSummaryInfo(
             string domainKey,
+            string domainKeyName,
             string title,
             string description,
             DomainDescription.DomainTypes domainType,
@@ -53,6 +60,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
             string sourcePropertyName)
         {
             DomainKey = domainKey ?? throw new ArgumentNullException(nameof(domainKey));
+            DomainKeyName = domainKeyName;
             Title = title ?? throw new ArgumentNullException(nameof(title));
             Description = description ?? string.Empty;
             DomainType = domainType;

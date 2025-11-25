@@ -27,17 +27,17 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         /// split manager-methods into multiple sections. Final RagChunk slicing
         /// still happens downstream.
         /// </param>
-        public IEnumerable<SummarySection> BuildSections(
-            DomainModelHeaderInformation headerInfo,
-            int maxTokens = 6500)
+        public IEnumerable<SummarySection> BuildSections(DomainModelHeaderInformation headerInfo, int maxTokens = 6500)
         {
             if (maxTokens <= 0)
             {
                 maxTokens = 6500;
             }
 
+
             var symbol = string.IsNullOrWhiteSpace(ClassName) ? "(unknown-manager)" : ClassName;
             var sections = new List<SummarySection>();
+            _summarySections = sections;
 
             // ---------------------------------------------------------------------
             // manager-overview
@@ -185,6 +185,8 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                     SectionNormalizedText = emptyText.ToString().Trim()
                 });
 
+                _summarySections = sections;
+
                 return sections;
             }
 
@@ -298,6 +300,8 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                     SectionNormalizedText = currentText.ToString().Trim()
                 });
             }
+
+            _summarySections = sections;
 
             return sections;
         }

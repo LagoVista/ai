@@ -34,6 +34,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
             }
 
             var sections = new List<SummarySection>();
+            _summarySections = sections;
 
             // Symbol: prefer logical underlying entity name; fall back to list name.
             var symbol = !string.IsNullOrWhiteSpace(UnderlyingEntityTypeName)

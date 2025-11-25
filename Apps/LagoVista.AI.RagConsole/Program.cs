@@ -26,7 +26,7 @@ namespace LagoVista.AI.RagConsole
         // Parse command-line arguments
         // Modes: "index" | "subkind" | "resources"
         static string mode = "index";
-        static string repoId = null;
+        static string? repoId = "";
         static bool showHelp = false;
         static bool verbose = false;
         static bool dryRun = false;

@@ -19,10 +19,7 @@ namespace LagoVista.AI.Models.TrainingData
             Labels = new List<EntityHeader>();
         }
 
-        [FormField(LabelResource: AIResources.Names.Common_Description, FieldType: FieldTypes.MultiLineText, ResourceType: typeof(AIResources))]
-        public string Description { get; set; }
-
-        public List<EntityHeader> Labels { get; set; }
+        public new List<EntityHeader> Labels { get; set; }
 
         public List<string> GetFormFields()
         {

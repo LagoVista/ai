@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using LagoVista.AI.Rag.Chunkers.Services;
+using LagoVista.Core.Validation;
 
 namespace LagoVista.AI.Rag.Chunkers.Models
 {
@@ -12,26 +14,54 @@ namespace LagoVista.AI.Rag.Chunkers.Models
     {
         public IReadOnlyDictionary<string, DomainSummaryInfo> DomainsByKey { get; }
 
+        public IReadOnlyDictionary<string, DomainSummaryInfo> DomainsByKeyName { get; }
+
         public IReadOnlyDictionary<string, ModelCatalogEntry> ModelsByQualifiedName { get; }
 
         public DomainModelCatalog(
             IReadOnlyDictionary<string, DomainSummaryInfo> domainsByKey,
+            IReadOnlyDictionary<string, DomainSummaryInfo> domainsByKeyName,
             IReadOnlyDictionary<string, ModelCatalogEntry> modelsByQualifiedName)
         {
             DomainsByKey = domainsByKey ?? throw new ArgumentNullException(nameof(domainsByKey));
+            DomainsByKeyName = domainsByKeyName ?? throw new ArgumentNullException(nameof(domainsByKeyName));
             ModelsByQualifiedName = modelsByQualifiedName ?? throw new ArgumentNullException(nameof(modelsByQualifiedName));
         }
 
-        public bool TryGetDomain(string domainKey, out DomainSummaryInfo domain)
+        public InvokeResult<DomainSummaryInfo> GetDomainByKey(string domainKey)
         {
             if (domainKey == null) throw new ArgumentNullException(nameof(domainKey));
-            return DomainsByKey.TryGetValue(domainKey, out domain);
+
+            if(DomainsByKey.ContainsKey(domainKey))
+            {
+                return InvokeResult<DomainSummaryInfo>.Create(DomainsByKey[domainKey]);
+            }
+            if(DomainsByKeyName.ContainsKey(domainKey))
+            {
+                return InvokeResult<DomainSummaryInfo>.Create(DomainsByKeyName[domainKey]);
+            }   
+
+
+            return InvokeResult<DomainSummaryInfo>.FromError($"Domain with key '{domainKey}' not found in catalog.");
         }
 
-        public bool TryGetModel(string qualifiedName, out ModelCatalogEntry model)
+        public InvokeResult<ModelCatalogEntry> GetModelByName(string qualifiedName)
         {
             if (qualifiedName == null) throw new ArgumentNullException(nameof(qualifiedName));
-            return ModelsByQualifiedName.TryGetValue(qualifiedName, out model);
+
+
+            if( ModelsByQualifiedName.TryGetValue(qualifiedName, out ModelCatalogEntry model))
+            {
+                return InvokeResult<ModelCatalogEntry>.Create(model);
+            }
+
+            var fullKey = ModelsByQualifiedName.Keys.FirstOrDefault(key => key.EndsWith(qualifiedName));
+            if(fullKey != default)
+            {
+                return InvokeResult<ModelCatalogEntry>.Create(ModelsByQualifiedName[fullKey]);
+            }
+           
+            return InvokeResult<ModelCatalogEntry>.FromError($"Model with qualified name '{qualifiedName}' not found in catalog."); 
         }
     }
 

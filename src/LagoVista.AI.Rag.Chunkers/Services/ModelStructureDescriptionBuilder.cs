@@ -22,8 +22,9 @@ namespace LagoVista.AI.Rag.Chunkers.Services
         public static InvokeResult<ModelStructureDescription> FromSource(IndexFileContext ctx, string sourceText, IReadOnlyDictionary<string, string> resources)
         {
             var description = FromSource(sourceText, resources);
-            /* populate ctx fields */
-            description.Result.SetCommonProperties(ctx);
+            if(description.Successful) 
+                /* populate ctx fields */
+                description.Result.SetCommonProperties(ctx);
 
             return description;
         }
@@ -40,12 +41,19 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             if (resources == null) throw new ArgumentNullException(nameof(resources));
 
             // Core analysis (EntityDescription + FormField metadata)
-            var analysis = ModelSourceAnalyzer.Analyze(sourceText, resources);
+            var analysisResult = ModelSourceAnalyzer.Analyze(sourceText, resources);
 
+            if (!analysisResult.Successful)
+            {
+                return InvokeResult<ModelStructureDescription>.FromInvokeResult(analysisResult.ToInvokeResult());
+            }
+
+            var analysis = analysisResult.Result;
             var result = new ModelStructureDescription
             {
                 // Identity
                 ModelName = analysis.ModelName,
+                PrimaryEntity = analysis.ModelName,
                 Namespace = analysis.Namespace,
                 QualifiedName = analysis.QualifiedName,
                 BusinessDomainKey = analysis.Domain,
@@ -147,13 +155,12 @@ namespace LagoVista.AI.Rag.Chunkers.Services
 
                 result.Properties.Add(propDesc);
             }
-
             // Append EntityBase properties (via reflection) when applicable
             AppendEntityBasePropertiesIfApplicable(sourceText, result);
 
             return InvokeResult<ModelStructureDescription>.Create(result);
-        }
 
+        }
         // ---------- helpers ----------
 
         private static bool IsChildField(FormFieldSyntaxInfo field)

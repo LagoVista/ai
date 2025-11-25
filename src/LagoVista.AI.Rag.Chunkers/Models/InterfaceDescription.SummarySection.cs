@@ -35,6 +35,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
 
             var symbol = string.IsNullOrWhiteSpace(InterfaceName) ? "(unknown-interface)" : InterfaceName;
             var sections = new List<SummarySection>();
+            _summarySections = sections;
 
             // -----------------------------------------------------------------
             // interface-overview
@@ -202,6 +203,8 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                     SectionNormalizedText = currentText.ToString().Trim()
                 });
             }
+
+            _summarySections = sections;
 
             return sections;
         }

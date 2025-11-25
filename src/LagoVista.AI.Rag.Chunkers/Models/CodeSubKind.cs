@@ -31,6 +31,8 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         Response,
         ProxyServices,
         Message,
+        Ddr,
+        MarkDown,
         Other
     }
 }

@@ -1,7 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Rag.Chunkers.Models;
-using LagoVista.AI.Rag.Chunkers.Models; // SummaryObjectKind, TitleDescriptionReviewResult
 
 namespace LagoVista.AI.Rag.ContractPacks.Quality.Interfaces
 {

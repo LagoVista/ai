@@ -27,6 +27,14 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             Assert.Throws<ArgumentNullException>(() => new DomainModelCatalogBuilder(null, null));
         }
 
+        private static IReadOnlyDictionary<string, string> LoadResources()
+        {
+            // Uses ResxLabelScanner helper to load a single resource dictionary
+            // from the current directory (expects resources.resx in ./Content).
+            var scanner = new ResxLabelScanner();
+            return scanner.GetSingleResourceDictionary(".");
+        }
+
         [Test]
         public void BuildAsync_NullRepoId_Throws()
         {
@@ -36,7 +44,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             var sut = new DomainModelCatalogBuilder(chunkerMock.Object, descriptorMock.Object);
 
             Assert.ThrowsAsync<ArgumentNullException>(async () =>
-                await sut.BuildAsync(null, new List<DiscoveredFile>()));
+                await sut.BuildAsync(null, new List<DiscoveredFile>(),LoadResources()));
         }
 
         [Test]
@@ -48,7 +56,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             var sut = new DomainModelCatalogBuilder(chunkerMock.Object, descriptorMock.Object);
 
             Assert.ThrowsAsync<ArgumentNullException>(async () =>
-                await sut.BuildAsync(RepoId, null));
+                await sut.BuildAsync(RepoId, null, LoadResources()));
         }
 
         [Test]
@@ -74,7 +82,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
                     new DiscoveredFile { FullPath = missingCsPath, RelativePath = "Missing.cs" }
                 };
 
-                var catalog = await sut.BuildAsync(RepoId, files);
+                var catalog = await sut.BuildAsync(RepoId, files, LoadResources());
 
                 var domains = GetDomainsDictionary(catalog);
                 var models = GetModelsDictionary(catalog);
@@ -129,7 +137,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
                     .Setup(c => c.DetectForFile(sourceText, "Models/Device.cs"))
                     .Returns(detectionResult);
 
-                var domainInfo = new DomainSummaryInfo("Devices", "Devices Domain", "Domain Description", DomainDescription.DomainTypes.Service, "DomainType", "Domainproperty");
+                var domainInfo = new DomainSummaryInfo("Devices", "Devices Domain", null, "Domain Description", DomainDescription.DomainTypes.Service, "DomainType", "Domainproperty");
 
                 chunkerMock
                     .Setup(c => c.ExtractDomains(sourceText))
@@ -148,7 +156,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
                         sourceText))
                     .Returns(InvokeResult<ModelStructureDescription>.Create( modelStructure));
 
-                var catalog = await sut.BuildAsync(RepoId, files);
+                var catalog = await sut.BuildAsync(RepoId, files, LoadResources());
 
                 var domains = GetDomainsDictionary(catalog);
                 var models = GetModelsDictionary(catalog);
@@ -205,7 +213,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
                 cts.Cancel();
 
                 Assert.ThrowsAsync<OperationCanceledException>(async () =>
-                    await sut.BuildAsync(RepoId, files, cts.Token));
+                    await sut.BuildAsync(RepoId, files, LoadResources(), cts.Token));
 
                 chunkerMock.Verify(c => c.DetectForFile(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
                 chunkerMock.Verify(c => c.ExtractDomains(It.IsAny<string>()), Times.Never);

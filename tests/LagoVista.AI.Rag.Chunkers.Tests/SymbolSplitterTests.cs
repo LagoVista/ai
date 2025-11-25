@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using LagoVista.AI.Rag.Chunkers.Services;
 using NUnit.Framework;
@@ -65,6 +66,53 @@ namespace TestSpace
             Assert.That(result.Text, Does.Contain("using System.Collections.Generic;"));
             Assert.That(result.Text, Does.Contain("namespace TestSpace"));
         }
+
+        private const string ModelPath = "./Content/MultipleModel.txt";
+        private const string NichelPath = "./Content/IndustryNiche.txt";
+        private const string YearEndPath = "./Content/YearEndTaxes.txt";
+
+        [Test]
+        public void ShouldSplitAgentContext()
+        {
+            var content = System.IO.File.ReadAllText(ModelPath);
+            var result = SymbolSplitter.Split(content);
+
+            Assert.That(result.Successful, Is.True);
+            Assert.That(result.Result.Count, Is.EqualTo(3));
+        }
+
+
+        [Test]
+        public void ShouldSplitIndustryNicheInTwo()
+        {
+            var content = System.IO.File.ReadAllText(NichelPath);
+            var result = SymbolSplitter.Split(content);
+
+            Assert.That(result.Successful, Is.True);
+            Assert.That(result.Result.Count, Is.EqualTo(3));
+
+            foreach(var split in result.Result)
+            {
+                Console.WriteLine($"{split.SymbolKind} - {split.SymbolName}");
+            }
+        }
+
+        [Test]
+        public void Should_Split_And_Extract_YearEndPath()
+        {
+            var content = System.IO.File.ReadAllText(YearEndPath);
+            var result = SymbolSplitter.Split(content);
+
+            Assert.That(result.Successful, Is.True);
+            Assert.That(result.Result.Count, Is.EqualTo(4));
+
+            foreach (var split in result.Result)
+            {
+                Console.WriteLine($"{split.SymbolKind} - {split.SymbolName}");
+                Console.WriteLine(split.Text);
+            }
+        }
+
 
         [Test]
         public void Split_No_Classes_Returns_Default()

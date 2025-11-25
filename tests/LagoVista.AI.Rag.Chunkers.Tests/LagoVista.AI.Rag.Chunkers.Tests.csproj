@@ -13,9 +13,20 @@
     <None Remove="Content\AgentContextTestController.txt" />
     <None Remove="Content\AgentContextTestRepository.txt" />
     <None Remove="Content\IAgentContextManager.txt" />
+    <None Remove="Content\IndustryNiche.txt" />
     <None Remove="Content\Model_AIModel.txt" />
+    <None Remove="Content\MultipleModel.txt" />
     <None Remove="Content\sample-device.resources.txt" />
     <None Remove="Content\SummaryModel.txt" />
+    <None Remove="Content\YearEndTaxes.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Content\IndustryNiche.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\MultipleModel.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\AgentContextTestController.txt">
@@ -47,10 +58,13 @@
     <Content Include="Content\SummaryModel.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\YearEndTaxes.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="LagoVista.Core.TestBase" Version="3.0.3114.0818" />
+    <PackageReference Include="LagoVista.Core.TestBase" Version="3.0.3114.0941" />
   </ItemGroup>
 
   <ItemGroup>

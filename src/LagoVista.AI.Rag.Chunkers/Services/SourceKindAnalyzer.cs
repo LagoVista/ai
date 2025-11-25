@@ -82,7 +82,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 var fileLabel = string.IsNullOrWhiteSpace(relativePath) ? "<unknown>" : relativePath;
 
                 throw new InvalidOperationException(
-                    $"SourceKindAnalyzer.AnalyzeFile expected a single top-level type but found {typeNodes.Count} in '{fileLabel}'. " +
+                    $"SourceKindAnalyzer.AnalyzeFile expected a single top-level type but found {typeNodes.Count} in '{fileLabel}'.  Found {String.Join(',', typeNodes.Select(tn=> tn.Identifier))} " +
                     "This API must only be called with isolated symbol text (e.g., SymbolSplitter output)."
                 );
             }
@@ -97,6 +97,14 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             if (IsTest(type, ns, segments, evidence))
             {
                 kind = CodeSubKind.Test;
+            }
+            else if(IsDdr(type, ns, segments, evidence))
+            {
+                kind = CodeSubKind.Ddr;
+            }
+            else if (IsMarkDown(type, ns, segments, evidence))
+            {
+                kind = CodeSubKind.MarkDown;
             }
             else if (IsDomainDescription(type, ns, segments, evidence))
             {
@@ -334,9 +342,9 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             string[] segments,
             List<string> evidence)
         {
-            if (InheritsBase(type, "EntityBase"))
+            if (InheritsBase(type, "SummaryData"))
             {
-                evidence.Add($"Type {type.Identifier.ValueText} inherits from EntityBase.");
+                evidence.Add($"Type {type.Identifier.ValueText} inherits from SummaryData.");
                 return true;
             }
 
@@ -570,6 +578,26 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 return true;
             }
 
+            return false;
+        }
+
+        private static bool IsDdr(TypeDeclarationSyntax type, string ns, string[] segmments, List<string> evidence)
+        {
+            if (segmments[0].ToLower() == "ddrs")
+            {
+                evidence.Add($"In root DDRs folder");
+                return true;
+            }
+            return false;
+        }
+
+        private static bool IsMarkDown(TypeDeclarationSyntax type, string ns, string[] segmments, List<string> evidence)
+        {
+            if (segmments.Last().ToLower().EndsWith("md"))
+            {
+                evidence.Add($"File ends with markdown");
+                return true;
+            }
             return false;
         }
 

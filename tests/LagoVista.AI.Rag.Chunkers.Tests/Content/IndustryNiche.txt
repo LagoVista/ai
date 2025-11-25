@@ -1,0 +1,251 @@
+// --- BEGIN CODE INDEX META (do not edit) ---
+// ContentHash: f436b2ffbc2c8358a154134c8dba33e346a10440f9991b862e30938773037f20
+// IndexVersion: 2
+// --- END CODE INDEX META ---
+using LagoVista.Campaigns.Models;
+using LagoVista.Core;
+using LagoVista.Core.Attributes;
+using LagoVista.Core.Interfaces;
+using LagoVista.Core.Models;
+using LagoVista.Core.Models.UIMetaData;
+using LagoVista.Core.Validation;
+using LagoVista.IoT.Billing.Models.Resources;
+using LagoVista.MediaServices.Models;
+using LagoVista.ProjectManagement.Models;
+using LagoVista.ProjectManagement.Resources;
+using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Text;
+
+namespace LagoVista.IoT.Billing.Models
+{
+    public enum Ranking
+    {
+        [EnumLabel("10", BillingResources.Names.PVP_10, typeof(BillingResources))]
+        Ten,
+        [EnumLabel("9", BillingResources.Names.PVP_9, typeof(BillingResources))]
+        Nine,
+        [EnumLabel("8", BillingResources.Names.PVP_8, typeof(BillingResources))]
+        Eight,
+        [EnumLabel("7", BillingResources.Names.PVP_7, typeof(BillingResources))]
+        Seven,
+        [EnumLabel("6", BillingResources.Names.PVP_6, typeof(BillingResources))]
+        Six,
+        [EnumLabel("5", BillingResources.Names.PVP_5, typeof(BillingResources))]
+        Five,
+        [EnumLabel("4", BillingResources.Names.PVP_4, typeof(BillingResources))]
+        Four,
+        [EnumLabel("3", BillingResources.Names.PVP_3, typeof(BillingResources))]
+        Three,
+        [EnumLabel("2", BillingResources.Names.PVP_2, typeof(BillingResources))]
+        Two,
+        [EnumLabel("1", BillingResources.Names.PVP_1, typeof(BillingResources))]
+        One
+    }
+
+
+    [EntityDescription(Domains.CrmDomainName, BillingResources.Names.IndustryNiche_Title, BillingResources.Names.IndustryNiche_Description,
+                    BillingResources.Names.Customer_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(BillingResources), Icon: "icon-pz-target-goal",
+                    FactoryUrl: "/api/industry/niche/factory")]
+    public class IndustryNiche : IIDEntity, IValidateable, INamedEntity, IKeyedEntity, IDescriptionEntity, IIconEntity, IFormDescriptor, IFormDescriptorCol2, IFormDescriptorAdvanced, IFormDescriptorAdvancedCol2, IDiscussable
+    {
+        public IndustryNiche()
+        {
+            Id = Guid.NewGuid().ToId();
+            Fulfillment = EntityHeader<Ranking>.Create(Ranking.Five);
+            Value = EntityHeader<Ranking>.Create(Ranking.Five);
+            Profitability = EntityHeader<Ranking>.Create(Ranking.Five);
+            Depth = EntityHeader<Ranking>.Create(Ranking.Five);
+            Width = EntityHeader<Ranking>.Create(Ranking.Five);
+            Icon = "icon-pz-target-goal";
+            EmailTemplates = new List<EntityHeader>();
+        }
+
+        public string Id { get; set; }
+
+
+        [FormField(LabelResource: BillingResources.Names.Common_Key, HelpResource: BillingResources.Names.Common_Key_Help, FieldType: FieldTypes.Key, RegExValidationMessageResource: BillingResources.Names.Common_Key_Validation, ResourceType: typeof(BillingResources), IsRequired: true)]
+        public string Key { get; set; }
+
+        [FormField(LabelResource: BillingResources.Names.Common_Name, FieldType: FieldTypes.Text, ResourceType: typeof(BillingResources), IsRequired: true)]
+        public string Name { get; set; }
+
+        [FormField(LabelResource: BillingResources.Names.Common_Icon, FieldType: FieldTypes.Icon, ResourceType: typeof(BillingResources), IsRequired: true, IsUserEditable: true)]
+        public string Icon { get; set; }
+
+
+        [FormField(LabelResource: BillingResources.Names.Common_Description, IsRequired: false, FieldType: FieldTypes.MultiLineText, ResourceType: typeof(BillingResources))]
+        public string Description { get; set; }
+
+        [FormField(LabelResource: BillingResources.Names.Industry_Sensors, ChildListDisplayMember: "sensor.text", FieldType: FieldTypes.ChildListInline, ResourceType: typeof(BillingResources))]
+        public List<IndustrySensors> Sensors { get; set; }
+
+
+        [FormField(LabelResource: BillingResources.Names.Niche_PersonalFulfillment, EnumType: typeof(Ranking), FieldType: FieldTypes.Picker, WaterMark: BillingResources.Names.PVP_Select, HelpResource: BillingResources.Names.Niche_PersonalFulfillment_Help, ResourceType: typeof(BillingResources), IsRequired: true, IsUserEditable: true)]
+        public EntityHeader<Ranking> Fulfillment { get; set; }
+
+        [FormField(LabelResource: BillingResources.Names.Niche_Value, EnumType: typeof(Ranking), FieldType: FieldTypes.Picker, WaterMark: BillingResources.Names.PVP_Select, HelpResource: BillingResources.Names.Niche_Value_Help, ResourceType: typeof(BillingResources), IsRequired: true, IsUserEditable: true)]
+        public EntityHeader<Ranking> Value { get; set; }
+
+        [FormField(LabelResource: BillingResources.Names.Niche_Profitability, EnumType: typeof(Ranking), FieldType: FieldTypes.Picker, WaterMark: BillingResources.Names.PVP_Select, HelpResource: BillingResources.Names.Niche_Profitability_Help, ResourceType: typeof(BillingResources), IsRequired: true, IsUserEditable: true)]
+        public EntityHeader<Ranking> Profitability { get; set; }
+
+
+        [FormField(LabelResource: BillingResources.Names.Industry_EmailTemplates, FieldType: FieldTypes.ChildListInlinePicker, EntityHeaderPickerUrl: "/api/sales/emailtemplates", ResourceType: typeof(BillingResources))]
+        public List<EntityHeader> EmailTemplates { get; set; }
+
+
+        [FormField(LabelResource: BillingResources.Names.Common_Resources, FieldType: FieldTypes.MediaResources, ResourceType: typeof(BillingResources))]
+        public List<MediaResource> Resources { get; set; } = new List<MediaResource>();
+
+
+        [FormField(LabelResource: BillingResources.Names.Niche_Depth, EnumType: typeof(Ranking), FieldType: FieldTypes.Picker, WaterMark: BillingResources.Names.PVP_Select, HelpResource: BillingResources.Names.Niche_Depth_Help, ResourceType: typeof(BillingResources), IsRequired: true, IsUserEditable: true)]
+        public EntityHeader<Ranking> Depth { get; set; }
+
+        [FormField(LabelResource: BillingResources.Names.Niche_Width, EnumType: typeof(Ranking), FieldType: FieldTypes.Picker, WaterMark: BillingResources.Names.PVP_Select, HelpResource: BillingResources.Names.NIche_Width_Help, ResourceType: typeof(BillingResources), IsRequired: true, IsUserEditable: true)]
+        public EntityHeader<Ranking> Width { get; set; }
+
+        [FormField(LabelResource: BillingResources.Names.Industry_Surveys, ResourceType: typeof(BillingResources), IsRequired: true,
+            FieldType: FieldTypes.ChildListInlinePicker, EntityHeaderPickerUrl: "/api/surveys", SortEnums: true, AddEnumSelect: true)]
+        public List<EntityHeader> Surveys { get; set; } = new List<EntityHeader>();
+
+        [FormField(LabelResource: BillingResources.Names.Personas_Title, FieldType: FieldTypes.ChildListInlinePicker,  EntityHeaderPickerUrl: "/api/personas", EditorPath: "/business/customers/persona/{id}", ResourceType: typeof(BillingResources))]
+        public List<EntityHeader> Personas { get; set; } = new List<EntityHeader>();
+
+        [FormField(LabelResource: BillingResources.Names.ProductMarketResearch_Discussions, FieldType: FieldTypes.Discussion, HelpResource: BillingResources.Names.Customer_Opportunities_Help,
+            ResourceType: typeof(BillingResources), IsRequired: false, IsUserEditable: true)]
+        public List<Discussion> Discussions { get; set; } = new List<Discussion>();
+
+
+        [FormField(LabelResource: BillingResources.Names.ProductMarketResearch_ElevatorPitches, FieldType: FieldTypes.Discussion, HelpResource: BillingResources.Names.Customer_Opportunities_Help,
+         ResourceType: typeof(BillingResources), IsRequired: false, IsUserEditable: true)]
+        public List<Discussion> ElevatorPitches { get; set; } = new List<Discussion>();
+
+
+        [FormField(LabelResource: BillingResources.Names.ProductMarketResearch_Competitors, FieldType: FieldTypes.ChildListInline, 
+            ResourceType: typeof(BillingResources), IsRequired: false, IsUserEditable: true, FactoryUrl: "/api/competitor/factory")]
+        public List<Competitor> Competitors { get; set; } = new List<Competitor>();
+
+
+        [FormField(LabelResource: BillingResources.Names.Industry_SalesProcesses, ResourceType: typeof(BillingResources),
+            FieldType: FieldTypes.ChildListInlinePicker, FactoryUrl: "/api/sales/process")]
+        public List<EntityHeader> NicheSalesProcesses { get; set; } = new List<EntityHeader>();
+
+
+        [FormField(LabelResource: BillingResources.Names.Common_DefaultLandingPage, FieldType: FieldTypes.EntityHeaderPicker, EntityHeaderPickerUrl: "/api/landingpages", EditorPath: "/contentmanagement/landingpage/{id}", WaterMark: BillingResources.Names.Common_LandingPage_Select, ResourceType: typeof(BillingResources), IsRequired: false, IsUserEditable: true)]
+        public EntityHeader DefaultLandingPage { get; set; }
+
+        [FormField(LabelResource: BillingResources.Names.Common_LandingPages, FieldType: FieldTypes.ChildListInlinePicker, EntityHeaderPickerUrl: "/api/landingpages", EditorPath: "/contentmanagement/landingpage/{id}", ResourceType: typeof(BillingResources), IsRequired: false, IsUserEditable: true)]
+        public List<EntityHeader> NicheLandingPages { get; set; } = new List<EntityHeader>();
+
+
+        public string EmailListId { get; set; }
+        public string EmailListName { get; set; }
+
+        public EntityHeader ToEntityHeader()
+        {
+            return EntityHeader.Create(Id, Key, Name);
+        }
+
+
+        public EnumDescription CreateEnumDescription()
+        {
+            return new EnumDescription()
+            {
+                Id = Id,
+                Label = Name,
+                Key = Key,
+                Name = Name,
+                Text = Name,
+            };
+        }
+
+        public IndustryNicheSummay CreateSummary()
+        {
+            var summary = new IndustryNicheSummay()
+            {
+                Id = Id,
+                Icon = Icon,
+                Description = Description,
+                IsPublic = false,
+                Key = Key,
+                Name = Name
+            };
+
+            summary.Score += Convert.ToInt32(Fulfillment.Id);
+            summary.Score += Convert.ToInt32(Value.Id);
+            summary.Score += Convert.ToInt32(Profitability.Id);
+            summary.Score += Convert.ToInt32(Depth.Id);
+            summary.Score += Convert.ToInt32(Width.Id);
+
+            return summary;
+        }
+
+
+        public List<string> GetAdvancedFields()
+        {
+            return new List<string>()
+            {
+                nameof(Name),
+                nameof(Key),
+                nameof(Icon),
+                nameof(DefaultLandingPage),
+                nameof(Fulfillment),
+                nameof(Value),
+                nameof(Profitability),
+                nameof(Depth),
+                nameof(Width),
+                nameof(Description),
+            };
+        }
+
+        public List<string> GetAdvancedFieldsCol2()
+        {
+            return new List<string>()
+            {
+                nameof(Personas),
+                nameof(DefaultLandingPage),
+                nameof(NicheLandingPages),
+                nameof(Discussions),
+                nameof(Competitors),
+                nameof(Surveys),
+                nameof(EmailTemplates),
+                nameof(ElevatorPitches),
+                nameof(Sensors),
+            };
+        }
+
+        public List<string> GetFormFields()
+        {
+            return new List<string>()
+            {
+                nameof(Name),
+                nameof(Key),
+                nameof(Icon),
+                nameof(Fulfillment),
+                nameof(Value),
+                nameof(Profitability),
+                nameof(Depth),
+                nameof(Width),
+                nameof(Description),
+            };
+        }
+
+        public List<string> GetFormFieldsCol2()
+        {
+            return new List<string>()
+            {
+                nameof(Personas),
+                nameof(Competitors),
+                nameof(Discussions),
+                nameof(Resources),
+            };
+        }
+
+        public class IndustryNicheSummay : SummaryData
+        {
+            public int Score { get; set; }
+        }
+    }
+}

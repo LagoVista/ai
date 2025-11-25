@@ -14,6 +14,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         {
             var info = new DomainSummaryInfo(
                 domainKey: "AI Admin",
+                domainKeyName: null, 
                 title: "AI Admin",
                 description: "A set of classes that contains meta data for managing machine learning models.",
                 domainType: DomainDescription.DomainTypes.BusinessObject,
@@ -46,6 +47,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         {
             var info = new DomainSummaryInfo(
                 domainKey: "Experimental",
+                domainKeyName: null,
                 title: "Experimental",
                 description: string.Empty,
                 domainType: DomainDescription.DomainTypes.BusinessObject,
@@ -67,6 +69,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         {
             var info = new DomainSummaryInfo(
                 domainKey: "Experimental",
+                domainKeyName: null, 
                 title: "Ex",
                 description: "short",
                 domainType: DomainDescription.DomainTypes.BusinessObject,

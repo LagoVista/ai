@@ -6,6 +6,7 @@ using LagoVista.Core.Validation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mime;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -42,6 +43,15 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         public string SourceSystem { get; set; } = "GitHub";
         public string SourceObjectId { get; set; }
 
+        public string SymbolName { get; set; }
+
+        /// <summary>
+        /// Primary entity name that this Manager orchestrates, e.g. "Device".
+        /// May be null if heuristics cannot determine a clear entity.
+        /// </summary>
+        public string PrimaryEntity { get; set; }
+
+
         public async Task<InvokeResult> CreateEmbeddingsAsync(IEmbedder embeddingService)
         {
             var result = new InvokeResult();
@@ -77,6 +87,9 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         {
             var payloadResults = new List<InvokeResult<IRagPoint>>();
 
+            if (_summarySections == null)
+                throw new ArgumentNullException($"Must create summary sections prior to calling CreateIRagPoints - {QualifiedName}.");
+
             foreach (var section in _summarySections)
             {
                 var payload = new RagVectorPayload()
@@ -97,6 +110,8 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                     Language = "en-US",
                 };
 
+                payload.Title = $"{this.BusinessDomainKey}:{payload.ContentType}:{payload.Subtype}:{PrimaryEntity}";
+
                 section.PopulateRagPayload(payload);
 
                 var result = PopulateAdditionalRagProperties(payload);
@@ -108,6 +123,8 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                     Vector = section.Vectors,
                     Contents = Encoding.UTF8.GetBytes(section.SectionNormalizedText)
                 };
+
+                payloadResults.Add(InvokeResult<IRagPoint>.Create( point));
             }
           
             return payloadResults;

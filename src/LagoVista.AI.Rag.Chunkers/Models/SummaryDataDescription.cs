@@ -53,12 +53,6 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         /// </summary>
         public string Domain { get; set; }
 
-        /// <summary>
-        /// Fully qualified name that uniquely identifies the list surface
-        /// or its backing summary type.
-        /// </summary>
-        public string QualifiedName { get; set; }
-
         // -------------------- Human Text --------------------
 
         /// <summary>

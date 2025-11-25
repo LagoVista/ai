@@ -51,7 +51,7 @@ namespace LagoVista.AI.Models
             Assert.Multiple(() =>
             {
                 Assert.That(summary.DomainKey, Is.EqualTo("AI Admin"));
-                Assert.That(summary.Title, Is.EqualTo("AI Admin"));
+                Assert.That(summary.Title, Is.EqualTo("AIAdmin"));
                 Assert.That(summary.Description, Does.Contain("meta data for managing machine learning models"));
                 Assert.That(summary.DomainType, Is.EqualTo(DomainDescription.DomainTypes.BusinessObject));
                 Assert.That(summary.SourceTypeName, Is.EqualTo("LagoVista.AI.Models.AIDomain"));

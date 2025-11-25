@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using LagoVista.Core.Validation;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -90,7 +91,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
     /// </summary>
     public static class ModelSourceAnalyzer
     {
-        public static ModelSourceAnalysisResult Analyze(
+        public static InvokeResult<ModelSourceAnalysisResult> Analyze(
             string sourceText,
             IReadOnlyDictionary<string, string> resources)
         {
@@ -107,8 +108,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 .FirstOrDefault(c => HasAttribute(c, "EntityDescription"));
 
             if (modelType == null)
-                throw new InvalidOperationException(
-                    "No class with [EntityDescription] attribute was found in the provided source.");
+                return InvokeResult<ModelSourceAnalysisResult>.FromError("No class with [EntityDescription] attribute was found in the provided source.");
 
             var ns = GetNamespace(modelType);
             var modelName = modelType.Identifier.ValueText;
@@ -121,8 +121,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
 
             var args = entityAttr.ArgumentList?.Arguments;
             if (args == null || args.Value.Count < 4)
-                throw new InvalidOperationException(
-                    "EntityDescription attribute must have at least 4 positional arguments (Domain, Title, Description, UserHelp).");
+                return InvokeResult<ModelSourceAnalysisResult>.FromError("EntityDescription attribute must have at least 4 positional arguments (Domain, Title, Description, UserHelp).");
 
             var domainExpr = args.Value[0].Expression;
             var titleKey = ExtractResourceKey(args.Value[1].Expression);
@@ -220,7 +219,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 });
             }
 
-            return result;
+            return InvokeResult<ModelSourceAnalysisResult>.Create(result);
         }
 
         // ====== helpers (mostly lifted from ModelStructureDescriptionBuilder) ======

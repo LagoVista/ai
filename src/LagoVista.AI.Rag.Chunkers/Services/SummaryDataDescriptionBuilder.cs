@@ -118,6 +118,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
 
             var description = new SummaryDataDescription
             {
+                PrimaryEntity = summaryTypeName,
                 // Identity
                 ListName = listName,
                 SummaryTypeName = qualifiedName,

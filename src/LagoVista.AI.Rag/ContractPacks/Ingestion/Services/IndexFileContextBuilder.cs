@@ -69,8 +69,11 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                 OrgId = orgId,
                 ProjectId = projectId,
                 RepoId = repoId,
-                RelativePath = relativePath
+                RelativePath = relativePath,
+                
             };
+
+            
 
             identity.DocId = _indexIdServices.ComputeDocId(gitRepoInfo.RemoteUrl, projectId, relativePath);
            
@@ -100,6 +103,8 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                 RelativePath = relativePath,
                 Language = DetectLanguage(relativePath),
                 DocumentIdentity = identity,
+                GitRepoInfo = gitRepoInfo,
+                BlobUri = $"{repoId}/{relativePath}",
             };
 
             return ctx;

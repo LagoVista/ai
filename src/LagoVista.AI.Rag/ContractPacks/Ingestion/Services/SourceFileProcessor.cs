@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing.Text;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Security.Authentication.ExtendedProtection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,6 +14,7 @@ using LagoVista.AI.Rag.ContractPacks.Ingestion.Interfaces;
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Models;
 using LagoVista.AI.Rag.Models;
 using LagoVista.Core.Validation;
+using LagoVista.IoT.Logging.Loggers;
 using ZstdSharp.Unsafe;
 
 namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
@@ -25,9 +27,13 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
     {
         private readonly IChunkerServices _chunkerServics;
         private readonly ICodeDescriptionService _descriptionServices;
+        private readonly IAdminLogger _adminLogger;
 
-        public SourceFileProcessor(IChunkerServices chunkerServices, ICodeDescriptionService descriptionServices)
+        public SourceFileProcessor(IChunkerServices chunkerServices, ICodeDescriptionService descriptionServices, IAdminLogger adminLogger)
         {
+            _chunkerServics = chunkerServices ?? throw new ArgumentNullException(nameof(chunkerServices));
+            _descriptionServices = descriptionServices ?? throw new ArgumentNullException(nameof(descriptionServices));
+            _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
         }
 
         /// <summary>
@@ -38,83 +44,181 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
             var filePath = ctx.FullPath;
 
 
-            var result = new InvokeResult<ProcessedFileResults>();
-
-            var fullFileSourceCode =  System.Text.ASCIIEncoding.ASCII.GetString(ctx.Contents);
-
-            var symbolSplitsResult = SplitSymbols(fullFileSourceCode);
-            if (!symbolSplitsResult.Successful) return InvokeResult<ProcessedFileResults>.FromInvokeResult(symbolSplitsResult.ToInvokeResult());
-
-           var fileInfo = new FileInfo(filePath);
-
-            var splitSymbols = symbolSplitsResult.Result;
-            foreach(var splitSymbol in splitSymbols)
+            var result = new InvokeResult<ProcessedFileResults>()
             {
-                var subKindResult = AnalyzeSubKinds(splitSymbol.Text, filePath);
-                var symbolText = splitSymbol.Text;
-
-                switch(subKindResult.SubKind)
+                Result = new ProcessedFileResults()
                 {
-                    case CodeSubKind.Model:
-                        var modelStructureDescription = _descriptionServices.BuildModelStructureDescription(ctx, symbolText, resources);
-                        var stucturedResults = modelStructureDescription.Result.CreateIRagPoints();
-                        result.Result.RagPoints.AddRange(stucturedResults.Select(rp => rp.Result));
 
-                        var modelMetaDataDescription = _descriptionServices.BuildModelMetadataDescription(ctx, symbolText, resources);
-                        var metaDataResults = modelMetaDataDescription.Result.CreateIRagPoints();
-                        result.Result.RagPoints.AddRange(metaDataResults.Select(rp => rp.Result));
-
-
-                        break;
-                    case CodeSubKind.Manager:
-                        var managerDescription = _descriptionServices.BuildManagerDescription(ctx, symbolText);
-                        var managerResults = managerDescription.Result.CreateIRagPoints();
-                        result.Result.RagPoints.AddRange(managerResults.Select(rp=>rp.Result));
-                        break;
-
-                    case CodeSubKind.Interface:
-                        var interfaceDescription = _descriptionServices.BuildInterfaceDescription(ctx, symbolText);
-                        var interfaceResults = interfaceDescription.Result.CreateIRagPoints();
-                        result.Result.RagPoints.AddRange(interfaceResults.Select(rp => rp.Result));
-
-                        break;
-
-                    case CodeSubKind.Repository:
-                        var repoDescription = _descriptionServices.BuildRepositoryDescription(ctx, symbolText);
-                        var repoResults = repoDescription.Result.CreateIRagPoints();
-                        result.Result.RagPoints.AddRange(repoResults.Select(rp => rp.Result));
-
-                        break;
-                    case CodeSubKind.Controller:
-                        var controllerDescription = _descriptionServices.BuildEndpointDescriptions(ctx, symbolText);
-                        foreach(var endpoint in controllerDescription.Result)
-                        {
-                            var endpointRagPoints = endpoint.CreateIRagPoints();
-                            result.Result.RagPoints.AddRange(endpointRagPoints.Select(rp => rp.Result));
-                        }   
-                
-                        break;
-
-                    case CodeSubKind.SummaryListModel:
-                        var summaryListDescription = _descriptionServices.BuildSummaryDescription(ctx, symbolText, resources);
-                        var summaryResults = summaryListDescription.Result.CreateIRagPoints();
-                        result.Result.RagPoints.AddRange(summaryResults.Select(rp => rp.Result));
-                        break;
                 }
-              
-                var chunks = _chunkerServics.ChunkCSharpWithRoslyn(symbolText, fileInfo.Name);
-                foreach(var chunk in chunks.Result)
-                {
+            };
 
+            if(ctx.Contents == null)
+            {
+                ctx.Contents = System.Text.ASCIIEncoding.ASCII.GetBytes(System.IO.File.ReadAllText(filePath));
+            }
+
+            if (ctx.RelativePath.StartsWith("ddrs"))
+            {
+
+            }
+            else if(ctx.RelativePath.ToLower().EndsWith("md"))
+            {
+
+            }
+            else
+            {
+                var fullFileSourceCode = System.Text.ASCIIEncoding.ASCII.GetString(ctx.Contents);
+
+                var symbolSplitsResult = SplitSymbols(fullFileSourceCode);
+                if (!symbolSplitsResult.Successful) return InvokeResult<ProcessedFileResults>.FromInvokeResult(symbolSplitsResult.ToInvokeResult());
+
+                var fileInfo = new FileInfo(filePath);
+
+                var splitSymbols = symbolSplitsResult.Result;
+                foreach (var splitSymbol in splitSymbols)
+                {
+                    var subKindResult = AnalyzeSubKinds(splitSymbol.Text, filePath);
+                    var symbolText = splitSymbol.Text;
+                    switch (subKindResult.SubKind)
+                    {
+                        case CodeSubKind.Model:
+                            {
+                                var modelStructureDescription = _descriptionServices.BuildModelStructureDescription(ctx, symbolText, resources);
+                                if(modelStructureDescription.Successful)
+                                {                                   
+                                    var headerInfo = FindDomainHeaderInfo(catalog, modelStructureDescription.Result);
+                                    modelStructureDescription.Result.BuildSections(headerInfo.Result);
+                                    var stucturedResults = modelStructureDescription.Result.CreateIRagPoints();
+                                    result.Result.RagPoints.AddRange(stucturedResults.Select(rp => rp.Result));
+
+                                }
+
+                                var modelMetaDataDescription = _descriptionServices.BuildModelMetadataDescription(ctx, symbolText, resources);
+                                if (modelMetaDataDescription.Successful)
+                                {
+                                    var headerInfo = FindDomainHeaderInfo(catalog, modelMetaDataDescription.Result);
+                                    modelMetaDataDescription.Result.BuildSections(headerInfo.Result);
+                                    var metaDataResults = modelMetaDataDescription.Result.CreateIRagPoints();
+                                    result.Result.RagPoints.AddRange(metaDataResults.Select(rp => rp.Result));
+                                }
+                            }
+
+                            break;
+                        case CodeSubKind.Manager:
+                            {
+                                var managerDescription = _descriptionServices.BuildManagerDescription(ctx, symbolText);
+                                if (managerDescription.Successful)
+                                {
+                                    var headerInfo = FindDomainHeaderInfo(catalog, managerDescription.Result);
+                                    managerDescription.Result.BuildSections(headerInfo.Result);
+                                    var managerResults = managerDescription.Result.CreateIRagPoints();
+                                    managerDescription.Result.BuildSections(headerInfo.Result);
+                                    result.Result.RagPoints.AddRange(managerResults.Select(rp => rp.Result));
+                                }
+                            }
+                            break;
+
+                        case CodeSubKind.Interface:
+                            {
+                                var interfaceDescription = _descriptionServices.BuildInterfaceDescription(ctx, symbolText);
+                                if (interfaceDescription.Successful)
+                                {
+                                    var headerInfo = FindDomainHeaderInfo(catalog, interfaceDescription.Result);
+                                    interfaceDescription.Result.BuildSections(headerInfo.Result);
+                                    var interfaceResults = interfaceDescription.Result.CreateIRagPoints();
+                                    result.Result.RagPoints.AddRange(interfaceResults.Select(rp => rp.Result));
+                                }
+                            }
+                            break;
+
+                        case CodeSubKind.Repository:
+                            {
+                                var repoDescription = _descriptionServices.BuildRepositoryDescription(ctx, symbolText);
+                                if (repoDescription.Successful)
+                                {
+                                    var headerInfo = FindDomainHeaderInfo(catalog, repoDescription.Result);
+                                    repoDescription.Result.BuildSections(headerInfo.Result);
+                                    var repoResults = repoDescription.Result.CreateIRagPoints();
+                                    result.Result.RagPoints.AddRange(repoResults.Select(rp => rp.Result));
+                                }
+                            }
+                            break;
+                        case CodeSubKind.Controller:
+                            {
+                                var controllerDescription = _descriptionServices.BuildEndpointDescriptions(ctx, symbolText);
+                                if (controllerDescription.Successful)
+                                {
+                                    foreach (var endpoint in controllerDescription.Result)
+                                    {
+                                        var headerInfo = FindDomainHeaderInfo(catalog, endpoint);
+                                        endpoint.BuildSections(headerInfo.Result);
+                                        var endpointRagPoints = endpoint.CreateIRagPoints();
+                                        result.Result.RagPoints.AddRange(endpointRagPoints.Select(rp => rp.Result));
+                                    }
+                                }
+                            }
+
+                            break;
+
+                        case CodeSubKind.SummaryListModel:
+                            var summaryListDescription = _descriptionServices.BuildSummaryDescription(ctx, symbolText, resources);
+                            if (summaryListDescription.Successful)
+                            {
+                                var headerInfo = FindDomainHeaderInfo(catalog, summaryListDescription.Result);
+                                summaryListDescription.Result.BuildSections(headerInfo.Result);
+                                var summaryResults = summaryListDescription.Result.CreateIRagPoints();
+                                result.Result.RagPoints.AddRange(summaryResults.Select(rp => rp.Result));
+                            }
+                            break;
+                    }
+
+                    //var chunks = _chunkerServics.ChunkCSharpWithRoslyn(symbolText, fileInfo.Name);
+                    //foreach(var chunk in chunks.Result)
+                    //{
+                    //    var points = chunk.CreateIRagPoints(ctx);
+                    //    result.Result.RagPoints.AddRange(points.Select(pt => pt.Result));
+                    //}
                 }
             }
+
+            //foreach(var pt in result.Result.RagPoints)
+            //{
+            //    _adminLogger.Trace($"{pt.Payload.Subtype} - {pt.Payload.Title} {pt.Payload.BlobUri}");
+            //    _adminLogger.Trace(System.Text.ASCIIEncoding.ASCII.GetString(pt.Contents));
+            //    _adminLogger.Trace(new String('-',80));
+            //}
 
             result.Result.OriginalFileBlobUri = ctx.BlobUri;
             result.Result.OriginalFileContents = ctx.Contents;
 
             return result;
         }
-        
+
+        private InvokeResult<DomainModelHeaderInformation> FindDomainHeaderInfo(DomainModelCatalog catalog, SummaryFacts fact)
+        {
+            if(String.IsNullOrEmpty(fact.PrimaryEntity))
+                return InvokeResult<DomainModelHeaderInformation>.FromError("Object does not have primary entity.");
+
+            var model = catalog.GetModelByName(fact.PrimaryEntity);
+            if (model.Successful)
+            {
+                var domainKey = model.Result.Structure.BusinessDomainKey;
+                var domain = catalog.GetDomainByKey(domainKey);
+
+                return InvokeResult<DomainModelHeaderInformation>.Create(new DomainModelHeaderInformation()
+                {
+                    DomainKey = domainKey,
+                    DomainName = domain.Result.Title,
+                    DomainTagLine = domain.Result.Description,
+                    ModelName = model.Result.Structure.ModelName,
+                    ModelClassName = fact.PrimaryEntity,
+                    ModelTagLine = model.Result.Structure.Description
+                });
+            }
+            else
+                return InvokeResult<DomainModelHeaderInformation>.FromError("Model not found in catalog.");
+        }
+
         private InvokeResult<IReadOnlyList<SplitSymbolResult>> SplitSymbols(string sourceText)
         {
             return SymbolSplitter.Split(sourceText);

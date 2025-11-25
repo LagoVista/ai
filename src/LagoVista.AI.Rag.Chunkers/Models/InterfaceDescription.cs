@@ -37,11 +37,6 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         public IReadOnlyList<string> BaseInterfaces { get; set; }
 
         /// <summary>
-        /// Primary entity this contract operates on (when inferable), e.g. Device.
-        /// </summary>
-        public string PrimaryEntity { get; set; }
-
-        /// <summary>
         /// Coarse role classification for the contract: ManagerContract, RepositoryContract, ServiceContract, OtherContract.
         /// </summary>
         public string Role { get; set; }

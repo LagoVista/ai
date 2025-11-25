@@ -30,12 +30,14 @@ namespace LagoVista.AI.Rag.ContractPacks.Infrastructure.Services
         public async Task<DomainModelCatalog> BuildAsync(
             string repoId,
             IReadOnlyList<DiscoveredFile> files,
+            IReadOnlyDictionary<string, string> resources,
             CancellationToken token = default)
         {
             if (repoId == null) throw new ArgumentNullException(nameof(repoId));
             if (files == null) throw new ArgumentNullException(nameof(files));
 
             var domainsByKey = new Dictionary<string, DomainSummaryInfo>(StringComparer.OrdinalIgnoreCase);
+            var domainsByKeyName = new Dictionary<string, DomainSummaryInfo>(StringComparer.OrdinalIgnoreCase);
             var modelsByQualifiedName = new Dictionary<string, ModelCatalogEntry>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var file in files)
@@ -54,44 +56,56 @@ namespace LagoVista.AI.Rag.ContractPacks.Infrastructure.Services
 
                 var source = await File.ReadAllTextAsync(file.FullPath, token).ConfigureAwait(false);
 
-                var result = _chunkerServices.DetectForFile(source, file.RelativePath);
-
-                var snippet = string.IsNullOrWhiteSpace(result.SymbolText)
-                    ? source
-                    : result.SymbolText;
-
-                // 1) Domains: ExtractDomains will return empty for non-domain snippets.
-                var domainInfos = _chunkerServices.ExtractDomains(snippet);
-                if (domainInfos != null)
+                var splitterResults = SymbolSplitter.Split(source);
+                if (splitterResults.Successful)
                 {
-                    foreach (var domain in domainInfos)
+                    foreach (var splitrResult in splitterResults.Result)
                     {
-                        if (string.IsNullOrWhiteSpace(domain.DomainKey))
-                            continue;
+                        var result = _chunkerServices.DetectForFile(splitrResult.Text, file.RelativePath);
 
-                        if (!domainsByKey.ContainsKey(domain.DomainKey))
+                        var snippet = string.IsNullOrWhiteSpace(result.SymbolText)
+                            ? source
+                            : result.SymbolText;
+
+                        // 1) Domains: ExtractDomains will return empty for non-domain snippets.
+                        var domainInfos = _chunkerServices.ExtractDomains(snippet);
+                        if (domainInfos != null)
                         {
-                            domainsByKey[domain.DomainKey] = domain;
+                            foreach (var domain in domainInfos)
+                            {
+                                if (string.IsNullOrWhiteSpace(domain.DomainKey))
+                                    continue;
+
+                                if (!domainsByKey.ContainsKey(domain.DomainKey))
+                                {
+                                    domainsByKey[domain.DomainKey] = domain;
+                                }
+
+                                if (!String.IsNullOrEmpty(domain.DomainKeyName) && !domainsByKeyName.ContainsKey(domain.DomainKeyName))
+                                {
+                                    domainsByKeyName[domain.DomainKeyName] = domain;
+                                }
+                            }
+                        }
+
+                        // 2) Models: BuildStructuredDescriptionForModel returns null for non-model snippets.
+                        var modelStructure = _codeDescriptionService.BuildModelStructureDescription(snippet, resources).Result;
+
+                        if (modelStructure != null && !string.IsNullOrWhiteSpace(modelStructure.QualifiedName))
+                        {
+                            modelsByQualifiedName[modelStructure.QualifiedName] = new ModelCatalogEntry
+                            {
+                                RepoId = repoId,
+                                RelativePath = file.RelativePath,
+                                SubKind = result.SubKind,
+                                Structure = modelStructure
+                            };
                         }
                     }
                 }
-
-                // 2) Models: BuildStructuredDescriptionForModel returns null for non-model snippets.
-                var modelStructure = _codeDescriptionService.BuildModelStructureDescription(snippet).Result;
-
-                if (modelStructure != null && !string.IsNullOrWhiteSpace(modelStructure.QualifiedName))
-                {
-                    modelsByQualifiedName[modelStructure.QualifiedName] = new ModelCatalogEntry
-                    {
-                        RepoId = repoId,
-                        RelativePath = file.RelativePath,
-                        SubKind = result.SubKind,
-                        Structure = modelStructure
-                    };
-                }
             }
 
-            return new DomainModelCatalog(domainsByKey, modelsByQualifiedName);
+            return new DomainModelCatalog(domainsByKey, domainsByKeyName, modelsByQualifiedName);
         }
     }
 }

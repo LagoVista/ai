@@ -9,7 +9,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Models
 {
     public class ProcessedFileResults
     {
-        public List<IRagPoint> RagPoints { get; set; }
+        public List<IRagPoint> RagPoints { get; set; } = new List<IRagPoint>();
         public string OriginalFileBlobUri { get; set; }
         public byte[] OriginalFileContents { get; set; }
     }

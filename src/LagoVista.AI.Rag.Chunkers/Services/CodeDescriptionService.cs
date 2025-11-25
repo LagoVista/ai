@@ -70,5 +70,10 @@ namespace LagoVista.AI.Rag.Chunkers.Services
         {
             return ModelStructureDescriptionBuilder.FromSource(sourceText);
         }
+
+        public InvokeResult<ModelStructureDescription> BuildModelStructureDescription(string sourceText, IReadOnlyDictionary<string, string> resources)
+        {
+            return ModelStructureDescriptionBuilder.FromSource(sourceText, resources);
+        }
     }
 }

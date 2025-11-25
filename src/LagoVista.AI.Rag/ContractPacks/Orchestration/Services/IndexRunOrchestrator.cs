@@ -14,6 +14,7 @@ using LagoVista.AI.Rag.ContractPacks.Orchestration.Interfaces;
 using LagoVista.AI.Rag.ContractPacks.Registry.Interfaces;
 using LagoVista.AI.Rag.Models;
 using LagoVista.IoT.Logging.Loggers;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
 {
@@ -87,7 +88,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
             var repos = config.Ingestion?.Repositories ?? new List<string>();
 
             if (!string.IsNullOrEmpty(processRepo))
-                repos = repos.Where(rp => rp == processRepo).ToList();
+                repos = repos.Where(rp => rp.ToLower() == processRepo.ToLower()).ToList();
 
             int idx = 1;
 
@@ -115,7 +116,6 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
 
                 _adminLogger.Trace($"[IndexRunOrchestrator_RunAsync] - Starting repo {repoId}; in folder {repoRoot} - {idx} of {repos.Count}.");
                 var localIndex = await _localIndexStore.LoadAsync(config, repoId, cancellationToken);
-
                 var discoveredFiles = await _discoveryService.DiscoverAsync(config, repoId, cancellationToken);
                 totalFilesFound += discoveredFiles.Count;
                 _adminLogger.Trace($"[IndexRunOrchestrator_RunAsync] - Found {discoveredFiles.Count} files.");
@@ -136,7 +136,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
                     }
                 }
 
-                var domainCatalog = _domainModelCatalogBuilder.BuildAsync(repoId, discoveredFiles);
+                var domainCatalog = await _domainModelCatalogBuilder.BuildAsync(repoId, discoveredFiles, resources);
 
 
                 var plan = await _ingestionPlanner.BuildPlanAsync(repoId, relativePaths, localIndex, cancellationToken);
@@ -150,9 +150,19 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
                         continue;
 
                     var  fileContext = await _indexFileContextBuilder.BuildAsync(config, gitInfo.Result, repoId, filePlan, localIndex, cancellationToken);
-                    var fileProcessResult = _sourceFileProcessor.BuildChunks(fileContext, domainCatalog.Result, resources);
-
-
+                   
+                    var fileProcessResult = _sourceFileProcessor.BuildChunks(fileContext, domainCatalog, resources);
+                    if (fileProcessResult.Successful)
+                    {
+                        foreach (var result in fileProcessResult.Result.RagPoints)
+                        {
+                            Console.WriteLine(result.Payload.Title);
+                        }
+                    }
+                    else
+                    {
+                        _adminLogger.AddError($"[IndexRunOrchestrator_RunAsync]", $"{fileProcessResult.ErrorMessage} - {fullPath}");
+                    }
                 }
 
 

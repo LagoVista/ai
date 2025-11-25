@@ -22,6 +22,8 @@ namespace LagoVista.AI.Rag.Chunkers.Interfaces
         /// <returns>A populated <see cref="ModelStructureDescription"/>.</returns>
         InvokeResult<ModelStructureDescription> BuildModelStructureDescription(IndexFileContext ctx, string sourceText, IReadOnlyDictionary<string, string> resources);
 
+        InvokeResult<ModelStructureDescription> BuildModelStructureDescription(string sourceText, IReadOnlyDictionary<string, string> resources);
+
 
         InvokeResult<ModelStructureDescription> BuildModelStructureDescription(string sourceText);
 
