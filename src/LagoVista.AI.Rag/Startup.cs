@@ -1,4 +1,5 @@
-﻿using LagoVista.AI.Rag.ContractPacks.IndexStore.Services;
+﻿using LagoVista.AI.Interfaces;
+using LagoVista.AI.Rag.ContractPacks.IndexStore.Services;
 using LagoVista.AI.Rag.ContractPacks.Infrastructure.Interfaces;
 using LagoVista.AI.Rag.ContractPacks.Infrastructure.Services;
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Interfaces;
@@ -8,6 +9,7 @@ using LagoVista.AI.Rag.ContractPacks.Orchestration.Services;
 using LagoVista.AI.Rag.ContractPacks.Registry.Interfaces;
 using LagoVista.AI.Rag.ContractPacks.Registry.Services;
 using LagoVista.AI.Rag.Models;
+using LagoVista.AI.Services;
 using LagoVista.Core.IOC;
 
 namespace LagoVista.AI.Rag
@@ -16,6 +18,7 @@ namespace LagoVista.AI.Rag
     {
         public static void Init()
         {
+            SLWIOC.RegisterSingleton<IQdrantClient, QdrantClient>();
             SLWIOC.RegisterSingleton<IIndexIdServices, IndexIdServices>();
             SLWIOC.RegisterSingleton<IIngestionConfigProvider, JsonIngestionConfigProvider>();
             SLWIOC.RegisterSingleton<IIndexFileContextBuilder, IndexFileContextBuilder>();

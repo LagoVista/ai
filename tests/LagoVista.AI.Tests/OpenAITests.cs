@@ -62,12 +62,13 @@ namespace LagoVista.AI.Tests
 
             Console.WriteLine(JsonConvert.SerializeObject(result));
         }
-
     }
 
     internal class OpenAISettings : IOpenAISettings
     {
         public string OpenAIUrl { get; set; }
         public string OpenAIApiKey { get; set; }
+
+        public string DefaultEmbeddingModel { get; }
     }
 }

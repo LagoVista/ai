@@ -4,8 +4,11 @@
 // --- END CODE INDEX META ---
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
+using LagoVista.Core.Interfaces;
+using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json;
+using RingCentral;
 using System;
 using System.Linq;
 using System.Linq.Expressions;
@@ -45,7 +48,7 @@ namespace LagoVista.AI.Services
         {
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
 
-            _model = "text-embedding-3-large";
+            _model = aiSettings.DefaultEmbeddingModel;
             _expectedDims = 3072;
             _http = new HttpClient { BaseAddress = new Uri(aiSettings.OpenAIUrl) };
             _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", aiSettings.OpenAIApiKey);
@@ -56,7 +59,7 @@ namespace LagoVista.AI.Services
         {
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
 
-            _model = "text-embedding-3-large";
+            _model = aiSettings.DefaultEmbeddingModel;
             _expectedDims = 3072;
             _http = new HttpClient { BaseAddress = new Uri(aiSettings.OpenAIUrl) };
             _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", vectorDb.LlmApiKey);
@@ -64,11 +67,14 @@ namespace LagoVista.AI.Services
         }
 
 
-        public async Task<float[]> EmbedAsync(string text, int estimatedTokens)
+        public async Task<InvokeResult<EmbeddingResult>> EmbedAsync(string text, int? estimatedTokens = null, string embeddingModel= "")
         {
-            var payload = new { model = _model, input = text };
+            var payload = new { model = String.IsNullOrEmpty(embeddingModel) ? _model : embeddingModel, input = text };
 
-            using (var resp = await PostWithRetryAsync("/v1/embeddings", payload, estimatedTokens))
+            if(estimatedTokens == null)
+                estimatedTokens = TokenEstimator.EstimateTokens(text);
+
+            using (var resp = await PostWithRetryAsync("/v1/embeddings", payload, estimatedTokens.Value))
             {
                 var er = await resp.Content.ReadAsAsync<EmbeddingResponse>();
                 var vec = er.Data.FirstOrDefault().Embedding;
@@ -76,7 +82,9 @@ namespace LagoVista.AI.Services
                 if (_expectedDims > 0 && vec.Length != _expectedDims)
                     throw new InvalidOperationException($"Embedding dims {vec.Length} != expected {_expectedDims}. Check model + Qdrant.VectorSize.");
 
-                return vec;
+                var result = new EmbeddingResult(vec, payload.model);
+
+                return InvokeResult<EmbeddingResult>.Create(result);
             }
         }
 

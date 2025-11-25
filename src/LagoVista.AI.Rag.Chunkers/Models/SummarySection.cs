@@ -36,7 +36,8 @@ namespace LagoVista.AI.Rag.Chunkers.Models
             var result = await embeder.EmbedAsync(SectionNormalizedText);
             if(result.Successful)
             {
-                Vectors = result.Result;
+                Vectors = result.Result.Vector;
+                EmbeddingModel = result.Result.EmbeddingModel;
             }
 
             return result.ToInvokeResult();

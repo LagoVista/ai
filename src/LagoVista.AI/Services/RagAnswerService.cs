@@ -13,6 +13,7 @@ using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
 using LagoVista.Core;
 using LagoVista.Core.AI.Models;
+using LagoVista.Core.Interfaces;
 using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
@@ -118,7 +119,7 @@ namespace LagoVista.AI.Services
 
             var hits = await _qdrant.SearchAsync(vectorDb.VectorDatabaseCollectionName, new QdrantSearchRequest
             {
-                Vector = qvec,
+                Vector = qvec.Result.Vector,
                 Limit = Math.Clamp(topK * 3, 12, 50),
                 WithPayload = true,
                 Filter = filter

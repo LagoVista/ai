@@ -7,7 +7,6 @@ using LagoVista.AI.Managers;
 using LagoVista.AI.Services;
 using LagoVista.Core.AI.Interfaces;
 using LagoVista.Core.Interfaces;
-using IEmbedder = LagoVista.AI.Interfaces.IEmbedder;
 
 namespace LagoVista.AI
 {

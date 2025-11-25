@@ -14,7 +14,6 @@ namespace LagoVista.AI.Rag.Chunkers
             SLWIOC.RegisterSingleton<ICodeDescriptionService, CodeDescriptionService>();
             SLWIOC.RegisterSingleton<IResourceExtractor, ResxResourceExtractor>();
             SLWIOC.RegisterSingleton<IResxLabelScanner, ResxLabelScanner>();
-            SLWIOC.RegisterSingleton<IAdminLogger>(new AdminLogger(new ConsoleLogWriter()));
         }
     }
 }

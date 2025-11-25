@@ -57,27 +57,56 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                 {
                     case CodeSubKind.Model:
                         var modelStructureDescription = _descriptionServices.BuildModelStructureDescription(ctx, symbolText, resources);
+                        var stucturedResults = modelStructureDescription.Result.CreateIRagPoints();
+                        result.Result.RagPoints.AddRange(stucturedResults.Select(rp => rp.Result));
+
                         var modelMetaDataDescription = _descriptionServices.BuildModelMetadataDescription(ctx, symbolText, resources);
+                        var metaDataResults = modelMetaDataDescription.Result.CreateIRagPoints();
+                        result.Result.RagPoints.AddRange(metaDataResults.Select(rp => rp.Result));
+
+
                         break;
                     case CodeSubKind.Manager:
                         var managerDescription = _descriptionServices.BuildManagerDescription(ctx, symbolText);
-                        var rangePointResults = managerDescription.Result.CreateIRagPoints();
-                        result.Result.RagPoints.AddRange(rangePointResults.Select(rp=>rp.Result));
+                        var managerResults = managerDescription.Result.CreateIRagPoints();
+                        result.Result.RagPoints.AddRange(managerResults.Select(rp=>rp.Result));
                         break;
 
                     case CodeSubKind.Interface:
                         var interfaceDescription = _descriptionServices.BuildInterfaceDescription(ctx, symbolText);
+                        var interfaceResults = interfaceDescription.Result.CreateIRagPoints();
+                        result.Result.RagPoints.AddRange(interfaceResults.Select(rp => rp.Result));
+
                         break;
 
                     case CodeSubKind.Repository:
-                        var repoDescription = _descriptionServices.BuildInterfaceDescription(ctx, symbolText);
+                        var repoDescription = _descriptionServices.BuildRepositoryDescription(ctx, symbolText);
+                        var repoResults = repoDescription.Result.CreateIRagPoints();
+                        result.Result.RagPoints.AddRange(repoResults.Select(rp => rp.Result));
+
                         break;
                     case CodeSubKind.Controller:
                         var controllerDescription = _descriptionServices.BuildEndpointDescriptions(ctx, symbolText);
+                        foreach(var endpoint in controllerDescription.Result)
+                        {
+                            var endpointRagPoints = endpoint.CreateIRagPoints();
+                            result.Result.RagPoints.AddRange(endpointRagPoints.Select(rp => rp.Result));
+                        }   
+                
+                        break;
+
+                    case CodeSubKind.SummaryListModel:
+                        var summaryListDescription = _descriptionServices.BuildSummaryDescription(ctx, symbolText, resources);
+                        var summaryResults = summaryListDescription.Result.CreateIRagPoints();
+                        result.Result.RagPoints.AddRange(summaryResults.Select(rp => rp.Result));
                         break;
                 }
               
                 var chunks = _chunkerServics.ChunkCSharpWithRoslyn(symbolText, fileInfo.Name);
+                foreach(var chunk in chunks.Result)
+                {
+
+                }
             }
 
             result.Result.OriginalFileBlobUri = ctx.BlobUri;

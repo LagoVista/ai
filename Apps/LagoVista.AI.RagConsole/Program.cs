@@ -14,6 +14,10 @@ using LagoVista.Core.IOC;
 using LagoVista.AI.Rag.ContractPacks.Orchestration.Interfaces;
 using LagoVista.AI.Rag;
 using Svg;
+using LagoVista.AI.Services;
+using LagoVista.AI.Interfaces;
+using LagoVista.IoT.Logging.Loggers;
+using LagoVista.IoT.Logging.Utils;
 
 namespace LagoVista.AI.RagConsole
 {
@@ -82,9 +86,6 @@ namespace LagoVista.AI.RagConsole
                     showHelp = true;
                 }
             }
-
-            LagoVista.AI.Rag.Chunkers.Startup.Init();
-            LagoVista.AI.Rag.Startup.Init();
           
             if (showHelp)
             {
@@ -101,12 +102,46 @@ namespace LagoVista.AI.RagConsole
                 return;
             }
 
-            Console.WriteLine($"Repo: {repoId}");
+            SLWIOC.RegisterSingleton<IAdminLogger>(new AdminLogger(new ConsoleLogWriter()));
+            var openAISettings = new OpenAISettings(result.Result.Embeddings.BaseUrl, result.Result.Embeddings.ApiKey, result.Result.Embeddings.Model);
+            var qdrantSettings = new QdrantSettings(result.Result.Qdrant.Endpoint, result.Result.Qdrant.ApiKey);
+            SLWIOC.RegisterSingleton<IOpenAISettings>(openAISettings);
+            SLWIOC.RegisterSingleton<IQdrantSettings>(qdrantSettings);
+            
+            LagoVista.AI.Rag.Chunkers.Startup.Init();
+            LagoVista.AI.Rag.Startup.Init();
 
             var orchestrator = SLWIOC.Create<IIndexRunOrchestrator>();
             await orchestrator.RunAsync(result.Result, mode, repoId, verbose, dryRun);
+        }
 
+        internal class OpenAISettings : IOpenAISettings
+        {
+            public OpenAISettings(string url, string apiKey, string embeddingModel)
+            {
+                OpenAIUrl = url;
+                OpenAIApiKey = apiKey;
+                DefaultEmbeddingModel = embeddingModel;
+            }
 
+            public string DefaultEmbeddingModel { get; }
+
+            public string OpenAIUrl { get; }
+
+            public string OpenAIApiKey { get; }
+        }
+
+        internal class QdrantSettings : IQdrantSettings
+        {
+            public QdrantSettings(string endpoint, string apiKey)
+            {
+                QdrantEndpoint = endpoint;
+                QdrantApiKey = apiKey;
+            }
+
+            public string QdrantEndpoint { get; }
+
+            public string QdrantApiKey { get; }
         }
 
         static void PrintUsage()

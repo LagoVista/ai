@@ -1,7 +1,15 @@
-﻿    using System;
+﻿using LagoVista.Core.AI.Interfaces;
+using LagoVista.Core.AI.Models;
+using LagoVista.Core.Interfaces;
+using LagoVista.Core.Utils.Types.Nuviot.RagIndexing;
+using LagoVista.Core.Validation;
+using Microsoft.CodeAnalysis;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
-    namespace LagoVista.AI.Rag.Chunkers.Models
-    {
+namespace LagoVista.AI.Rag.Chunkers.Models
+ {
         /// <summary>
         /// Normalized chunk for a C# source component (file, type, member).
         /// Replaces RawChunk/RagChunk for C# assets.
@@ -47,6 +55,7 @@
             /// Pre-computed token estimate for this chunk.
             /// </summary>
             public int EstimatedTokens { get; set; }
+            public string EmbeddingModel { get; set; }
 
             /// <summary>
             /// Normalized text for this chunk, including any injected summary comment.
@@ -62,5 +71,54 @@
             /// Total number of chunks produced for the file.
             /// </summary>
             public int PartTotal { get; set; }
+
+        public float[] Vector { get; set; }
+
+        public async Task<InvokeResult> CreateEmbeddingsAsync(IEmbedder embeddingService)
+        {
+           var result = await embeddingService.EmbedAsync(Text);
+            Vector = result.Result.Vector;
+            EmbeddingModel = result.Result.EmbeddingModel;
+
+            return result.ToInvokeResult();
+        }
+
+        public IEnumerable<InvokeResult<IRagPoint>> CreateIRagPoints(IndexFileContext fileContext)
+        {
+            var payload = new RagVectorPayload()
+            {
+                DocId = fileContext.DocumentIdentity.DocId,
+                OrgId = fileContext.DocumentIdentity.OrgId,
+                ProjectId = fileContext.DocumentIdentity.ProjectId,
+                Repo = fileContext.GitRepoInfo.RemoteUrl,
+                RepoBranch = fileContext.GitRepoInfo.BranchRef,
+                Path = fileContext.RelativePath,
+                CommitSha = fileContext.GitRepoInfo.CommitSha,
+                SourceSystem = "GitHub",
+                Symbol = SymbolName,
+                SymbolType = SymbolKind,
+                SectionKey = SectionKey,
+                EmbeddingModel = EmbeddingModel,
+                BlobUri = $"{fileContext.BlobUri}.{PartIndex}.{SymbolName}",
+                PartIndex = PartIndex,
+                PartTotal = PartTotal,
+                CharStart = StartCharacter,
+                CharEnd = EndCharacter,
+                ContentTypeId = RagContentType.SourceCode,
+                Language = "en-US",
+                Subtype = "RawCode",
+                SysDomain = "Backend",
+            };
+
+            var ragPoint = new RagPoint
+            {
+                PointId = Guid.NewGuid().ToString(),
+                Payload = payload,
+                Vector = Vector,
+                Contents = System.Text.ASCIIEncoding.ASCII.GetBytes(Text)
+            };
+
+            return new List<InvokeResult<IRagPoint>>() { InvokeResult<IRagPoint>.Create(ragPoint) };
         }
     }
+}

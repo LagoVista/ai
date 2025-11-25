@@ -1,4 +1,5 @@
 ﻿using LagoVista.Core.AI.Interfaces;
+using LagoVista.Core.AI.Models;
 using LagoVista.Core.Interfaces;
 using LagoVista.Core.Utils.Types.Nuviot.RagIndexing;
 using LagoVista.Core.Validation;
@@ -36,6 +37,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         public string CommitSha { get; set; }
         public string Path { get; set; }
 
+        public string BlobUri { get; set; }
 
         public string SourceSystem { get; set; } = "GitHub";
         public string SourceObjectId { get; set; }
@@ -62,6 +64,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
             Branch = ctx.GitRepoInfo.BranchRef;
             Path = ctx.RelativePath;
             CommitSha = ctx.GitRepoInfo.CommitSha;
+            BlobUri = ctx.BlobUri;
         }
 
         protected virtual InvokeResult PopulateAdditionalRagProperties(RagVectorPayload payload)
@@ -79,10 +82,17 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                 var payload = new RagVectorPayload()
                 {
                     DocId = this.DocId,
+                    OrgId = this.OrgId,
+                    ProjectId = this.ProjectId,
+                    Repo = this.Repo,
+                    RepoBranch = this.Branch,
+                    CommitSha = this.CommitSha,
+                    SectionKey = section.SectionKey,
                     EmbeddingModel =  section.EmbeddingModel,
-                    BusinessDomainKey = BusinessDomainKey,
+                    BusinessDomainKey = this.BusinessDomainKey,
                     ContentTypeId = ContentTypeId,
                     Subtype = this.Subtype,
+                    BlobUri =  $"{this.BlobUri}.{section.PartIndex}.{section.SectionKey}",
                     SubtypeFlavor = this.SubtypeFlavor,
                     Language = "en-US",
                 };
@@ -90,6 +100,14 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                 section.PopulateRagPayload(payload);
 
                 var result = PopulateAdditionalRagProperties(payload);
+
+                var point = new RagPoint
+                {
+                    PointId = Guid.NewGuid().ToString(),
+                    Payload = payload,
+                    Vector = section.Vectors,
+                    Contents = Encoding.UTF8.GetBytes(section.SectionNormalizedText)
+                };
             }
           
             return payloadResults;
