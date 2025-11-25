@@ -13,6 +13,11 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         public string FullPath { get; set; }
 
         /// <summary>
+        /// A short textual description for the Repo.
+        /// </summary>
+        public string RepoId { get; set; }
+
+        /// <summary>
         /// The path of the file relative to the configured SourceRoot.
         /// </summary>
         public string RelativePath { get; set; }

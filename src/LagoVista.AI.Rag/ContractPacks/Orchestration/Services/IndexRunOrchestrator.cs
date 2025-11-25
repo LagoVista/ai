@@ -154,10 +154,18 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
                     var fileProcessResult = _sourceFileProcessor.BuildChunks(fileContext, domainCatalog, resources);
                     if (fileProcessResult.Successful)
                     {
+                        if(fileProcessResult.Result.RagPoints.Count == 0)
+                        {
+                            Console.WriteLine($"No points: {fileContext.RelativePath}");
+                        }
+
                         foreach (var result in fileProcessResult.Result.RagPoints)
                         {
                             Console.WriteLine(result.Payload.Title);
+                            Console.WriteLine(result.Payload.SemanticId);
                         }
+
+                        Console.WriteLine(new String('-', 80));
                     }
                     else
                     {

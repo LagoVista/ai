@@ -14,6 +14,7 @@
     <None Remove="Content\AgentContextTestRepository.txt" />
     <None Remove="Content\IAgentContextManager.txt" />
     <None Remove="Content\IndustryNiche.txt" />
+    <None Remove="Content\LargeDdr.md" />
     <None Remove="Content\Model_AIModel.txt" />
     <None Remove="Content\MultipleModel.txt" />
     <None Remove="Content\sample-device.resources.txt" />
@@ -22,6 +23,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\IndustryNiche.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\LargeDdr.md">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\MultipleModel.txt">

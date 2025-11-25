@@ -52,14 +52,23 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                 }
             };
 
-            if(ctx.Contents == null)
+            var fileText = System.IO.File.ReadAllText(filePath);
+
+            if (ctx.Contents == null)
             {
-                ctx.Contents = System.Text.ASCIIEncoding.ASCII.GetBytes(System.IO.File.ReadAllText(filePath));
+                ctx.Contents = System.Text.ASCIIEncoding.ASCII.GetBytes(fileText);
             }
 
             if (ctx.RelativePath.StartsWith("ddrs"))
             {
-
+                var description = _descriptionServices.BuildDdrDescription(ctx, fileText);
+                if(description.Successful)
+                {
+                    var ddr = description.Result;
+                    ddr.BuildSections(null);
+                    var ddrRagPoints = ddr.CreateIRagPoints();
+                    result.Result.RagPoints.AddRange(ddrRagPoints.Select(rp => rp.Result));
+                }
             }
             else if(ctx.RelativePath.ToLower().EndsWith("md"))
             {
@@ -172,12 +181,12 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                             break;
                     }
 
-                    //var chunks = _chunkerServics.ChunkCSharpWithRoslyn(symbolText, fileInfo.Name);
-                    //foreach(var chunk in chunks.Result)
-                    //{
-                    //    var points = chunk.CreateIRagPoints(ctx);
-                    //    result.Result.RagPoints.AddRange(points.Select(pt => pt.Result));
-                    //}
+                    var chunks = _chunkerServics.ChunkCSharpWithRoslyn(symbolText, fileInfo.Name);
+                    foreach (var chunk in chunks.Result)
+                    {
+                        var points = chunk.CreateIRagPoints(ctx);
+                        result.Result.RagPoints.AddRange(points.Select(pt => pt.Result));
+                    }
                 }
             }
 

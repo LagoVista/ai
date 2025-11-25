@@ -9,9 +9,15 @@ namespace LagoVista.AI.Rag.Chunkers.Models
     public sealed class DocumentIdentity
     {
         /// <summary>
-        /// Organization / tenant identifier.
+        /// Organization / tenant identifier (guid)
         /// </summary>
         public string OrgId { get; set; }
+
+
+        /// <summary>
+        /// Unique org namespace (human readable)
+        /// </summary>
+        public string OrgNamespace { get; set; }
 
         /// <summary>
         /// Optional project identifier.

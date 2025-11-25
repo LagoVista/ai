@@ -6,7 +6,9 @@ using LagoVista.Core.Validation;
 using Microsoft.CodeAnalysis;
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using static System.Collections.Specialized.BitVector32;
 
 namespace LagoVista.AI.Rag.Chunkers.Models
  {
@@ -85,6 +87,9 @@ namespace LagoVista.AI.Rag.Chunkers.Models
 
         public IEnumerable<InvokeResult<IRagPoint>> CreateIRagPoints(IndexFileContext fileContext)
         {
+            var dualColonRegEx = new Regex(@"::");
+
+
             var payload = new RagVectorPayload()
             {
                 DocId = fileContext.DocumentIdentity.DocId,
@@ -99,16 +104,23 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                 SymbolType = SymbolKind,
                 SectionKey = SectionKey,
                 EmbeddingModel = EmbeddingModel,
-                BlobUri = $"{fileContext.BlobUri}.{PartIndex}.{SymbolName}",
                 PartIndex = PartIndex,
                 PartTotal = PartTotal,
                 CharStart = StartCharacter,
                 CharEnd = EndCharacter,
                 ContentTypeId = RagContentType.SourceCode,
+                BlobUri = $"{fileContext.BlobUri}.{SymbolKind}.{SymbolName}.{PartIndex}",
                 Language = "en-US",
                 Subtype = "RawCode",
                 SysDomain = "Backend",
             };
+
+            payload.Title = $"{SymbolKind}: {SymbolName} - {SectionKey} (Chunk {PartIndex} of {PartTotal})";
+            payload.SemanticId = $"{fileContext.DocumentIdentity.OrgNamespace}:{fileContext.DocumentIdentity.ProjectId}:{fileContext.DocumentIdentity.RepoId}:{SymbolKind}:{SymbolName}:{SectionKey}:{PartIndex}".ToLower();
+            if (dualColonRegEx.Match(payload.SemanticId).Success)
+            {
+                throw new ArgumentNullException("Semantic ID should not have two :: in a row, that means a field is missing, code should encorce this.");
+            }
 
             var ragPoint = new RagPoint
             {

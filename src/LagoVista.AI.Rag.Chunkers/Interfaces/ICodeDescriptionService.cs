@@ -25,6 +25,8 @@ namespace LagoVista.AI.Rag.Chunkers.Interfaces
         InvokeResult<ModelStructureDescription> BuildModelStructureDescription(string sourceText, IReadOnlyDictionary<string, string> resources);
 
 
+        InvokeResult<DdrDescription> BuildDdrDescription(IndexFileContext ctx, string sourceText);
+
         InvokeResult<ModelStructureDescription> BuildModelStructureDescription(string sourceText);
 
         /// <summary>

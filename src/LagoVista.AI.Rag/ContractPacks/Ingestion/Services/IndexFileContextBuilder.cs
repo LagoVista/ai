@@ -67,10 +67,10 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
             var identity = new DocumentIdentity
             {
                 OrgId = orgId,
+                OrgNamespace = config.OrgNamespace,
                 ProjectId = projectId,
                 RepoId = repoId,
                 RelativePath = relativePath,
-                
             };
 
             
@@ -104,6 +104,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                 Language = DetectLanguage(relativePath),
                 DocumentIdentity = identity,
                 GitRepoInfo = gitRepoInfo,
+                RepoId = repoId,
                 BlobUri = $"{repoId}/{relativePath}",
             };
 

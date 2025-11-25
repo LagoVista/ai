@@ -54,6 +54,4 @@ namespace LagoVista.AI.Rag.Chunkers.Models
             return InvokeResult.Success;
         }
     }
-
-
 }

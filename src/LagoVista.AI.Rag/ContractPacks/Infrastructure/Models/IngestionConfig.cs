@@ -9,6 +9,8 @@ namespace LagoVista.AI.Rag.Models
     {
         public string OrgId { get; set; }
 
+        public string OrgNamespace { get; set; }
+
         /// <summary>
         /// Global reindex mode for this run.
         /// Stored as a string so it can be manually edited in appsettings.

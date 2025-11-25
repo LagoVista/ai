@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Mime;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace LagoVista.AI.Rag.Chunkers.Models
@@ -31,6 +32,8 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         public virtual string SubtypeFlavor { get;  }
 
         public string OrgId { get; set; }
+        public string OrgNamespace { get; set; }
+        public string RepoId { get; set; }
         public string ProjectId { get; set; }
 
         public string Repo { get; set; }
@@ -70,11 +73,14 @@ namespace LagoVista.AI.Rag.Chunkers.Models
             DocId = ctx.DocumentIdentity.DocId;
             Repo = ctx.GitRepoInfo.RemoteUrl;
             OrgId = ctx.DocumentIdentity.OrgId;
+            OrgNamespace = ctx.DocumentIdentity.OrgNamespace;
             ProjectId = ctx.DocumentIdentity.ProjectId;
             Branch = ctx.GitRepoInfo.BranchRef;
             Path = ctx.RelativePath;
             CommitSha = ctx.GitRepoInfo.CommitSha;
             BlobUri = ctx.BlobUri;
+            RepoId = ctx.RepoId;
+            
         }
 
         protected virtual InvokeResult PopulateAdditionalRagProperties(RagVectorPayload payload)
@@ -90,6 +96,8 @@ namespace LagoVista.AI.Rag.Chunkers.Models
             if (_summarySections == null)
                 throw new ArgumentNullException($"Must create summary sections prior to calling CreateIRagPoints - {QualifiedName}.");
 
+            var dualColonRegEx = new Regex(@"::");
+
             foreach (var section in _summarySections)
             {
                 var payload = new RagVectorPayload()
@@ -102,7 +110,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                     CommitSha = this.CommitSha,
                     SectionKey = section.SectionKey,
                     EmbeddingModel =  section.EmbeddingModel,
-                    BusinessDomainKey = this.BusinessDomainKey,
+                    BusinessDomainKey = section.DomainKey,
                     ContentTypeId = ContentTypeId,
                     Subtype = this.Subtype,
                     BlobUri =  $"{this.BlobUri}.{section.PartIndex}.{section.SectionKey}",
@@ -110,7 +118,13 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                     Language = "en-US",
                 };
 
-                payload.Title = $"{this.BusinessDomainKey}:{payload.ContentType}:{payload.Subtype}:{PrimaryEntity}";
+                payload.Title = $"{section.SymbolType}: {section.Symbol} - {section.SectionKey} (Chunk {section.PartIndex} of {section.PartTotal})";
+                payload.SemanticId = $"{this.OrgNamespace}:{this.ProjectId}:{this.RepoId}:{section.SymbolType}:{section.Symbol}:{section.SectionKey}:{section.PartIndex}".ToLower();
+
+                if(dualColonRegEx.Match(payload.SemanticId).Success)
+                {
+                    throw new ArgumentNullException("Semantic ID should not have two :: in a row, that means a field is missing, code should encorce this.");
+                }
 
                 section.PopulateRagPayload(payload);
 

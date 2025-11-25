@@ -75,5 +75,10 @@ namespace LagoVista.AI.Rag.Chunkers.Services
         {
             return ModelStructureDescriptionBuilder.FromSource(sourceText, resources);
         }
+
+        public InvokeResult<DdrDescription> BuildDdrDescription(IndexFileContext ctx, string sourceText)
+        {
+            return DdrDescriptionBuilder.FromSource(ctx, sourceText);
+        }
     }
 }
