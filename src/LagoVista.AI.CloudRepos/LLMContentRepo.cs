@@ -6,7 +6,9 @@ using LagoVista.AI.Models;
 using LagoVista.CloudStorage.Storage;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
+using MongoDB.Bson.IO;
 using System;
+using System.Globalization;
 using System.Threading.Tasks;
 
 namespace LagoVista.AI.CloudRepos
@@ -59,6 +61,47 @@ namespace LagoVista.AI.CloudRepos
             var containerName = GetContainerName(vectorDb.OwnerOrganization.Id);
             var result = await GetFileAsync(containerName, blobName);
             return InvokeResult<string>.Create(System.Text.ASCIIEncoding.ASCII.GetString(result.Result));
+        }
+
+        private const int BlobMaxLength = 1024;
+
+        private const int BlobFileDirectoryMinLength = 1;
+
+        public void ValidateBlobName(string blobName)
+        {
+            if (string.IsNullOrWhiteSpace(blobName))
+            {
+                throw new ArgumentException("Blob name must not be empty");
+            }
+
+            if (blobName.Length < BlobFileDirectoryMinLength || blobName.Length > BlobMaxLength)
+            {
+                throw new ArgumentException($"Blob name must be between {BlobFileDirectoryMinLength} and {BlobMaxLength} characters");
+            }
+
+            int slashCount = 0;
+            foreach (char c in blobName)
+            {
+                if (c == '/')
+                {
+                    slashCount++;
+                }
+            }
+
+            // 254 slashes means 255 path segments; max 254 segments for blobs, 255 includes container. 
+            if (slashCount >= 254)
+            {
+                throw new ArgumentException("Too many paths in blob name");
+            }
+
+        }      
+
+        public async Task<InvokeResult> AddTextContentAsync(string orgId, string accountId, string apiKey, string blobName, string content)
+        {
+            InitConnectionSettings(accountId, apiKey);
+            var containerName = GetContainerName(orgId);
+            var result = await AddFileAsync(containerName, blobName, content);
+            return result.ToInvokeResult();
         }
     }
 }

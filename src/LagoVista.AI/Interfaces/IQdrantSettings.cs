@@ -12,5 +12,7 @@ namespace LagoVista.AI.Interfaces
     {
         public string QdrantEndpoint { get; }
         public string QdrantApiKey { get; }
+        public int VectorSize { get; }
+        public string Distance { get; }
     }
 }

@@ -103,15 +103,14 @@ namespace LagoVista.AI.RagConsole
                 return;
             }
 
-
-
             var adminLogger = new AdminLogger(new ConsoleLogWriter());
             SLWIOC.RegisterSingleton<IAdminLogger>(adminLogger);
             var openAISettings = new OpenAISettings(result.Result.Embeddings.BaseUrl, result.Result.Embeddings.ApiKey, result.Result.Embeddings.Model);
-            var qdrantSettings = new QdrantSettings(result.Result.Qdrant.Endpoint, result.Result.Qdrant.ApiKey);
+            var qdrantSettings = new QdrantSettings(result.Result.Qdrant.Endpoint, result.Result.Qdrant.ApiKey, result.Result.Qdrant.VectorSize, result.Result.Qdrant.Distance);
 
             var embedder = new OpenAIEmbedder(openAISettings, adminLogger);
 
+            SLWIOC.RegisterSingleton<IngestionConfig>(result.Result);
             SLWIOC.RegisterSingleton<IOpenAISettings>(openAISettings);
             SLWIOC.RegisterSingleton<IQdrantSettings>(qdrantSettings);
             
@@ -140,15 +139,21 @@ namespace LagoVista.AI.RagConsole
 
         internal class QdrantSettings : IQdrantSettings
         {
-            public QdrantSettings(string endpoint, string apiKey)
+            public QdrantSettings(string endpoint, string apiKey, int vectorSize, string distance)
             {
                 QdrantEndpoint = endpoint;
                 QdrantApiKey = apiKey;
+                VectorSize = vectorSize;
+                Distance = distance;
             }
 
             public string QdrantEndpoint { get; }
 
             public string QdrantApiKey { get; }
+
+            public int VectorSize { get; }
+
+            public string Distance { get; } 
         }
 
         static void PrintUsage()

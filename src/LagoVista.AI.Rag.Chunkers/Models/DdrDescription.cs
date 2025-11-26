@@ -1,3 +1,4 @@
+using LagoVista.Core.Utils.Types.Nuviot.RagIndexing;
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
@@ -10,7 +11,8 @@ namespace LagoVista.AI.Rag.Chunkers.Models
     public partial class DdrDescription : SummaryFacts
     {
         public override string Subtype => "Ddr";
-
+       
+        public override RagContentType ContentTypeId => RagContentType.Spec;
 
         public string DdrType { get; set; }
         public int DdrNumber { get; set; }

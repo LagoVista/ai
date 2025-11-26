@@ -89,11 +89,10 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         {
             var dualColonRegEx = new Regex(@"::");
 
-
             var payload = new RagVectorPayload()
             {
                 DocId = fileContext.DocumentIdentity.DocId,
-                OrgId = fileContext.DocumentIdentity.OrgId,
+                OrgNamespace = fileContext.DocumentIdentity.OrgNamespace,
                 ProjectId = fileContext.DocumentIdentity.ProjectId,
                 Repo = fileContext.GitRepoInfo.RemoteUrl,
                 RepoBranch = fileContext.GitRepoInfo.BranchRef,

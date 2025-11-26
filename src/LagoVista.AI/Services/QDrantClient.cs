@@ -4,6 +4,8 @@
 // --- END CODE INDEX META ---
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
+using LagoVista.Core.AI.Interfaces;
+using LagoVista.Core.AI.Models;
 using LagoVista.Core.Utils.Types;
 using LagoVista.Core.Utils.Types.Nuviot.RagIndexing;
 using LagoVista.IoT.Logging.Loggers;
@@ -25,13 +27,14 @@ namespace LagoVista.AI.Services
     {
         private  HttpClient _http;
         private IAdminLogger _adminLogger;
-
+        private readonly IQdrantSettings _settings;
 
         public QdrantClient(IQdrantSettings settings, IAdminLogger adminLogger)
         {
             _http = new HttpClient { BaseAddress = new Uri(settings.QdrantEndpoint) };
             _http.DefaultRequestHeaders.Add("api-key", settings.QdrantApiKey);
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
+            _settings = settings;
         }
 
         public QdrantClient(AgentContext vectorDb, IAdminLogger adminLogger)
@@ -41,20 +44,20 @@ namespace LagoVista.AI.Services
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
         }
 
-        public async Task EnsureCollectionAsync(QdrantCollectionConfig cfg, string name)
+        public async Task EnsureCollectionAsync(string name)
         {
             var exists = await _http.GetAsync($"/collections/{name}");
             if (exists.IsSuccessStatusCode) return;
 
             var req = new
             {
-                vectors = new { size = cfg.VectorSize, distance = cfg.Distance }
+                vectors = new { size = _settings.VectorSize, distance = _settings.Distance }
             };
             var resp = await _http.PutAsJsonAsync($"/collections/{name}", req);
             resp.EnsureSuccessStatusCode();
         }
 
-        public async Task UpsertAsync(string collection, IEnumerable<PayloadBuildResult> points, CancellationToken ct)
+        public async Task UpsertAsync(string collection, IEnumerable<IRagPoint> points, CancellationToken ct)
         {
             var sw = Stopwatch.StartNew();
             var req = new { points = points.Select(p => new { id = p.PointId, vector = p.Vector, payload = p.Payload }) };
@@ -134,12 +137,13 @@ namespace LagoVista.AI.Services
         /// </summary>
         public async Task UpsertInBatchesAsync(
             string collection,
-            IReadOnlyList<PayloadBuildResult> points,
+            IReadOnlyList<IRagPoint> points,
             int vectorDims,
             int? maxPerBatch = null,
             CancellationToken ct = default)
         {
             if (points == null || points.Count == 0) return;
+
 
             long bytesPerPoint = (long)vectorDims * 28 + 2000;
             long targetBytes = 2_500_000; // ~2.5 MB per request
@@ -176,7 +180,7 @@ namespace LagoVista.AI.Services
         /// Posts an upsert using gzip-compressed JSON body for smaller request payloads.
         /// Compatible with .NET Standard 2.1 (Newtonsoft.Json version).
         /// </summary>
-        private async Task UpsertJsonGzipAsync(string collection, List<PayloadBuildResult> batch, CancellationToken ct)
+        private async Task UpsertJsonGzipAsync(string collection, List<RagPoint> batch, CancellationToken ct)
         {
             var url = $"collections/{collection}/points?wait=true";
             var payload = new { points = batch };

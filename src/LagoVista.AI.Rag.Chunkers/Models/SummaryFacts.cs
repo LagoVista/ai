@@ -6,7 +6,6 @@ using LagoVista.Core.Validation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Mime;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -27,7 +26,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
 
         public string BusinessDomainKey { get; set; }          // e.g. "Devices", "Alerts"
 
-        public RagContentType ContentTypeId { get => RagContentType.SourceCode; }
+        public virtual RagContentType ContentTypeId { get => RagContentType.SourceCode; }
         public abstract string Subtype { get;  }
         public virtual string SubtypeFlavor { get;  }
 
@@ -103,7 +102,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                 var payload = new RagVectorPayload()
                 {
                     DocId = this.DocId,
-                    OrgId = this.OrgId,
+                    OrgNamespace = this.OrgNamespace,
                     ProjectId = this.ProjectId,
                     Repo = this.Repo,
                     RepoBranch = this.Branch,
@@ -113,7 +112,6 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                     BusinessDomainKey = section.DomainKey,
                     ContentTypeId = ContentTypeId,
                     Subtype = this.Subtype,
-                    BlobUri =  $"{this.BlobUri}.{section.PartIndex}.{section.SectionKey}",
                     SubtypeFlavor = this.SubtypeFlavor,
                     Language = "en-US",
                 };
@@ -128,6 +126,9 @@ namespace LagoVista.AI.Rag.Chunkers.Models
 
                 section.PopulateRagPayload(payload);
 
+                payload.BlobUri = $"{this.BlobUri}.{section.SectionKey}.{section.PartIndex}".ToLower().Replace(" ", "_"); 
+
+
                 var result = PopulateAdditionalRagProperties(payload);
 
                 var point = new RagPoint
@@ -139,6 +140,12 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                 };
 
                 payloadResults.Add(InvokeResult<IRagPoint>.Create( point));
+            }
+
+            var uniqueBlobIds = payloadResults.Select(pay => pay.Result.Payload.BlobUri).Distinct();
+            if(uniqueBlobIds.Count() != payloadResults.Count())
+            {
+                throw new ArgumentNullException("Blob uris within a vector payload must be unique");
             }
           
             return payloadResults;

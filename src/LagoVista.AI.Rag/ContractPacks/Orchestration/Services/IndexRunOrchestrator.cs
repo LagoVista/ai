@@ -4,8 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using LagoVista.AI.Interfaces;
 using LagoVista.AI.Rag.Chunkers.Interfaces;
 using LagoVista.AI.Rag.Chunkers.Services;
+using LagoVista.AI.Rag.ContractPacks.Content.Interfaces;
 using LagoVista.AI.Rag.ContractPacks.Infrastructure.Interfaces;
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Interfaces;
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Models;
@@ -35,7 +37,6 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
     /// </summary>
     public sealed class IndexRunOrchestrator : IIndexRunOrchestrator
     {
-        private readonly IIngestionConfigProvider _configProvider;
         private readonly IFileDiscoveryService _discoveryService;
         private readonly IFileIngestionPlanner _ingestionPlanner;
         private readonly ILocalIndexStore _localIndexStore;
@@ -49,7 +50,8 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
         private readonly IDomainModelCatalogBuilder _domainModelCatalogBuilder;
         private readonly IResxLabelScanner _resxLabelScanner;
         private readonly IEmbedder _embedder;
-
+        private readonly IQdrantClient _qdrantClient;
+        private readonly IContentStorage _contentStorage;
 
         public IndexRunOrchestrator(
             IIngestionConfigProvider configProvider,
@@ -65,11 +67,12 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
             IIndexFileContextBuilder indexFileContextBuilder,
             IResxLabelScanner resxLabelScanner,
             IEmbedder embedder,
+            IContentStorage contentStorage,
+            IQdrantClient qdrantClient,
             IMetadataRegistryClient metadataRegistryClient)
         {
             _indexFileContextBuilder = indexFileContextBuilder ?? throw new ArgumentNullException(nameof(indexFileContextBuilder));
             _gitRepoInspector = gitRepoInspector ?? throw new ArgumentNullException(nameof(gitRepoInspector));
-            _configProvider = configProvider ?? throw new ArgumentNullException(nameof(configProvider));
             _discoveryService = discoveryService ?? throw new ArgumentNullException(nameof(discoveryService));
             _ingestionPlanner = ingestionPlanner ?? throw new ArgumentNullException(nameof(ingestionPlanner));
             _localIndexStore = localIndexStore ?? throw new ArgumentNullException(nameof(localIndexStore));
@@ -81,6 +84,8 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
             _domainModelCatalogBuilder = domainModelCatalogBuilder ?? throw new ArgumentNullException(nameof(domainModelCatalogBuilder));
             _resxLabelScanner = resxLabelScanner ?? throw new ArgumentNullException(nameof(resxLabelScanner));
             _embedder = embedder ?? throw new ArgumentNullException(nameof(embedder));
+            _qdrantClient = qdrantClient ?? throw new ArgumentNullException(nameof(qdrantClient));
+            _contentStorage = contentStorage ?? throw new ArgumentNullException(nameof(contentStorage));
         }
 
         public async Task RunAsync(IngestionConfig config, string mode = null, string processRepo = null, bool verbose = false, bool dryrun = false, CancellationToken cancellationToken = default)
@@ -95,6 +100,8 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
                 repos = repos.Where(rp => rp.ToLower() == processRepo.ToLower()).ToList();
 
             int idx = 1;
+
+            await _qdrantClient.EnsureCollectionAsync(config.Qdrant.Collection);
 
             var totalFilesFound = 0;
             var totalPartsToIndex = 0;
@@ -170,14 +177,20 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
                             if (String.IsNullOrEmpty(result.Payload.DocId))
                                 throw new ArgumentNullException("DocId");
 
+                            _adminLogger.Trace($"[IndexRunOrchestrator__RunAsync] {result.Payload.SemanticId}");
+
                             var embedResult = await _embedder.EmbedAsync(System.Text.ASCIIEncoding.ASCII.GetString(result.Contents));
                             result.Vector = embedResult.Result.Vector;
                             result.Payload.EmbeddingModel = embedResult.Result.EmbeddingModel;
 
-                            Console.WriteLine(result.Payload.DocId);
-                            Console.WriteLine(result.Payload.Title);
-                            Console.WriteLine(result.Payload.SemanticId);
+                            await _contentStorage.AddContentAsync(result.Payload.BlobUri, result.Contents);
                         }
+
+                        await _qdrantClient.UpsertInBatchesAsync(config.Qdrant.Collection, fileProcessResult.Result.RagPoints, config.Qdrant.VectorSize);
+
+                        var record = localIndex.GetOrAdd(fileContext.RelativePath, fileContext.DocumentIdentity.DocId);
+                        record.ContentHash = await ContentHashUtil.ComputeFileContentHashAsync(fileContext.FullPath);
+                        await _localIndexStore.SaveAsync(config, repoId, localIndex, cancellationToken);
 
                         Console.WriteLine(new String('-', 80));
                     }
@@ -188,7 +201,6 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
                 }
 
 
-                await _localIndexStore.SaveAsync(config, repoId, localIndex, cancellationToken).ConfigureAwait(false);
                 idx++;
             }
 
