@@ -97,6 +97,7 @@ namespace LagoVista.AI.Services
                 OrgId = org?.Id,
                 SessionId = session.Id,
                 TurnId = turn.Id,
+                turn.PreviousOpenAIResponseId,
                 Request = execRequest,
                 ActiveFiles = request.ActiveFiles,
                 RagFilters = request.RagFilters
@@ -124,6 +125,7 @@ namespace LagoVista.AI.Services
             {
                 OrgId = org?.Id,
                 SessionId = session.Id,
+                ResponseId = execRequest.ResponseContinuationId,
                 TurnId = turn.Id,
                 Response = execResponse
             };
@@ -199,6 +201,7 @@ namespace LagoVista.AI.Services
                 TurnId = turn.Id,
                 AgentAnswer = execResponse.Text,
                 AgentAnswerFullText = execResponse.Text,
+                OpenAIResponseId = execResponse.ResponseContinuationId,
                 OpenAIRequestBlobUrl = requestBlobUrl,
                 OpenAIResponseBlobUrl = responseBlobUrl,
                 PreviousOpenAIResponseId = turn.PreviousOpenAIResponseId,

@@ -120,6 +120,7 @@ namespace LagoVista.AI.Services
                 agentContext.Id,
                 request.Instruction,
                 conversationContextId,
+                request.ResponseContinuationId,
                 org,
                 user,
                 repo: request.Repo,

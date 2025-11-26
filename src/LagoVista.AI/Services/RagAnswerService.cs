@@ -48,18 +48,18 @@ namespace LagoVista.AI.Services
 
         public Task<InvokeResult<AnswerResult>> AnswerAsync(string vectorDatabaseId, string question, EntityHeader org, EntityHeader user, string repo = null, string language = "csharp", int topK = 8)
         {
-            return AnswerAsync(vectorDatabaseId, question, null, org, user, repo, language, topK);
+            return AnswerAsync(vectorDatabaseId, question, null, null, org, user, repo, language, topK);
         }
 
-        public Task<InvokeResult<AnswerResult>> AnswerAsync(string vectorDatabaseId, string question, string conversationContextId, EntityHeader org, EntityHeader user, string repo, string language, int topK, string ragScope, string workspaceId, List<ActiveFile> activeFiles)
+        public Task<InvokeResult<AnswerResult>> AnswerAsync(string vectorDatabaseId, string question, string conversationContextId, string previousResponseId, EntityHeader org, EntityHeader user, string repo, string language, int topK, string ragScope, string workspaceId, List<ActiveFile> activeFiles)
         {
             // Step 2.1: wiring only, ignore ragScope/workspaceId/activeFiles for now
-            return AnswerAsync(vectorDatabaseId, question, conversationContextId, org, user, repo, language, topK);
+            return AnswerAsync(vectorDatabaseId, question, conversationContextId, previousResponseId, org, user, repo, language, topK);
         }
 
 
 
-        public async Task<InvokeResult<AnswerResult>> AnswerAsync(string vectorDatabaseId, string question, string conversationContextId, EntityHeader org, EntityHeader user, string repo = null, string language = "csharp", int topK = 8)
+        public async Task<InvokeResult<AnswerResult>> AnswerAsync(string vectorDatabaseId, string question, string conversationContextId, string previousResponseId, EntityHeader org, EntityHeader user, string repo = null, string language = "csharp", int topK = 8)
         {
             if (string.IsNullOrEmpty(vectorDatabaseId)) throw new ArgumentNullException(nameof(vectorDatabaseId));
 
@@ -175,6 +175,7 @@ namespace LagoVista.AI.Services
             {
                 model,
                 store = true,
+                previous_response_id = previousResponseId,
                 temperature = conversationContext.Temperature,
                 // The Responses API uses "input" instead of "messages".
                 // We can still send a multi-message conversation structure.
