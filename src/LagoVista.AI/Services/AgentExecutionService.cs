@@ -141,6 +141,7 @@ namespace LagoVista.AI.Services
                 Kind = "answer",
                 ConversationId = conversationId,
                 AgentContextId = agentContext.Id,
+                ResponseContinuationId = answerResult.Result.OpenAiResponeId,
                 ConversationContextId = conversationContextId,
                 Mode = "ask",
                 Text = answerResult.Result.Text,

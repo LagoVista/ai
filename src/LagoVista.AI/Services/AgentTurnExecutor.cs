@@ -111,6 +111,7 @@ namespace LagoVista.AI.Services
                 return InvokeResult<AgentExecutionResponse>.FromInvokeResult(requestBlobResult.ToInvokeResult());
             }
 
+
             var execResult = await _agentExecutionService.ExecuteAsync(execRequest, org, user, cancellationToken);
             if (!execResult.Successful)
             {
@@ -200,7 +201,6 @@ namespace LagoVista.AI.Services
                 AgentAnswerFullText = execResponse.Text,
                 OpenAIRequestBlobUrl = requestBlobUrl,
                 OpenAIResponseBlobUrl = responseBlobUrl,
-                OpenAIResponseId = null,
                 PreviousOpenAIResponseId = turn.PreviousOpenAIResponseId,
                 Warnings = new List<string>(),
                 Errors = new List<string>(),

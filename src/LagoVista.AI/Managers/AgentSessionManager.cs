@@ -66,6 +66,8 @@ namespace LagoVista.AI.Managers
             turn.Status = EntityHeader<AgentSessionTurnStatuses>.Create( AgentSessionTurnStatuses.Completed);
             turn.StatusTimeStamp = DateTime.UtcNow.ToJSONString();
             turn.OpenAIResponseReceivedDate = turn.StatusTimeStamp;
+            turn.OpenAIResponseId = openAiResponseId;
+            turn.OpenAIChainExpiresDate = DateTime.UtcNow.AddDays(30).ToJSONString();
             turn.OpenAIResponseBlobUrl = answerBlobUrl;
             turn.Warnings.AddRange(warnings);
             turn.ExecutionMs = executionMs;
