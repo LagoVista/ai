@@ -29,6 +29,9 @@ namespace LagoVista.AI.Services
         private IAdminLogger _adminLogger;
         private readonly IQdrantSettings _settings;
 
+        public const int VECTOR_SIZE = 3072;
+        public const string VECTOR_DISTANCE = "Cosine";
+
         public QdrantClient(IQdrantSettings settings, IAdminLogger adminLogger)
         {
             _http = new HttpClient { BaseAddress = new Uri(settings.QdrantEndpoint) };
@@ -51,7 +54,7 @@ namespace LagoVista.AI.Services
 
             var req = new
             {
-                vectors = new { size = _settings.VectorSize, distance = _settings.Distance }
+                vectors = new { size = VECTOR_SIZE, distance = VECTOR_DISTANCE }
             };
             var resp = await _http.PutAsJsonAsync($"/collections/{name}", req);
             resp.EnsureSuccessStatusCode();
@@ -75,12 +78,19 @@ namespace LagoVista.AI.Services
 
         public async Task<List<QdrantScoredPoint>> SearchAsync(string collection, QdrantSearchRequest req)
         {
+            _adminLogger.Trace($"[QdrantClient__SearchAsync] Search started with collection {collection}");
+
+            var sw = Stopwatch.StartNew();
             var resp = await _http.PostAsJsonAsync($"/collections/{collection}/points/search", req);
 
             if (resp.IsSuccessStatusCode)
             {
+
                 resp.EnsureSuccessStatusCode();
                 var json = await resp.Content.ReadAsAsync<QdrantSearchResponse>();
+
+                _adminLogger.Trace($"[QdrantClient__SearchAsync] Search completed in {sw.Elapsed.TotalMilliseconds}ms, found {json.Result.Count} results.");
+
                 return json!.Result ?? new List<QdrantScoredPoint>();
             }
             else

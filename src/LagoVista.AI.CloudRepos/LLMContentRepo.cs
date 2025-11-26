@@ -103,5 +103,18 @@ namespace LagoVista.AI.CloudRepos
             var result = await AddFileAsync(containerName, blobName, content);
             return result.ToInvokeResult();
         }
+
+        public async Task<InvokeResult<string>> GetTextContentAsync(AgentContext vectorDb, string blobName)
+        {
+            InitConnectionSettings(vectorDb.AzureAccountId, vectorDb.AzureApiToken);
+            var result = await GetFileAsync(vectorDb.BlobContainerName, blobName);
+            if(!result.Successful)
+            {
+                return InvokeResult<string>.FromInvokeResult(result.ToInvokeResult());
+            }
+
+            var content = System.Text.ASCIIEncoding.ASCII.GetString(result.Result);
+            return InvokeResult<string>.Create(content);
+        }
     }
 }

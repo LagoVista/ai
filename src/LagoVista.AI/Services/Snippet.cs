@@ -6,11 +6,11 @@ namespace LagoVista.AI.Services
 {
     public sealed class Snippet
     {
-        public Snippet(string tag, string path, string fileName, int start, int end, string text, string symbol, string symbolType)
+        public Snippet(string tag, string path, string title, int start, int end, string text, string symbol, string symbolType)
         {
             Tag = tag;
             Path = path;
-            FileName = fileName;
+            Title = title;
             Start = start;
             End = end;
             Text = text;
@@ -18,9 +18,9 @@ namespace LagoVista.AI.Services
             SymbolType = symbolType;
         }
 
+        public string Title { get; set; }
         public string Tag { get; }
         public string Path { get; }
-        public string FileName { get; }
         public int Start { get; }
         public int End { get; }
         public string Text { get; }

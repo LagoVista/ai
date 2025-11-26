@@ -16,11 +16,11 @@ namespace LagoVista.AI.Interfaces
 
         Task<InvokeResult<AnswerResult>> AnswerAsync(string vectorDatabaseId, string question, string conversationContextId, EntityHeader org, EntityHeader user, string repo, string language, int topK, string ragScope, string workspaceId, List<ActiveFile> activeFiles);
 
-        Task<InvokeResult<string>> GetContentAsync(AgentContext vectorDb, string path, string fileName, int start, int end, EntityHeader org, EntityHeader user);
+        Task<InvokeResult<string>> GetContentAsync(AgentContext vectorDb, string path, int start, int end, EntityHeader org, EntityHeader user);
 
-        Task<InvokeResult<string>> GetContentAsync(string vectorDbId, string path, string fileName, int start, int end, EntityHeader org, EntityHeader user);
+        Task<InvokeResult<string>> GetContentAsync(string vectorDbId, string path, int start, int end, EntityHeader org, EntityHeader user);
 
-        Task<InvokeResult<string>> GetContentAsync(string path, string fileName, int start, int end, EntityHeader org, EntityHeader user);
+        Task<InvokeResult<string>> GetContentAsync(string path, int start, int end, EntityHeader org, EntityHeader user);
 
         Task<InvokeResult<AnswerResult>> AnswerAsync(string question, EntityHeader org, EntityHeader user, string repo = null, string language = "csharp", int topK = 8);
     }

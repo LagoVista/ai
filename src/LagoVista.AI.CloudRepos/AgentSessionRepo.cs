@@ -18,7 +18,7 @@ namespace LagoVista.AI.CloudRepos
             _shouldConsolidateCollections = settings.ShouldConsolidateCollections;
         }
 
-        protected override bool ShouldConsolidateCollections => base.ShouldConsolidateCollections; 
+        protected override bool ShouldConsolidateCollections => _shouldConsolidateCollections; 
 
         public Task AddSessionAsync(AgentSession session)
         {

@@ -12,6 +12,5 @@ namespace LagoVista.AI.Interfaces
     {
         public string OpenAIUrl { get; }
         public string OpenAIApiKey { get; }
-        public string DefaultEmbeddingModel { get; }
     }
 }

@@ -25,7 +25,9 @@ namespace LagoVista.AI.Services
         private HttpClient _http;
         private readonly string _model;
         private readonly int _expectedDims;
-        private readonly IAdminLogger _adminLogger;    
+        private readonly IAdminLogger _adminLogger;
+
+        public const string DEFAULT_EMBEDDING_MODEL = "text-embedding-3-large";
 
         private class EmbeddingResponse
         {
@@ -43,7 +45,7 @@ namespace LagoVista.AI.Services
         {
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
 
-            _model = aiSettings.DefaultEmbeddingModel;
+            _model = DEFAULT_EMBEDDING_MODEL;
             _expectedDims = 3072;
             _http = new HttpClient { BaseAddress = new Uri(aiSettings.OpenAIUrl) };
             _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", aiSettings.OpenAIApiKey);
@@ -54,7 +56,7 @@ namespace LagoVista.AI.Services
         {
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
 
-            _model = aiSettings.DefaultEmbeddingModel;
+            _model = DEFAULT_EMBEDDING_MODEL;
             _expectedDims = 3072;
             _http = new HttpClient { BaseAddress = new Uri(aiSettings.OpenAIUrl) };
             _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", vectorDb.LlmApiKey);

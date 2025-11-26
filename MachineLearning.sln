@@ -51,6 +51,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LagoVista.AI.Rag.Tests", "t
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LagoVista.AI.RagConsole", "Apps\LagoVista.AI.RagConsole\LagoVista.AI.RagConsole.csproj", "{690AF3A3-A9B7-4D94-A8D6-D873CAFD7970}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LagoVista.AI.Aptix.Cli", "Apps\LagoVista.AI.Aptix.Cli\LagoVista.AI.Aptix.Cli.csproj", "{C5F8E262-D969-4549-A357-EA0AA9F37183}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -101,6 +103,10 @@ Global
 		{690AF3A3-A9B7-4D94-A8D6-D873CAFD7970}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{690AF3A3-A9B7-4D94-A8D6-D873CAFD7970}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{690AF3A3-A9B7-4D94-A8D6-D873CAFD7970}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C5F8E262-D969-4549-A357-EA0AA9F37183}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C5F8E262-D969-4549-A357-EA0AA9F37183}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C5F8E262-D969-4549-A357-EA0AA9F37183}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C5F8E262-D969-4549-A357-EA0AA9F37183}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -117,6 +123,7 @@ Global
 		{F0AE441F-A281-4F07-8FE1-94DC03152111} = {0C3AF45F-896E-44A6-9A2A-E62A8609B5D4}
 		{2A33E0B2-92EC-4B46-8579-89F92DABAA82} = {0C3AF45F-896E-44A6-9A2A-E62A8609B5D4}
 		{690AF3A3-A9B7-4D94-A8D6-D873CAFD7970} = {A7E7FEBA-8F2E-410F-BC32-C1CA2D0D4888}
+		{C5F8E262-D969-4549-A357-EA0AA9F37183} = {A7E7FEBA-8F2E-410F-BC32-C1CA2D0D4888}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {29D4F79F-3C1A-46CA-BA14-25CEA87D4B71}

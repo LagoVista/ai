@@ -14,5 +14,6 @@ namespace LagoVista.AI
         Task<InvokeResult<byte[]>> GetImageContentAsync(AgentContext vectorDb, string path, string fileName);
         Task<InvokeResult> AddTextContentAsync(AgentContext vectorDb, string path, string fileName, string content, string contentType);
         Task<InvokeResult<string>> GetTextContentAsync(AgentContext vectorDb, string path, string fileName);
+        Task<InvokeResult<string>> GetTextContentAsync(AgentContext vectorDb, string blobName);
     }
 }

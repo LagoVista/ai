@@ -657,4 +657,7 @@
   <data name="OperationKind_Domain" xml:space="preserve">
     <value>Domain</value>
   </data>
+  <data name="Common_Status_New" xml:space="preserve">
+    <value>New</value>
+  </data>
 </root>

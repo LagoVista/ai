@@ -36,9 +36,9 @@ namespace LagoVista.AI.Rest
         }
 
         [HttpGet("/api/ai/llm/{vectordbid}/content")]
-        public Task<InvokeResult<string>> GetContent(string vectordbid, [FromQuery] string path, [FromQuery] string fileName, [FromQuery]int start, [FromQuery]int end)
+        public Task<InvokeResult<string>> GetContentForDatabase(string vectordbid, [FromQuery] string path, [FromQuery]int start, [FromQuery]int end)
         {
-            return _answerService.GetContentAsync(vectordbid, path, fileName, start, end, OrgEntityHeader, UserEntityHeader);
+            return _answerService.GetContentAsync(vectordbid, path, start, end, OrgEntityHeader, UserEntityHeader);
         }
 
 
@@ -49,7 +49,7 @@ namespace LagoVista.AI.Rest
         }
 
         [HttpGet("/api/ai/llm/content")]
-        public Task<InvokeResult<string>> GetContent([FromQuery] string path, [FromQuery] string fileName, [FromQuery] int start, [FromQuery] int end)
+        public Task<InvokeResult<string>> GetCOntent([FromQuery] string path, [FromQuery] string fileName, [FromQuery] int start, [FromQuery] int end)
         {
             return _answerService.GetContentAsync(path, fileName, start, end, OrgEntityHeader, UserEntityHeader);
         }

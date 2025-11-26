@@ -53,7 +53,7 @@ namespace LagoVista.AI.Managers
             await _repo.UpdateSessionAsyunc(session);
         }
 
-        public async Task CompleteAgentSessionTurnAsync(string agentSessionId, string turnId, string answerSummary, string answerBlobUrl, string openAiResponseId, List<string> warnings, EntityHeader org, EntityHeader user)
+        public async Task CompleteAgentSessionTurnAsync(string agentSessionId, string turnId, string answerSummary, string answerBlobUrl, string openAiResponseId, double executionMs, List<string> warnings, EntityHeader org, EntityHeader user)
         {
             var session = await _repo.GetAgentSessionAsync(agentSessionId);
             var turn = session.Turns.SingleOrDefault(t => t.Id == turnId);
@@ -68,13 +68,14 @@ namespace LagoVista.AI.Managers
             turn.OpenAIResponseReceivedDate = turn.StatusTimeStamp;
             turn.OpenAIResponseBlobUrl = answerBlobUrl;
             turn.Warnings.AddRange(warnings);
+            turn.ExecutionMs = executionMs;
 
             ValidationCheck(session, Actions.Update);
 
             await _repo.UpdateSessionAsyunc(session);
         }
 
-        public async Task FailAgentSessionTurnAsync(string agentSessionId, string turnId, string openAiResponseId, List<string> errors, List<string> warnings, EntityHeader org, EntityHeader user)
+        public async Task FailAgentSessionTurnAsync(string agentSessionId, string turnId, string openAiResponseId, double executionMs, List<string> errors, List<string> warnings, EntityHeader org, EntityHeader user)
         {
             var session = await _repo.GetAgentSessionAsync(agentSessionId);
             await AuthorizeAsync(session, AuthorizeResult.AuthorizeActions.Update, user, org);
@@ -90,7 +91,7 @@ namespace LagoVista.AI.Managers
             turn.OpenAIResponseReceivedDate = turn.StatusTimeStamp;
             turn.Warnings.AddRange(warnings);
             turn.Errors.AddRange(errors);
-
+            turn.ExecutionMs = executionMs;
             ValidationCheck(session, Actions.Update);
 
             await _repo.UpdateSessionAsyunc(session);
@@ -135,6 +136,22 @@ namespace LagoVista.AI.Managers
             await AuthorizeAsync(session, AuthorizeResult.AuthorizeActions.Update, user, org);
 
             return session.Turns.LastOrDefault();
+        }
+
+        public async Task SetRequestBlobUriAsync(string agentSessionid, string turnId, string requestBlobUri, EntityHeader org, EntityHeader user)
+        {
+            var session = await _repo.GetAgentSessionAsync(agentSessionid);
+            var turn = session.Turns.SingleOrDefault(t => t.Id == turnId);
+            if (turn == null)
+            {
+                throw new RecordNotFoundException(nameof(AgentSessionTurn), turnId);
+            }
+
+            turn.OpenAIRequestBlobUrl = requestBlobUri;
+            turn.Status = EntityHeader<AgentSessionTurnStatuses>.Create(AgentSessionTurnStatuses.Pending);
+            turn.StatusTimeStamp = DateTime.UtcNow.ToJSONString();
+
+            await _repo.UpdateSessionAsyunc(session);
         }
     }
 }

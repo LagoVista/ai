@@ -12,6 +12,9 @@ namespace LagoVista.AI.Models
 {
     public enum AgentSessionTurnStatuses
     {
+        [EnumLabel(AgentSessionTurn.AgentSessionTurnStatuses_New, AIResources.Names.Common_Status_New, typeof(AIResources))]
+        New,
+
         [EnumLabel(AgentSessionTurn.AgentSessionTurnStatuses_Pending, AIResources.Names.Common_Status_Pending, typeof(AIResources))]
         Pending,
 
@@ -87,6 +90,8 @@ namespace LagoVista.AI.Models
 
     public class AgentSessionTurn : IValidateable
     {
+
+        public const string AgentSessionTurnStatuses_New = "new";
         public const string AgentSessionTurnStatuses_Pending = "pending";
         public const string AgentSessionTurnStatuses_Completed = "completed";
         public const string AgentSessionTurnStatuses_Failed = "failed";
@@ -138,8 +143,10 @@ namespace LagoVista.AI.Models
 
         public string OpenAIResponseBlobUrl { get; set; }
 
+        public double ExecutionMs { get; set; }
+
         public EntityHeader<AgentSessionTurnStatuses> Status { get; set; } =
-            EntityHeader<AgentSessionTurnStatuses>.Create(AgentSessionTurnStatuses.Pending);
+            EntityHeader<AgentSessionTurnStatuses>.Create(AgentSessionTurnStatuses.New);
 
         public List<AgentSessionChunkRef> ChunkRefs { get; set; } = new List<AgentSessionChunkRef>();
 

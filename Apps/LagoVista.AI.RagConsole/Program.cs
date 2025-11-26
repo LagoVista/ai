@@ -105,8 +105,8 @@ namespace LagoVista.AI.RagConsole
 
             var adminLogger = new AdminLogger(new ConsoleLogWriter());
             SLWIOC.RegisterSingleton<IAdminLogger>(adminLogger);
-            var openAISettings = new OpenAISettings(result.Result.Embeddings.BaseUrl, result.Result.Embeddings.ApiKey, result.Result.Embeddings.Model);
-            var qdrantSettings = new QdrantSettings(result.Result.Qdrant.Endpoint, result.Result.Qdrant.ApiKey, result.Result.Qdrant.VectorSize, result.Result.Qdrant.Distance);
+            var openAISettings = new OpenAISettings(result.Result.Embeddings.BaseUrl, result.Result.Embeddings.ApiKey);
+            var qdrantSettings = new QdrantSettings(result.Result.Qdrant.Endpoint, result.Result.Qdrant.ApiKey);
 
             var embedder = new OpenAIEmbedder(openAISettings, adminLogger);
 
@@ -123,14 +123,11 @@ namespace LagoVista.AI.RagConsole
 
         internal class OpenAISettings : IOpenAISettings
         {
-            public OpenAISettings(string url, string apiKey, string embeddingModel)
+            public OpenAISettings(string url, string apiKey)
             {
                 OpenAIUrl = url;
                 OpenAIApiKey = apiKey;
-                DefaultEmbeddingModel = embeddingModel;
             }
-
-            public string DefaultEmbeddingModel { get; }
 
             public string OpenAIUrl { get; }
 
@@ -139,21 +136,16 @@ namespace LagoVista.AI.RagConsole
 
         internal class QdrantSettings : IQdrantSettings
         {
-            public QdrantSettings(string endpoint, string apiKey, int vectorSize, string distance)
+            public QdrantSettings(string endpoint, string apiKey)
             {
                 QdrantEndpoint = endpoint;
                 QdrantApiKey = apiKey;
-                VectorSize = vectorSize;
-                Distance = distance;
             }
 
             public string QdrantEndpoint { get; }
 
             public string QdrantApiKey { get; }
 
-            public int VectorSize { get; }
-
-            public string Distance { get; } 
         }
 
         static void PrintUsage()

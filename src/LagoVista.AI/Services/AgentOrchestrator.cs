@@ -90,7 +90,12 @@ namespace LagoVista.AI.Services
             var stopwatch = Stopwatch.StartNew();
             await PublishTurnExecutionStartedAsync(session, turn, org, user);
 
+            _adminLogger.Trace("[AgentOrchestrator_BeginNewSessionAsync] Session Ready. " + $"correlationId={correlationId}, org={org?.Id}, user={user?.Id}");
+
+
             var execResult = await _turnExecutor.ExecuteNewSessionTurnAsync(context, session, turn, request, org, user, cancellationToken);
+          
+            _adminLogger.Trace("[AgentOrchestrator_BeginNewSessionAsync] Session Completed. " + $"Success={execResult.Successful} correlationId={correlationId}, org={org?.Id}, user={user?.Id}");
 
             stopwatch.Stop();
 
@@ -98,7 +103,7 @@ namespace LagoVista.AI.Services
             {
                 var warnings = execResult.Result?.Warnings ?? new List<string>();
 
-                await _sessionManager.FailAgentSessionTurnAsync(session.Id, turn.Id, null, execResult.Errors.Select(er => er.Message).ToList(), warnings, org, user);
+                await _sessionManager.FailAgentSessionTurnAsync(session.Id, turn.Id, null, stopwatch.Elapsed.TotalMilliseconds, execResult.Errors.Select(er => er.Message).ToList(), warnings, org, user);
 
                 await PublishTurnFailedAsync(session, turn, execResult, stopwatch.ElapsedMilliseconds, org, user);
 
@@ -107,7 +112,7 @@ namespace LagoVista.AI.Services
 
             var response = execResult.Result;
 
-            await _sessionManager.CompleteAgentSessionTurnAsync(session.Id, turn.Id, response.AgentAnswer, response.OpenAIResponseBlobUrl, response.OpenAIResponseId, response.Warnings, org, user);
+            await _sessionManager.CompleteAgentSessionTurnAsync(session.Id, turn.Id, response.AgentAnswer, response.OpenAIResponseBlobUrl, response.OpenAIResponseId, stopwatch.Elapsed.TotalMilliseconds, response.Warnings, org, user);
 
             await PublishTurnCompletedAsync(session, turn, stopwatch.ElapsedMilliseconds, org, user);
 
@@ -195,7 +200,7 @@ namespace LagoVista.AI.Services
             {
                 var warnings = execResult.Result?.Warnings ?? new List<string>();
 
-                await _sessionManager.FailAgentSessionTurnAsync(session.Id, turn.Id, null, execResult.Errors.Select(er => er.Message).ToList(), warnings, org, user);
+                await _sessionManager.FailAgentSessionTurnAsync(session.Id, turn.Id, null, stopwatch.Elapsed.TotalMilliseconds, execResult.Errors.Select(er => er.Message).ToList(), warnings, org, user);
 
                 await PublishTurnFailedAsync(session, turn, execResult, stopwatch.ElapsedMilliseconds, org, user);
 
@@ -204,7 +209,7 @@ namespace LagoVista.AI.Services
 
             var response = execResult.Result;
 
-            await _sessionManager.CompleteAgentSessionTurnAsync(session.Id, turn.Id, response.AgentAnswer, response.OpenAIResponseBlobUrl, response.OpenAIResponseId, response.Warnings, org, user);
+            await _sessionManager.CompleteAgentSessionTurnAsync(session.Id, turn.Id, response.AgentAnswer, response.OpenAIResponseBlobUrl, response.OpenAIResponseId, stopwatch.Elapsed.TotalMilliseconds, response.Warnings, org, user);
 
             await PublishTurnCompletedAsync(session, turn, stopwatch.ElapsedMilliseconds, org, user);
 

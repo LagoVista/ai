@@ -21,6 +21,14 @@
  
     <AssemblyName>aptix</AssemblyName>
   </PropertyGroup>
+  <ItemGroup>
+    <None Remove="aptix.config.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="aptix.config.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
  
 
   <ItemGroup>

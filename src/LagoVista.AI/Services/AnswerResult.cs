@@ -10,6 +10,7 @@ namespace LagoVista.AI.Services
     public sealed class AnswerResult
     {
         public string Text { get; set; } = "";
+        public string OpenAiResponeId { get; set; }
         public List<SourceRef> Sources { get; set; } = new List<SourceRef>();
     }
 }
