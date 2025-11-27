@@ -127,7 +127,6 @@ namespace LagoVista.AI.Services
                 Vector = qvec.Result.Vector,
                 Limit = Math.Clamp(topK * 3, 12, 50),
                 WithPayload = true,
-                Filter = filter
             });
 
             // 3) Pick a diverse, small set for the prompt
@@ -142,8 +141,8 @@ namespace LagoVista.AI.Services
 
                 var p = hit.Payload!;
                 var path = p["BlobUri"]?.ToString() ?? string.Empty;
-                var start = -1;// Convert.ToInt32(String.IsNullOrEmpty(p["LineStart"].ToString()) ? p["LineStart"] : -1);
-                var end = -1;// Convert.ToInt32(String.IsNullOrEmpty(p["LineEnd"].ToString()) ? p["LineEnd"] : -1);
+                var start = Convert.ToInt32(String.IsNullOrEmpty(p["LineStart"].ToString()) ? p["LineStart"] : -1);
+                var end = Convert.ToInt32(String.IsNullOrEmpty(p["LineEnd"].ToString()) ? p["LineEnd"] : -1);
                 var symbolType = Convert.ToString(p["SymbolType"]);
                 var symbol = Convert.ToString(p["Symbol"]);
                 var title = p["Title"].ToString();

@@ -169,7 +169,6 @@ namespace LagoVista.AI.AgentClient
                 WorkspaceId = workspaceId,
                 Repo = repo,
                 Language = language,
-                RagScope = ragScope,
                 ActiveFiles = activeFiles != null
                     ? new List<ActiveFile>(activeFiles)
                     : new List<ActiveFile>()
@@ -208,7 +207,6 @@ namespace LagoVista.AI.AgentClient
                 WorkspaceId = workspaceId,
                 Repo = repo,
                 Language = language,
-                RagScope = ragScope,
                 ActiveFiles = new List<ActiveFile>(activeFiles)
             };
 

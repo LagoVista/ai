@@ -24,9 +24,9 @@ namespace LagoVista.AI.Interfaces
         Task<InvokeResult<LLMResult>> GetAnswerAsync(
             AgentContext agentContext,
             ConversationContext conversationContext,
-            string userPrompt,
-            string contextPrompt,
-            string sessionId = null,
+            AgentExecuteRequest executeRequest,
+            string ragContextBlock,
+            string sessionId,
             CancellationToken cancellationToken = default);
     }
 }

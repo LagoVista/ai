@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
@@ -16,12 +17,14 @@ namespace LagoVista.AI.Services
         private readonly IAgentContextManager _agentContextManager;
         private readonly IRagAnswerService _ragAnswerService;
         private readonly IAdminLogger _adminLogger;
+        private readonly ILLMClient _llmClient;
 
-        public AgentExecutionService(IAgentContextManager agentContextManager, IRagAnswerService ragAnswerService, IAdminLogger adminLogger)
+        public AgentExecutionService(IAgentContextManager agentContextManager, ILLMClient llmClient, IRagAnswerService ragAnswerService, IAdminLogger adminLogger)
         {
             _agentContextManager = agentContextManager ?? throw new ArgumentNullException(nameof(agentContextManager));
             _ragAnswerService = ragAnswerService ?? throw new ArgumentNullException(nameof(ragAnswerService));
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
+            _llmClient = llmClient ?? throw new ArgumentNullException(nameof(llmClient));
         }
 
         public async Task<InvokeResult<AgentExecuteResponse>> ExecuteAsync(AgentExecuteRequest request, EntityHeader org, EntityHeader user, CancellationToken cancellationToken = default)
@@ -116,6 +119,10 @@ namespace LagoVista.AI.Services
                 $"correlationId={correlationId}, conversationId={conversationId}, " +
                 $"repo={request.Repo}, language={request.Language ?? "csharp"}");
 
+            var conversationContext = agentContext.ConversationContexts.Single(ctx=>ctx.Id == conversationContextId);
+
+//            var res1 = await _llmClient.GetAnswerAsync(agentContext, conversationContext, request.Instruction, conversationContext.System, request.ResponseContinuationId);
+
             var answerResult = await _ragAnswerService.AnswerAsync(
                 agentContext.Id,
                 request.Instruction,
@@ -126,7 +133,7 @@ namespace LagoVista.AI.Services
                 repo: request.Repo,
                 language: request.Language ?? "csharp",
                 topK: 8,
-                ragScope: request.RagScope,
+                ragScope:"",
                 workspaceId: request.WorkspaceId,
                 activeFiles: request.ActiveFiles);
 

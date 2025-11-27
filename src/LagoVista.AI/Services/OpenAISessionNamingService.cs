@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
+using LagoVista.Core.AI.Models;
 using LagoVista.IoT.Logging.Loggers;
 
 namespace LagoVista.AI.Services
@@ -59,7 +60,11 @@ namespace LagoVista.AI.Services
             var result = await _llmClient.GetAnswerAsync(
                 agentContext,
                 conversationCtx,
-                instruction,
+                new AgentExecuteRequest()
+                {
+                    Instruction = instruction,
+                },
+                "",
                 systemPrompt);
 
             if (!result.Successful || result.Result == null)

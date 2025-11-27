@@ -247,7 +247,7 @@ namespace LagoVista.AI.Services
         [JsonProperty("vector")] public float[] Vector { get; set; } = Array.Empty<float>();
         [JsonProperty("limit")] public int Limit { get; set; } = 8;
         [JsonProperty("with_payload")] public bool WithPayload { get; set; } = true;
-        [JsonProperty("filter")] public QdrantFilter Filter { get; set; }
+        [JsonProperty("filter")] public RagScopeFilter Filter { get; set; }
     }
 
     public class QdrantFilter

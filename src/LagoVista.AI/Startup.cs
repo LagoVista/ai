@@ -33,6 +33,7 @@ namespace LagoVista.AI
             services.AddTransient<IAiConversationManager, AiConversationManager>();
             services.AddSingleton<IAgentOrchestrator, AgentOrchestrator>();
             services.AddSingleton<IAgentSessionFactory, AgentSessionFactory>();
+            services.AddSingleton<IRagContextBuilder, QdrantRagContextBuilder>();
             services.AddSingleton<IAgentTurnExecutor, AgentTurnExecutor>();
             services.AddSingleton<IAgentRequestHandler, AgentRequestHandler>();
             services.AddSingleton<IAgentSessionNamingService, OpenAISessionNamingService>();

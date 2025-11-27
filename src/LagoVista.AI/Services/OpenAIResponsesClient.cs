@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -30,175 +31,188 @@ namespace LagoVista.AI.Services
         private readonly IAdminLogger _adminLogger;
         private readonly INotificationPublisher _notificationPublisher;
 
-        public OpenAIResponsesClient(
-            IOpenAISettings openAiSettings,
-            IAdminLogger adminLogger,
-            INotificationPublisher notificationPublisher)
+        public OpenAIResponsesClient(IOpenAISettings openAiSettings, IAdminLogger adminLogger, INotificationPublisher notificationPublisher)
         {
-            _openAiSettings = openAiSettings
-                ?? throw new ArgumentNullException(nameof(openAiSettings));
-            _adminLogger = adminLogger
-                ?? throw new ArgumentNullException(nameof(adminLogger));
-            _notificationPublisher = notificationPublisher
-                ?? throw new ArgumentNullException(nameof(notificationPublisher));
+            _openAiSettings = openAiSettings ?? throw new ArgumentNullException(nameof(openAiSettings));
+            _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
+            _notificationPublisher = notificationPublisher ?? throw new ArgumentNullException(nameof(notificationPublisher));
         }
 
         public async Task<InvokeResult<LLMResult>> GetAnswerAsync(
             AgentContext agentContext,
             ConversationContext conversationContext,
-            string userPrompt,
-            string contextPrompt,
-            string sessionId = null,
+            AgentExecuteRequest executeRequest,
+            string ragContextBlock,
+            string sessionId,
             CancellationToken cancellationToken = default)
         {
-            if (agentContext == null)
-            {
-                throw new ArgumentNullException(nameof(agentContext));
-            }
+            if (agentContext == null) throw new ArgumentNullException(nameof(agentContext));
+            if (conversationContext == null) throw new ArgumentNullException(nameof(conversationContext));
+            if (executeRequest == null) throw new ArgumentNullException(nameof(executeRequest));
 
-            if (conversationContext == null)
+            if (string.IsNullOrWhiteSpace(executeRequest.Instruction))
             {
-                throw new ArgumentNullException(nameof(conversationContext));
-            }
-
-            if (string.IsNullOrWhiteSpace(userPrompt))
-            {
-                return InvokeResult<LLMResult>.FromError(
-                    "User prompt is required for LLM call.");
+                return InvokeResult<LLMResult>.FromError("Instruction is required for LLM call.");
             }
 
             var baseUrl = _openAiSettings.OpenAIUrl;
             if (string.IsNullOrWhiteSpace(baseUrl))
             {
-                return InvokeResult<LLMResult>.FromError(
-                    "OpenAIUrl is not configured in IOpenAISettings.");
+                return InvokeResult<LLMResult>.FromError("OpenAIUrl is not configured in IOpenAISettings.");
             }
 
             if (string.IsNullOrWhiteSpace(agentContext.LlmApiKey))
             {
-                return InvokeResult<LLMResult>.FromError(
-                    "LlmApiKey is not configured on AgentContext.");
+                return InvokeResult<LLMResult>.FromError("LlmApiKey is not configured on AgentContext.");
             }
 
-            var combinedPromptBuilder = new StringBuilder();
+            var isInitialTurn = string.IsNullOrWhiteSpace(executeRequest.ResponseContinuationId);
 
-            if (!string.IsNullOrWhiteSpace(conversationContext.System))
+            // --- Build input messages per AGN-003 ---
+
+            var inputMessages = new List<object>();
+
+            // 1) System message (boot prompt) – first turn only
+            if (isInitialTurn && !string.IsNullOrWhiteSpace(conversationContext.System))
             {
-                combinedPromptBuilder
-                    .AppendLine(conversationContext.System.Trim())
-                    .AppendLine();
-            }
-
-            if (!string.IsNullOrWhiteSpace(contextPrompt))
-            {
-                combinedPromptBuilder
-                    .AppendLine(contextPrompt.Trim())
-                    .AppendLine();
-            }
-
-            combinedPromptBuilder
-                .AppendLine("User instruction:")
-                .AppendLine(userPrompt.Trim());
-
-            var combinedPrompt = combinedPromptBuilder.ToString();
-
-            var requestObject = new
-            {
-                model = conversationContext.ModelName,
-                input = combinedPrompt,
-                temperature = (double)conversationContext.Temperature,
-                response_format = new
+                inputMessages.Add(new
                 {
-                    type = "text"
-                },
-                stream = true
+                    role = "system",
+                    content = new[]
+                    {
+                new
+                {
+                    type = "text",
+                    text = conversationContext.System.Trim()
+                }
+            }
+                });
+            }
+
+            // 2) User message: [MODE] + [INSTRUCTION] (+ optional [CONTEXT])
+            var mode = string.IsNullOrWhiteSpace(executeRequest.Mode)
+                ? "DEFAULT"
+                : executeRequest.Mode.Trim();
+
+            var instructionText = $"[MODE: {mode}]\n\n[INSTRUCTION]\n{executeRequest.Instruction.Trim()}";
+
+            var userContent = new List<object>
+    {
+        new
+        {
+            type = "text",
+            text = instructionText
+        }
+    };
+
+            if (!string.IsNullOrWhiteSpace(ragContextBlock))
+            {
+                userContent.Add(new
+                {
+                    type = "text",
+                    text = ragContextBlock
+                });
+            }
+
+            inputMessages.Add(new
+            {
+                role = "user",
+                content = userContent.ToArray()
+            });
+
+            // --- Tools and tool_choice per AGN-003 ---
+
+            JArray toolsArray = null;
+            if (isInitialTurn && !string.IsNullOrWhiteSpace(executeRequest.ToolsJson))
+            {
+                // Pass-through from client; must be valid JSON array in OpenAI tools format
+                toolsArray = JArray.Parse(executeRequest.ToolsJson);
+            }
+
+            object toolChoice = null;
+            if (!string.IsNullOrWhiteSpace(executeRequest.ToolChoiceName))
+            {
+                toolChoice = new
+                {
+                    type = "tool",
+                    name = executeRequest.ToolChoiceName
+                };
+            }
+
+            // --- Build /responses request object ---
+
+            var requestDict = new Dictionary<string, object>
+            {
+                ["model"] = conversationContext.ModelName,
+                ["input"] = inputMessages.ToArray(),
+                ["temperature"] = (double)conversationContext.Temperature,
+                ["response_format"] = new { type = "text" },
+                ["stream"] = true
             };
+
+            if (!isInitialTurn)
+            {
+                requestDict["previous_response_id"] = executeRequest.ResponseContinuationId;
+            }
+
+            if (toolsArray != null)
+            {
+                requestDict["tools"] = toolsArray;
+            }
+
+            if (toolChoice != null)
+            {
+                requestDict["tool_choice"] = toolChoice;
+            }
+
+            var requestObject = requestDict;
 
             var requestJson = Newtonsoft.Json.JsonConvert.SerializeObject(requestObject);
 
             try
             {
-                await PublishLlmEventAsync(
-                    sessionId,
-                    "LLMStarted",
-                    "in-progress",
-                    "Calling OpenAI model...",
-                    null,
-                    cancellationToken);
+                await PublishLlmEventAsync(sessionId, "LLMStarted", "in-progress", "Calling OpenAI model...", null, cancellationToken);
 
                 using (var httpClient = new HttpClient())
                 {
                     httpClient.BaseAddress = new Uri(baseUrl);
                     httpClient.Timeout = TimeSpan.FromSeconds(120);
-                    httpClient.DefaultRequestHeaders.Authorization =
-                        new AuthenticationHeaderValue("Bearer", agentContext.LlmApiKey);
+                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", agentContext.LlmApiKey);
 
                     var request = new HttpRequestMessage(HttpMethod.Post, "/v1/responses")
                     {
                         Content = new StringContent(requestJson, Encoding.UTF8, "application/json")
                     };
 
-                    var response = await httpClient.SendAsync(
-                        request,
-                        HttpCompletionOption.ResponseHeadersRead,
-                        cancellationToken);
+                    var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
 
                     if (!response.IsSuccessStatusCode)
                     {
                         var errorBody = await response.Content.ReadAsStringAsync();
-                        var errorMessage =
-                            $"LLM call failed with HTTP {(int)response.StatusCode} ({response.ReasonPhrase}).";
+                        var errorMessage = $"LLM call failed with HTTP {(int)response.StatusCode} ({response.ReasonPhrase}).";
 
-                        _adminLogger.AddError(
-                            "[OpenAIResponsesClient_GetAnswerAsync__HTTP]",
-                            errorMessage);
-                        _adminLogger.AddError(
-                            "[OpenAIResponsesClient_GetAnswerAsync__Body]",
-                            errorBody);
+                        _adminLogger.AddError("[OpenAIResponsesClient_GetAnswerAsync__HTTP]", errorMessage);
+                        _adminLogger.AddError("[OpenAIResponsesClient_GetAnswerAsync__Body]", errorBody);
 
-                        await PublishLlmEventAsync(
-                            sessionId,
-                            "LLMFailed",
-                            "failed",
-                            errorMessage,
-                            null,
-                            cancellationToken);
+                        await PublishLlmEventAsync(sessionId, "LLMFailed", "failed", errorMessage, null, cancellationToken);
 
                         return InvokeResult<LLMResult>.FromError(errorMessage);
                     }
 
-                    var llmResult = await ReadStreamingResponseAsync(
-                        response,
-                        sessionId,
-                        cancellationToken);
+                    var llmResult = await ReadStreamingResponseAsync(response, sessionId, cancellationToken);
 
                     if (llmResult == null || string.IsNullOrWhiteSpace(llmResult.Text))
                     {
-                        const string msg =
-                            "LLM response did not contain any text output in the expected streaming format.";
+                        const string msg = "LLM response did not contain any text output in the expected streaming format.";
 
-                        _adminLogger.AddError(
-                            "[OpenAIResponsesClient_GetAnswerAsync__ParseStreaming]",
-                            msg);
+                        _adminLogger.AddError("[OpenAIResponsesClient_GetAnswerAsync__ParseStreaming]", msg);
 
-                        await PublishLlmEventAsync(
-                            sessionId,
-                            "LLMFailed",
-                            "failed",
-                            msg,
-                            null,
-                            cancellationToken);
+                        await PublishLlmEventAsync(sessionId, "LLMFailed", "failed", msg, null, cancellationToken);
 
                         return InvokeResult<LLMResult>.FromError(msg);
                     }
 
-                    await PublishLlmEventAsync(
-                        sessionId,
-                        "LLMCompleted",
-                        "completed",
-                        "Model response received.",
-                        null,
-                        cancellationToken);
+                    await PublishLlmEventAsync(sessionId, "LLMCompleted", "completed", "Model response received.", null, cancellationToken);
 
                     return InvokeResult<LLMResult>.Create(llmResult);
                 }
@@ -206,34 +220,18 @@ namespace LagoVista.AI.Services
             catch (TaskCanceledException tex) when (tex.CancellationToken == cancellationToken)
             {
                 const string msg = "LLM call was cancelled.";
-                _adminLogger.AddError(
-                    "[OpenAIResponsesClient_GetAnswerAsync__Cancelled]",
-                    msg);
 
-                await PublishLlmEventAsync(
-                    sessionId,
-                    "LLMCancelled",
-                    "aborted",
-                    msg,
-                    null,
-                    cancellationToken);
+                _adminLogger.AddError("[OpenAIResponsesClient_GetAnswerAsync__Cancelled]", msg);
+                await PublishLlmEventAsync(sessionId, "LLMCancelled", "aborted", msg, null, cancellationToken);
 
                 return InvokeResult<LLMResult>.FromError(msg);
             }
             catch (Exception ex)
             {
                 const string msg = "Unexpected exception during LLM call.";
-                _adminLogger.AddException(
-                    "[OpenAIResponsesClient_GetAnswerAsync__Exception]",
-                    ex);
 
-                await PublishLlmEventAsync(
-                    sessionId,
-                    "LLMFailed",
-                    "failed",
-                    msg,
-                    null,
-                    cancellationToken);
+                _adminLogger.AddException("[OpenAIResponsesClient_GetAnswerAsync__Exception]", ex);
+                await PublishLlmEventAsync(sessionId, "LLMFailed", "failed", msg, null, cancellationToken);
 
                 return InvokeResult<LLMResult>.FromError(msg);
             }
@@ -247,10 +245,7 @@ namespace LagoVista.AI.Services
         /// event name indicate "output_text.delta". If the upstream schema
         /// evolves, this method can be adjusted without impacting callers.
         /// </summary>
-        private async Task<LLMResult> ReadStreamingResponseAsync(
-            HttpResponseMessage response,
-            string sessionId,
-            CancellationToken cancellationToken)
+        private async Task<LLMResult> ReadStreamingResponseAsync(HttpResponseMessage response, string sessionId, CancellationToken cancellationToken)
         {
             using (var stream = await response.Content.ReadAsStreamAsync())
             using (var reader = new StreamReader(stream))
@@ -265,11 +260,9 @@ namespace LagoVista.AI.Services
                 while (!reader.EndOfStream)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
+
                     var line = await reader.ReadLineAsync();
-                    if (line == null)
-                    {
-                        break;
-                    }
+                    if (line == null) break;
 
                     if (string.IsNullOrWhiteSpace(line))
                     {
@@ -278,13 +271,7 @@ namespace LagoVista.AI.Services
                             var dataJson = dataBuilder.ToString();
                             rawBuilder.AppendLine(dataJson);
 
-                            await ProcessSseEventAsync(
-                                currentEvent,
-                                sessionId,
-                                dataJson,
-                                fullTextBuilder,
-                                value => responseId = value ?? responseId,
-                                cancellationToken);
+                            await ProcessSseEventAsync(currentEvent, sessionId, dataJson, fullTextBuilder, value => responseId = value ?? responseId, cancellationToken);
 
                             dataBuilder.Clear();
                             currentEvent = null;
@@ -302,10 +289,7 @@ namespace LagoVista.AI.Services
                     if (line.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
                     {
                         var dataPart = line.Substring("data:".Length).Trim();
-                        if (string.Equals(dataPart, "[DONE]", StringComparison.Ordinal))
-                        {
-                            break;
-                        }
+                        if (string.Equals(dataPart, "[DONE]", StringComparison.Ordinal)) break;
 
                         dataBuilder.AppendLine(dataPart);
                     }
@@ -316,14 +300,12 @@ namespace LagoVista.AI.Services
                     return null;
                 }
 
-                var result = new LLMResult
+                return new LLMResult
                 {
                     ResponseId = responseId,
                     Text = fullTextBuilder.ToString(),
                     RawResponseJson = rawBuilder.ToString()
                 };
-
-                return result;
             }
         }
 
@@ -332,18 +314,9 @@ namespace LagoVista.AI.Services
         /// extract text deltas and response id in a schema-tolerant way and emit
         /// LLMDelta narration events for each non-empty text chunk.
         /// </summary>
-        private async Task ProcessSseEventAsync(
-            string eventName,
-            string sessionId,
-            string dataJson,
-            StringBuilder fullTextBuilder,
-            Action<string> setResponseId,
-            CancellationToken cancellationToken)
+        private async Task ProcessSseEventAsync(string eventName, string sessionId, string dataJson, StringBuilder fullTextBuilder, Action<string> setResponseId, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrWhiteSpace(dataJson))
-            {
-                return;
-            }
+            if (string.IsNullOrWhiteSpace(dataJson)) return;
 
             try
             {
@@ -361,30 +334,18 @@ namespace LagoVista.AI.Services
                     if (!string.IsNullOrEmpty(deltaText))
                     {
                         fullTextBuilder.Append(deltaText);
-
-                        await PublishLlmEventAsync(
-                            sessionId,
-                            "LLMDelta",
-                            "in-progress",
-                            deltaText,
-                            null,
-                            cancellationToken);
+                        await PublishLlmEventAsync(sessionId, "LLMDelta", "in-progress", deltaText, null, cancellationToken);
                     }
                 }
                 else if (string.Equals(type, "response.completed", StringComparison.OrdinalIgnoreCase))
                 {
                     var respId = (string)root["response"]?["id"];
-                    if (!string.IsNullOrWhiteSpace(respId))
-                    {
-                        setResponseId(respId);
-                    }
+                    if (!string.IsNullOrWhiteSpace(respId)) setResponseId(respId);
                 }
             }
             catch (Exception ex)
             {
-                _adminLogger.AddException(
-                    "[OpenAIResponsesClient_ProcessSseEventAsync__Exception]",
-                    ex);
+                _adminLogger.AddException("[OpenAIResponsesClient_ProcessSseEventAsync__Exception]", ex);
             }
         }
 
@@ -392,18 +353,9 @@ namespace LagoVista.AI.Services
         /// Publish a lightweight LLM-related event if a session id is available.
         /// This keeps narration fully optional and scoped to the LLM implementation.
         /// </summary>
-        private async Task PublishLlmEventAsync(
-            string sessionId,
-            string stage,
-            string status,
-            string message,
-            double? elapsedMs,
-            CancellationToken cancellationToken)
+        private async Task PublishLlmEventAsync(string sessionId, string stage, string status, string message, double? elapsedMs, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrWhiteSpace(sessionId))
-            {
-                return;
-            }
+            if (string.IsNullOrWhiteSpace(sessionId)) return;
 
             var evt = new AptixOrchestratorEvent
             {
@@ -418,18 +370,11 @@ namespace LagoVista.AI.Services
 
             try
             {
-                await _notificationPublisher.PublishAsync(
-                    Targets.WebSocket,
-                    Channels.Entity,
-                    sessionId,
-                    evt,
-                    NotificationVerbosity.Diagnostics);
+                await _notificationPublisher.PublishAsync(Targets.WebSocket, Channels.Entity, sessionId, evt, NotificationVerbosity.Diagnostics);
             }
             catch (Exception ex)
             {
-                _adminLogger.AddException(
-                    "[OpenAIResponsesClient_PublishLlmEventAsync__Exception]",
-                    ex);
+                _adminLogger.AddException("[OpenAIResponsesClient_PublishLlmEventAsync__Exception]", ex);
             }
         }
     }
