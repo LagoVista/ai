@@ -31,7 +31,7 @@ namespace LagoVista.AI.Rest
         /// and dispatched to the orchestrator.
         /// </summary>
         [HttpPost("/api/ai/agent/execute")]
-        public Task<InvokeResult<AgentExecuteResponse>> ExecuteAsync([FromBody] AgentRequestEnvelope request)
+        public Task<InvokeResult<AgentExecuteResponse>> ExecuteAsync([FromBody] AgentExecuteRequest request)
         {
             var cancellationToken = HttpContext?.RequestAborted ?? CancellationToken.None;
 

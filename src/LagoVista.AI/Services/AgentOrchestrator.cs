@@ -12,6 +12,7 @@ using LagoVista.Core.Interfaces;
 using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
+using Newtonsoft.Json;
 
 namespace LagoVista.AI.Services
 {
@@ -36,8 +37,9 @@ namespace LagoVista.AI.Services
         private readonly INotificationPublisher _notificationPublisher;
         private readonly IAdminLogger _adminLogger;
         private readonly IAgentContextManager _contextManager;
+        private readonly IAgentTurnTranscriptStore _transcriptStore;
 
-        public AgentOrchestrator(IAgentSessionManager sessionManager, IAgentContextManager agentContextManager, IAgentSessionFactory sessionFactory, IAgentTurnExecutor turnExecutor, INotificationPublisher notificationPublisher, IAdminLogger adminLogger)
+        public AgentOrchestrator(IAgentSessionManager sessionManager, IAgentContextManager agentContextManager, IAgentTurnTranscriptStore agentTranscriptStore, IAgentSessionFactory sessionFactory, IAgentTurnExecutor turnExecutor, INotificationPublisher notificationPublisher, IAdminLogger adminLogger)
         {
             _sessionManager = sessionManager ?? throw new ArgumentNullException(nameof(sessionManager));
             _sessionFactory = sessionFactory ?? throw new ArgumentNullException(nameof(sessionFactory));
@@ -45,6 +47,7 @@ namespace LagoVista.AI.Services
             _notificationPublisher = notificationPublisher ?? throw new ArgumentNullException(nameof(notificationPublisher));
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
             _contextManager = agentContextManager ?? throw new ArgumentNullException(nameof(agentContextManager));
+            _transcriptStore = agentTranscriptStore ?? throw new ArgumentNullException(nameof(agentTranscriptStore));
         }
 
         public async Task<InvokeResult<AgentExecuteResponse>> BeginNewSessionAsync(AgentExecuteRequest request, EntityHeader org, EntityHeader user, CancellationToken cancellationToken = default)
@@ -93,9 +96,30 @@ namespace LagoVista.AI.Services
 
             _adminLogger.Trace("[AgentOrchestrator_BeginNewSessionAsync] Session Ready. " + $"correlationId={correlationId}, org={org?.Id}, user={user?.Id}");
 
+            var requestEnvelope = new
+            {
+                OrgId = org?.Id,
+                SessionId = session.Id,
+                TurnId = turn.Id,
+                Request = request,
+                ActiveFiles = request.ActiveFiles,
+                RagFilters = request.RagScopeFilter
+            };
+
+            var requestJson = JsonConvert.SerializeObject(requestEnvelope);
+            var requestBlobResult = await _transcriptStore.SaveTurnRequestAsync(org.Id, session.Id, turn.Id, requestJson, cancellationToken);
+
+            if (!requestBlobResult.Successful)
+            {
+                _adminLogger.AddError("[AgentTurnExecutor_ExecuteNewSessionTurnAsync__Transcript]", "Failed to store turn request transcript.");
+                return InvokeResult<AgentExecuteResponse>.FromInvokeResult(requestBlobResult.ToInvokeResult());
+            }
+
+            await _sessionManager.SetRequestBlobUriAsync(session.Id, turn.Id, requestBlobResult.Result.ToString(), org, user);
 
             var execResult = await _turnExecutor.ExecuteNewSessionTurnAsync(context, session, turn, request, org, user, cancellationToken);
-          
+            execResult.Result.RequestEnvelopeUrl = requestBlobResult.Result.ToString();
+
             _adminLogger.Trace("[AgentOrchestrator_BeginNewSessionAsync] Session Completed. " + $"Success={execResult.Successful} correlationId={correlationId}, org={org?.Id}, user={user?.Id}");
 
             stopwatch.Stop();
@@ -193,6 +217,26 @@ namespace LagoVista.AI.Services
             var stopwatch = Stopwatch.StartNew();
             await PublishTurnExecutionStartedAsync(session, turn, org, user);
 
+            var requestEnvelope = new
+            {
+                OrgId = org?.Id,
+                SessionId = session.Id,
+                TurnId = turn.Id,
+                turn.PreviousOpenAIResponseId,
+                Request = request,
+                ActiveFiles = request.ActiveFiles,
+                RagFilters = request.RagScopeFilter
+            };
+
+            var requestJson = JsonConvert.SerializeObject(requestEnvelope);
+            var requestBlobResult = await _transcriptStore.SaveTurnRequestAsync(org.Id, session.Id, turn.Id, requestJson, cancellationToken);
+
+            if (!requestBlobResult.Successful)
+            {
+                _adminLogger.AddError("[AgentTurnExecutor_ExecuteFollowupTurnAsync__Transcript]", "Failed to store turn request transcript.");
+                return InvokeResult<AgentExecuteResponse>.FromInvokeResult(requestBlobResult.ToInvokeResult());
+            }
+
             var execResult = await _turnExecutor.ExecuteFollowupTurnAsync(context, session, turn, request, org, user, cancellationToken);
 
             stopwatch.Stop();
@@ -213,6 +257,8 @@ namespace LagoVista.AI.Services
             await _sessionManager.CompleteAgentSessionTurnAsync(session.Id, turn.Id, response.Text, response.FullResponseUrl, response.ResponseContinuationId, stopwatch.Elapsed.TotalMilliseconds, response.Warnings, org, user);
 
             await PublishTurnCompletedAsync(session, turn, stopwatch.ElapsedMilliseconds, org, user);
+
+            execResult.Result.RequestEnvelopeUrl = requestBlobResult.Result.ToString();
 
             return execResult;
         }

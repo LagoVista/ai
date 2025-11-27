@@ -27,33 +27,33 @@ namespace LagoVista.AI.CloudRepos
             return $"{orgId}/sessions/{sessionId}/turns/{turnId}/{type}.json".ToLower();
         }       
 
-        public async Task<InvokeResult<string>> LoadTurnRequestAsync(AgentContext ctx, string orgId, string sessionId, string turnId, CancellationToken cancellationToken = default)
+        public async Task<InvokeResult<string>> LoadTurnRequestAsync(string orgId, string sessionId, string turnId, CancellationToken cancellationToken = default)
         {
             var path = BuildPath("request", orgId, sessionId, turnId);
-            var containerName = GetContainerName(ctx.OwnerOrganization.Id);
+            var containerName = GetContainerName(orgId);
             var buffer = await GetFileAsync(containerName, path);
             return InvokeResult<string>.Create(System.Text.ASCIIEncoding.ASCII.GetString(buffer.Result));
         }
 
-        public async Task<InvokeResult<string>> LoadTurnResponseAsync( AgentContext ctx, string orgId, string sessionId, string turnId, CancellationToken cancellationToken = default)
+        public async Task<InvokeResult<string>> LoadTurnResponseAsync(string orgId, string sessionId, string turnId, CancellationToken cancellationToken = default)
         {
             var path = BuildPath("response", orgId, sessionId, turnId);
-            var containerName = GetContainerName(ctx.OwnerOrganization.Id);
+            var containerName = GetContainerName(orgId);
             var buffer = await GetFileAsync(containerName, path);
             return InvokeResult<string>.Create(System.Text.ASCIIEncoding.ASCII.GetString(buffer.Result));
         }
 
-        public async Task<InvokeResult<System.Uri>> SaveTurnRequestAsync(AgentContext ctx, string orgId, string sessionId, string turnId, string requestJson, CancellationToken cancellationToken = default)
+        public async Task<InvokeResult<System.Uri>> SaveTurnRequestAsync(string orgId, string sessionId, string turnId, string requestJson, CancellationToken cancellationToken = default)
         {
             var path = BuildPath("request", orgId, sessionId, turnId);
-            var containerName = GetContainerName(ctx.OwnerOrganization.Id);
+            var containerName = GetContainerName(orgId);
             return await AddFileAsync(containerName, path, requestJson);
         }
 
-        public async Task<InvokeResult<System.Uri>> SaveTurnResponseAsync(AgentContext ctx, string orgId, string sessionId, string turnId, string responseJson, CancellationToken cancellationToken = default)
+        public async Task<InvokeResult<System.Uri>> SaveTurnResponseAsync(string orgId, string sessionId, string turnId, string responseJson, CancellationToken cancellationToken = default)
         {
             var path = BuildPath("response", orgId, sessionId, turnId);
-            var containerName = GetContainerName(ctx.OwnerOrganization.Id);
+            var containerName = GetContainerName(orgId);
             return await AddFileAsync(containerName, path, responseJson);
         }
     }

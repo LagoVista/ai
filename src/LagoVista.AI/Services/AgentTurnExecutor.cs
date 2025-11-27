@@ -33,25 +33,6 @@ namespace LagoVista.AI.Services
             if (turn == null) throw new ArgumentNullException(nameof(turn));
             if (execRequest == null) throw new ArgumentNullException(nameof(execRequest));
 
-            var requestEnvelope = new
-            {
-                OrgId = org?.Id,
-                SessionId = session.Id,
-                TurnId = turn.Id,
-                Request = execRequest,
-                ActiveFiles = execRequest.ActiveFiles,
-                RagFilters = execRequest.RagScopeFilter
-            };
-
-            var requestJson = JsonConvert.SerializeObject(requestEnvelope);
-            var requestBlobResult = await _transcriptStore.SaveTurnRequestAsync(agentContext, org.Id, session.Id, turn.Id, requestJson, cancellationToken);
-
-            if (!requestBlobResult.Successful)
-            {
-                _adminLogger.AddError("[AgentTurnExecutor_ExecuteNewSessionTurnAsync__Transcript]", "Failed to store turn request transcript.");
-                return InvokeResult<AgentExecuteResponse>.FromInvokeResult(requestBlobResult.ToInvokeResult());
-            }
-
             var execResult = await _agentExecutionService.ExecuteAsync(execRequest, org, user, cancellationToken);
             if (!execResult.Successful)
             {
@@ -69,13 +50,15 @@ namespace LagoVista.AI.Services
             };
 
             var responseJson = JsonConvert.SerializeObject(responseEnvelope);
-            var responseBlobResult = await _transcriptStore.SaveTurnResponseAsync(agentContext, org.Id, session.Id, turn.Id, responseJson, cancellationToken);
+            var responseBlobResult = await _transcriptStore.SaveTurnResponseAsync(org.Id, session.Id, turn.Id, responseJson, cancellationToken);
 
             if (!responseBlobResult.Successful)
             {
                 _adminLogger.AddError("[AgentTurnExecutor_ExecuteNewSessionTurnAsync__Transcript]", "Failed to store turn response transcript.");
                 return InvokeResult<AgentExecuteResponse>.FromInvokeResult(responseBlobResult.ToInvokeResult());
             }
+
+            execResult.Result.FullResponseUrl = responseBlobResult.Result.ToString();
 
             return execResult;
         }
@@ -86,29 +69,6 @@ namespace LagoVista.AI.Services
             if (session == null) throw new ArgumentNullException(nameof(session));
             if (turn == null) throw new ArgumentNullException(nameof(turn));
             if (execRequest == null) throw new ArgumentNullException(nameof(execRequest));
-
-//            var execRequest = BuildAgentExecuteRequestForFollowup(session, turn, request);
-
-            var requestEnvelope = new
-            {
-                OrgId = org?.Id,
-                SessionId = session.Id,
-                TurnId = turn.Id,
-                turn.PreviousOpenAIResponseId,
-                Request = execRequest,
-                ActiveFiles = execRequest.ActiveFiles,
-                RagFilters = execRequest.RagScopeFilter
-            };
-
-            var requestJson = JsonConvert.SerializeObject(requestEnvelope);
-            var requestBlobResult = await _transcriptStore.SaveTurnRequestAsync(agentContext, org.Id, session.Id, turn.Id, requestJson, cancellationToken);
-
-            if (!requestBlobResult.Successful)
-            {
-                _adminLogger.AddError("[AgentTurnExecutor_ExecuteFollowupTurnAsync__Transcript]", "Failed to store turn request transcript.");
-                return InvokeResult<AgentExecuteResponse>.FromInvokeResult(requestBlobResult.ToInvokeResult());
-            }
-
 
             var execResult = await _agentExecutionService.ExecuteAsync(execRequest, org, user, cancellationToken);
             if (!execResult.Successful)
@@ -128,7 +88,7 @@ namespace LagoVista.AI.Services
             };
 
             var responseJson = JsonConvert.SerializeObject(responseEnvelope);
-            var responseBlobResult = await _transcriptStore.SaveTurnResponseAsync(agentContext, org.Id, session.Id, turn.Id, responseJson, cancellationToken);
+            var responseBlobResult = await _transcriptStore.SaveTurnResponseAsync(org.Id, session.Id, turn.Id, responseJson, cancellationToken);
 
             if (!responseBlobResult.Successful)
             {
@@ -136,6 +96,7 @@ namespace LagoVista.AI.Services
                 return InvokeResult<AgentExecuteResponse>.FromInvokeResult(responseBlobResult.ToInvokeResult());
             }
 
+            execResult.Result.FullResponseUrl = responseBlobResult.Result.ToString();
             return execResult;
         }
     }

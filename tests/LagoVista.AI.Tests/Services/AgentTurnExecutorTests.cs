@@ -106,7 +106,7 @@ namespace LagoVista.AI.Tests.Services
             var user = CreateUser();
 
             _transcriptStore
-                .Setup(t => t.SaveTurnRequestAsync(agentContext, org.Id, session.Id, turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Setup(t => t.SaveTurnRequestAsync(org.Id, session.Id, turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(InvokeResult<Uri>.Create(new Uri("https://www.test.ai/reqeust")));
 
             var execResponse = new AgentExecuteResponse
@@ -120,7 +120,7 @@ namespace LagoVista.AI.Tests.Services
                 .ReturnsAsync(InvokeResult<AgentExecuteResponse>.Create(execResponse));
 
             _transcriptStore
-                .Setup(t => t.SaveTurnResponseAsync(agentContext, org.Id, session.Id, turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Setup(t => t.SaveTurnResponseAsync(org.Id, session.Id, turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(InvokeResult<Uri>.Create(new Uri("https://www.test.ai/response")));
 
             // Act
@@ -131,41 +131,8 @@ namespace LagoVista.AI.Tests.Services
             Assert.That(result.Successful, Is.True);
             Assert.That(result.Result, Is.SameAs(execResponse));
 
-            _transcriptStore.Verify(t => t.SaveTurnRequestAsync(agentContext, org.Id, session.Id, turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
             _agentExecutionService.Verify(s => s.ExecuteAsync(execRequest, org, user, It.IsAny<CancellationToken>()), Times.Once);
-            _transcriptStore.Verify(t => t.SaveTurnResponseAsync(agentContext, org.Id, session.Id, turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
-        }
-
-        [Test]
-        public async Task ExecuteNewSessionTurnAsync_SaveRequestFails_LogsErrorAndReturnsError()
-        {
-            // Arrange
-            var agentContext = new AgentContext();
-            var session = CreateSession();
-            var turn = CreateTurn();
-            var execRequest = CreateExecRequestForNewSession(session, turn);
-            var org = CreateOrg();
-            var user = CreateUser();
-
-            var failingResult = InvokeResult<Uri>.FromError("failed-to-save-request");
-
-            _transcriptStore
-                .Setup(t => t.SaveTurnRequestAsync(agentContext, org.Id, session.Id, turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(failingResult);
-
-            // Act
-            var result = await _sut.ExecuteNewSessionTurnAsync(agentContext, session, turn, execRequest, org, user);
-
-            // Assert
-            Assert.That(result.Successful, Is.False);
-
-            _adminLogger.Verify(l => l.AddError(
-                    "[AgentTurnExecutor_ExecuteNewSessionTurnAsync__Transcript]",
-                    "Failed to store turn request transcript."),
-                Times.Once);
-
-            _agentExecutionService.Verify(s => s.ExecuteAsync(It.IsAny<AgentExecuteRequest>(), org, user, It.IsAny<CancellationToken>()), Times.Never);
-            _transcriptStore.Verify(t => t.SaveTurnResponseAsync(It.IsAny<AgentContext>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+            _transcriptStore.Verify(t => t.SaveTurnResponseAsync(org.Id, session.Id, turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Test]
@@ -180,7 +147,7 @@ namespace LagoVista.AI.Tests.Services
             var user = CreateUser();
 
             _transcriptStore
-                .Setup(t => t.SaveTurnRequestAsync(agentContext, org.Id, session.Id, turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Setup(t => t.SaveTurnRequestAsync(org.Id, session.Id, turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(InvokeResult<Uri>.Create(new Uri("https://www.test.ai/reqeust")));
 
             var failingExecResult = InvokeResult<AgentExecuteResponse>.FromError("exec-failed");
@@ -195,7 +162,7 @@ namespace LagoVista.AI.Tests.Services
             // Assert
             Assert.That(result.Successful, Is.False);
 
-            _transcriptStore.Verify(t => t.SaveTurnResponseAsync(It.IsAny<AgentContext>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+            _transcriptStore.Verify(t => t.SaveTurnResponseAsync( It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
         }
 
         [Test]
@@ -210,7 +177,7 @@ namespace LagoVista.AI.Tests.Services
             var user = CreateUser();
 
             _transcriptStore
-                .Setup(t => t.SaveTurnRequestAsync(agentContext, org.Id, session.Id, turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Setup(t => t.SaveTurnRequestAsync(org.Id, session.Id, turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(InvokeResult<Uri>.Create(new Uri("https://www.test.ai/reqeust")));
 
             var execResponse = new AgentExecuteResponse { Text = "answer" };
@@ -222,7 +189,7 @@ namespace LagoVista.AI.Tests.Services
             var failingResponseResult = InvokeResult<Uri>.FromError("failed-to-save-response");
 
             _transcriptStore
-                .Setup(t => t.SaveTurnResponseAsync(agentContext, org.Id, session.Id, turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Setup(t => t.SaveTurnResponseAsync(org.Id, session.Id, turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(failingResponseResult);
 
             // Act
@@ -256,13 +223,7 @@ namespace LagoVista.AI.Tests.Services
             var org = CreateOrg();
             var user = CreateUser();
 
-            string capturedRequestJson = null;
             string capturedResponseJson = null;
-
-            _transcriptStore
-                .Setup(t => t.SaveTurnRequestAsync(agentContext, org.Id, session.Id, turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .Callback<AgentContext, string, string, string, string, CancellationToken>((ctx, o, sid, tid, json, ct) => capturedRequestJson = json)
-                  .ReturnsAsync(InvokeResult<Uri>.Create(new Uri("https://www.test.ai/reqeust")));
 
             var execResponse = new AgentExecuteResponse
             {
@@ -275,8 +236,8 @@ namespace LagoVista.AI.Tests.Services
                 .ReturnsAsync(InvokeResult<AgentExecuteResponse>.Create(execResponse));
 
             _transcriptStore
-                .Setup(t => t.SaveTurnResponseAsync(agentContext, org.Id, session.Id, turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .Callback<AgentContext, string, string, string, string, CancellationToken>((ctx, o, sid, tid, json, ct) => capturedResponseJson = json)
+                .Setup(t => t.SaveTurnResponseAsync(org.Id, session.Id, turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<string, string, string, string, CancellationToken>((o, sid, tid, json, ct) => capturedResponseJson = json)
                 .ReturnsAsync(InvokeResult<Uri>.Create(new Uri("https://www.test.ai/response")));
 
             // Act
@@ -285,46 +246,11 @@ namespace LagoVista.AI.Tests.Services
             // Assert
             Assert.That(result.Successful, Is.True);
             Assert.That(result.Result, Is.SameAs(execResponse));
-            Assert.That(capturedRequestJson, Is.Not.Null);
             Assert.That(capturedResponseJson, Is.Not.Null);
 
-            dynamic requestEnvelope = JsonConvert.DeserializeObject(capturedRequestJson);
-            Assert.That((string)requestEnvelope.PreviousOpenAIResponseId, Is.EqualTo("prev-001"));
-
+            
             dynamic responseEnvelope = JsonConvert.DeserializeObject(capturedResponseJson);
             Assert.That((string)responseEnvelope.ResponseId, Is.EqualTo("resp-cont-999"));
-        }
-
-        [Test]
-        public async Task ExecuteFollowupTurnAsync_SaveRequestFails_LogsErrorAndReturnsError()
-        {
-            // Arrange
-            var agentContext = new AgentContext();
-            var session = CreateSession();
-            var turn = CreateTurn();
-            var execRequest = CreateExecRequestForFollowup(session, turn);
-            var org = CreateOrg();
-            var user = CreateUser();
-
-            var failingResult = InvokeResult<Uri>.FromError("failed-to-save-request");
-
-            _transcriptStore
-                .Setup(t => t.SaveTurnRequestAsync(agentContext, org.Id, session.Id, turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(failingResult);
-
-            // Act
-            var result = await _sut.ExecuteFollowupTurnAsync(agentContext, session, turn, execRequest, org, user);
-
-            // Assert
-            Assert.That(result.Successful, Is.False);
-
-            _adminLogger.Verify(l => l.AddError(
-                    "[AgentTurnExecutor_ExecuteFollowupTurnAsync__Transcript]",
-                    "Failed to store turn request transcript."),
-                Times.Once);
-
-            _agentExecutionService.Verify(s => s.ExecuteAsync(It.IsAny<AgentExecuteRequest>(), org, user, It.IsAny<CancellationToken>()), Times.Never);
-            _transcriptStore.Verify(t => t.SaveTurnResponseAsync(It.IsAny<AgentContext>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
         }
 
         [Test]
@@ -339,7 +265,7 @@ namespace LagoVista.AI.Tests.Services
             var user = CreateUser();
 
             _transcriptStore
-                .Setup(t => t.SaveTurnRequestAsync(agentContext, org.Id, session.Id, turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Setup(t => t.SaveTurnRequestAsync(org.Id, session.Id, turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(InvokeResult<Uri>.Create(new Uri("https://www.test.ai/reqeust")));
 
             var execResponse = new AgentExecuteResponse { Text = "answer" };
@@ -351,7 +277,7 @@ namespace LagoVista.AI.Tests.Services
             var failingResponseResult = InvokeResult<Uri>.FromError("failed-to-save-response");
 
             _transcriptStore
-                .Setup(t => t.SaveTurnResponseAsync(agentContext, org.Id, session.Id, turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Setup(t => t.SaveTurnResponseAsync(org.Id, session.Id, turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(failingResponseResult);
 
             // Act

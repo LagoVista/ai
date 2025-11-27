@@ -12,6 +12,7 @@ using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Moq;
+using Newtonsoft.Json;
 using NUnit.Framework;
 
 namespace LagoVista.AI.Tests.Services
@@ -25,6 +26,7 @@ namespace LagoVista.AI.Tests.Services
         private Mock<INotificationPublisher> _notificationPublisher;
         private Mock<IAdminLogger> _adminLogger;
         private Mock<IAgentContextManager> _contextManager;
+        private Mock<IAgentTurnTranscriptStore> _transcriptStore;
 
         private AgentOrchestrator _sut;
 
@@ -37,6 +39,7 @@ namespace LagoVista.AI.Tests.Services
             _notificationPublisher = new Mock<INotificationPublisher>();
             _adminLogger = new Mock<IAdminLogger>();
             _contextManager = new Mock<IAgentContextManager>();
+            _transcriptStore = new Mock<IAgentTurnTranscriptStore>();
 
             _notificationPublisher
                 .Setup(p => p.PublishAsync(
@@ -50,15 +53,119 @@ namespace LagoVista.AI.Tests.Services
             _sut = new AgentOrchestrator(
                 _sessionManager.Object,
                 _contextManager.Object,
+                _transcriptStore.Object,
                 _sessionFactory.Object,
                 _turnExecutor.Object,
                 _notificationPublisher.Object,
                 _adminLogger.Object);
         }
 
+        #region Ctor Guards
 
         [Test]
-        public async Task BeginNewSessionAsync_Success_PopulatesRequiredFieldsOnAgentExecuteResponse()
+        public void Ctor_NullSessionManager_Throws()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+                new AgentOrchestrator(
+                    null,
+                    _contextManager.Object,
+                    _transcriptStore.Object,
+                    _sessionFactory.Object,
+                    _turnExecutor.Object,
+                    _notificationPublisher.Object,
+                    _adminLogger.Object));
+        }
+
+        [Test]
+        public void Ctor_NullContextManager_Throws()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+                new AgentOrchestrator(
+                    _sessionManager.Object,
+                    null,
+                    _transcriptStore.Object,
+                    _sessionFactory.Object,
+                    _turnExecutor.Object,
+                    _notificationPublisher.Object,
+                    _adminLogger.Object));
+        }
+
+        [Test]
+        public void Ctor_NullTranscriptStore_Throws()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+                new AgentOrchestrator(
+                    _sessionManager.Object,
+                    _contextManager.Object,
+                    null,
+                    _sessionFactory.Object,
+                    _turnExecutor.Object,
+                    _notificationPublisher.Object,
+                    _adminLogger.Object));
+        }
+
+        [Test]
+        public void Ctor_NullSessionFactory_Throws()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+                new AgentOrchestrator(
+                    _sessionManager.Object,
+                    _contextManager.Object,
+                    _transcriptStore.Object,
+                    null,
+                    _turnExecutor.Object,
+                    _notificationPublisher.Object,
+                    _adminLogger.Object));
+        }
+
+        [Test]
+        public void Ctor_NullTurnExecutor_Throws()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+                new AgentOrchestrator(
+                    _sessionManager.Object,
+                    _contextManager.Object,
+                    _transcriptStore.Object,
+                    _sessionFactory.Object,
+                    null,
+                    _notificationPublisher.Object,
+                    _adminLogger.Object));
+        }
+
+        [Test]
+        public void Ctor_NullNotificationPublisher_Throws()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+                new AgentOrchestrator(
+                    _sessionManager.Object,
+                    _contextManager.Object,
+                    _transcriptStore.Object,
+                    _sessionFactory.Object,
+                    _turnExecutor.Object,
+                    null,
+                    _adminLogger.Object));
+        }
+
+        [Test]
+        public void Ctor_NullAdminLogger_Throws()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+                new AgentOrchestrator(
+                    _sessionManager.Object,
+                    _contextManager.Object,
+                    _transcriptStore.Object,
+                    _sessionFactory.Object,
+                    _turnExecutor.Object,
+                    _notificationPublisher.Object,
+                    null));
+        }
+
+        #endregion
+
+        #region BeginNewSessionAsync – request envelope
+
+        [Test]
+        public async Task BeginNewSessionAsync_Success_StoresRequestEnvelope_SetsRequestEnvelopeUrl_AndCompletesTurn()
         {
             // Arrange
             var org = CreateOrg();
@@ -69,7 +176,6 @@ namespace LagoVista.AI.Tests.Services
                 AgentContext = new EntityHeader { Id = "agent-ctx-1", Text = "Agent Ctx" },
                 Instruction = "do something",
                 Mode = "ask",
-                ConversationId = null,
                 WorkspaceId = "ws-1",
                 Repo = "repo-1",
                 Language = "csharp",
@@ -82,8 +188,8 @@ namespace LagoVista.AI.Tests.Services
             var session = new AgentSession
             {
                 Id = "session-1",
-                AgentContext = EntityHeader.Create("ID", "TEXT"),
-                ConversationContext = EntityHeader.Create("ID", "TEXT"),
+                AgentContext = EntityHeader.Create("id","text"),
+                ConversationContext = EntityHeader.Create("id", "text"),
                 Repo = request.Repo,
                 DefaultLanguage = request.Language,
                 WorkspaceId = request.WorkspaceId
@@ -122,6 +228,17 @@ namespace LagoVista.AI.Tests.Services
 
             _sessionManager
                 .Setup(m => m.AddAgentSessionTurnAsync(session.Id, turn, org, user))
+                .Returns(Task.CompletedTask);
+
+            string capturedRequestJson = null;
+
+            _transcriptStore
+                .Setup(t => t.SaveTurnRequestAsync(org.Id, session.Id, turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<string, string, string, string, CancellationToken>((o, sId, tId, json, ct) => capturedRequestJson = json)
+                .ReturnsAsync(InvokeResult<Uri>.Create(new Uri("blob://req-1")));
+
+            _sessionManager
+                .Setup(m => m.SetRequestBlobUriAsync(session.Id, turn.Id, "blob://req-1", org, user))
                 .Returns(Task.CompletedTask);
 
             _turnExecutor
@@ -163,10 +280,22 @@ namespace LagoVista.AI.Tests.Services
             // Act
             var result = await _sut.BeginNewSessionAsync(request, org, user);
 
-            // Assert
+            // Assert – orchestrator result
             Assert.That(result.Successful, Is.True);
             Assert.That(result.Result, Is.SameAs(agentResponse));
 
+            // Assert – request envelope JSON persisted correctly
+            Assert.That(capturedRequestJson, Is.Not.Null.And.Not.Empty);
+            dynamic envelope = JsonConvert.DeserializeObject(capturedRequestJson);
+            Assert.That((string)envelope.OrgId, Is.EqualTo(org.Id));
+            Assert.That((string)envelope.SessionId, Is.EqualTo(session.Id));
+            Assert.That((string)envelope.TurnId, Is.EqualTo(turn.Id));
+
+            // Assert – blob URL was stored on session/turn and on response
+            _sessionManager.Verify(m => m.SetRequestBlobUriAsync(session.Id, turn.Id, "blob://req-1/", org, user), Times.Once);
+            Assert.That(agentResponse.RequestEnvelopeUrl, Is.EqualTo("blob://req-1/"));
+
+            // Assert – completion call used required fields from AgentExecuteResponse
             Assert.That(completedSessionId, Is.EqualTo(session.Id));
             Assert.That(completedTurnId, Is.EqualTo(turn.Id));
             Assert.That(completedText, Is.EqualTo(agentResponse.Text));
@@ -174,22 +303,84 @@ namespace LagoVista.AI.Tests.Services
             Assert.That(completedContinuationId, Is.EqualTo(agentResponse.ResponseContinuationId));
             Assert.That(completedWarnings, Is.SameAs(agentResponse.Warnings));
             Assert.That(completedElapsed, Is.GreaterThan(0));
-
-            _sessionManager.Verify(m => m.CompleteAgentSessionTurnAsync(
-                session.Id,
-                turn.Id,
-                agentResponse.Text,
-                agentResponse.FullResponseUrl,
-                agentResponse.ResponseContinuationId,
-                It.IsAny<double>(),
-                agentResponse.Warnings,
-                org,
-                user), Times.Once);
         }
 
+        [Test]
+        public async Task BeginNewSessionAsync_SaveRequestFails_ReturnsErrorAndDoesNotExecuteTurn()
+        {
+            // Arrange
+            var org = CreateOrg();
+            var user = CreateUser();
+
+            var request = new AgentExecuteRequest
+            {
+                AgentContext = new EntityHeader { Id = "agent-ctx-1", Text = "Agent Ctx" },
+                Instruction = "do something",
+                Mode = "ask"
+            };
+
+            var agentContext = new AgentContext { Id = "ctx-1", Name = "Context 1" };
+            var session = new AgentSession { Id = "session-1", AgentContext = EntityHeader.Create("id","text"), ConversationContext = EntityHeader.Create("id", "text") };
+            var turn = new AgentSessionTurn { Id = "turn-1", ConversationId = "conv-1" };
+
+            _contextManager
+                .Setup(c => c.GetAgentContextAsync(request.AgentContext.Id, org, user))
+                .ReturnsAsync(agentContext);
+
+            _sessionFactory
+                .Setup(f => f.CreateSession(request, agentContext, OperationKinds.Code, org, user))
+                .ReturnsAsync(session);
+
+            _sessionFactory
+                .Setup(f => f.CreateTurnForNewSession(session, request, org, user))
+                .Returns(turn);
+
+            _sessionManager
+                .Setup(m => m.AddAgentSessionAsync(session, org, user))
+                .Returns(Task.CompletedTask);
+
+            _sessionManager
+                .Setup(m => m.AddAgentSessionTurnAsync(session.Id, turn, org, user))
+                .Returns(Task.CompletedTask);
+
+            _transcriptStore
+                .Setup(t => t.SaveTurnRequestAsync(org.Id, session.Id, turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(InvokeResult<Uri>.FromError("failed to save"));
+
+            // Act
+            var result = await _sut.BeginNewSessionAsync(request, org, user);
+
+            // Assert
+            Assert.That(result.Successful, Is.False);
+
+            _turnExecutor.Verify(t => t.ExecuteNewSessionTurnAsync(
+                It.IsAny<AgentContext>(),
+                It.IsAny<AgentSession>(),
+                It.IsAny<AgentSessionTurn>(),
+                It.IsAny<AgentExecuteRequest>(),
+                org,
+                user,
+                It.IsAny<CancellationToken>()), Times.Never);
+
+            _sessionManager.Verify(m => m.SetRequestBlobUriAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), org, user), Times.Never);
+            _sessionManager.Verify(m => m.CompleteAgentSessionTurnAsync(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<double>(),
+                It.IsAny<List<string>>(),
+                org,
+                user), Times.Never);
+        }
+
+        #endregion
+
+        #region ExecuteTurnAsync – request envelope
 
         [Test]
-        public async Task ExecuteTurnAsync_Success_PopulatesRequiredFieldsOnAgentExecuteResponse()
+        public async Task ExecuteTurnAsync_Success_StoresRequestEnvelope_SetsRequestEnvelopeUrl_AndCompletesTurn()
         {
             // Arrange
             var org = CreateOrg();
@@ -213,8 +404,8 @@ namespace LagoVista.AI.Tests.Services
             var session = new AgentSession
             {
                 Id = "session-1",
-                AgentContext = EntityHeader.Create("ID", "TEXT"),
-                ConversationContext = EntityHeader.Create("ID","TEXT"),
+                AgentContext = EntityHeader.Create("id", "text"),
+                ConversationContext = EntityHeader.Create("id", "text"),
                 Repo = request.Repo,
                 DefaultLanguage = request.Language,
                 WorkspaceId = request.WorkspaceId
@@ -263,8 +454,15 @@ namespace LagoVista.AI.Tests.Services
                 .Setup(m => m.AddAgentSessionTurnAsync(session.Id, newTurn, org, user))
                 .Returns(Task.CompletedTask);
 
+            string capturedRequestJson = null;
+
+            _transcriptStore
+                .Setup(t => t.SaveTurnRequestAsync(org.Id, session.Id, newTurn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<string, string, string, string, CancellationToken>((o, sId, tId, json, ct) => capturedRequestJson = json)
+                .ReturnsAsync(InvokeResult<Uri>.Create(new Uri("blob://req-1")));
+
             _turnExecutor
-                .Setup(t => t.ExecuteFollowupTurnAsync(agentContext, session, It.IsAny<AgentSessionTurn>(), request, org, user, It.IsAny<CancellationToken>()))
+                .Setup(t => t.ExecuteFollowupTurnAsync(agentContext, session, newTurn, request, org, user, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(InvokeResult<AgentExecuteResponse>.Create(agentResponse));
 
             string completedSessionId = null;
@@ -302,10 +500,19 @@ namespace LagoVista.AI.Tests.Services
             // Act
             var result = await _sut.ExecuteTurnAsync(request, org, user);
 
-            // Assert
+            // Assert – orchestrator result
             Assert.That(result.Successful, Is.True);
             Assert.That(result.Result, Is.SameAs(agentResponse));
 
+            // Assert – request envelope JSON persisted correctly with PreviousOpenAIResponseId
+            Assert.That(capturedRequestJson, Is.Not.Null.And.Not.Empty);
+            dynamic envelope = JsonConvert.DeserializeObject(capturedRequestJson);
+            Assert.That((string)envelope.OrgId, Is.EqualTo(org.Id));
+            Assert.That((string)envelope.SessionId, Is.EqualTo(session.Id));
+            Assert.That((string)envelope.TurnId, Is.EqualTo(newTurn.Id));
+            Assert.That((string)envelope.PreviousOpenAIResponseId, Is.EqualTo(previousTurn.OpenAIResponseId));
+
+            // Assert – response completion uses required fields
             Assert.That(completedSessionId, Is.EqualTo(session.Id));
             Assert.That(completedTurnId, Is.EqualTo(newTurn.Id));
             Assert.That(completedText, Is.EqualTo(agentResponse.Text));
@@ -314,19 +521,83 @@ namespace LagoVista.AI.Tests.Services
             Assert.That(completedWarnings, Is.SameAs(agentResponse.Warnings));
             Assert.That(completedElapsed, Is.GreaterThan(0));
 
-            _sessionManager.Verify(m => m.CompleteAgentSessionTurnAsync(
-                session.Id,
-                newTurn.Id,
-                agentResponse.Text,
-                agentResponse.FullResponseUrl,
-                agentResponse.ResponseContinuationId,
-                It.IsAny<double>(),
-                agentResponse.Warnings,
-                org,
-                user), Times.Once);
+            // RequestEnvelopeUrl should be set from the blob result
+            Assert.That(agentResponse.RequestEnvelopeUrl, Is.EqualTo("blob://req-1/"));
         }
 
+        [Test]
+        public async Task ExecuteTurnAsync_SaveRequestFails_ReturnsErrorAndDoesNotExecuteTurn()
+        {
+            // Arrange
+            var org = CreateOrg();
+            var user = CreateUser();
 
+            var request = new AgentExecuteRequest
+            {
+                ConversationId = "conv-1",
+                Instruction = "follow up",
+                Mode = "ask"
+            };
+
+            var agentContext = new AgentContext { Id = "ctx-1", Name = "Context 1" };
+            var session = new AgentSession { Id = "session-1", AgentContext = EntityHeader.Create("id", "text"), ConversationContext = EntityHeader.Create("id", "text") };
+            var previousTurn = new AgentSessionTurn { Id = "prev", SequenceNumber = 1, ConversationId = "conv-1", OpenAIResponseId = "prev-open" };
+            var newTurn = new AgentSessionTurn { Id = "turn-2" };
+
+            _sessionManager
+                .Setup(m => m.GetAgentSessionAsync(request.ConversationId, org, user))
+                .ReturnsAsync(session);
+
+            _sessionManager
+                .Setup(m => m.GetLastAgentSessionTurnAsync(request.ConversationId, org, user))
+                .ReturnsAsync(previousTurn);
+
+            _contextManager
+                .Setup(c => c.GetAgentContextAsync(session.AgentContext.Id, org, user))
+                .ReturnsAsync(agentContext);
+
+            _sessionFactory
+                .Setup(f => f.CreateTurnForExistingSession(session, request, org, user))
+                .Returns(newTurn);
+
+            _sessionManager
+                .Setup(m => m.AddAgentSessionTurnAsync(session.Id, newTurn, org, user))
+                .Returns(Task.CompletedTask);
+
+            _transcriptStore
+                .Setup(t => t.SaveTurnRequestAsync(org.Id, session.Id, newTurn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(InvokeResult<Uri>.FromError("failed"));
+
+            // Act
+            var result = await _sut.ExecuteTurnAsync(request, org, user);
+
+            // Assert
+            Assert.That(result.Successful, Is.False);
+
+            _turnExecutor.Verify(t => t.ExecuteFollowupTurnAsync(
+                It.IsAny<AgentContext>(),
+                It.IsAny<AgentSession>(),
+                It.IsAny<AgentSessionTurn>(),
+                It.IsAny<AgentExecuteRequest>(),
+                org,
+                user,
+                It.IsAny<CancellationToken>()), Times.Never);
+
+            _sessionManager.Verify(m => m.CompleteAgentSessionTurnAsync(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<double>(),
+                It.IsAny<List<string>>(),
+                org,
+                user), Times.Never);
+        }
+
+        #endregion
+
+        #region Helpers
 
         private static EntityHeader CreateOrg()
         {
@@ -345,5 +616,7 @@ namespace LagoVista.AI.Tests.Services
                 Text = "User 1"
             };
         }
+
+        #endregion
     }
 }
