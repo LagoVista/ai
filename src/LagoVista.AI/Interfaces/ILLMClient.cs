@@ -21,7 +21,7 @@ namespace LagoVista.AI.Interfaces
         /// over notifications keyed to that session, but the call still returns a
         /// single final LLMResult.
         /// </summary>
-        Task<InvokeResult<LLMResult>> GetAnswerAsync(
+        Task<InvokeResult<AgentExecuteResponse>> GetAnswerAsync(
             AgentContext agentContext,
             ConversationContext conversationContext,
             AgentExecuteRequest executeRequest,

@@ -1,19 +1,19 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using LagoVista.AI.Helpers;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
 using LagoVista.Core;
-using LagoVista.Core.AI.Interfaces;
 using LagoVista.Core.AI.Models;
 using LagoVista.Core.Interfaces;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace LagoVista.AI.Services
@@ -38,7 +38,7 @@ namespace LagoVista.AI.Services
             _notificationPublisher = notificationPublisher ?? throw new ArgumentNullException(nameof(notificationPublisher));
         }
 
-        public async Task<InvokeResult<LLMResult>> GetAnswerAsync(
+        public async Task<InvokeResult<AgentExecuteResponse>> GetAnswerAsync(
             AgentContext agentContext,
             ConversationContext conversationContext,
             AgentExecuteRequest executeRequest,
@@ -52,133 +52,30 @@ namespace LagoVista.AI.Services
 
             if (string.IsNullOrWhiteSpace(executeRequest.Instruction))
             {
-                return InvokeResult<LLMResult>.FromError("Instruction is required for LLM call.");
+                return InvokeResult<AgentExecuteResponse>.FromError("Instruction is required for LLM call.");
             }
 
             var baseUrl = _openAiSettings.OpenAIUrl;
             if (string.IsNullOrWhiteSpace(baseUrl))
             {
-                return InvokeResult<LLMResult>.FromError("OpenAIUrl is not configured in IOpenAISettings.");
+                return InvokeResult<AgentExecuteResponse>.FromError("OpenAIUrl is not configured in IOpenAISettings.");
             }
 
             if (string.IsNullOrWhiteSpace(agentContext.LlmApiKey))
             {
-                return InvokeResult<LLMResult>.FromError("LlmApiKey is not configured on AgentContext.");
+                return InvokeResult<AgentExecuteResponse>.FromError("LlmApiKey is not configured on AgentContext.");
             }
 
-            var isInitialTurn = string.IsNullOrWhiteSpace(executeRequest.ResponseContinuationId);
+            var requestObject = ResponsesRequestBuilder.Build(conversationContext, executeRequest, ragContextBlock);
 
-            // --- Build input messages per AGN-003 ---
-
-            var inputMessages = new List<object>();
-
-            // 1) System message (boot prompt) – first turn only
-            if (isInitialTurn && !string.IsNullOrWhiteSpace(conversationContext.System))
-            {
-                inputMessages.Add(new
-                {
-                    role = "system",
-                    content = new[]
-                    {
-                new
-                {
-                    type = "text",
-                    text = conversationContext.System.Trim()
-                }
-            }
-                });
-            }
-
-            // 2) User message: [MODE] + [INSTRUCTION] (+ optional [CONTEXT])
-            var mode = string.IsNullOrWhiteSpace(executeRequest.Mode)
-                ? "DEFAULT"
-                : executeRequest.Mode.Trim();
-
-            var instructionText = $"[MODE: {mode}]\n\n[INSTRUCTION]\n{executeRequest.Instruction.Trim()}";
-
-            var userContent = new List<object>
-    {
-        new
-        {
-            type = "text",
-            text = instructionText
-        }
-    };
-
-            if (!string.IsNullOrWhiteSpace(ragContextBlock))
-            {
-                userContent.Add(new
-                {
-                    type = "text",
-                    text = ragContextBlock
-                });
-            }
-
-            inputMessages.Add(new
-            {
-                role = "user",
-                content = userContent.ToArray()
-            });
-
-            // --- Tools and tool_choice per AGN-003 ---
-
-            JArray toolsArray = null;
-            if (isInitialTurn && !string.IsNullOrWhiteSpace(executeRequest.ToolsJson))
-            {
-                // Pass-through from client; must be valid JSON array in OpenAI tools format
-                toolsArray = JArray.Parse(executeRequest.ToolsJson);
-            }
-
-            object toolChoice = null;
-            if (!string.IsNullOrWhiteSpace(executeRequest.ToolChoiceName))
-            {
-                toolChoice = new
-                {
-                    type = "tool",
-                    name = executeRequest.ToolChoiceName
-                };
-            }
-
-            // --- Build /responses request object ---
-
-            var requestDict = new Dictionary<string, object>
-            {
-                ["model"] = conversationContext.ModelName,
-                ["input"] = inputMessages.ToArray(),
-                ["temperature"] = (double)conversationContext.Temperature,
-                ["response_format"] = new { type = "text" },
-                ["stream"] = true
-            };
-
-            if (!isInitialTurn)
-            {
-                requestDict["previous_response_id"] = executeRequest.ResponseContinuationId;
-            }
-
-            if (toolsArray != null)
-            {
-                requestDict["tools"] = toolsArray;
-            }
-
-            if (toolChoice != null)
-            {
-                requestDict["tool_choice"] = toolChoice;
-            }
-
-            var requestObject = requestDict;
-
-            var requestJson = Newtonsoft.Json.JsonConvert.SerializeObject(requestObject);
+            var requestJson = JsonConvert.SerializeObject(requestObject);
 
             try
             {
                 await PublishLlmEventAsync(sessionId, "LLMStarted", "in-progress", "Calling OpenAI model...", null, cancellationToken);
 
-                using (var httpClient = new HttpClient())
+                using (var httpClient = CreateHttpClient(baseUrl, agentContext.LlmApiKey))
                 {
-                    httpClient.BaseAddress = new Uri(baseUrl);
-                    httpClient.Timeout = TimeSpan.FromSeconds(120);
-                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", agentContext.LlmApiKey);
-
                     var request = new HttpRequestMessage(HttpMethod.Post, "/v1/responses")
                     {
                         Content = new StringContent(requestJson, Encoding.UTF8, "application/json")
@@ -196,12 +93,12 @@ namespace LagoVista.AI.Services
 
                         await PublishLlmEventAsync(sessionId, "LLMFailed", "failed", errorMessage, null, cancellationToken);
 
-                        return InvokeResult<LLMResult>.FromError(errorMessage);
+                        return InvokeResult<AgentExecuteResponse>.FromError(errorMessage);
                     }
 
-                    var llmResult = await ReadStreamingResponseAsync(response, sessionId, cancellationToken);
+                    var agentResponse = await ReadStreamingResponseAsync(response, executeRequest, sessionId, cancellationToken);
 
-                    if (llmResult == null || string.IsNullOrWhiteSpace(llmResult.Text))
+                    if (agentResponse == null || string.IsNullOrWhiteSpace(agentResponse.Text))
                     {
                         const string msg = "LLM response did not contain any text output in the expected streaming format.";
 
@@ -209,12 +106,12 @@ namespace LagoVista.AI.Services
 
                         await PublishLlmEventAsync(sessionId, "LLMFailed", "failed", msg, null, cancellationToken);
 
-                        return InvokeResult<LLMResult>.FromError(msg);
+                        return InvokeResult<AgentExecuteResponse>.FromError(msg);
                     }
 
                     await PublishLlmEventAsync(sessionId, "LLMCompleted", "completed", "Model response received.", null, cancellationToken);
 
-                    return InvokeResult<LLMResult>.Create(llmResult);
+                    return InvokeResult<AgentExecuteResponse>.Create(agentResponse);
                 }
             }
             catch (TaskCanceledException tex) when (tex.CancellationToken == cancellationToken)
@@ -224,7 +121,7 @@ namespace LagoVista.AI.Services
                 _adminLogger.AddError("[OpenAIResponsesClient_GetAnswerAsync__Cancelled]", msg);
                 await PublishLlmEventAsync(sessionId, "LLMCancelled", "aborted", msg, null, cancellationToken);
 
-                return InvokeResult<LLMResult>.FromError(msg);
+                return InvokeResult<AgentExecuteResponse>.FromError(msg);
             }
             catch (Exception ex)
             {
@@ -233,45 +130,61 @@ namespace LagoVista.AI.Services
                 _adminLogger.AddException("[OpenAIResponsesClient_GetAnswerAsync__Exception]", ex);
                 await PublishLlmEventAsync(sessionId, "LLMFailed", "failed", msg, null, cancellationToken);
 
-                return InvokeResult<LLMResult>.FromError(msg);
+                return InvokeResult<AgentExecuteResponse>.FromError(msg);
             }
         }
 
-        /// <summary>
-        /// Read a streaming Responses API response (SSE-style) and accumulate
-        /// both the full text and intermediate narration events.
-        ///
-        /// This implementation focuses on text deltas from events whose type or
-        /// event name indicate "output_text.delta". If the upstream schema
-        /// evolves, this method can be adjusted without impacting callers.
-        /// </summary>
-        private async Task<LLMResult> ReadStreamingResponseAsync(HttpResponseMessage response, string sessionId, CancellationToken cancellationToken)
+        private async Task<AgentExecuteResponse> ReadStreamingResponseAsync(
+            HttpResponseMessage httpResponse,
+            AgentExecuteRequest request,
+            string sessionId,
+            CancellationToken cancellationToken)
         {
-            using (var stream = await response.Content.ReadAsStreamAsync())
+            using (var stream = await httpResponse.Content.ReadAsStreamAsync())
             using (var reader = new StreamReader(stream))
             {
                 var fullTextBuilder = new StringBuilder();
-                var rawBuilder = new StringBuilder();
+                var rawEventLogBuilder = new StringBuilder();
                 string responseId = null;
 
                 string currentEvent = null;
                 var dataBuilder = new StringBuilder();
+
+                // This will hold the *final* response.completed payload
+                string completedEventJson = null;
 
                 while (!reader.EndOfStream)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
                     var line = await reader.ReadLineAsync();
-                    if (line == null) break;
+                    if (line == null)
+                    {
+                        break;
+                    }
 
+                    // Blank line => end of one SSE event
                     if (string.IsNullOrWhiteSpace(line))
                     {
                         if (dataBuilder.Length > 0)
                         {
                             var dataJson = dataBuilder.ToString();
-                            rawBuilder.AppendLine(dataJson);
+                            rawEventLogBuilder.AppendLine(dataJson);
 
-                            await ProcessSseEventAsync(currentEvent, sessionId, dataJson, fullTextBuilder, value => responseId = value ?? responseId, cancellationToken);
+                            // Capture the completed event payload so we can reconstruct
+                            // the full /responses object for AgentExecuteResponseParser.
+                            if (string.Equals(currentEvent, "response.completed", StringComparison.OrdinalIgnoreCase))
+                            {
+                                completedEventJson = dataJson;
+                            }
+
+                            await ProcessSseEventAsync(
+                                currentEvent,
+                                sessionId,
+                                dataJson,
+                                fullTextBuilder,
+                                value => responseId = value ?? responseId,
+                                cancellationToken);
 
                             dataBuilder.Clear();
                             currentEvent = null;
@@ -289,31 +202,61 @@ namespace LagoVista.AI.Services
                     if (line.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
                     {
                         var dataPart = line.Substring("data:".Length).Trim();
-                        if (string.Equals(dataPart, "[DONE]", StringComparison.Ordinal)) break;
+                        if (string.Equals(dataPart, "[DONE]", StringComparison.Ordinal))
+                        {
+                            break;
+                        }
 
                         dataBuilder.AppendLine(dataPart);
                     }
                 }
 
-                if (fullTextBuilder.Length == 0)
+                // If we never got any text or a completed event, treat as null/empty
+                if (string.IsNullOrWhiteSpace(completedEventJson))
                 {
-                    return null;
+                    return new AgentExecuteResponse
+                    {
+                        Kind = string.IsNullOrWhiteSpace(fullTextBuilder.ToString()) ? "empty" : "ok",
+                        ConversationId = request.ConversationId,
+                        ConversationContextId = request.ConversationContext?.Id,
+                        AgentContextId = request.AgentContext?.Id,
+                        Mode = request.Mode,
+                        Text = fullTextBuilder.ToString(),
+                        RawResponseJson = rawEventLogBuilder.ToString(),
+                        ResponseContinuationId = responseId,
+                        TurnId = responseId
+                    };
                 }
 
-                return new LLMResult
+                // Convert the streaming response.completed payload into the
+                // non-stream /responses JSON shape expected by AgentExecuteResponseParser.
+                var finalResponseJson = ExtractCompletedResponseJson(completedEventJson);
+
+                // Parse into our normalized envelope
+                var agentResponse = AgentExecuteResponseParser.Parse(finalResponseJson, request);
+
+                // Preserve the streaming raw event log and incremental text as extra diagnostics
+                agentResponse.RawResponseJson = rawEventLogBuilder.ToString();
+
+                // If the parser did not see text (e.g., only tool calls), we can still
+                // fill in the visible text from the streaming builder as a convenience.
+                if (string.IsNullOrWhiteSpace(agentResponse.Text) && fullTextBuilder.Length > 0)
                 {
-                    ResponseId = responseId,
-                    Text = fullTextBuilder.ToString(),
-                    RawResponseJson = rawBuilder.ToString()
-                };
+                    agentResponse.Text = fullTextBuilder.ToString();
+                }
+
+                // If we got a responseId earlier (e.g., from ProcessSseEventAsync),
+                // prefer that as the continuation id if the parser did not set one.
+                if (string.IsNullOrWhiteSpace(agentResponse.ResponseContinuationId) && !string.IsNullOrWhiteSpace(responseId))
+                {
+                    agentResponse.ResponseContinuationId = responseId;
+                    agentResponse.TurnId = responseId;
+                }
+
+                return agentResponse;
             }
         }
 
-        /// <summary>
-        /// Process a single SSE event payload from the Responses API. Attempts to
-        /// extract text deltas and response id in a schema-tolerant way and emit
-        /// LLMDelta narration events for each non-empty text chunk.
-        /// </summary>
         private async Task ProcessSseEventAsync(string eventName, string sessionId, string dataJson, StringBuilder fullTextBuilder, Action<string> setResponseId, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(dataJson)) return;
@@ -350,6 +293,38 @@ namespace LagoVista.AI.Services
         }
 
         /// <summary>
+        /// Given the JSON payload from a "response.completed" SSE event, extract the inner
+        /// "response" object (if present) and return it as a compact JSON string.
+        ///
+        /// Typical shape:
+        /// { "type": "response.completed", "response": { ... full /responses object ... } }
+        /// </summary>
+        private static string ExtractCompletedResponseJson(string completedEventJson)
+        {
+            if (string.IsNullOrWhiteSpace(completedEventJson))
+            {
+                return "{}";
+            }
+
+            try
+            {
+                var root = JObject.Parse(completedEventJson);
+
+                var responseToken = root["response"];
+                if (responseToken != null && responseToken.Type == JTokenType.Object)
+                {
+                    return responseToken.ToString(Formatting.None);
+                }
+
+                return root.ToString(Formatting.None);
+            }
+            catch (JsonException)
+            {
+                return completedEventJson;
+            }
+        }
+
+        /// <summary>
         /// Publish a lightweight LLM-related event if a session id is available.
         /// This keeps narration fully optional and scoped to the LLM implementation.
         /// </summary>
@@ -376,6 +351,22 @@ namespace LagoVista.AI.Services
             {
                 _adminLogger.AddException("[OpenAIResponsesClient_PublishLlmEventAsync__Exception]", ex);
             }
+        }
+
+        /// <summary>
+        /// Factory method for HttpClient so tests can override and inject fake handlers.
+        /// </summary>
+        protected virtual HttpClient CreateHttpClient(string baseUrl, string apiKey)
+        {
+            var client = new HttpClient
+            {
+                BaseAddress = new Uri(baseUrl),
+                Timeout = TimeSpan.FromSeconds(120)
+            };
+
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+
+            return client;
         }
     }
 }

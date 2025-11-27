@@ -15,16 +15,17 @@ namespace LagoVista.AI.Services
     public class AgentExecutionService : IAgentExecutionService
     {
         private readonly IAgentContextManager _agentContextManager;
-        private readonly IRagAnswerService _ragAnswerService;
         private readonly IAdminLogger _adminLogger;
         private readonly ILLMClient _llmClient;
+        private readonly IRagContextBuilder _ragContextBuilder;
 
-        public AgentExecutionService(IAgentContextManager agentContextManager, ILLMClient llmClient, IRagAnswerService ragAnswerService, IAdminLogger adminLogger)
+
+        public AgentExecutionService(IAgentContextManager agentContextManager, ILLMClient llmClient, IRagContextBuilder ragContextBuilder, IAdminLogger adminLogger)
         {
             _agentContextManager = agentContextManager ?? throw new ArgumentNullException(nameof(agentContextManager));
-            _ragAnswerService = ragAnswerService ?? throw new ArgumentNullException(nameof(ragAnswerService));
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
             _llmClient = llmClient ?? throw new ArgumentNullException(nameof(llmClient));
+            _ragContextBuilder = ragContextBuilder ?? throw new ArgumentNullException(nameof(ragContextBuilder));
         }
 
         public async Task<InvokeResult<AgentExecuteResponse>> ExecuteAsync(AgentExecuteRequest request, EntityHeader org, EntityHeader user, CancellationToken cancellationToken = default)
@@ -113,50 +114,20 @@ namespace LagoVista.AI.Services
                 $"correlationId={correlationId}, requestConversationId={request.ConversationId}");
 
             var conversationId = String.IsNullOrWhiteSpace(request.ConversationId) ? Guid.NewGuid().ToId() : request.ConversationId;
+            var conversationContext = agentContext.ConversationContexts.Single(ctx => ctx.Id == conversationContextId);
 
             _adminLogger.Trace(
                 $"[AgentExecutionService_ExecuteAsync__RAG] Invoking RAG pipeline. " +
                 $"correlationId={correlationId}, conversationId={conversationId}, " +
                 $"repo={request.Repo}, language={request.Language ?? "csharp"}");
 
-            var conversationContext = agentContext.ConversationContexts.Single(ctx=>ctx.Id == conversationContextId);
 
-//            var res1 = await _llmClient.GetAnswerAsync(agentContext, conversationContext, request.Instruction, conversationContext.System, request.ResponseContinuationId);
+            var ragContextBlock = await _ragContextBuilder.BuildContextSectionAsync(agentContext, request.Instruction, request.RagScopeFilter);
+            if(!ragContextBlock.Successful)
+                return InvokeResult<AgentExecuteResponse>.FromInvokeResult(ragContextBlock.ToInvokeResult());
 
-            var answerResult = await _ragAnswerService.AnswerAsync(
-                agentContext.Id,
-                request.Instruction,
-                conversationContextId,
-                request.ResponseContinuationId,
-                org,
-                user,
-                repo: request.Repo,
-                language: request.Language ?? "csharp",
-                topK: 8,
-                ragScope:"",
-                workspaceId: request.WorkspaceId,
-                activeFiles: request.ActiveFiles);
 
-            if (!answerResult.Successful)
-            {
-                _adminLogger.AddError("[AgentExecutionService_ExecuteAsync__RAGError]", "RAG pipeline failed.", answerResult.ErrorsToKVPArray());
-
-                return InvokeResult<AgentExecuteResponse>.FromInvokeResult(answerResult.ToInvokeResult());
-            }
-
-            var response = new AgentExecuteResponse
-            {
-                Kind = "answer",
-                ConversationId = conversationId,
-                AgentContextId = agentContext.Id,
-                ResponseContinuationId = answerResult.Result.OpenAiResponeId,
-                ConversationContextId = conversationContextId,
-                Mode = "ask",
-                Text = answerResult.Result.Text,
-                Sources = answerResult.Result.Sources
-            };
-
-            return InvokeResult<AgentExecuteResponse>.Create(response);
+            return await _llmClient.GetAnswerAsync(agentContext, conversationContext, request, ragContextBlock.Result, correlationId, cancellationToken);
         }
 
         private InvokeResult<AgentExecuteResponse> HandleEditNotImplemented(string correlationId)
