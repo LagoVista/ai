@@ -45,6 +45,7 @@ namespace LagoVista.AI.Services
             {
                 OrgId = org?.Id,
                 SessionId = session.Id,
+                ConversationId = session.Id,
                 TurnId = turn.Id,
                 Response = execResponse
             };
@@ -59,7 +60,8 @@ namespace LagoVista.AI.Services
             }
 
             execResult.Result.FullResponseUrl = responseBlobResult.Result.ToString();
-
+            execResult.Result.ConversationId = session.Id;
+            execResult.Result.TurnId = turn.Id;
             return execResult;
         }
 
@@ -82,6 +84,7 @@ namespace LagoVista.AI.Services
             {
                 OrgId = org?.Id,
                 SessionId = session.Id,
+                ConversationId = session.Id,
                 ResponseId = execRequest.ResponseContinuationId,
                 TurnId = turn.Id,
                 Response = execResponse
@@ -97,6 +100,8 @@ namespace LagoVista.AI.Services
             }
 
             execResult.Result.FullResponseUrl = responseBlobResult.Result.ToString();
+            execResult.Result.ConversationId = session.Id;
+            execResult.Result.TurnId = turn.Id;
             return execResult;
         }
     }

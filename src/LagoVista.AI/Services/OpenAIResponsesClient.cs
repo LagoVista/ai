@@ -230,14 +230,12 @@ namespace LagoVista.AI.Services
                     return InvokeResult<AgentExecuteResponse>.Create(new AgentExecuteResponse
                     {
                         Kind = string.IsNullOrWhiteSpace(fullTextBuilder.ToString()) ? "empty" : "ok",
-                        ConversationId = request.ConversationId,
                         ConversationContextId = request.ConversationContext?.Id,
                         AgentContextId = request.AgentContext?.Id,
                         Mode = request.Mode,
                         Text = fullTextBuilder.ToString(),
                         RawResponseJson = rawEventLogBuilder.ToString(),
                         ResponseContinuationId = responseId,
-                        TurnId = responseId
                     });
                 }
 
