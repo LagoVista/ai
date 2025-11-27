@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using LagoVista.Core.AI.Models;
 using LagoVista.Core.Models;
+using LagoVista.Core.Validation;
 
 namespace LagoVista.AI.Helpers
 {
@@ -21,21 +22,11 @@ namespace LagoVista.AI.Helpers
         /// <param name="rawJson">Raw JSON from the /responses call.</param>
         /// <param name="request">The AgentExecuteRequest used to initiate this call.</param>
         /// <returns>Populated AgentExecuteResponse.</returns>
-        public static AgentExecuteResponse Parse(string rawJson, AgentExecuteRequest request)
+        public static InvokeResult<AgentExecuteResponse> Parse(string rawJson, AgentExecuteRequest request)
         {
             if (string.IsNullOrWhiteSpace(rawJson))
             {
-                return new AgentExecuteResponse
-                {
-                    Kind = "error",
-                    ErrorCode = "empty-json",
-                    ErrorMessage = "Empty or null JSON payload.",
-                    RawResponseJson = rawJson,
-                    ConversationId = request?.ConversationId,
-                    ConversationContextId = request?.ConversationContext?.Id,
-                    AgentContextId = request?.AgentContext?.Id,
-                    Mode = request?.Mode
-                };
+                return InvokeResult<AgentExecuteResponse>.FromError("[AgentExecuteResponseParser__Parse] Empty or null JSON payload.");
             }
 
             JObject root;
@@ -45,17 +36,8 @@ namespace LagoVista.AI.Helpers
             }
             catch (Exception ex)
             {
-                return new AgentExecuteResponse
-                {
-                    Kind = "error",
-                    ErrorCode = "json-parse-failure",
-                    ErrorMessage = $"Failed to parse JSON: {ex.Message}",
-                    RawResponseJson = rawJson,
-                    ConversationId = request?.ConversationId,
-                    ConversationContextId = request?.ConversationContext?.Id,
-                    AgentContextId = request?.AgentContext?.Id,
-                    Mode = request?.Mode
-                };
+                Console.WriteLine(rawJson);
+                return InvokeResult<AgentExecuteResponse>.FromError($"[AgentExecuteResponseParser__Parse] {ex.Message}");
             }
 
             var response = new AgentExecuteResponse
@@ -87,10 +69,7 @@ namespace LagoVista.AI.Helpers
             var outputArray = root["output"] as JArray;
             if (outputArray == null)
             {
-                response.Kind = "error";
-                response.ErrorCode = "missing-output";
-                response.ErrorMessage = "OpenAI response did not contain an 'output' array.";
-                return response;
+                return InvokeResult<AgentExecuteResponse>.FromError("[AgentExecuteResponseParser__Parse] Missing [output] Node.");
             }
 
             var textSegments = new List<string>();
@@ -170,7 +149,7 @@ namespace LagoVista.AI.Helpers
             // Classify Kind
             if (!string.IsNullOrWhiteSpace(response.ErrorCode) || !string.IsNullOrWhiteSpace(response.ErrorMessage))
             {
-                response.Kind = "error";
+                return InvokeResult<AgentExecuteResponse>.FromError($"{response.ErrorCode} : {response.ErrorMessage}");
             }
             else if (response.ToolCalls.Any() && string.IsNullOrWhiteSpace(response.Text))
             {
@@ -178,14 +157,14 @@ namespace LagoVista.AI.Helpers
             }
             else if (string.IsNullOrWhiteSpace(response.Text) && !response.ToolCalls.Any())
             {
-                response.Kind = "empty";
+                return InvokeResult<AgentExecuteResponse>.FromError($"[AgentExecuteResponseParser__Parse] - No tool or text response.");
             }
             else
             {
                 response.Kind = "ok";
             }
 
-            return response;
+            return InvokeResult<AgentExecuteResponse>.Create(response);
         }
     }
 }

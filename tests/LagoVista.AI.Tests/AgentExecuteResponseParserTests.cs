@@ -4,6 +4,7 @@ using NUnit.Framework;
 using LagoVista.AI.Helpers;
 using LagoVista.Core.AI.Models;
 using LagoVista.Core.Models;
+using Newtonsoft.Json.Linq;
 
 namespace LagoVista.AI.Tests
 {
@@ -26,8 +27,8 @@ namespace LagoVista.AI.Tests
         {
             var request = CreateDefaultRequest();
 
-            var response = AgentExecuteResponseParser.Parse(string.Empty, request);
-
+            var result = AgentExecuteResponseParser.Parse(string.Empty, request);
+            var response = result.Result;
             Assert.That(response.Kind, Is.EqualTo("error"));
             Assert.That(response.ErrorCode, Is.EqualTo("empty-json"));
             Assert.That(response.ErrorMessage, Does.Contain("Empty or null"));
@@ -41,12 +42,76 @@ namespace LagoVista.AI.Tests
             var request = CreateDefaultRequest();
             const string rawJson = "{ not valid json";
 
-            var response = AgentExecuteResponseParser.Parse(rawJson, request);
+            var result = AgentExecuteResponseParser.Parse(rawJson, request);
+            var response = result.Result;
 
             Assert.That(response.Kind, Is.EqualTo("error"));
             Assert.That(response.ErrorCode, Is.EqualTo("json-parse-failure"));
             Assert.That(response.ErrorMessage, Does.Contain("Failed to parse JSON"));
         }
+
+        [Test]
+        public void Parse_MessageOutputWithContentArray_MapsTextUsageAndKindOk()
+        {
+            var request = CreateDefaultRequest();
+
+            const string rawJson = @"{
+  ""id"": ""resp_real_world"",
+  ""object"": ""response"",
+  ""model"": ""gpt-4.1-mini"",
+  ""usage"": {
+    ""prompt_tokens"": 21,
+    ""completion_tokens"": 34,
+    ""total_tokens"": 55
+  },
+  ""output"": [
+    {
+      ""id"": ""rs_00153e3b7b97a4f0006928564bc48d18cbfd7f5ee57a209"",
+      ""type"": ""reasoning"",
+      ""summary"": []
+    },
+    {
+      ""id"": ""msg_00153e3b7b97a4f000692b5d4ba50881ca7b505d29c3147c7"",
+      ""type"": ""message"",
+      ""role"": ""assistant"",
+      ""status"": ""completed"",
+      ""content"": [
+        {
+          ""type"": ""output_text"",
+          ""annotations"": [],
+          ""logprobs"": [],
+          ""text"": ""Short answer for this codebase.""
+        }
+      ]
+    }
+  ]
+}";
+
+            var result = AgentExecuteResponseParser.Parse(rawJson, request);
+            var response = result.Result;
+
+            Assert.That(result.Successful, Is.True, result.ErrorMessage);
+            Assert.That(response.Kind, Is.EqualTo("ok"));
+
+            // Ids
+            Assert.That(response.ResponseContinuationId, Is.EqualTo("resp_real_world"));
+            Assert.That(response.TurnId, Is.EqualTo("resp_real_world"));
+
+            // Model
+            Assert.That(response.ModelId, Is.EqualTo("gpt-4.1-mini"));
+
+            // Text extracted from the message.content[0].text
+            Assert.That(response.Text, Is.EqualTo("Short answer for this codebase."));
+
+            // Usage mapped correctly
+            Assert.That(response.Usage.PromptTokens, Is.EqualTo(21));
+            Assert.That(response.Usage.CompletionTokens, Is.EqualTo(34));
+            Assert.That(response.Usage.TotalTokens, Is.EqualTo(55));
+
+            // No tool calls expected in this payload
+            Assert.That(response.ToolCalls, Is.Empty);
+        }
+
 
         [Test]
         public void Parse_MissingOutputArray_ReturnsError()
@@ -62,8 +127,8 @@ namespace LagoVista.AI.Tests
   }
 }";
 
-            var response = AgentExecuteResponseParser.Parse(rawJson, request);
-
+            var result = AgentExecuteResponseParser.Parse(rawJson, request);
+            var response = result.Result;
             Assert.That(response.Kind, Is.EqualTo("error"));
             Assert.That(response.ErrorCode, Is.EqualTo("missing-output"));
             Assert.That(response.ErrorMessage, Does.Contain("did not contain an 'output' array"));
@@ -90,8 +155,8 @@ namespace LagoVista.AI.Tests
   ]
 }";
 
-            var response = AgentExecuteResponseParser.Parse(rawJson, request);
-
+            var result = AgentExecuteResponseParser.Parse(rawJson, request);
+            var response = result.Result;
             Assert.That(response.Kind, Is.EqualTo("ok"));
             Assert.That(response.ResponseContinuationId, Is.EqualTo("resp_text_only"));
             Assert.That(response.TurnId, Is.EqualTo("resp_text_only"));
@@ -104,7 +169,11 @@ namespace LagoVista.AI.Tests
             Assert.That(response.ToolCalls, Is.Empty);
         }
 
-        [Test]
+
+      
+
+
+    [Test]
         public void Parse_ToolOnlyResponse_ClassifiesToolOnlyAndExtractsToolCall()
         {
             var request = CreateDefaultRequest();
@@ -132,8 +201,8 @@ namespace LagoVista.AI.Tests
   ]
 }";
 
-            var response = AgentExecuteResponseParser.Parse(rawJson, request);
-
+            var result = AgentExecuteResponseParser.Parse(rawJson, request);
+            var response = result.Result;
             Assert.That(response.Kind, Is.EqualTo("tool-only"));
             Assert.That(response.Text, Is.Null.Or.Empty);
             Assert.That(response.ToolCalls.Count, Is.EqualTo(1));
@@ -178,8 +247,8 @@ namespace LagoVista.AI.Tests
   ]
 }";
 
-            var response = AgentExecuteResponseParser.Parse(rawJson, request);
-
+            var result = AgentExecuteResponseParser.Parse(rawJson, request);
+            var response = result.Result;
             Assert.That(response.Kind, Is.EqualTo("ok"));
             Assert.That(response.Text, Is.EqualTo("I will create a DDR for you."));
             Assert.That(response.ToolCalls.Count, Is.EqualTo(1));

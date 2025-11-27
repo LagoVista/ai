@@ -26,7 +26,7 @@ namespace LagoVista.AI.Helpers
         /// <param name="request">The agent execute request from the client.</param>
         /// <param name="ragContextBlock">The pre-formatted RAG context block (may be null or empty).</param>
         /// <returns>ResponsesApiRequest representing the body for the /responses call.</returns>
-        public static ResponsesApiRequest Build(ConversationContext conversationContext, AgentExecuteRequest request, string ragContextBlock)
+        public static ResponsesApiRequest Build(ConversationContext conversationContext, AgentExecuteRequest request, string ragContextBlock, bool? stream = null)
         {
             if (conversationContext == null) throw new ArgumentNullException(nameof(conversationContext));
             if (request == null) throw new ArgumentNullException(nameof(request));
@@ -36,7 +36,8 @@ namespace LagoVista.AI.Helpers
             var dto = new ResponsesApiRequest
             {
                 Model = conversationContext.ModelName,
-                Temperature = conversationContext.Temperature
+                Temperature = conversationContext.Temperature,
+                Stream = stream,
             };
 
             if (isContinuation)

@@ -102,22 +102,24 @@ namespace LagoVista.AI.Services
                 SessionId = session.Id,
                 TurnId = turn.Id,
                 Request = request,
-                ActiveFiles = request.ActiveFiles,
-                RagFilters = request.RagScopeFilter
             };
 
             var requestJson = JsonConvert.SerializeObject(requestEnvelope);
             var requestBlobResult = await _transcriptStore.SaveTurnRequestAsync(org.Id, session.Id, turn.Id, requestJson, cancellationToken);
-
+            Console.WriteLine("[AgentOrchestrator_BeginNewSessionAsync] Session Ready 1");
             if (!requestBlobResult.Successful)
             {
                 _adminLogger.AddError("[AgentTurnExecutor_ExecuteNewSessionTurnAsync__Transcript]", "Failed to store turn request transcript.");
                 return InvokeResult<AgentExecuteResponse>.FromInvokeResult(requestBlobResult.ToInvokeResult());
             }
-
             await _sessionManager.SetRequestBlobUriAsync(session.Id, turn.Id, requestBlobResult.Result.ToString(), org, user);
-
+   
             var execResult = await _turnExecutor.ExecuteNewSessionTurnAsync(context, session, turn, request, org, user, cancellationToken);
+            if(!execResult.Successful)
+            {
+                return execResult;
+            }
+           
             execResult.Result.RequestEnvelopeUrl = requestBlobResult.Result.ToString();
 
             _adminLogger.Trace("[AgentOrchestrator_BeginNewSessionAsync] Session Completed. " + $"Success={execResult.Successful} correlationId={correlationId}, org={org?.Id}, user={user?.Id}");
@@ -224,8 +226,6 @@ namespace LagoVista.AI.Services
                 TurnId = turn.Id,
                 turn.PreviousOpenAIResponseId,
                 Request = request,
-                ActiveFiles = request.ActiveFiles,
-                RagFilters = request.RagScopeFilter
             };
 
             var requestJson = JsonConvert.SerializeObject(requestEnvelope);

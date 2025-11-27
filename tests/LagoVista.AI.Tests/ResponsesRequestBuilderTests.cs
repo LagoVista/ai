@@ -45,6 +45,16 @@ namespace LagoVista.AI.Tests
         }
 
         [Test]
+        public void Type_On_Content_ShoudBe_input_text()
+        {
+            var convCtx = CreateConversationContext();
+            var request = CreateRequest();
+
+            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty);
+            Assert.That(dto.Input[0].Content[0].Type, Is.EqualTo("input_text"));
+        }
+
+        [Test]
         public void Build_InitialRequest_IncludesSystemMessageAndNoPreviousResponseId()
         {
             var convCtx = CreateConversationContext();

@@ -37,6 +37,12 @@ namespace LagoVista.AI.Models
         /// </summary>
         [JsonProperty("tool_choice", NullValueHandling = NullValueHandling.Ignore)]
         public ResponsesToolChoice ToolChoice { get; set; }
+
+        /// <summary>
+        /// Should partial results be streamed.
+        /// </summary>
+        [JsonProperty("stream")]
+        public bool? Stream { get; set; }
     }
 
     public class ResponsesMessage
@@ -51,7 +57,7 @@ namespace LagoVista.AI.Models
     public class ResponsesMessageContent
     {
         [JsonProperty("type")]
-        public string Type { get; set; } = "text";
+        public string Type { get; set; } = "input_text";
 
         [JsonProperty("text")]
         public string Text { get; set; }

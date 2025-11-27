@@ -365,6 +365,16 @@ namespace LagoVista.AI.Services
     {
         [JsonProperty("error")]
         public OpenAIError Error { get; set; }
+
+        public override string ToString()
+        {
+            if (Error == null)
+                return base.ToString();
+
+            var paramInfo = string.IsNullOrEmpty(Error.Param) ? "" : $" (param: {Error.Param})";
+            var codeInfo = string.IsNullOrEmpty(Error.Code) ? "" : $" (code: {Error.Code})";
+            return $"OpenAI error: {Error.Message} [{Error.Type}]{paramInfo}{codeInfo}";
+        }
     }
 
     public sealed class OpenAIError
@@ -374,6 +384,9 @@ namespace LagoVista.AI.Services
 
         [JsonProperty("type")]
         public string Type { get; set; }
+
+        [JsonProperty("param")]
+        public string Param { get; set; }
 
         [JsonProperty("code")]
         public string Code { get; set; }
