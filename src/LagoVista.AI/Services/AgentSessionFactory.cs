@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
 using LagoVista.Core;
+using LagoVista.Core.AI.Models;
 using LagoVista.Core.Models;
 
 namespace LagoVista.AI.Services
@@ -18,7 +19,7 @@ namespace LagoVista.AI.Services
             _namingService = namingService ?? throw new ArgumentNullException(nameof(namingService));
         }
 
-        public async Task<AgentSession> CreateSession(NewAgentExecutionSession request, AgentContext agentContext, EntityHeader org, EntityHeader user)
+        public async Task<AgentSession> CreateSession(AgentExecuteRequest request, AgentContext agentContext, OperationKinds kind, EntityHeader org, EntityHeader user)
         {
             var now = DateTime.UtcNow.ToJSONString();
 
@@ -37,7 +38,7 @@ namespace LagoVista.AI.Services
                 LastUpdatedDate = now,
                 AgentContext = request.AgentContext,
                 ConversationContext = request.ConversationContext,
-                OperationKind = request.OperationKind,
+                OperationKind = EntityHeader<OperationKinds>.Create(kind),
                 WorkspaceId = request.WorkspaceId,
                 Repo = request.Repo,
                 DefaultLanguage = request.Language
@@ -49,7 +50,7 @@ namespace LagoVista.AI.Services
             return session;
         }
 
-        public AgentSessionTurn CreateTurnForNewSession(AgentSession session, NewAgentExecutionSession request, EntityHeader org, EntityHeader user)
+        public AgentSessionTurn CreateTurnForNewSession(AgentSession session, AgentExecuteRequest request, EntityHeader org, EntityHeader user)
         {
             if (session == null)
             {
@@ -69,7 +70,7 @@ namespace LagoVista.AI.Services
                 CreatedByUser = user,
                 CreationDate = now,
                 StatusTimeStamp = now,
-                Mode = "ask",
+                Mode = request.Mode,
                 InstructionSummary = BuildInstructionSummary(request.Instruction),
                 ConversationId = Guid.NewGuid().ToId()
             };
@@ -77,7 +78,7 @@ namespace LagoVista.AI.Services
             return turn;
         }
 
-        public AgentSessionTurn CreateTurnForExistingSession(AgentSession session, AgentExecutionRequest request, EntityHeader org, EntityHeader user)
+        public AgentSessionTurn CreateTurnForExistingSession(AgentSession session, AgentExecuteRequest request, EntityHeader org, EntityHeader user)
         {
             if (session == null)
             {

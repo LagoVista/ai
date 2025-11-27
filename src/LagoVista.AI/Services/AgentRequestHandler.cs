@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
 using LagoVista.Core;
+using LagoVista.Core.AI.Models;
 using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
@@ -32,18 +33,18 @@ namespace LagoVista.AI.Services
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
         }
 
-        public async Task<InvokeResult<AgentExecutionResponse>> HandleAsync(AgentRequestEnvelope request, EntityHeader org, EntityHeader user, CancellationToken cancellationToken = default)
+        public async Task<InvokeResult<AgentExecuteResponse>> HandleAsync(AgentExecuteRequest request, EntityHeader org, EntityHeader user, CancellationToken cancellationToken = default)
         {
             var correlationId = Guid.NewGuid().ToId();
 
-            _adminLogger.Trace("[AgentRequestHandler_HandleAsync] Handling agent request. " + $"correlationId={correlationId}, org={org?.Id}, user={user?.Id}, sessionId={request?.SessionId ?? "<null>"}");
+            _adminLogger.Trace("[AgentRequestHandler_HandleAsync] Handling agent request. " + $"correlationId={correlationId}, org={org?.Id}, user={user?.Id}, sessionId={request?.ConversationId ?? "<null>"}");
 
             if (request == null)
             {
                 const string msg = "AgentRequestEnvelope cannot be null.";
                 _adminLogger.AddError("[AgentRequestHandler_HandleAsync__ValidateRequest]", msg);
 
-                return InvokeResult<AgentExecutionResponse>.FromError(msg, "AGENT_REQ_NULL_REQUEST");
+                return InvokeResult<AgentExecuteResponse>.FromError(msg, "AGENT_REQ_NULL_REQUEST");
             }
 
             if (string.IsNullOrWhiteSpace(request.Instruction))
@@ -51,10 +52,10 @@ namespace LagoVista.AI.Services
                 const string msg = "Instruction is required.";
                 _adminLogger.AddError("[AgentRequestHandler_HandleAsync__ValidateRequest]", msg);
 
-                return InvokeResult<AgentExecutionResponse>.FromError(msg, "AGENT_REQ_MISSING_INSTRUCTION");
+                return InvokeResult<AgentExecuteResponse>.FromError(msg, "AGENT_REQ_MISSING_INSTRUCTION");
             }
 
-            var isNewSession = string.IsNullOrWhiteSpace(request.SessionId);
+            var isNewSession = string.IsNullOrWhiteSpace(request.ConversationId);
 
             if (isNewSession)
             {
@@ -64,7 +65,7 @@ namespace LagoVista.AI.Services
             return await HandleFollowupTurnAsync(request, org, user, correlationId, cancellationToken);
         }
 
-        private async Task<InvokeResult<AgentExecutionResponse>> HandleNewSessionAsync(AgentRequestEnvelope request, EntityHeader org, EntityHeader user, string correlationId, CancellationToken cancellationToken)
+        private async Task<InvokeResult<AgentExecuteResponse>> HandleNewSessionAsync(AgentExecuteRequest request, EntityHeader org, EntityHeader user, string correlationId, CancellationToken cancellationToken)
         {
             _adminLogger.Trace("[AgentRequestHandler_HandleNewSessionAsync] Normalizing new session request. " + $"correlationId={correlationId}, org={org?.Id}, user={user?.Id}");
 
@@ -73,47 +74,27 @@ namespace LagoVista.AI.Services
                 const string msg = "AgentContext is required for a new session.";
                 _adminLogger.AddError("[AgentRequestHandler_HandleNewSessionAsync__ValidateRequest]", msg);
 
-                return InvokeResult<AgentExecutionResponse>.FromError(msg, "AGENT_REQ_MISSING_AGENT_CONTEXT");
+                return InvokeResult<AgentExecuteResponse>.FromError(msg, "AGENT_REQ_MISSING_AGENT_CONTEXT");
             }
 
-            var sessionRequest = new NewAgentExecutionSession
-            {
-                OperationKind = request.OperationKind,
-                AgentContext = request.AgentContext,
-                ConversationContext = request.ConversationContext,
-                WorkspaceId = request.WorkspaceId,
-                Repo = request.Repo,
-                Language = request.Language,
-                Instruction = request.Instruction,
-                ActiveFiles = request.ActiveFiles,
-                RagFilters = request.RagFilters
-            };
-
-            return await _orchestrator.BeginNewSessionAsync(sessionRequest, org, user, cancellationToken);
+            
+            return await _orchestrator.BeginNewSessionAsync(request, org, user, cancellationToken);
         }
 
-        private async Task<InvokeResult<AgentExecutionResponse>> HandleFollowupTurnAsync(AgentRequestEnvelope request, EntityHeader org, EntityHeader user, string correlationId, CancellationToken cancellationToken)
+        private async Task<InvokeResult<AgentExecuteResponse>> HandleFollowupTurnAsync(AgentExecuteRequest request, EntityHeader org, EntityHeader user, string correlationId, CancellationToken cancellationToken)
         {
-            _adminLogger.Trace("[AgentRequestHandler_HandleFollowupTurnAsync] Normalizing follow-up turn request. " + $"correlationId={correlationId}, org={org?.Id}, user={user?.Id}, sessionId={request.SessionId}");
+            _adminLogger.Trace("[AgentRequestHandler_HandleFollowupTurnAsync] Normalizing follow-up turn request. " + $"correlationId={correlationId}, org={org?.Id}, user={user?.Id}, conversationId={request.ConversationId}");
 
-            if (string.IsNullOrWhiteSpace(request.SessionId))
+            if (string.IsNullOrWhiteSpace(request.ConversationId))
             {
-                const string msg = "SessionId is required for a follow-up turn.";
+                const string msg = "ConversationId is required for a follow-up turn.";
                 _adminLogger.AddError("[AgentRequestHandler_HandleFollowupTurnAsync__ValidateRequest]", msg);
 
-                return InvokeResult<AgentExecutionResponse>.FromError(msg, "AGENT_REQ_MISSING_SESSION_ID");
+                return InvokeResult<AgentExecuteResponse>.FromError(msg, "AGENT_REQ_MISSING_SESSION_ID");
             }
 
-            var turnRequest = new AgentExecutionRequest
-            {
-                SessionId = request.SessionId,
-                PreviousTurnId = request.PreviousTurnId,
-                Instruction = request.Instruction,
-                ActiveFiles = request.ActiveFiles,
-                RagFilters = request.RagFilters
-            };
 
-            return await _orchestrator.ExecuteTurnAsync(turnRequest, org, user, cancellationToken);
+            return await _orchestrator.ExecuteTurnAsync(request, org, user, cancellationToken);
         }
     }
 }

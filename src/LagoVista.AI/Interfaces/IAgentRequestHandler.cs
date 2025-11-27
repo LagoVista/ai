@@ -1,6 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Models;
+using LagoVista.Core.AI.Models;
 using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
 
@@ -17,6 +18,6 @@ namespace LagoVista.AI.Interfaces
     /// </summary>
     public interface IAgentRequestHandler
     {
-        Task<InvokeResult<AgentExecutionResponse>> HandleAsync(AgentRequestEnvelope request, EntityHeader org, EntityHeader user, CancellationToken cancellationToken = default);
+        Task<InvokeResult<AgentExecuteResponse>> HandleAsync(AgentExecuteRequest request, EntityHeader org, EntityHeader user, CancellationToken cancellationToken = default);
     }
 }

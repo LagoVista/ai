@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
 using LagoVista.Core;
+using LagoVista.Core.AI.Models;
 using LagoVista.Core.Interfaces;
 using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
@@ -46,7 +47,7 @@ namespace LagoVista.AI.Services
             _contextManager = agentContextManager ?? throw new ArgumentNullException(nameof(agentContextManager));
         }
 
-        public async Task<InvokeResult<AgentExecutionResponse>> BeginNewSessionAsync(NewAgentExecutionSession request, EntityHeader org, EntityHeader user, CancellationToken cancellationToken = default)
+        public async Task<InvokeResult<AgentExecuteResponse>> BeginNewSessionAsync(AgentExecuteRequest request, EntityHeader org, EntityHeader user, CancellationToken cancellationToken = default)
         {
             var correlationId = Guid.NewGuid().ToId();
 
@@ -57,7 +58,7 @@ namespace LagoVista.AI.Services
                 const string msg = "NewAgentExecutionSession cannot be null.";
                 _adminLogger.AddError("[AgentOrchestrator_BeginNewSessionAsync__ValidateRequest]", msg);
 
-                return InvokeResult<AgentExecutionResponse>.FromError(msg, "AGENT_ORCH_NULL_REQUEST");
+                return InvokeResult<AgentExecuteResponse>.FromError(msg, "AGENT_ORCH_NULL_REQUEST");
             }
 
             if (request.AgentContext == null || EntityHeader.IsNullOrEmpty(request.AgentContext))
@@ -65,7 +66,7 @@ namespace LagoVista.AI.Services
                 const string msg = "AgentContext is required.";
                 _adminLogger.AddError("[AgentOrchestrator_BeginNewSessionAsync__ValidateRequest]", msg);
 
-                return InvokeResult<AgentExecutionResponse>.FromError(msg, "AGENT_ORCH_MISSING_AGENT_CONTEXT");
+                return InvokeResult<AgentExecuteResponse>.FromError(msg, "AGENT_ORCH_MISSING_AGENT_CONTEXT");
             }
 
             if (string.IsNullOrWhiteSpace(request.Instruction))
@@ -73,12 +74,12 @@ namespace LagoVista.AI.Services
                 const string msg = "Instruction is required.";
                 _adminLogger.AddError("[AgentOrchestrator_BeginNewSessionAsync__ValidateRequest]", msg);
 
-                return InvokeResult<AgentExecutionResponse>.FromError(msg, "AGENT_ORCH_MISSING_INSTRUCTION");
+                return InvokeResult<AgentExecuteResponse>.FromError(msg, "AGENT_ORCH_MISSING_INSTRUCTION");
             }
 
             var context = await _contextManager.GetAgentContextAsync(request.AgentContext.Id, org, user);
 
-            var session = await _sessionFactory.CreateSession(request, context, org, user);
+            var session = await _sessionFactory.CreateSession(request, context, OperationKinds.Code, org, user);
             var turn = _sessionFactory.CreateTurnForNewSession(session, request, org, user);
 
             await _sessionManager.AddAgentSessionAsync(session, org, user);
@@ -112,14 +113,14 @@ namespace LagoVista.AI.Services
 
             var response = execResult.Result;
 
-            await _sessionManager.CompleteAgentSessionTurnAsync(session.Id, turn.Id, response.AgentAnswer, response.OpenAIResponseBlobUrl, response.OpenAIResponseId, stopwatch.Elapsed.TotalMilliseconds, response.Warnings, org, user);
+            await _sessionManager.CompleteAgentSessionTurnAsync(session.Id, turn.Id, response.Text, response.FullResponseUrl, response.ResponseContinuationId, stopwatch.Elapsed.TotalMilliseconds, response.Warnings, org, user);
 
             await PublishTurnCompletedAsync(session, turn, stopwatch.ElapsedMilliseconds, org, user);
 
             return execResult;
         }
 
-        public async Task<InvokeResult<AgentExecutionResponse>> ExecuteTurnAsync(AgentExecutionRequest request, EntityHeader org, EntityHeader user, CancellationToken cancellationToken = default)
+        public async Task<InvokeResult<AgentExecuteResponse>> ExecuteTurnAsync(AgentExecuteRequest request, EntityHeader org, EntityHeader user, CancellationToken cancellationToken = default)
         {
             var correlationId = Guid.NewGuid().ToId();
 
@@ -130,15 +131,15 @@ namespace LagoVista.AI.Services
                 const string msg = "AgentExecutionRequest cannot be null.";
                 _adminLogger.AddError("[AgentOrchestrator_ExecuteTurnAsync__ValidateRequest]", msg);
 
-                return InvokeResult<AgentExecutionResponse>.FromError(msg, "AGENT_ORCH_NULL_REQUEST");
+                return InvokeResult<AgentExecuteResponse>.FromError(msg, "AGENT_ORCH_NULL_REQUEST");
             }
 
-            if (string.IsNullOrWhiteSpace(request.SessionId))
+            if (string.IsNullOrWhiteSpace(request.ConversationId))
             {
-                const string msg = "SessionId is required.";
+                const string msg = "ConversationId is required.";
                 _adminLogger.AddError("[AgentOrchestrator_ExecuteTurnAsync__ValidateRequest]", msg);
 
-                return InvokeResult<AgentExecutionResponse>.FromError(msg, "AGENT_ORCH_MISSING_SESSION_ID");
+                return InvokeResult<AgentExecuteResponse>.FromError(msg, "AGENT_ORCH_MISSING_SESSION_ID");
             }
 
             if (string.IsNullOrWhiteSpace(request.Instruction))
@@ -146,27 +147,27 @@ namespace LagoVista.AI.Services
                 const string msg = "Instruction is required.";
                 _adminLogger.AddError("[AgentOrchestrator_ExecuteTurnAsync__ValidateRequest]", msg);
 
-                return InvokeResult<AgentExecutionResponse>.FromError(msg, "AGENT_ORCH_MISSING_INSTRUCTION");
+                return InvokeResult<AgentExecuteResponse>.FromError(msg, "AGENT_ORCH_MISSING_INSTRUCTION");
             }
 
-            var session = await _sessionManager.GetAgentSessionAsync(request.SessionId, org, user);
+            var session = await _sessionManager.GetAgentSessionAsync(request.ConversationId, org, user);
 
             if (session == null)
             {
                 const string msg = "Session not found.";
                 _adminLogger.AddError("[AgentOrchestrator_ExecuteTurnAsync__LoadSession]", msg);
 
-                return InvokeResult<AgentExecutionResponse>.FromError(msg, "AGENT_ORCH_SESSION_NOT_FOUND");
+                return InvokeResult<AgentExecuteResponse>.FromError(msg, "AGENT_ORCH_SESSION_NOT_FOUND");
             }
 
             AgentSessionTurn previousTurn;
             if (!string.IsNullOrWhiteSpace(request.PreviousTurnId))
             {
-                previousTurn = await _sessionManager.GetAgentSessionTurnAsync(request.SessionId, request.PreviousTurnId, org, user);
+                previousTurn = await _sessionManager.GetAgentSessionTurnAsync(request.ConversationId, request.PreviousTurnId, org, user);
             }
             else
             {
-                previousTurn = await _sessionManager.GetLastAgentSessionTurnAsync(request.SessionId, org, user);
+                previousTurn = await _sessionManager.GetLastAgentSessionTurnAsync(request.ConversationId, org, user);
             }
 
             if (previousTurn == null)
@@ -174,7 +175,7 @@ namespace LagoVista.AI.Services
                 const string msg = "No previous turns found for this session.";
                 _adminLogger.AddError("[AgentOrchestrator_ExecuteTurnAsync__PreviousTurn]", msg);
 
-                return InvokeResult<AgentExecutionResponse>.FromError(msg, "AGENT_ORCH_NO_PREVIOUS_TURN");
+                return InvokeResult<AgentExecuteResponse>.FromError(msg, "AGENT_ORCH_NO_PREVIOUS_TURN");
             }
 
             var context = await _contextManager.GetAgentContextAsync(session.AgentContext.Id, org, user);
@@ -209,7 +210,7 @@ namespace LagoVista.AI.Services
 
             var response = execResult.Result;
 
-            await _sessionManager.CompleteAgentSessionTurnAsync(session.Id, turn.Id, response.AgentAnswer, response.OpenAIResponseBlobUrl, response.OpenAIResponseId, stopwatch.Elapsed.TotalMilliseconds, response.Warnings, org, user);
+            await _sessionManager.CompleteAgentSessionTurnAsync(session.Id, turn.Id, response.Text, response.FullResponseUrl, response.ResponseContinuationId, stopwatch.Elapsed.TotalMilliseconds, response.Warnings, org, user);
 
             await PublishTurnCompletedAsync(session, turn, stopwatch.ElapsedMilliseconds, org, user);
 
@@ -280,7 +281,7 @@ namespace LagoVista.AI.Services
             await _notificationPublisher.PublishAsync(Targets.WebSocket, Channels.Entity, session.Id, evt, NotificationVerbosity.Normal);
         }
 
-        private async Task PublishTurnFailedAsync(AgentSession session, AgentSessionTurn turn, InvokeResult<AgentExecutionResponse> execResult, long elapsedMilliseconds, EntityHeader org, EntityHeader user)
+        private async Task PublishTurnFailedAsync(AgentSession session, AgentSessionTurn turn, InvokeResult<AgentExecuteResponse> execResult, long elapsedMilliseconds, EntityHeader org, EntityHeader user)
         {
             var message = execResult.Errors != null && execResult.Errors.Count > 0 ? execResult.Errors[0].Message : "Turn failed.";
 

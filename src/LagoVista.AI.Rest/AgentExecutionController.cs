@@ -2,6 +2,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
+using LagoVista.Core.AI.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.IoT.Web.Common.Controllers;
@@ -30,7 +31,7 @@ namespace LagoVista.AI.Rest
         /// and dispatched to the orchestrator.
         /// </summary>
         [HttpPost("/api/ai/agent/execute")]
-        public Task<InvokeResult<AgentExecutionResponse>> ExecuteAsync([FromBody] AgentRequestEnvelope request)
+        public Task<InvokeResult<AgentExecuteResponse>> ExecuteAsync([FromBody] AgentRequestEnvelope request)
         {
             var cancellationToken = HttpContext?.RequestAborted ?? CancellationToken.None;
 
