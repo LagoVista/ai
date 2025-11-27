@@ -83,53 +83,107 @@ namespace LagoVista.AI.Helpers
                 switch (type)
                 {
                     case "output_text":
-                    {
-                        var txt = item.Value<string>("text");
-                        if (!string.IsNullOrWhiteSpace(txt))
                         {
-                            textSegments.Add(txt);
-                        }
-
-                        var fr = item.Value<string>("finish_reason");
-                        if (!string.IsNullOrWhiteSpace(fr))
-                        {
-                            finishReasons.Add(fr);
-                        }
-                        break;
-                    }
-
-                    case "tool_call":
-                    {
-                        var call = item["tool_call"];
-                        if (call != null)
-                        {
-                            var agentCall = new AgentToolCall
+                            // Legacy flat shape: output[] items are output_text
+                            var txt = item.Value<string>("text");
+                            if (!string.IsNullOrWhiteSpace(txt))
                             {
-                                CallId = call.Value<string>("id"),
-                                Name = call.Value<string>("name"),
-                                ArgumentsJson = call["arguments"]?.ToString(Formatting.None)
-                            };
+                                textSegments.Add(txt);
+                            }
 
-                            toolCalls.Add(agentCall);
-
-                            var fr = call.Value<string>("finish_reason");
+                            var fr = item.Value<string>("finish_reason");
                             if (!string.IsNullOrWhiteSpace(fr))
                             {
                                 finishReasons.Add(fr);
                             }
+                            break;
                         }
-                        break;
-                    }
+
+                    case "tool_call":
+                        {
+                            // Legacy flat tool_call shape
+                            var call = item["tool_call"];
+                            if (call != null)
+                            {
+                                var agentCall = new AgentToolCall
+                                {
+                                    CallId = call.Value<string>("id"),
+                                    Name = call.Value<string>("name"),
+                                    ArgumentsJson = call["arguments"]?.ToString(Formatting.None)
+                                };
+
+                                toolCalls.Add(agentCall);
+
+                                var fr = call.Value<string>("finish_reason");
+                                if (!string.IsNullOrWhiteSpace(fr))
+                                {
+                                    finishReasons.Add(fr);
+                                }
+                            }
+                            break;
+                        }
+
+                    case "message":
+                        {
+                            // New Responses shape: output[] contains message objects with content[]
+                            var contentArray = item["content"] as JArray;
+                            if (contentArray != null)
+                            {
+                                foreach (var content in contentArray)
+                                {
+                                    var contentType = content.Value<string>("type");
+
+                                    if (string.Equals(contentType, "output_text", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        var txt = content.Value<string>("text");
+                                        if (!string.IsNullOrWhiteSpace(txt))
+                                        {
+                                            textSegments.Add(txt);
+                                        }
+                                    }
+                                    else if (string.Equals(contentType, "tool_call", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        var call = content["tool_call"];
+                                        if (call != null)
+                                        {
+                                            var agentCall = new AgentToolCall
+                                            {
+                                                CallId = call.Value<string>("id"),
+                                                Name = call.Value<string>("name"),
+                                                ArgumentsJson = call["arguments"]?.ToString(Formatting.None)
+                                            };
+
+                                            toolCalls.Add(agentCall);
+
+                                            var fr = call.Value<string>("finish_reason");
+                                            if (!string.IsNullOrWhiteSpace(fr))
+                                            {
+                                                finishReasons.Add(fr);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            var frMsg = item.Value<string>("finish_reason");
+                            if (!string.IsNullOrWhiteSpace(frMsg))
+                            {
+                                finishReasons.Add(frMsg);
+                            }
+
+                            break;
+                        }
 
                     default:
-                    {
-                        var fr = item.Value<string>("finish_reason");
-                        if (!string.IsNullOrWhiteSpace(fr))
                         {
-                            finishReasons.Add(fr);
+                            // e.g. "reasoning" items or other types we don't currently surface
+                            var fr = item.Value<string>("finish_reason");
+                            if (!string.IsNullOrWhiteSpace(fr))
+                            {
+                                finishReasons.Add(fr);
+                            }
+                            break;
                         }
-                        break;
-                    }
                 }
             }
 
@@ -157,7 +211,7 @@ namespace LagoVista.AI.Helpers
             }
             else if (string.IsNullOrWhiteSpace(response.Text) && !response.ToolCalls.Any())
             {
-                return InvokeResult<AgentExecuteResponse>.FromError($"[AgentExecuteResponseParser__Parse] - No tool or text response.");
+                return InvokeResult<AgentExecuteResponse>.FromError("[AgentExecuteResponseParser__Parse] - No tool or text response.");
             }
             else
             {

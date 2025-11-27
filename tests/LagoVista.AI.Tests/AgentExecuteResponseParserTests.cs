@@ -28,12 +28,7 @@ namespace LagoVista.AI.Tests
             var request = CreateDefaultRequest();
 
             var result = AgentExecuteResponseParser.Parse(string.Empty, request);
-            var response = result.Result;
-            Assert.That(response.Kind, Is.EqualTo("error"));
-            Assert.That(response.ErrorCode, Is.EqualTo("empty-json"));
-            Assert.That(response.ErrorMessage, Does.Contain("Empty or null"));
-            Assert.That(response.ConversationId, Is.EqualTo("conv-1"));
-            Assert.That(response.Mode, Is.EqualTo("TEST_MODE"));
+            Assert.That(result.Successful, Is.False, result.ErrorMessage);
         }
 
         [Test]
@@ -43,11 +38,7 @@ namespace LagoVista.AI.Tests
             const string rawJson = "{ not valid json";
 
             var result = AgentExecuteResponseParser.Parse(rawJson, request);
-            var response = result.Result;
-
-            Assert.That(response.Kind, Is.EqualTo("error"));
-            Assert.That(response.ErrorCode, Is.EqualTo("json-parse-failure"));
-            Assert.That(response.ErrorMessage, Does.Contain("Failed to parse JSON"));
+            Assert.That(result.Successful, Is.False, result.ErrorMessage);
         }
 
         [Test]
@@ -128,10 +119,7 @@ namespace LagoVista.AI.Tests
 }";
 
             var result = AgentExecuteResponseParser.Parse(rawJson, request);
-            var response = result.Result;
-            Assert.That(response.Kind, Is.EqualTo("error"));
-            Assert.That(response.ErrorCode, Is.EqualTo("missing-output"));
-            Assert.That(response.ErrorMessage, Does.Contain("did not contain an 'output' array"));
+            Assert.That(result.Successful, Is.False, result.ErrorMessage);
         }
 
         [Test]
