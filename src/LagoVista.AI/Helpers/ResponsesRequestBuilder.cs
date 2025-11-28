@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using LagoVista.AI.Models;
@@ -43,7 +42,7 @@ namespace LagoVista.AI.Helpers
             {
                 Model = conversationContext.ModelName,
                 Temperature = conversationContext.Temperature,
-                Stream = stream
+                Stream = stream,
             };
 
             if (isContinuation)
@@ -52,8 +51,10 @@ namespace LagoVista.AI.Helpers
             }
 
             //
-            // 1) Initial turn: include system / boot prompt from ConversationContext
+            // INPUT MESSAGES
             //
+
+            // 1) Initial turn: include system / boot prompt from ConversationContext
             if (!isContinuation)
             {
                 var systemMessage = new ResponsesMessage
@@ -63,132 +64,57 @@ namespace LagoVista.AI.Helpers
                     {
                         new ResponsesMessageContent
                         {
-                            // Type defaults to "input_text"
+                            // Type defaults to "input_text" via DTO
                             Text = conversationContext.System ?? string.Empty
                         }
                     }
                 };
 
                 dto.Input.Add(systemMessage);
-                Console.WriteLine($"-----\r\n{systemMessage}\r\n---\r\n\r\n");
             }
 
-            
-
-
-            //
-            // 2) User message: [MODE] + [INSTRUCTION] (+ optional [CONTEXT])
-            //
+            // 2) User message: [MODE] + [INSTRUCTION] (+ optional [CONTEXT] and [TOOL_RESULTS])
             var userMessage = new ResponsesMessage
             {
                 Role = "user",
                 Content = new List<ResponsesMessageContent>()
             };
 
-            var instructionBlock = "[MODE: " + request.Mode + "]\n\n[INSTRUCTION]\n" + (request.Instruction ?? string.Empty);
+            var instructionBlock =
+                "[MODE: " + request.Mode + "]\n\n[INSTRUCTION]\n" + (request.Instruction ?? string.Empty);
 
+            // Primary instruction
             userMessage.Content.Add(new ResponsesMessageContent
             {
                 Text = instructionBlock
             });
 
-            Console.WriteLine($"-----\r\n{instructionBlock}\r\n---\r\n\r\n");
-
+            // Optional RAG context block
             if (!string.IsNullOrWhiteSpace(ragContextBlock))
             {
                 userMessage.Content.Add(new ResponsesMessageContent
                 {
                     Text = ragContextBlock
                 });
-
-                Console.WriteLine($"-----\r\n{ragContextBlock}\r\n---\r\n\r\n");
             }
 
-            //
-            // 3) Tool results (as plain text) if any were executed server-side.
-            //
-            // AgentReasoner populates request.ToolResultsJson with the serialized
-            // collection of AgentToolCall objects that actually ran on the server.
-            //
-            // Here we build a "[TOOL_RESULTS]" text block that describes:
-            // - which tools ran
-            // - their inputs
-            // - their outputs or error messages
-            //
+            // Optional TOOL_RESULTS block as additional input_text
             if (!string.IsNullOrWhiteSpace(request.ToolResultsJson))
             {
-                try
+                var toolResultsText = ToolResultsTextBuilder.BuildFromToolResultsJson(request.ToolResultsJson);
+                if (!string.IsNullOrWhiteSpace(toolResultsText))
                 {
-                    var resultsArray = JArray.Parse(request.ToolResultsJson);
-                    if (resultsArray.Count > 0)
+                    userMessage.Content.Add(new ResponsesMessageContent
                     {
-                        var sb = new StringBuilder();
-                        sb.AppendLine("[TOOL_RESULTS]");
-                        sb.AppendLine("The following server-side tools were executed for this turn:");
-                        sb.AppendLine();
-
-                        foreach (var token in resultsArray)
-                        {
-                            if (token is JObject obj)
-                            {
-                                var callId = obj.Value<string>("CallId") ?? obj.Value<string>("call_id");
-                                var name = obj.Value<string>("Name") ?? obj.Value<string>("name");
-                                var argumentsJson = obj.Value<string>("ArgumentsJson") ?? obj.Value<string>("arguments");
-                                var wasExecuted = obj.Value<bool?>("WasExecuted") ?? false;
-                                var isServerTool = obj.Value<bool?>("IsServerTool") ?? false;
-                                var resultJson = obj.Value<string>("ResultJson");
-                                var errorMessage = obj.Value<string>("ErrorMessage");
-
-                                sb.AppendLine($"- Tool: {name ?? "(unknown)"}");
-                                if (!string.IsNullOrWhiteSpace(callId))
-                                {
-                                    sb.AppendLine($"  CallId: {callId}");
-                                }
-
-                                sb.AppendLine($"  IsServerTool: {isServerTool}");
-                                sb.AppendLine($"  WasExecuted: {wasExecuted}");
-
-                                if (!string.IsNullOrWhiteSpace(argumentsJson))
-                                {
-                                    sb.AppendLine("  Arguments:");
-                                    sb.AppendLine($"    {argumentsJson}");
-                                }
-
-                                if (!string.IsNullOrWhiteSpace(resultJson))
-                                {
-                                    sb.AppendLine("  ResultJson:");
-                                    sb.AppendLine($"    {resultJson}");
-                                }
-
-                                if (!string.IsNullOrWhiteSpace(errorMessage))
-                                {
-                                    sb.AppendLine("  ErrorMessage:");
-                                    sb.AppendLine($"    {errorMessage}");
-                                }
-
-                                sb.AppendLine();
-                            }
-                        }
-
-                        userMessage.Content.Add(new ResponsesMessageContent
-                        {
-                            Text = sb.ToString()
-                        });
-
-                        Console.WriteLine($"-----\r\n{sb.ToString()}\r\n----\r\n");
-                    }
-                }
-                catch (JsonException)
-                {
-                    // If ToolResultsJson is malformed, we skip the TOOL_RESULTS block.
-                    // Upstream logging / diagnostics will still have the raw JSON.
+                        Text = toolResultsText
+                    });
                 }
             }
 
             dto.Input.Add(userMessage);
 
             //
-            // 4) Tools (only on initial turn)
+            // 3) Tools (only on initial turn)
             //
             if (!string.IsNullOrWhiteSpace(request.ToolsJson) && !isContinuation)
             {
@@ -200,7 +126,8 @@ namespace LagoVista.AI.Helpers
                         dto.Tools = new List<JObject>();
                         foreach (var tool in toolsArray)
                         {
-                            if (tool is JObject obj)
+                            var obj = tool as JObject;
+                            if (obj != null)
                             {
                                 dto.Tools.Add(obj);
                             }
@@ -215,7 +142,7 @@ namespace LagoVista.AI.Helpers
             }
 
             //
-            // 5) Tool choice (if specified)
+            // 4) Tool choice (if specified)
             //
             if (!string.IsNullOrWhiteSpace(request.ToolChoiceName))
             {

@@ -21,6 +21,9 @@ namespace LagoVista.AI
 
             /* define our agent tools here */
             toolRegistry.RegisterTool<PingPongTool>();
+            toolRegistry.RegisterTool<CalculatorTool>();
+            toolRegistry.RegisterTool<DelayTool>();
+            toolRegistry.RegisterTool<FailureInjectionTool>();
 
             /*--*/
 

@@ -86,7 +86,6 @@ namespace LagoVista.AI.Tests
 
             Assert.That(dto.PreviousResponseId, Is.EqualTo("resp_123"));
 
-            // Continuation: only the user message
             Assert.That(dto.Input.Count, Is.EqualTo(1));
             var onlyMessage = dto.Input[0];
             Assert.That(onlyMessage.Role, Is.EqualTo("user"));
@@ -182,8 +181,14 @@ namespace LagoVista.AI.Tests
         {
             var convCtx = CreateConversationContext();
 
+            // Simulate a continuation with tool results from the server-side tool executor.
+            var request = CreateRequest(
+                previousResponseId: "resp_123",
+                toolsJson: null
+            );
+
             // This matches the shape of AgentToolCall that AgentReasoner serializes.
-            var toolResultsJson = @"
+            request.ToolResultsJson = @"
 [
   {
     ""CallId"": ""call_123"",
@@ -191,23 +196,18 @@ namespace LagoVista.AI.Tests
     ""ArgumentsJson"": ""{\""message\"":\""hello\"",\""count\"":0}"",
     ""IsServerTool"": true,
     ""WasExecuted"": true,
-    ""ResultJson"": ""{\""Reply\"":\""pong: hello\"",\""Count\"":1,\""ConversationId\"":null,\""SessionId\"":\""session-1\""}"",
+    ""ResultJson"": ""{\""Reply\"":\""pong: hello\"",\""Count\"":1}"",
     ""ErrorMessage"": null
   }
 ]";
-
-            var request = CreateRequest(
-                previousResponseId: "resp_123",
-                toolResultsJson: toolResultsJson);
 
             var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty);
 
             // Still a continuation.
             Assert.That(dto.PreviousResponseId, Is.EqualTo("resp_123"));
 
-            // For continuation with tool results we expect:
-            //   - a single user message
-            //   - its content includes instruction + a [TOOL_RESULTS] block
+            // We expect a single user message whose content includes the instruction
+            // and a [TOOL_RESULTS] block.
             Assert.That(dto.Input.Count, Is.EqualTo(1));
 
             var userMessage = dto.Input[0];
@@ -221,11 +221,12 @@ namespace LagoVista.AI.Tests
             var toolResultsContent = userMessage.Content[1];
             Assert.That(toolResultsContent.Type, Is.EqualTo("input_text"));
             Assert.That(toolResultsContent.Text, Does.Contain("[TOOL_RESULTS]"));
-            Assert.That(toolResultsContent.Text, Does.Contain("testing_ping_pong"));
+            Assert.That(toolResultsContent.Text, Does.Contain("ToolCall:"));
             Assert.That(toolResultsContent.Text, Does.Contain("call_123"));
+            Assert.That(toolResultsContent.Text, Does.Contain("testing_ping_pong"));
             Assert.That(toolResultsContent.Text, Does.Contain("pong: hello"));
 
-            // Continuation: we still do NOT send tools again.
+            // On continuation we still do NOT send tools again.
             Assert.That(dto.Tools, Is.Null);
         }
     }
