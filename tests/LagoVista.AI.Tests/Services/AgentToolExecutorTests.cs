@@ -71,9 +71,14 @@ namespace LagoVista.AI.Tests.Services
 
             var result = await _sut.ExecuteServerToolAsync(call, context, CancellationToken.None);
 
-            Assert.That(result.IsServerTool, Is.False);
-            Assert.That(result.WasExecuted, Is.False);
-            Assert.That(result.ErrorMessage, Is.EqualTo("Tool call name is empty."));
+            // InvokeResult reflects error
+            Assert.That(result.Successful, Is.False);
+            Assert.That(result.ErrorMessage, Does.Contain("Tool call name is empty."));
+
+            // Call object was mutated
+            Assert.That(call.IsServerTool, Is.False);
+            Assert.That(call.WasExecuted, Is.False);
+            Assert.That(call.ErrorMessage, Is.EqualTo("Tool call name is empty."));
 
             _toolRegistry.Verify(r => r.HasTool(It.IsAny<string>()), Times.Never);
             _toolFactory.Verify(f => f.GetTool(It.IsAny<string>()), Times.Never);
@@ -84,23 +89,28 @@ namespace LagoVista.AI.Tests.Services
         }
 
         [Test]
-        public async Task ExecuteServerToolAsync_UnknownTool_LeavesForClient()
+        public async Task ExecuteServerToolAsync_UnknownTool_LeavesForClientAndReturnsErrorResult()
         {
             var call = new AgentToolCall
             {
                 CallId = "call-1",
-                Name = "testing.ping_pong"
+                Name = "testing_ping_pong"
             };
 
             var context = new AgentToolExecutionContext();
 
-            _toolRegistry.Setup(r => r.HasTool("testing.ping_pong")).Returns(false);
+            _toolRegistry.Setup(r => r.HasTool(call.Name)).Returns(false);
 
             var result = await _sut.ExecuteServerToolAsync(call, context, CancellationToken.None);
 
-            Assert.That(result.IsServerTool, Is.False);
-            Assert.That(result.WasExecuted, Is.False);
-            Assert.That(result.ErrorMessage, Is.Null);
+            // InvokeResult is an error (per current implementation)
+            Assert.That(result.Successful, Is.False);
+            Assert.That(result.ErrorMessage, Does.Contain("not registered as a server tool"));
+
+            // Call is still marked as client-only / not executed
+            Assert.That(call.IsServerTool, Is.False);
+            Assert.That(call.WasExecuted, Is.False);
+            Assert.That(call.ErrorMessage, Is.Null);
 
             _toolFactory.Verify(f => f.GetTool(It.IsAny<string>()), Times.Never);
         }
@@ -111,7 +121,7 @@ namespace LagoVista.AI.Tests.Services
             var call = new AgentToolCall
             {
                 CallId = "call-1",
-                Name = "testing.ping_pong",
+                Name = "testing_ping_pong",
                 ArgumentsJson = "{\"message\":\"hi\"}"
             };
 
@@ -125,20 +135,26 @@ namespace LagoVista.AI.Tests.Services
 
             var result = await _sut.ExecuteServerToolAsync(call, context, CancellationToken.None);
 
-            Assert.That(result.IsServerTool, Is.True);
-            Assert.That(result.WasExecuted, Is.False);
-            Assert.That(result.ErrorMessage, Is.EqualTo("Factory failed"));
+            // InvokeResult is error from factory
+            Assert.That(result.Successful, Is.False);
+            Assert.That(result.ErrorMessage, Does.Contain("Factory failed"));
+
+            // Call flags
+            Assert.That(call.IsServerTool, Is.True);
+            Assert.That(call.WasExecuted, Is.False);
+            Assert.That(call.ResultJson, Is.Null);
+            Assert.That(call.ErrorMessage, Is.EqualTo("Factory failed"));
 
             _toolFactory.Verify(f => f.GetTool(call.Name), Times.Once);
         }
 
         [Test]
-        public async Task ExecuteServerToolAsync_ToolExecutesSuccessfully_PopulatesResult()
+        public async Task ExecuteServerToolAsync_ToolExecutesSuccessfully_PopulatesResultAndReturnsSuccess()
         {
             var call = new AgentToolCall
             {
                 CallId = "call-1",
-                Name = "testing.ping_pong",
+                Name = "testing_ping_pong",
                 ArgumentsJson = "{\"message\":\"hi\"}"
             };
 
@@ -157,22 +173,29 @@ namespace LagoVista.AI.Tests.Services
 
             var result = await _sut.ExecuteServerToolAsync(call, context, CancellationToken.None);
 
-            Assert.That(result.IsServerTool, Is.True);
-            Assert.That(result.WasExecuted, Is.True);
-            Assert.That(result.ErrorMessage, Is.Null);
-            Assert.That(result.ResultJson, Is.EqualTo("{\"reply\":\"pong: hi\"}"));
+            // InvokeResult success
+            Assert.That(result.Successful, Is.True);
+            Assert.That(result.Result, Is.SameAs(call));
+
+            // Call mutated
+            Assert.That(call.IsServerTool, Is.True);
+            Assert.That(call.WasExecuted, Is.True);
+            Assert.That(call.ErrorMessage, Is.Null);
+            Assert.That(call.ResultJson, Is.EqualTo("{\"reply\":\"pong: hi\"}"));
 
             _toolFactory.Verify(f => f.GetTool(call.Name), Times.Once);
-            toolMock.Verify(t => t.ExecuteAsync(call.ArgumentsJson, context, It.IsAny<CancellationToken>()), Times.Once);
+            toolMock.Verify(
+                t => t.ExecuteAsync(call.ArgumentsJson, context, It.IsAny<CancellationToken>()),
+                Times.Once);
         }
 
         [Test]
-        public async Task ExecuteServerToolAsync_ToolExecutionFails_SetsErrorAndLogs()
+        public async Task ExecuteServerToolAsync_ToolExecutionFails_SetsErrorLogsAndReturnsError()
         {
             var call = new AgentToolCall
             {
                 CallId = "call-1",
-                Name = "testing.ping_pong",
+                Name = "testing_ping_pong",
                 ArgumentsJson = "{\"message\":\"hi\"}"
             };
 
@@ -191,15 +214,20 @@ namespace LagoVista.AI.Tests.Services
 
             var result = await _sut.ExecuteServerToolAsync(call, context, CancellationToken.None);
 
-            Assert.That(result.IsServerTool, Is.True);
-            Assert.That(result.WasExecuted, Is.False);
-            Assert.That(result.ErrorMessage, Is.EqualTo("Tool failed"));
-            Assert.That(result.ResultJson, Is.Null);
+            // InvokeResult is error from tool execution
+            Assert.That(result.Successful, Is.False);
+            Assert.That(result.ErrorMessage, Does.Contain("Tool failed"));
+
+            // Call mutated
+            Assert.That(call.IsServerTool, Is.True);
+            Assert.That(call.WasExecuted, Is.False);
+            Assert.That(call.ErrorMessage, Is.EqualTo("Tool failed"));
+            Assert.That(call.ResultJson, Is.Null);
 
             _logger.Verify(
                 l => l.AddError(
                     "[AgentToolExecutor_ExecuteServerToolAsync__ToolFailed]",
-                    It.Is<string>(msg => msg.Contains("Tool 'testing.ping_pong' execution failed: Tool failed"))),
+                    It.Is<string>(msg => msg.Contains("Tool 'testing_ping_pong' execution failed: Tool failed"))),
                 Times.Once);
         }
     }

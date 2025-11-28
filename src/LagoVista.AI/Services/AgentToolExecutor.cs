@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
 using LagoVista.Core.AI.Models;
+using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 
 namespace LagoVista.AI.Services
@@ -27,7 +28,7 @@ namespace LagoVista.AI.Services
             _toolRegistry = agentToolRegistry ?? throw new ArgumentNullException(nameof(agentToolRegistry));
         }
 
-        public async Task<AgentToolCall> ExecuteServerToolAsync(
+        public async Task<InvokeResult<AgentToolCall>> ExecuteServerToolAsync(
             AgentToolCall call,
             AgentToolExecutionContext context,
             CancellationToken cancellationToken = default)
@@ -46,7 +47,7 @@ namespace LagoVista.AI.Services
                 call.ErrorMessage = "Tool call name is empty.";
                 _logger.AddError("[AgentToolExecutor_ExecuteServerToolAsync__EmptyName]", call.ErrorMessage);
 
-                return call;
+                return InvokeResult<AgentToolCall>.FromError($"[AgentToolExecutor_ExecuteServerToolAsync__EmptyName] {call.ErrorMessage}");
             }
 
             // If the registry does not know this tool, it's a client-only tool.
@@ -55,7 +56,9 @@ namespace LagoVista.AI.Services
                 _logger.Trace(
                     $"[AgentToolExecutor_ExecuteServerToolAsync] Tool '{call.Name}' not registered as a server tool. " +
                     "Leaving for client execution.");
-                return call;
+
+                return InvokeResult<AgentToolCall>.FromError($"[AgentToolExecutor_ExecuteServerToolAsync] Tool '{call.Name}' not registered as a server tool. " +
+                    "Leaving for client execution.");
             }
 
             call.IsServerTool = true;
@@ -68,7 +71,7 @@ namespace LagoVista.AI.Services
                     "[AgentToolExecutor_ExecuteServerToolAsync__ResolveFailed]",
                     $"Tool '{call.Name}' resolve failed: {call.ErrorMessage}");
 
-                return call;
+                return InvokeResult<AgentToolCall>.FromInvokeResult(toolResult.ToInvokeResult());
             }
 
             var tool = toolResult.Result;
@@ -77,7 +80,7 @@ namespace LagoVista.AI.Services
                 call.ErrorMessage = $"Tool '{call.Name}' resolved to null instance.";
                 _logger.AddError("[AgentToolExecutor_ExecuteServerToolAsync__NullInstance]", call.ErrorMessage);
 
-                return call;
+                return InvokeResult<AgentToolCall>.FromError($"[AgentToolExecutor_ExecuteServerToolAsync__NullInstance] {call.ErrorMessage}");
             }
 
             try
@@ -93,6 +96,8 @@ namespace LagoVista.AI.Services
                     _logger.AddError(
                         "[AgentToolExecutor_ExecuteServerToolAsync__ToolFailed]",
                         $"Tool '{call.Name}' execution failed: {call.ErrorMessage}");
+
+                    return InvokeResult<AgentToolCall>.FromInvokeResult(execResult.ToInvokeResult());
                 }
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -112,7 +117,7 @@ namespace LagoVista.AI.Services
                 _logger.AddException("[AgentToolExecutor_ExecuteServerToolAsync__Exception]", ex);
             }
 
-            return call;
+            return InvokeResult<AgentToolCall>.Create(call);
         }
     }
 }

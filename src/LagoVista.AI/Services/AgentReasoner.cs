@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
@@ -115,10 +116,15 @@ namespace LagoVista.AI.Services
                 foreach (var toolCall in lastResponse.ToolCalls)
                 {
                     // Let the executor decide if this is a server tool or not.
-                    var updatedCall = await _toolExecutor.ExecuteServerToolAsync(
+                    var updatedCallResponse = await _toolExecutor.ExecuteServerToolAsync(
                         toolCall,
                         toolContext,
                         cancellationToken);
+
+                    if(!updatedCallResponse.Successful) 
+                        return InvokeResult < AgentExecuteResponse >.FromInvokeResult(updatedCallResponse.ToInvokeResult());
+
+                    var updatedCall = updatedCallResponse.Result;
 
                     if (updatedCall.IsServerTool && updatedCall.WasExecuted)
                     {
@@ -138,6 +144,17 @@ namespace LagoVista.AI.Services
                         executedServerCalls.Add(updatedCall);
                     }
                 }
+
+                var toolOutputs = executedServerCalls
+                    .Where(c => c.IsServerTool && c.WasExecuted && !string.IsNullOrWhiteSpace(c.CallId))
+                    .Select(c => new ResponsesToolOutput
+                    {
+                        ToolCallId = c.CallId,
+                        Output = string.IsNullOrWhiteSpace(c.ResultJson) ? "{}" : c.ResultJson
+                    })
+                    .ToList();
+
+                                request.ToolResultsJson = JsonConvert.SerializeObject(toolOutputs);
 
                 // If there are any client tools, we stop here.
                 if (pendingClientCalls.Count > 0)
@@ -190,12 +207,18 @@ namespace LagoVista.AI.Services
                     return InvokeResult<AgentExecuteResponse>.FromError(msg);
                 }
 
-                // Carry forward the response continuation id if present so the
-                // LLM can "continue" the prior response.
-                if (!string.IsNullOrWhiteSpace(lastResponse.ResponseContinuationId))
-                {
-                    request.ResponseContinuationId = lastResponse.ResponseContinuationId;
-                }
+                //// Carry forward the response continuation id if present so the
+                //// LLM can "continue" the prior response.
+                //if (!string.IsNullOrWhiteSpace(lastResponse.ResponseContinuationId))
+                //{
+                //    request.ResponseContinuationId = lastResponse.ResponseContinuationId;
+                //}
+
+                // IMPORTANT CHANGE:
+                // We do NOT propagate the previous response id when feeding back tool results
+                // as plain text. Doing so would cause the Responses API to expect structured
+                // tool outputs for the earlier function_call ids.
+                request.ResponseContinuationId = null;
 
                 // Loop back to call the LLM again, now with tool results.
             }
@@ -221,5 +244,16 @@ namespace LagoVista.AI.Services
 
             return InvokeResult<AgentExecuteResponse>.FromError(noResponseMsg);
         }
+
+        private sealed class ResponsesToolOutput
+        {
+            [JsonProperty("tool_call_id")]
+            public string ToolCallId { get; set; }
+
+            [JsonProperty("output")]
+            public string Output { get; set; }
+        }
     }
+
+    
 }

@@ -121,12 +121,14 @@ namespace LagoVista.AI.Tests.Services
                     It.Is<AgentToolCall>(c => c.Name == "server-tool"),
                     It.IsAny<AgentToolExecutionContext>(),
                     It.IsAny<CancellationToken>()))
-                .ReturnsAsync((AgentToolCall call, AgentToolExecutionContext ctx, CancellationToken ct) =>
+                .ReturnsAsync((AgentToolCall call, 
+                               AgentToolExecutionContext ctx, 
+                               CancellationToken ct) =>
                 {
                     call.IsServerTool = true;
                     call.WasExecuted = true;
                     call.ResultJson = "{\"handledBy\":\"server\"}";
-                    return call;
+                    return InvokeResult<AgentToolCall>.Create(call);
                 });
 
             var result = await _reasoner.ExecuteAsync(
@@ -191,19 +193,23 @@ namespace LagoVista.AI.Tests.Services
                     It.IsAny<AgentToolExecutionContext>(),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync((AgentToolCall call, AgentToolExecutionContext ctx, CancellationToken ct) =>
-                {
+                 {
                     call.IsServerTool = true;
                     call.WasExecuted = true;
                     call.ResultJson = "{\"handledBy\":\"server\"}";
-                    return call;
-                });
+                     return InvokeResult<AgentToolCall>.Create(call);
+                 });
 
             _toolExecutorMock
                 .Setup(e => e.ExecuteServerToolAsync(
                     It.Is<AgentToolCall>(c => c.Name == "client-tool"),
                     It.IsAny<AgentToolExecutionContext>(),
                     It.IsAny<CancellationToken>()))
-                .ReturnsAsync((AgentToolCall call, AgentToolExecutionContext ctx, CancellationToken ct) => call);
+                .ReturnsAsync((AgentToolCall call, AgentToolExecutionContext ctx, CancellationToken ct) =>
+                {
+                    return InvokeResult<AgentToolCall>.Create(call);
+                });
+                
 
             var result = await _reasoner.ExecuteAsync(
                 _agentContext,

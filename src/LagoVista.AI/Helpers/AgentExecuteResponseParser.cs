@@ -56,17 +56,39 @@ namespace LagoVista.AI.Helpers
             // Model
             response.ModelId = root.Value<string>("model");
 
-            // Usage block
+            // Usage block – support both old (prompt/completion) and new (input/output) fields
             var usage = root["usage"];
             if (usage != null)
             {
-                response.Usage.PromptTokens = usage.Value<int?>("prompt_tokens") ?? 0;
-                response.Usage.CompletionTokens = usage.Value<int?>("completion_tokens") ?? 0;
-                response.Usage.TotalTokens = usage.Value<int?>("total_tokens") ?? 0;
+                var promptTokens =
+                    usage.Value<int?>("prompt_tokens") ??
+                    usage.Value<int?>("input_tokens");
+
+                var completionTokens =
+                    usage.Value<int?>("completion_tokens") ??
+                    usage.Value<int?>("output_tokens");
+
+                var totalTokens =
+                    usage.Value<int?>("total_tokens");
+
+                response.Usage.PromptTokens = promptTokens ?? 0;
+                response.Usage.CompletionTokens = completionTokens ?? 0;
+                response.Usage.TotalTokens = totalTokens ?? (response.Usage.PromptTokens + response.Usage.CompletionTokens);
             }
 
-            // Extract output array
-            var outputArray = root["output"] as JArray;
+            // Extract output – allow both array and single-object shapes
+            var outputToken = root["output"];
+            JArray outputArray = null;
+
+            if (outputToken is JArray arr)
+            {
+                outputArray = arr;
+            }
+            else if (outputToken is JObject singleObj)
+            {
+                outputArray = new JArray(singleObj);
+            }
+
             if (outputArray == null)
             {
                 return InvokeResult<AgentExecuteResponse>.FromError("[AgentExecuteResponseParser__Parse] Missing [output] Node.");
@@ -120,6 +142,62 @@ namespace LagoVista.AI.Helpers
                                     finishReasons.Add(fr);
                                 }
                             }
+                            break;
+                        }
+
+                    case "function_call":
+                        {
+                            // New Responses shape for tool calls in output[]
+                            // Example:
+                            // {
+                            //   "type": "function_call",
+                            //   "status": "completed",
+                            //   "arguments": "{\"message\":\"hello\",\"count\":0}",
+                            //   "call_id": "call_...",
+                            //   "name": "testing_ping_pong"
+                            // }
+
+                            string argsJson = null;
+                            var argsToken = item["arguments"];
+                            if (argsToken != null)
+                            {
+                                if (argsToken.Type == JTokenType.String)
+                                {
+                                    var rawArgs = argsToken.Value<string>();
+                                    if (!string.IsNullOrWhiteSpace(rawArgs))
+                                    {
+                                        try
+                                        {
+                                            argsJson = JToken.Parse(rawArgs).ToString(Formatting.None);
+                                        }
+                                        catch
+                                        {
+                                            // If it's not valid JSON, just keep the raw string.
+                                            argsJson = rawArgs;
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    argsJson = argsToken.ToString(Formatting.None);
+                                }
+                            }
+
+                            var agentCall = new AgentToolCall
+                            {
+                                CallId = item.Value<string>("call_id"),
+                                Name = item.Value<string>("name"),
+                                ArgumentsJson = argsJson
+                            };
+
+                            toolCalls.Add(agentCall);
+
+                            var fr = item.Value<string>("finish_reason");
+                            if (!string.IsNullOrWhiteSpace(fr))
+                            {
+                                finishReasons.Add(fr);
+                            }
+
                             break;
                         }
 

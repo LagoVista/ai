@@ -41,7 +41,13 @@ namespace LagoVista.AI.Services
 
             try
             {
-                var instance = _serviceProvider.GetService(toolType) as IAgentTool;
+
+
+//                var instance = _serviceProvider.GetService(toolType) as IAgentTool;
+
+                var instance = ActivatorUtilities.CreateInstance(_serviceProvider, toolType) as IAgentTool;
+
+
 
                 if (instance == null)
                 {

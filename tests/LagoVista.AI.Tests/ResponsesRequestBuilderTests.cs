@@ -28,7 +28,8 @@ namespace LagoVista.AI.Tests
             string instruction = "Do something useful.",
             string previousResponseId = null,
             string toolsJson = null,
-            string toolChoiceName = null)
+            string toolChoiceName = null,
+            string toolResultsJson = null)
         {
             return new AgentExecuteRequest
             {
@@ -40,6 +41,7 @@ namespace LagoVista.AI.Tests
                 ConversationContext = new EntityHeader { Id = "conv-ctx-1", Text = "Conv Ctx" },
                 ToolsJson = toolsJson,
                 ToolChoiceName = toolChoiceName,
+                ToolResultsJson = toolResultsJson,
                 ActiveFiles = new List<ActiveFile>()
             };
         }
@@ -84,6 +86,7 @@ namespace LagoVista.AI.Tests
 
             Assert.That(dto.PreviousResponseId, Is.EqualTo("resp_123"));
 
+            // Continuation: only the user message
             Assert.That(dto.Input.Count, Is.EqualTo(1));
             var onlyMessage = dto.Input[0];
             Assert.That(onlyMessage.Role, Is.EqualTo("user"));
@@ -172,6 +175,58 @@ namespace LagoVista.AI.Tests
             Assert.That(dto.ToolChoice, Is.Not.Null);
             Assert.That(dto.ToolChoice.Type, Is.EqualTo("tool"));
             Assert.That(dto.ToolChoice.Name, Is.EqualTo("ddr_document"));
+        }
+
+        [Test]
+        public void Build_ContinuationRequest_WithToolResults_AppendsToolResultsBlock()
+        {
+            var convCtx = CreateConversationContext();
+
+            // This matches the shape of AgentToolCall that AgentReasoner serializes.
+            var toolResultsJson = @"
+[
+  {
+    ""CallId"": ""call_123"",
+    ""Name"": ""testing_ping_pong"",
+    ""ArgumentsJson"": ""{\""message\"":\""hello\"",\""count\"":0}"",
+    ""IsServerTool"": true,
+    ""WasExecuted"": true,
+    ""ResultJson"": ""{\""Reply\"":\""pong: hello\"",\""Count\"":1,\""ConversationId\"":null,\""SessionId\"":\""session-1\""}"",
+    ""ErrorMessage"": null
+  }
+]";
+
+            var request = CreateRequest(
+                previousResponseId: "resp_123",
+                toolResultsJson: toolResultsJson);
+
+            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty);
+
+            // Still a continuation.
+            Assert.That(dto.PreviousResponseId, Is.EqualTo("resp_123"));
+
+            // For continuation with tool results we expect:
+            //   - a single user message
+            //   - its content includes instruction + a [TOOL_RESULTS] block
+            Assert.That(dto.Input.Count, Is.EqualTo(1));
+
+            var userMessage = dto.Input[0];
+            Assert.That(userMessage.Role, Is.EqualTo("user"));
+            Assert.That(userMessage.Content.Count, Is.EqualTo(2));
+
+            var instructionContent = userMessage.Content[0];
+            Assert.That(instructionContent.Type, Is.EqualTo("input_text"));
+            Assert.That(instructionContent.Text, Does.Contain("[INSTRUCTION]"));
+
+            var toolResultsContent = userMessage.Content[1];
+            Assert.That(toolResultsContent.Type, Is.EqualTo("input_text"));
+            Assert.That(toolResultsContent.Text, Does.Contain("[TOOL_RESULTS]"));
+            Assert.That(toolResultsContent.Text, Does.Contain("testing_ping_pong"));
+            Assert.That(toolResultsContent.Text, Does.Contain("call_123"));
+            Assert.That(toolResultsContent.Text, Does.Contain("pong: hello"));
+
+            // Continuation: we still do NOT send tools again.
+            Assert.That(dto.Tools, Is.Null);
         }
     }
 }

@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using LagoVista.AI.Interfaces;
+using LagoVista.Core.Interfaces;
 using LagoVista.IoT.Logging.Loggers;
 
 namespace LagoVista.AI.Services

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
 using LagoVista.AI.Services;
+using LagoVista.Core.Interfaces;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,7 +17,7 @@ namespace LagoVista.AI.Tests.Services
     public class AgentToolFactoryTests
     {
         private Mock<IAdminLogger> _logger;
-
+      
         [SetUp]
         public void SetUp()
         {
@@ -101,30 +102,7 @@ namespace LagoVista.AI.Tests.Services
                 Times.Once);
         }
 
-        [Test]
-        public void GetTool_RegisteredButNotInDI_ReturnsCreateFailedError()
-        {
-            var services = new ServiceCollection();
-            var sp = services.BuildServiceProvider();
 
-            var registry = new AgentToolRegistry(_logger.Object);
-
-            // Registered in registry, but NOT added to DI.
-            registry.RegisterTool<FakeTool>();
-
-            var factory = new AgentToolFactory(sp, registry, _logger.Object);
-
-            var result = factory.GetTool(FakeTool.ToolName);
-
-            Assert.That(result.Successful, Is.False);
-            Assert.That(result.ErrorMessage, Does.Contain("Failed to create instance of tool"));
-
-            _logger.Verify(
-                l => l.AddError(
-                    "[AgentToolRegistry_GetTool__NullInstance]",
-                    It.Is<string>(msg => msg.Contains("Failed to create instance of tool"))),
-                Times.Once);
-        }
 
         [Test]
         public void GetTool_RegisteredInDI_ResolvesAndReturnsInstance()
@@ -173,11 +151,14 @@ namespace LagoVista.AI.Tests.Services
 
         #region Helper Tool Types
 
+        /// <summary>
+        /// Simple fake tool type used only for DI/factory tests.
+        /// </summary>
         private sealed class FakeTool : IAgentTool
         {
-            public const string ToolName = "tests_fake_tool";
+            public string Name => FakeTool.ToolName;
 
-            public string Name => ToolName;
+            public const string ToolName = "tests_fake_tool";
 
             public static object GetSchema()
             {
@@ -194,7 +175,7 @@ namespace LagoVista.AI.Tests.Services
                 AgentToolExecutionContext context,
                 CancellationToken cancellationToken = default)
             {
-                return Task.FromResult(InvokeResult<string>.Create("{\"ok\":true}"));
+                return Task.FromResult(InvokeResult<string>.Create("ok"));
             }
         }
 

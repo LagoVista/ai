@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using LagoVista.AI.Models;
 using LagoVista.Core.AI.Models;
+using LagoVista.Core.Validation;
 
 namespace LagoVista.AI.Interfaces
 {
@@ -23,7 +24,7 @@ namespace LagoVista.AI.Interfaces
         /// - If the tool fails to execute:
         ///     IsServerTool = true, WasExecuted = false, ErrorMessage set.
         /// </summary>
-        Task<AgentToolCall> ExecuteServerToolAsync(
+        Task<InvokeResult<AgentToolCall>> ExecuteServerToolAsync(
             AgentToolCall call,
             AgentToolExecutionContext context,
             CancellationToken cancellationToken = default);

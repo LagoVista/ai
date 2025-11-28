@@ -56,18 +56,30 @@ namespace LagoVista.AI.Models
 
     public class ResponsesMessageContent
     {
+        /// <summary>
+        /// Content type; for our usage we keep this as "input_text".
+        /// </summary>
         [JsonProperty("type")]
         public string Type { get; set; } = "input_text";
 
-        [JsonProperty("text")]
+        /// <summary>
+        /// Plain text content (system prompt, instruction, RAG context, tool summaries, etc.).
+        /// </summary>
+        [JsonProperty("text", NullValueHandling = NullValueHandling.Ignore)]
         public string Text { get; set; }
     }
 
     public class ResponsesToolChoice
     {
+        /// <summary>
+        /// For function selection, OpenAI expects "tool" here.
+        /// </summary>
         [JsonProperty("type")]
         public string Type { get; set; } = "tool";
 
+        /// <summary>
+        /// Name of the tool that must be used.
+        /// </summary>
         [JsonProperty("name")]
         public string Name { get; set; }
     }

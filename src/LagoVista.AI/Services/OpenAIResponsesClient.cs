@@ -69,7 +69,7 @@ namespace LagoVista.AI.Services
             var requestObject = ResponsesRequestBuilder.Build(conversationContext, executeRequest, ragContextBlock, true);
 
             var requestJson = JsonConvert.SerializeObject(requestObject);
-
+            Console.WriteLine($"OpenAI Responses Request JSON:\r\n=====\r\n{requestJson}====\r\n");
             try
             {
                 await PublishLlmEventAsync(sessionId, "LLMStarted", "in-progress", "Calling OpenAI model...", null, cancellationToken);
@@ -121,17 +121,7 @@ namespace LagoVista.AI.Services
                     if (!agentResponse.Successful)
                         return agentResponse;
 
-                    if (agentResponse == null || string.IsNullOrWhiteSpace(agentResponse.Result.Text))
-                    {
-                        const string msg = "LLM response did not contain any text output in the expected streaming format.";
-
-                        _adminLogger.AddError("[OpenAIResponsesClient_GetAnswerAsync__ParseStreaming]", msg);
-
-                        await PublishLlmEventAsync(sessionId, "LLMFailed", "failed", msg, null, cancellationToken);
-
-                        return InvokeResult<AgentExecuteResponse>.FromError(msg);
-                    }
-
+  
                     await PublishLlmEventAsync(sessionId, "LLMCompleted", "completed", "Model response received.", null, cancellationToken);
 
                     return agentResponse;
@@ -175,8 +165,6 @@ namespace LagoVista.AI.Services
 
                 // This will hold the *final* response.completed payload
                 string completedEventJson = null;
-
-                var idx = 1;
 
                 while (!reader.EndOfStream)
                 {
@@ -237,8 +225,7 @@ namespace LagoVista.AI.Services
                     }
                 }
 
-                
-                Console.WriteLine(completedEventJson);
+                Console.WriteLine($"Commpleted JSON\r\n===={completedEventJson}\r\n====");
 
                 // If we never got any text or a completed event, treat as null/empty
                 if (string.IsNullOrWhiteSpace(completedEventJson))

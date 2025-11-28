@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using LagoVista.AI.Models;
@@ -13,7 +14,7 @@ namespace LagoVista.AI.Helpers
     ///
     /// Combines:
     /// - ConversationContext (model, system/boot prompt, temperature)
-    /// - AgentExecuteRequest (mode, instruction, continuation id, tools)
+    /// - AgentExecuteRequest (mode, instruction, continuation id, tools, tool results)
     /// - ragContextBlock (pre-formatted [CONTEXT] block per AGN-002)
     /// </summary>
     public static class ResponsesRequestBuilder
@@ -25,8 +26,13 @@ namespace LagoVista.AI.Helpers
         /// <param name="conversationContext">The reasoning profile / boot prompt for this conversation.</param>
         /// <param name="request">The agent execute request from the client.</param>
         /// <param name="ragContextBlock">The pre-formatted RAG context block (may be null or empty).</param>
+        /// <param name="stream">Whether to stream the response via SSE.</param>
         /// <returns>ResponsesApiRequest representing the body for the /responses call.</returns>
-        public static ResponsesApiRequest Build(ConversationContext conversationContext, AgentExecuteRequest request, string ragContextBlock, bool? stream = null)
+        public static ResponsesApiRequest Build(
+            ConversationContext conversationContext,
+            AgentExecuteRequest request,
+            string ragContextBlock,
+            bool? stream = null)
         {
             if (conversationContext == null) throw new ArgumentNullException(nameof(conversationContext));
             if (request == null) throw new ArgumentNullException(nameof(request));
@@ -37,7 +43,7 @@ namespace LagoVista.AI.Helpers
             {
                 Model = conversationContext.ModelName,
                 Temperature = conversationContext.Temperature,
-                Stream = stream,
+                Stream = stream
             };
 
             if (isContinuation)
@@ -45,11 +51,11 @@ namespace LagoVista.AI.Helpers
                 dto.PreviousResponseId = request.ResponseContinuationId;
             }
 
-            // input array (system + user on first turn, only user on continuation)
-
+            //
+            // 1) Initial turn: include system / boot prompt from ConversationContext
+            //
             if (!isContinuation)
             {
-                // Initial turn: include system / boot prompt from ConversationContext
                 var systemMessage = new ResponsesMessage
                 {
                     Role = "system",
@@ -57,15 +63,22 @@ namespace LagoVista.AI.Helpers
                     {
                         new ResponsesMessageContent
                         {
+                            // Type defaults to "input_text"
                             Text = conversationContext.System ?? string.Empty
                         }
                     }
                 };
 
                 dto.Input.Add(systemMessage);
+                Console.WriteLine($"-----\r\n{systemMessage}\r\n---\r\n\r\n");
             }
 
-            // User message: [MODE] + [INSTRUCTION] (+ optional [CONTEXT])
+            
+
+
+            //
+            // 2) User message: [MODE] + [INSTRUCTION] (+ optional [CONTEXT])
+            //
             var userMessage = new ResponsesMessage
             {
                 Role = "user",
@@ -79,17 +92,104 @@ namespace LagoVista.AI.Helpers
                 Text = instructionBlock
             });
 
+            Console.WriteLine($"-----\r\n{instructionBlock}\r\n---\r\n\r\n");
+
             if (!string.IsNullOrWhiteSpace(ragContextBlock))
             {
                 userMessage.Content.Add(new ResponsesMessageContent
                 {
                     Text = ragContextBlock
                 });
+
+                Console.WriteLine($"-----\r\n{ragContextBlock}\r\n---\r\n\r\n");
+            }
+
+            //
+            // 3) Tool results (as plain text) if any were executed server-side.
+            //
+            // AgentReasoner populates request.ToolResultsJson with the serialized
+            // collection of AgentToolCall objects that actually ran on the server.
+            //
+            // Here we build a "[TOOL_RESULTS]" text block that describes:
+            // - which tools ran
+            // - their inputs
+            // - their outputs or error messages
+            //
+            if (!string.IsNullOrWhiteSpace(request.ToolResultsJson))
+            {
+                try
+                {
+                    var resultsArray = JArray.Parse(request.ToolResultsJson);
+                    if (resultsArray.Count > 0)
+                    {
+                        var sb = new StringBuilder();
+                        sb.AppendLine("[TOOL_RESULTS]");
+                        sb.AppendLine("The following server-side tools were executed for this turn:");
+                        sb.AppendLine();
+
+                        foreach (var token in resultsArray)
+                        {
+                            if (token is JObject obj)
+                            {
+                                var callId = obj.Value<string>("CallId") ?? obj.Value<string>("call_id");
+                                var name = obj.Value<string>("Name") ?? obj.Value<string>("name");
+                                var argumentsJson = obj.Value<string>("ArgumentsJson") ?? obj.Value<string>("arguments");
+                                var wasExecuted = obj.Value<bool?>("WasExecuted") ?? false;
+                                var isServerTool = obj.Value<bool?>("IsServerTool") ?? false;
+                                var resultJson = obj.Value<string>("ResultJson");
+                                var errorMessage = obj.Value<string>("ErrorMessage");
+
+                                sb.AppendLine($"- Tool: {name ?? "(unknown)"}");
+                                if (!string.IsNullOrWhiteSpace(callId))
+                                {
+                                    sb.AppendLine($"  CallId: {callId}");
+                                }
+
+                                sb.AppendLine($"  IsServerTool: {isServerTool}");
+                                sb.AppendLine($"  WasExecuted: {wasExecuted}");
+
+                                if (!string.IsNullOrWhiteSpace(argumentsJson))
+                                {
+                                    sb.AppendLine("  Arguments:");
+                                    sb.AppendLine($"    {argumentsJson}");
+                                }
+
+                                if (!string.IsNullOrWhiteSpace(resultJson))
+                                {
+                                    sb.AppendLine("  ResultJson:");
+                                    sb.AppendLine($"    {resultJson}");
+                                }
+
+                                if (!string.IsNullOrWhiteSpace(errorMessage))
+                                {
+                                    sb.AppendLine("  ErrorMessage:");
+                                    sb.AppendLine($"    {errorMessage}");
+                                }
+
+                                sb.AppendLine();
+                            }
+                        }
+
+                        userMessage.Content.Add(new ResponsesMessageContent
+                        {
+                            Text = sb.ToString()
+                        });
+
+                        Console.WriteLine($"-----\r\n{sb.ToString()}\r\n----\r\n");
+                    }
+                }
+                catch (JsonException)
+                {
+                    // If ToolResultsJson is malformed, we skip the TOOL_RESULTS block.
+                    // Upstream logging / diagnostics will still have the raw JSON.
+                }
             }
 
             dto.Input.Add(userMessage);
 
-            // Tools (only need to be sent on initial turn unless tool set changes)
+            //
+            // 4) Tools (only on initial turn)
+            //
             if (!string.IsNullOrWhiteSpace(request.ToolsJson) && !isContinuation)
             {
                 try
@@ -109,12 +209,14 @@ namespace LagoVista.AI.Helpers
                 }
                 catch (JsonException)
                 {
-                    // If ToolsJson is malformed, we silently ignore it here.
+                    // If ToolsJson is malformed, silently ignore here.
                     // Higher-level code can log this if desired.
                 }
             }
 
-            // Tool choice (if specified)
+            //
+            // 5) Tool choice (if specified)
+            //
             if (!string.IsNullOrWhiteSpace(request.ToolChoiceName))
             {
                 dto.ToolChoice = new ResponsesToolChoice
