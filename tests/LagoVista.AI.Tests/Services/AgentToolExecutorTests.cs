@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
 using LagoVista.AI.Services;
 using LagoVista.Core.AI.Models;
-using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Moq;
@@ -17,144 +15,192 @@ namespace LagoVista.AI.Tests.Services
     [TestFixture]
     public class AgentToolExecutorTests
     {
-        private Mock<IAgentToolRegistry> _registryMock;
-        private Mock<IAdminLogger> _loggerMock;
-        private AgentToolExecutor _executor;
-        private AgentToolExecutionContext _context;
+        private Mock<IAgentToolFactory> _toolFactory;
+        private Mock<IAgentToolRegistry> _toolRegistry;
+        private Mock<IAdminLogger> _logger;
+        private AgentToolExecutor _sut;
 
         [SetUp]
         public void SetUp()
         {
-            _registryMock = new Mock<IAgentToolRegistry>(MockBehavior.Strict);
-            _loggerMock = new Mock<IAdminLogger>(MockBehavior.Loose);
+            _toolFactory = new Mock<IAgentToolFactory>();
+            _toolRegistry = new Mock<IAgentToolRegistry>();
+            _logger = new Mock<IAdminLogger>();
 
-            _executor = new AgentToolExecutor(_registryMock.Object, _loggerMock.Object);
-
-            _context = new AgentToolExecutionContext
-            {
-                AgentContext = new AgentContext { Id = "agent-1" },
-                ConversationContext = new ConversationContext { Id = "conv-ctx-1" },
-                Request = new AgentExecuteRequest { Mode = "ask", Instruction = "do something" },
-                SessionId = "session-1",
-                Org = EntityHeader.Create("org-1", "Org 1"),
-                User = EntityHeader.Create("user-1", "User 1")
-            };
+            _sut = new AgentToolExecutor(_toolFactory.Object, _toolRegistry.Object, _logger.Object);
         }
 
         [Test]
-        public async Task ExecuteServerToolAsync_ToolNotRegistered_LeavesCallForClient()
+        public void Ctor_NullFactory_Throws()
+        {
+            Assert.Throws<ArgumentNullException>(
+                () => new AgentToolExecutor(null, _toolRegistry.Object, _logger.Object));
+        }
+
+        [Test]
+        public void Ctor_NullRegistry_Throws()
+        {
+            Assert.Throws<ArgumentNullException>(
+                () => new AgentToolExecutor(_toolFactory.Object, null, _logger.Object));
+        }
+
+        [Test]
+        public void Ctor_NullLogger_Throws()
+        {
+            Assert.Throws<ArgumentNullException>(
+                () => new AgentToolExecutor(_toolFactory.Object, _toolRegistry.Object, null));
+        }
+
+        [Test]
+        public void ExecuteServerToolAsync_NullCall_Throws()
+        {
+            Assert.ThrowsAsync<ArgumentNullException>(
+                async () => await _sut.ExecuteServerToolAsync(null, new AgentToolExecutionContext(), CancellationToken.None));
+        }
+
+        [Test]
+        public async Task ExecuteServerToolAsync_EmptyName_SetsErrorAndDoesNotCallFactoryOrRegistry()
         {
             var call = new AgentToolCall
             {
                 CallId = "call-1",
-                Name = "unregistered-tool",
-                ArgumentsJson = "{\"foo\":\"bar\"}"
+                Name = "  "
             };
 
-            _registryMock.Setup(r => r.HasTool("unregistered-tool")).Returns(false);
+            var context = new AgentToolExecutionContext();
 
-            var updated = await _executor.ExecuteServerToolAsync(call, _context, CancellationToken.None);
+            var result = await _sut.ExecuteServerToolAsync(call, context, CancellationToken.None);
 
-            Assert.That(updated, Is.SameAs(call));
-            Assert.That(updated.IsServerTool, Is.False);
-            Assert.That(updated.WasExecuted, Is.False);
-            Assert.That(updated.ResultJson, Is.Null);
-            Assert.That(updated.ErrorMessage, Is.Null);
+            Assert.That(result.IsServerTool, Is.False);
+            Assert.That(result.WasExecuted, Is.False);
+            Assert.That(result.ErrorMessage, Is.EqualTo("Tool call name is empty."));
 
-            _registryMock.Verify(r => r.HasTool("unregistered-tool"), Times.Once);
-            _registryMock.Verify(r => r.GetTool(It.IsAny<string>()), Times.Never);
+            _toolRegistry.Verify(r => r.HasTool(It.IsAny<string>()), Times.Never);
+            _toolFactory.Verify(f => f.GetTool(It.IsAny<string>()), Times.Never);
+
+            _logger.Verify(
+                l => l.AddError("[AgentToolExecutor_ExecuteServerToolAsync__EmptyName]", "Tool call name is empty."),
+                Times.Once);
         }
 
         [Test]
-        public async Task ExecuteServerToolAsync_ToolRegistered_SuccessfulExecution_SetsResult()
+        public async Task ExecuteServerToolAsync_UnknownTool_LeavesForClient()
         {
             var call = new AgentToolCall
             {
                 CallId = "call-1",
-                Name = "echo-tool",
-                ArgumentsJson = "{\"msg\":\"hello\"}"
+                Name = "testing.ping_pong"
             };
 
-            var toolMock = new Mock<IAgentTool>(MockBehavior.Strict);
-            toolMock.Setup(t => t.Name).Returns("echo-tool");
+            var context = new AgentToolExecutionContext();
+
+            _toolRegistry.Setup(r => r.HasTool("testing.ping_pong")).Returns(false);
+
+            var result = await _sut.ExecuteServerToolAsync(call, context, CancellationToken.None);
+
+            Assert.That(result.IsServerTool, Is.False);
+            Assert.That(result.WasExecuted, Is.False);
+            Assert.That(result.ErrorMessage, Is.Null);
+
+            _toolFactory.Verify(f => f.GetTool(It.IsAny<string>()), Times.Never);
+        }
+
+        [Test]
+        public async Task ExecuteServerToolAsync_FactoryError_SetsErrorAndDoesNotExecute()
+        {
+            var call = new AgentToolCall
+            {
+                CallId = "call-1",
+                Name = "testing.ping_pong",
+                ArgumentsJson = "{\"message\":\"hi\"}"
+            };
+
+            var context = new AgentToolExecutionContext();
+
+            _toolRegistry.Setup(r => r.HasTool(call.Name)).Returns(true);
+
+            _toolFactory
+                .Setup(f => f.GetTool(call.Name))
+                .Returns(InvokeResult<IAgentTool>.FromError("Factory failed", "AGENT_TOOL_CREATE_FAILED"));
+
+            var result = await _sut.ExecuteServerToolAsync(call, context, CancellationToken.None);
+
+            Assert.That(result.IsServerTool, Is.True);
+            Assert.That(result.WasExecuted, Is.False);
+            Assert.That(result.ErrorMessage, Is.EqualTo("Factory failed"));
+
+            _toolFactory.Verify(f => f.GetTool(call.Name), Times.Once);
+        }
+
+        [Test]
+        public async Task ExecuteServerToolAsync_ToolExecutesSuccessfully_PopulatesResult()
+        {
+            var call = new AgentToolCall
+            {
+                CallId = "call-1",
+                Name = "testing.ping_pong",
+                ArgumentsJson = "{\"message\":\"hi\"}"
+            };
+
+            var context = new AgentToolExecutionContext();
+
+            _toolRegistry.Setup(r => r.HasTool(call.Name)).Returns(true);
+
+            var toolMock = new Mock<IAgentTool>();
             toolMock
-                .Setup(t => t.ExecuteAsync(call.ArgumentsJson, It.IsAny<AgentToolExecutionContext>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(InvokeResult<string>.Create("{\"ok\":true}"));
+                .Setup(t => t.ExecuteAsync(call.ArgumentsJson, context, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(InvokeResult<string>.Create("{\"reply\":\"pong: hi\"}"));
 
-            _registryMock.Setup(r => r.HasTool("echo-tool")).Returns(true);
-            _registryMock.Setup(r => r.GetTool("echo-tool")).Returns(InvokeResult<IAgentTool>.Create(toolMock.Object));
+            _toolFactory
+                .Setup(f => f.GetTool(call.Name))
+                .Returns(InvokeResult<IAgentTool>.Create(toolMock.Object));
 
-            var updated = await _executor.ExecuteServerToolAsync(call, _context, CancellationToken.None);
+            var result = await _sut.ExecuteServerToolAsync(call, context, CancellationToken.None);
 
-            Assert.That(updated.IsServerTool, Is.True);
-            Assert.That(updated.WasExecuted, Is.True);
-            Assert.That(updated.ResultJson, Is.EqualTo("{\"ok\":true}"));
-            Assert.That(updated.ErrorMessage, Is.Null);
+            Assert.That(result.IsServerTool, Is.True);
+            Assert.That(result.WasExecuted, Is.True);
+            Assert.That(result.ErrorMessage, Is.Null);
+            Assert.That(result.ResultJson, Is.EqualTo("{\"reply\":\"pong: hi\"}"));
 
-            _registryMock.Verify(r => r.HasTool("echo-tool"), Times.Once);
-            _registryMock.Verify(r => r.GetTool("echo-tool"), Times.Once);
-            toolMock.Verify(t => t.ExecuteAsync(call.ArgumentsJson, It.IsAny<AgentToolExecutionContext>(), It.IsAny<CancellationToken>()), Times.Once);
+            _toolFactory.Verify(f => f.GetTool(call.Name), Times.Once);
+            toolMock.Verify(t => t.ExecuteAsync(call.ArgumentsJson, context, It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Test]
-        public async Task ExecuteServerToolAsync_ToolRegistered_FailedExecution_SetsError()
+        public async Task ExecuteServerToolAsync_ToolExecutionFails_SetsErrorAndLogs()
         {
             var call = new AgentToolCall
             {
                 CallId = "call-1",
-                Name = "failing-tool",
-                ArgumentsJson = "{\"msg\":\"hello\"}"
+                Name = "testing.ping_pong",
+                ArgumentsJson = "{\"message\":\"hi\"}"
             };
 
-            var toolMock = new Mock<IAgentTool>(MockBehavior.Strict);
-            toolMock.Setup(t => t.Name).Returns("failing-tool");
+            var context = new AgentToolExecutionContext();
+
+            _toolRegistry.Setup(r => r.HasTool(call.Name)).Returns(true);
+
+            var toolMock = new Mock<IAgentTool>();
             toolMock
-                .Setup(t => t.ExecuteAsync(call.ArgumentsJson, It.IsAny<AgentToolExecutionContext>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(InvokeResult<string>.FromError("boom"));
+                .Setup(t => t.ExecuteAsync(call.ArgumentsJson, context, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(InvokeResult<string>.FromError("Tool failed"));
 
-            _registryMock.Setup(r => r.HasTool("failing-tool")).Returns(true);
-            _registryMock.Setup(r => r.GetTool("failing-tool")).Returns(InvokeResult<IAgentTool>.Create(toolMock.Object));
+            _toolFactory
+                .Setup(f => f.GetTool(call.Name))
+                .Returns(InvokeResult<IAgentTool>.Create(toolMock.Object));
 
-            var updated = await _executor.ExecuteServerToolAsync(call, _context, CancellationToken.None);
+            var result = await _sut.ExecuteServerToolAsync(call, context, CancellationToken.None);
 
-            Assert.That(updated.IsServerTool, Is.True);
-            Assert.That(updated.WasExecuted, Is.False);
-            Assert.That(updated.ResultJson, Is.Null);
-            Assert.That(updated.ErrorMessage, Is.EqualTo("boom"));
+            Assert.That(result.IsServerTool, Is.True);
+            Assert.That(result.WasExecuted, Is.False);
+            Assert.That(result.ErrorMessage, Is.EqualTo("Tool failed"));
+            Assert.That(result.ResultJson, Is.Null);
 
-            _registryMock.Verify(r => r.HasTool("failing-tool"), Times.Once);
-            _registryMock.Verify(r => r.GetTool("failing-tool"), Times.Once);
-            toolMock.Verify(t => t.ExecuteAsync(call.ArgumentsJson, It.IsAny<AgentToolExecutionContext>(), It.IsAny<CancellationToken>()), Times.Once);
-            _loggerMock.Verify(l => l.AddError(It.IsAny<string>(), It.Is<string>(m => m.Contains("boom")), It.IsAny<KeyValuePair<string, string>[]>()), Times.AtLeastOnce);
-        }
-
-        [Test]
-        public async Task ExecuteServerToolAsync_ToolThrowsException_SetsErrorMessage()
-        {
-            var call = new AgentToolCall
-            {
-                CallId = "call-1",
-                Name = "throwing-tool",
-                ArgumentsJson = "{}"
-            };
-
-            var toolMock = new Mock<IAgentTool>(MockBehavior.Strict);
-            toolMock.Setup(t => t.Name).Returns("throwing-tool");
-            toolMock
-                .Setup(t => t.ExecuteAsync(call.ArgumentsJson, It.IsAny<AgentToolExecutionContext>(), It.IsAny<CancellationToken>()))
-                .ThrowsAsync(new InvalidOperationException("boom"));
-
-            _registryMock.Setup(r => r.HasTool("throwing-tool")).Returns(true);
-            _registryMock.Setup(r => r.GetTool("throwing-tool")).Returns(InvokeResult<IAgentTool>.Create(toolMock.Object));
-
-            var updated = await _executor.ExecuteServerToolAsync(call, _context, CancellationToken.None);
-
-            Assert.That(updated.IsServerTool, Is.True);
-            Assert.That(updated.WasExecuted, Is.False);
-            Assert.That(updated.ResultJson, Is.Null);
-            Assert.That(updated.ErrorMessage, Does.Contain("boom"));
-
-            _loggerMock.Verify(l => l.AddException(It.IsAny<string>(), It.IsAny<Exception>(), It.IsAny<KeyValuePair<string, string>[]>()), Times.AtLeastOnce);
+            _logger.Verify(
+                l => l.AddError(
+                    "[AgentToolExecutor_ExecuteServerToolAsync__ToolFailed]",
+                    It.Is<string>(msg => msg.Contains("Tool 'testing.ping_pong' execution failed: Tool failed"))),
+                Times.Once);
         }
     }
 }

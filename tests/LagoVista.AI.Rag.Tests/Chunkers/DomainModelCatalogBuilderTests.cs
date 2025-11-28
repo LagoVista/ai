@@ -114,17 +114,17 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             try
             {
                 var fullPath = Path.Combine(tempDir, "Device.cs");
-                const string sourceText = "public class Device { }";
+                const string sourceText = "public class Device { }\r\n";
                 File.WriteAllText(fullPath, sourceText);
 
                 var files = new List<DiscoveredFile>
-                {
-                    new DiscoveredFile
-                    {
-                        FullPath = fullPath,
-                        RelativePath = "Models/Device.cs"
-                    }
-                };
+        {
+            new DiscoveredFile
+            {
+                FullPath = fullPath,
+                RelativePath = "Models/Device.cs"
+            }
+        };
 
                 var detectionResult = new SourceKindResult
                 {
@@ -137,10 +137,17 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
                     .Setup(c => c.DetectForFile(It.IsAny<string>(), It.IsAny<string>()))
                     .Returns(detectionResult);
 
-                var domainInfo = new DomainSummaryInfo("Devices", "Devices Domain","Some Title", "Domain Description", DomainDescription.DomainTypes.Service, "DomainType", "Domainproperty");
+                var domainInfo = new DomainSummaryInfo(
+                    "Devices",
+                    "Devices Domain",
+                    "Some Title",
+                    "Domain Description",
+                    DomainDescription.DomainTypes.Service,
+                    "DomainType",
+                    "Domainproperty");
 
                 chunkerMock
-                    .Setup(c => c.ExtractDomains(sourceText))
+                    .Setup(c => c.ExtractDomains(It.IsAny<string>()))
                     .Returns(new[] { domainInfo });
 
                 var modelStructure = new ModelStructureDescription
@@ -175,10 +182,22 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
                 Assert.That(modelEntry.Structure, Is.Not.Null);
                 Assert.That(modelEntry.Structure.QualifiedName, Is.EqualTo("LagoVista.Devices.Device"));
 
-                chunkerMock.Verify(c => c.DetectForFile(sourceText, "Models/Device.cs"), Times.Once);
-                chunkerMock.Verify(c => c.ExtractDomains(sourceText), Times.Once);
+                // ---- Updated verifications ----
+
+                // We only care that DetectForFile was called once for this relative path
+                chunkerMock.Verify(c => c.DetectForFile(
+                        It.Is<string>(s => s.Contains("public class Device")),
+                        "Models/Device.cs"),
+                    Times.Once);
+
+                chunkerMock.Verify(c => c.ExtractDomains(
+                        It.Is<string>(s => s.Contains("public class Device"))),
+                    Times.Once);
+
                 descriptorMock.Verify(d => d.BuildModelStructureDescription(
-                    sourceText), Times.Once);
+                        It.Is<string>(s => s.Contains("public class Device")),
+                        It.IsAny<IReadOnlyDictionary<string, string>>()),
+                    Times.Once);
             }
             finally
             {

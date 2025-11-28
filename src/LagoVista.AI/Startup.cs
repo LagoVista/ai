@@ -5,9 +5,11 @@
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Managers;
 using LagoVista.AI.Services;
+using LagoVista.AI.Services.Tools;
 using LagoVista.Core.AI.Interfaces;
 using LagoVista.Core.Interfaces;
 using LagoVista.IoT.Logging.Loggers;
+using System;
 
 namespace LagoVista.AI
 {
@@ -18,6 +20,7 @@ namespace LagoVista.AI
             var toolRegistry = new AgentToolRegistry(adminLogger);
 
             /* define our agent tools here */
+            toolRegistry.RegisterTool<PingPongTool>();
 
             /*--*/
 
@@ -25,6 +28,7 @@ namespace LagoVista.AI
             services.AddTransient<IModelCategoryManager, ModelCategoryManager>();
             services.AddTransient<IModelManager, ModelManager>();
             services.AddTransient<IHubManager, HubManager>();
+            services.AddTransient<IAgentToolFactory, AgentToolFactory>();
             services.AddTransient<ITrainingDataSetManager, TrainingDataSetManager>();
             services.AddTransient<ISampleManager, SampleManager>();
             services.AddTransient<ILabelManager, LabelManager>();
@@ -46,6 +50,7 @@ namespace LagoVista.AI
             services.AddSingleton<IAgentRequestHandler, AgentRequestHandler>();
             services.AddSingleton<IAgentReasoner, AgentReasoner>();
             services.AddSingleton<IAgentToolExecutor, AgentToolExecutor>();
+            services.AddSingleton<IServerToolSchemaProvider, DefaultServerToolSchemaProvider>();
             services.AddSingleton<IAgentSessionNamingService, OpenAISessionNamingService>();
 
         }

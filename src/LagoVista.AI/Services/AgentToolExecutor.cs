@@ -16,13 +16,15 @@ namespace LagoVista.AI.Services
     /// </summary>
     public class AgentToolExecutor : IAgentToolExecutor
     {
-        private readonly IAgentToolRegistry _registry;
+        private readonly IAgentToolFactory _toolFactory;
         private readonly IAdminLogger _logger;
+        private readonly IAgentToolRegistry _toolRegistry;
 
-        public AgentToolExecutor(IAgentToolRegistry registry, IAdminLogger logger)
+        public AgentToolExecutor(IAgentToolFactory agentToolFactory, IAgentToolRegistry agentToolRegistry, IAdminLogger logger)
         {
-            _registry = registry ?? throw new ArgumentNullException(nameof(registry));
+            _toolFactory = agentToolFactory ?? throw new ArgumentNullException(nameof(agentToolFactory));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _toolRegistry = agentToolRegistry ?? throw new ArgumentNullException(nameof(agentToolRegistry));
         }
 
         public async Task<AgentToolCall> ExecuteServerToolAsync(
@@ -48,7 +50,7 @@ namespace LagoVista.AI.Services
             }
 
             // If the registry does not know this tool, it's a client-only tool.
-            if (!_registry.HasTool(call.Name))
+            if (!_toolRegistry.HasTool(call.Name))
             {
                 _logger.Trace(
                     $"[AgentToolExecutor_ExecuteServerToolAsync] Tool '{call.Name}' not registered as a server tool. " +
@@ -58,7 +60,7 @@ namespace LagoVista.AI.Services
 
             call.IsServerTool = true;
 
-            var toolResult = _registry.GetTool(call.Name);
+            var toolResult = _toolFactory.GetTool(call.Name);
             if (!toolResult.Successful)
             {
                 call.ErrorMessage = toolResult.ErrorMessage ?? "Failed to resolve server tool.";

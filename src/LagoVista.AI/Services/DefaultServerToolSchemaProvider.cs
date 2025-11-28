@@ -1,0 +1,68 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Reflection;
+using LagoVista.AI.Interfaces;
+using LagoVista.Core.AI.Models;
+using LagoVista.IoT.Logging.Loggers;
+
+namespace LagoVista.AI.Services
+{
+    public class DefaultServerToolSchemaProvider : IServerToolSchemaProvider
+    {
+        private readonly IAgentToolRegistry _toolRegistry;
+        private readonly IAdminLogger _logger;
+
+        public DefaultServerToolSchemaProvider(IAgentToolRegistry toolRegistry, IAdminLogger logger)
+        {
+            _toolRegistry = toolRegistry ?? throw new ArgumentNullException(nameof(toolRegistry));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
+
+        public IReadOnlyList<object> GetToolSchemas(AgentExecuteRequest request)
+        {
+            var schemas = new List<object>();
+
+            var registered = _toolRegistry.GetRegisteredTools();
+
+            foreach (var kvp in registered)
+            {
+                var toolName = kvp.Key;
+                var toolType = kvp.Value;
+
+                try
+                {
+                    var schemaMethod = toolType.GetMethod(
+                        "GetSchema",
+                        BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy);
+
+                    // This *should* always be valid thanks to AgentToolRegistry.RegisterTool,
+                    // but we keep a defensive check and log if it isn’t.
+                    if (schemaMethod == null ||
+                        schemaMethod.ReturnType != typeof(object) ||
+                        schemaMethod.GetParameters().Length != 0)
+                    {
+                        _logger.AddError(
+                            "[DefaultServerToolSchemaProvider_GetToolSchemas__InvalidSchemaMethod]",
+                            $"Tool '{toolType.FullName}' registered as '{toolName}' " +
+                            $"does not expose a valid public static object GetSchema().");
+                        continue;
+                    }
+
+                    var schema = schemaMethod.Invoke(null, null);
+                    if (schema != null)
+                    {
+                        schemas.Add(schema);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.AddException(
+                        "[DefaultServerToolSchemaProvider_GetToolSchemas__Exception]",
+                        ex);
+                }
+            }
+
+            return schemas;
+        }
+    }
+}
