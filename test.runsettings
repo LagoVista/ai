@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <NUnit>
+    <!-- Exclude integration tests by default -->
+    <ExcludeCategories>IntegrationTests</ExcludeCategories>
+
+    <!-- Optional: add others -->
+    <!-- <ExcludeCategories>Integration,Slow,LLM</ExcludeCategories> -->
+
+    <!-- Optional: number of workers -->
+    <!-- <NumberOfTestWorkers>4</NumberOfTestWorkers> -->
+  </NUnit>
+</RunSettings>

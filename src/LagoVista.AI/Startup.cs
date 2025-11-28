@@ -7,13 +7,21 @@ using LagoVista.AI.Managers;
 using LagoVista.AI.Services;
 using LagoVista.Core.AI.Interfaces;
 using LagoVista.Core.Interfaces;
+using LagoVista.IoT.Logging.Loggers;
 
 namespace LagoVista.AI
 {
     public static class Startup
     {
-        public static void ConfigureServices(IServiceCollection services)
+        public static void ConfigureServices(IServiceCollection services, IAdminLogger adminLogger)
         {
+            var toolRegistry = new AgentToolRegistry(adminLogger);
+
+            /* define our agent tools here */
+
+            /*--*/
+
+            services.AddSingleton<IAgentToolRegistry>(toolRegistry);
             services.AddTransient<IModelCategoryManager, ModelCategoryManager>();
             services.AddTransient<IModelManager, ModelManager>();
             services.AddTransient<IHubManager, HubManager>();
@@ -36,6 +44,8 @@ namespace LagoVista.AI
             services.AddSingleton<IRagContextBuilder, QdrantRagContextBuilder>();
             services.AddSingleton<IAgentTurnExecutor, AgentTurnExecutor>();
             services.AddSingleton<IAgentRequestHandler, AgentRequestHandler>();
+            services.AddSingleton<IAgentReasoner, AgentReasoner>();
+            services.AddSingleton<IAgentToolExecutor, AgentToolExecutor>();
             services.AddSingleton<IAgentSessionNamingService, OpenAISessionNamingService>();
 
         }

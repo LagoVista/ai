@@ -9,15 +9,9 @@
     <RootNamespace>LagoVista.AI.Tests</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="DocumentTemplateManager.cs" />
-  </ItemGroup>
-  <ItemGroup>
     <None Remove="resnet50-v2-7.onnx" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="DocumentTemplateManager.cs">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="resnet50-v2-7.onnx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

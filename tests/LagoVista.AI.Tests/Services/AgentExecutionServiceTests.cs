@@ -20,7 +20,7 @@ namespace LagoVista.AI.Tests.Services
     {
         private Mock<IAgentContextManager> _agentContextManager;
         private Mock<IAdminLogger> _adminLogger;
-        private Mock<ILLMClient> _llmClient;
+        private Mock<IAgentReasoner> _reasoner;
         private Mock<IRagContextBuilder> _ragContextBuilder;
 
         private AgentExecutionService _sut;
@@ -28,14 +28,14 @@ namespace LagoVista.AI.Tests.Services
         [SetUp]
         public void SetUp()
         {
-            _agentContextManager = new Mock<IAgentContextManager>();
-            _adminLogger = new Mock<IAdminLogger>();
-            _llmClient = new Mock<ILLMClient>();
-            _ragContextBuilder = new Mock<IRagContextBuilder>();
+            _agentContextManager = new Mock<IAgentContextManager>(MockBehavior.Strict);
+            _adminLogger = new Mock<IAdminLogger>(MockBehavior.Loose);
+            _reasoner = new Mock<IAgentReasoner>(MockBehavior.Strict);
+            _ragContextBuilder = new Mock<IRagContextBuilder>(MockBehavior.Strict);
 
             _sut = new AgentExecutionService(
                 _agentContextManager.Object,
-                _llmClient.Object,
+                _reasoner.Object,
                 _ragContextBuilder.Object,
                 _adminLogger.Object);
         }
@@ -46,11 +46,11 @@ namespace LagoVista.AI.Tests.Services
         public void Ctor_NullAgentContextManager_Throws()
         {
             Assert.Throws<ArgumentNullException>(
-                () => new AgentExecutionService(null, _llmClient.Object, _ragContextBuilder.Object, _adminLogger.Object));
+                () => new AgentExecutionService(null, _reasoner.Object, _ragContextBuilder.Object, _adminLogger.Object));
         }
 
         [Test]
-        public void Ctor_NullLlmClient_Throws()
+        public void Ctor_NullReasoner_Throws()
         {
             Assert.Throws<ArgumentNullException>(
                 () => new AgentExecutionService(_agentContextManager.Object, null, _ragContextBuilder.Object, _adminLogger.Object));
@@ -60,14 +60,14 @@ namespace LagoVista.AI.Tests.Services
         public void Ctor_NullRagContextBuilder_Throws()
         {
             Assert.Throws<ArgumentNullException>(
-                () => new AgentExecutionService(_agentContextManager.Object, _llmClient.Object, null, _adminLogger.Object));
+                () => new AgentExecutionService(_agentContextManager.Object, _reasoner.Object, null, _adminLogger.Object));
         }
 
         [Test]
         public void Ctor_NullAdminLogger_Throws()
         {
             Assert.Throws<ArgumentNullException>(
-                () => new AgentExecutionService(_agentContextManager.Object, _llmClient.Object, _ragContextBuilder.Object, null));
+                () => new AgentExecutionService(_agentContextManager.Object, _reasoner.Object, _ragContextBuilder.Object, null));
         }
 
         #endregion
@@ -94,7 +94,16 @@ namespace LagoVista.AI.Tests.Services
 
             _agentContextManager.Verify(m => m.GetAgentContextWithSecretsAsync(It.IsAny<string>(), It.IsAny<EntityHeader>(), It.IsAny<EntityHeader>()), Times.Never);
             _ragContextBuilder.Verify(b => b.BuildContextSectionAsync(It.IsAny<AgentContext>(), It.IsAny<string>(), It.IsAny<RagScopeFilter>()), Times.Never);
-            _llmClient.Verify(c => c.GetAnswerAsync(It.IsAny<AgentContext>(), It.IsAny<ConversationContext>(), It.IsAny<AgentExecuteRequest>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+            _reasoner.Verify(r => r.ExecuteAsync(
+                    It.IsAny<AgentContext>(),
+                    It.IsAny<ConversationContext>(),
+                    It.IsAny<AgentExecuteRequest>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<EntityHeader>(),
+                    It.IsAny<EntityHeader>(),
+                    It.IsAny<CancellationToken>()),
+                Times.Never);
         }
 
         [Test]
@@ -225,7 +234,16 @@ namespace LagoVista.AI.Tests.Services
 
             _agentContextManager.Verify(m => m.GetAgentContextWithSecretsAsync(It.IsAny<string>(), It.IsAny<EntityHeader>(), It.IsAny<EntityHeader>()), Times.Never);
             _ragContextBuilder.Verify(b => b.BuildContextSectionAsync(It.IsAny<AgentContext>(), It.IsAny<string>(), It.IsAny<RagScopeFilter>()), Times.Never);
-            _llmClient.Verify(c => c.GetAnswerAsync(It.IsAny<AgentContext>(), It.IsAny<ConversationContext>(), It.IsAny<AgentExecuteRequest>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+            _reasoner.Verify(r => r.ExecuteAsync(
+                    It.IsAny<AgentContext>(),
+                    It.IsAny<ConversationContext>(),
+                    It.IsAny<AgentExecuteRequest>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<EntityHeader>(),
+                    It.IsAny<EntityHeader>(),
+                    It.IsAny<CancellationToken>()),
+                Times.Never);
         }
 
         #endregion
@@ -233,7 +251,7 @@ namespace LagoVista.AI.Tests.Services
         #region Ask Mode Success
 
         [Test]
-        public async Task ExecuteAsync_AskMode_Success_PopulatesRequiredFieldsFromLlmResponse()
+        public async Task ExecuteAsync_AskMode_Success_PopulatesRequiredFieldsFromReasonerResponse()
         {
             var org = CreateOrg();
             var user = CreateUser();
@@ -261,7 +279,7 @@ namespace LagoVista.AI.Tests.Services
                 .Setup(b => b.BuildContextSectionAsync(agentContext, request.Instruction, request.RagScopeFilter))
                 .ReturnsAsync(InvokeResult<string>.Create("RAG-BLOCK"));
 
-            var llmResponse = new AgentExecuteResponse
+            var reasonerResponse = new AgentExecuteResponse
             {
                 Text = "42",
                 FullResponseUrl = "https://responses/meaning-of-life.json",
@@ -274,34 +292,45 @@ namespace LagoVista.AI.Tests.Services
             ConversationContext capturedConversationContext = null;
             AgentExecuteRequest capturedRequest = null;
             string capturedRagBlock = null;
+            string capturedSessionId = null;
+            EntityHeader capturedOrg = null;
+            EntityHeader capturedUser = null;
 
-            _llmClient
-                .Setup(c => c.GetAnswerAsync(
+            _reasoner
+                .Setup(r => r.ExecuteAsync(
                     It.IsAny<AgentContext>(),
                     It.IsAny<ConversationContext>(),
                     It.IsAny<AgentExecuteRequest>(),
                     It.IsAny<string>(),
                     It.IsAny<string>(),
+                    It.IsAny<EntityHeader>(),
+                    It.IsAny<EntityHeader>(),
                     It.IsAny<CancellationToken>()))
-                .Callback<AgentContext, ConversationContext, AgentExecuteRequest, string, string, CancellationToken>(
-                    (ctx, convCtx, req, rag, corrId, ct) =>
+                .Callback<AgentContext, ConversationContext, AgentExecuteRequest, string, string, EntityHeader, EntityHeader, CancellationToken>(
+                    (ctx, convCtx, req, rag, sessionId, o, u, ct) =>
                     {
                         capturedAgentContext = ctx;
                         capturedConversationContext = convCtx;
                         capturedRequest = req;
                         capturedRagBlock = rag;
+                        capturedSessionId = sessionId;
+                        capturedOrg = o;
+                        capturedUser = u;
                     })
-                .ReturnsAsync(InvokeResult<AgentExecuteResponse>.Create(llmResponse));
+                .ReturnsAsync(InvokeResult<AgentExecuteResponse>.Create(reasonerResponse));
 
             var result = await _sut.ExecuteAsync(request, org, user);
 
             Assert.That(result.Successful, Is.True);
-            Assert.That(result.Result, Is.SameAs(llmResponse));
+            Assert.That(result.Result, Is.SameAs(reasonerResponse));
 
             Assert.That(capturedAgentContext, Is.SameAs(agentContext));
             Assert.That(capturedConversationContext, Is.SameAs(chosenConversationContext));
             Assert.That(capturedRequest, Is.SameAs(request));
             Assert.That(capturedRagBlock, Is.EqualTo("RAG-BLOCK"));
+            Assert.That(capturedSessionId, Is.Not.Null.And.Not.Empty);
+            Assert.That(capturedOrg, Is.SameAs(org));
+            Assert.That(capturedUser, Is.SameAs(user));
 
             Assert.That(result.Result.Text, Is.EqualTo("42"));
             Assert.That(result.Result.FullResponseUrl, Is.EqualTo("https://responses/meaning-of-life.json"));
@@ -343,16 +372,21 @@ namespace LagoVista.AI.Tests.Services
 
             ConversationContext capturedConversationContext = null;
 
-            _llmClient
-                .Setup(c => c.GetAnswerAsync(
+            _reasoner
+                .Setup(r => r.ExecuteAsync(
                     It.IsAny<AgentContext>(),
                     It.IsAny<ConversationContext>(),
                     It.IsAny<AgentExecuteRequest>(),
                     It.IsAny<string>(),
                     It.IsAny<string>(),
+                    It.IsAny<EntityHeader>(),
+                    It.IsAny<EntityHeader>(),
                     It.IsAny<CancellationToken>()))
-                .Callback<AgentContext, ConversationContext, AgentExecuteRequest, string, string, CancellationToken>(
-                    (ctx, convCtx, req, rag, corrId, ct) => capturedConversationContext = convCtx)
+                .Callback<AgentContext, ConversationContext, AgentExecuteRequest, string, string, EntityHeader, EntityHeader, CancellationToken>(
+                    (ctx, convCtx, req, rag, sessionId, o, u, ct) =>
+                    {
+                        capturedConversationContext = convCtx;
+                    })
                 .ReturnsAsync(InvokeResult<AgentExecuteResponse>.Create(new AgentExecuteResponse { Text = "ok" }));
 
             var result = await _sut.ExecuteAsync(request, org, user);
@@ -367,7 +401,7 @@ namespace LagoVista.AI.Tests.Services
         #region Ask Mode RAG Failure
 
         [Test]
-        public async Task ExecuteAsync_AskMode_RagFailure_PropagatesErrorAndDoesNotInvokeLlm()
+        public async Task ExecuteAsync_AskMode_RagFailure_PropagatesErrorAndDoesNotInvokeReasoner()
         {
             var org = CreateOrg();
             var user = CreateUser();
@@ -396,7 +430,16 @@ namespace LagoVista.AI.Tests.Services
             Assert.That(result.Errors, Is.Not.Null);
             Assert.That(result.Errors.Count, Is.GreaterThan(0));
 
-            _llmClient.Verify(c => c.GetAnswerAsync(It.IsAny<AgentContext>(), It.IsAny<ConversationContext>(), It.IsAny<AgentExecuteRequest>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+            _reasoner.Verify(r => r.ExecuteAsync(
+                    It.IsAny<AgentContext>(),
+                    It.IsAny<ConversationContext>(),
+                    It.IsAny<AgentExecuteRequest>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<EntityHeader>(),
+                    It.IsAny<EntityHeader>(),
+                    It.IsAny<CancellationToken>()),
+                Times.Never);
         }
 
         #endregion

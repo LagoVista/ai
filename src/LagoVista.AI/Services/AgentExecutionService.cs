@@ -16,15 +16,15 @@ namespace LagoVista.AI.Services
     {
         private readonly IAgentContextManager _agentContextManager;
         private readonly IAdminLogger _adminLogger;
-        private readonly ILLMClient _llmClient;
+        private readonly IAgentReasoner _reasoner;
         private readonly IRagContextBuilder _ragContextBuilder;
 
 
-        public AgentExecutionService(IAgentContextManager agentContextManager, ILLMClient llmClient, IRagContextBuilder ragContextBuilder, IAdminLogger adminLogger)
+        public AgentExecutionService(IAgentContextManager agentContextManager, IAgentReasoner agentReasoner, IRagContextBuilder ragContextBuilder, IAdminLogger adminLogger)
         {
             _agentContextManager = agentContextManager ?? throw new ArgumentNullException(nameof(agentContextManager));
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
-            _llmClient = llmClient ?? throw new ArgumentNullException(nameof(llmClient));
+            _reasoner = agentReasoner ?? throw new ArgumentNullException(nameof(agentReasoner));
             _ragContextBuilder = ragContextBuilder ?? throw new ArgumentNullException(nameof(ragContextBuilder));
         }
 
@@ -126,8 +126,8 @@ namespace LagoVista.AI.Services
             if(!ragContextBlock.Successful)
                 return InvokeResult<AgentExecuteResponse>.FromInvokeResult(ragContextBlock.ToInvokeResult());
 
-
-            return await _llmClient.GetAnswerAsync(agentContext, conversationContext, request, ragContextBlock.Result, correlationId, cancellationToken);
+            return await _reasoner.ExecuteAsync(agentContext,conversationContext,request, ragContextBlock.Result, correlationId, // or real sessionId, depending how you wire it
+                                                org, user, cancellationToken);
         }
 
         private InvokeResult<AgentExecuteResponse> HandleEditNotImplemented(string correlationId)

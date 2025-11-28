@@ -63,43 +63,49 @@ namespace LagoVista.AI.Rag.ContractPacks.Infrastructure.Services
                     {
                         var result = _chunkerServices.DetectForFile(splitrResult.Text, file.RelativePath);
 
-                        var snippet = string.IsNullOrWhiteSpace(result.SymbolText)
-                            ? source
-                            : result.SymbolText;
-
-                        // 1) Domains: ExtractDomains will return empty for non-domain snippets.
-                        var domainInfos = _chunkerServices.ExtractDomains(snippet);
-                        if (domainInfos != null)
+                        if (result != null)
                         {
-                            foreach (var domain in domainInfos)
+                            var snippet = string.IsNullOrWhiteSpace(result.SymbolText)
+                                ? source
+                                : result.SymbolText;
+
+                            // 1) Domains: ExtractDomains will return empty for non-domain snippets.
+                            var domainInfos = _chunkerServices.ExtractDomains(snippet);
+                            if (domainInfos != null)
                             {
-                                if (string.IsNullOrWhiteSpace(domain.DomainKey))
-                                    continue;
-
-                                if (!domainsByKey.ContainsKey(domain.DomainKey))
+                                foreach (var domain in domainInfos)
                                 {
-                                    domainsByKey[domain.DomainKey] = domain;
-                                }
+                                    if (string.IsNullOrWhiteSpace(domain.DomainKey))
+                                        continue;
 
-                                if (!String.IsNullOrEmpty(domain.DomainKeyName) && !domainsByKeyName.ContainsKey(domain.DomainKeyName))
-                                {
-                                    domainsByKeyName[domain.DomainKeyName] = domain;
+                                    if (!domainsByKey.ContainsKey(domain.DomainKey))
+                                    {
+                                        domainsByKey[domain.DomainKey] = domain;
+                                    }
+
+                                    if (!String.IsNullOrEmpty(domain.DomainKeyName) && !domainsByKeyName.ContainsKey(domain.DomainKeyName))
+                                    {
+                                        domainsByKeyName[domain.DomainKeyName] = domain;
+                                    }
                                 }
                             }
-                        }
 
-                        // 2) Models: BuildStructuredDescriptionForModel returns null for non-model snippets.
-                        var modelStructure = _codeDescriptionService.BuildModelStructureDescription(snippet, resources).Result;
+                            // 2) Models: BuildStructuredDescriptionForModel returns null for non-model snippets.
+                            var modelResult = _codeDescriptionService.BuildModelStructureDescription(snippet, resources);
 
-                        if (modelStructure != null && !string.IsNullOrWhiteSpace(modelStructure.QualifiedName))
-                        {
-                            modelsByQualifiedName[modelStructure.QualifiedName] = new ModelCatalogEntry
+                            if (modelResult != null && modelResult.Successful && modelResult.Result != null &&
+                                !string.IsNullOrWhiteSpace(modelResult.Result.QualifiedName))
                             {
-                                RepoId = repoId,
-                                RelativePath = file.RelativePath,
-                                SubKind = result.SubKind,
-                                Structure = modelStructure
-                            };
+                                var modelStructure = modelResult.Result;
+
+                                modelsByQualifiedName[modelStructure.QualifiedName] = new ModelCatalogEntry
+                                {
+                                    RepoId = repoId,
+                                    RelativePath = file.RelativePath,
+                                    SubKind = result.SubKind,
+                                    Structure = modelStructure
+                                };
+                            }
                         }
                     }
                 }

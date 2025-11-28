@@ -9,16 +9,15 @@ using LagoVista.MediaServices.Interfaces;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Newtonsoft.Json;
+using NUnit.Framework;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace LagoVista.AI.Tests
 {
 
     [TestClass]
+    [Category("IntegrationTests")]
     public class OpenAITests
     {
         OpenAIManager _mgr;

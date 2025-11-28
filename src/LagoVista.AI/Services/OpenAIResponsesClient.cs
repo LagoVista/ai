@@ -91,11 +91,29 @@ namespace LagoVista.AI.Services
                         _adminLogger.AddError("[OpenAIResponsesClient_GetAnswerAsync__HTTP]", errorMessage);
                         _adminLogger.AddError("[OpenAIResponsesClient_GetAnswerAsync__Body]", errorBody);
 
-                        var error = JsonConvert.DeserializeObject<OpenAIErrorResponse>(errorBody);
+                        OpenAIErrorResponse error = null;
+                        try
+                        {
+                            error = JsonConvert.DeserializeObject<OpenAIErrorResponse>(errorBody);
+                        }
+                        catch (Exception ex)
+                        {
+                            // Don't let a malformed error payload blow up the HTTP error branch.
+                            _adminLogger.AddException("[OpenAIResponsesClient_GetAnswerAsync__ErrorDeserialize]", ex);
+                        }
 
-                        await PublishLlmEventAsync(sessionId, "LLMFailed", "failed", $"{errorMessage} - {error}", null, cancellationToken);
+                        var reasonSuffix = error != null ? $"Reason: {error}" : $"Raw: {errorBody}";
 
-                        return InvokeResult<AgentExecuteResponse>.FromError($"{errorMessage}; Reason: {error}");
+                        await PublishLlmEventAsync(
+                            sessionId,
+                            "LLMFailed",
+                            "failed",
+                            $"{errorMessage} - {reasonSuffix}",
+                            null,
+                            cancellationToken);
+
+                        return InvokeResult<AgentExecuteResponse>.FromError($"{errorMessage}; {reasonSuffix}");
+
                     }
 
                     var agentResponse = await ReadStreamingResponseAsync(response, executeRequest, sessionId, cancellationToken);

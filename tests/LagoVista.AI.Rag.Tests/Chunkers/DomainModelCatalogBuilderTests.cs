@@ -134,10 +134,10 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
                 };
 
                 chunkerMock
-                    .Setup(c => c.DetectForFile(sourceText, "Models/Device.cs"))
+                    .Setup(c => c.DetectForFile(It.IsAny<string>(), It.IsAny<string>()))
                     .Returns(detectionResult);
 
-                var domainInfo = new DomainSummaryInfo("Devices", "Devices Domain", null, "Domain Description", DomainDescription.DomainTypes.Service, "DomainType", "Domainproperty");
+                var domainInfo = new DomainSummaryInfo("Devices", "Devices Domain","Some Title", "Domain Description", DomainDescription.DomainTypes.Service, "DomainType", "Domainproperty");
 
                 chunkerMock
                     .Setup(c => c.ExtractDomains(sourceText))
@@ -153,8 +153,9 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
 
                 descriptorMock
                     .Setup(c => c.BuildModelStructureDescription(
-                        sourceText))
-                    .Returns(InvokeResult<ModelStructureDescription>.Create( modelStructure));
+                        It.IsAny<string>(),
+                        It.IsAny<IReadOnlyDictionary<string, string>>()))
+                    .Returns(InvokeResult<ModelStructureDescription>.Create(modelStructure));
 
                 var catalog = await sut.BuildAsync(RepoId, files, LoadResources());
 

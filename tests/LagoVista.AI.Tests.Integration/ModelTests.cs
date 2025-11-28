@@ -4,11 +4,13 @@
 // --- END CODE INDEX META ---
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 
 namespace LagoVista.AI.Tests
 {
     [TestClass]
+    [Category("IntegrationTests")]
     public class ModelTests
     {
         [TestMethod]
