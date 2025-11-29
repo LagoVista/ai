@@ -2,7 +2,7 @@
 
 **Title:** Agent Tool Implementation and Execution Contract  
 **Status:** Accepted  
-**Version:** 1.1  
+**Version:** 1.2  
 **Owner:** Aptix Orchestrator / Reasoner  
 **Namespace:** LagoVista.AI.Services.Tools  
 **Last Updated:** 2025-11-29  
@@ -11,356 +11,258 @@
 
 ## 1. Purpose
 
-This DDR defines the required contract for implementing Aptix Agent Tools executed by the Aptix Reasoner via the Agent Tool Executor.
+This DDR defines the contract for implementing Aptix Agent Tools executed by the Aptix Reasoner via the Agent Tool Executor.
 
-All tools:
-- run *only* on the server side
-- implement `IAgentTool`
-- communicate strictly through JSON argument payloads and JSON result payloads
-- expose a static `GetSchema()` describing their OpenAI tool/function schema
-- expose a `ToolUsageMetadata` constant string describing detailed, LLM-facing usage guidance
-- participate in a strict call/return protocol through the OpenAI `/responses` API
+The goals for this spec are:
 
-This guarantees stability, validation, deterministic schemas, consistent logging, predictable error flows, rich usage guidance, and turn resumption.
+- Provide a single, stable interface (`IAgentTool`) for all tools the LLM can invoke.
+- Clearly describe _how we know_ whether a tool is fully executed on the server or requires a client-side executor.
+- Clearly describe _where this logic is used_ in the runtime (Agent Tool Executor and Agent Reasoner).
+- Ensure tools are safe, deterministic, and observable (logging + error handling).
+
+This document supersedes earlier versions of AGN-005 by adding an explicit execution-mode property on `IAgentTool`.
 
 ---
 
-## 2. Tool Contract
+## 2. Scope
 
-### 2.1 Required Interface
+**In scope**
 
-All tools MUST implement:
+- All tools the LLM is allowed to call via the Aptix Orchestrator.
+- The `IAgentTool` interface and its expected behavior.
+- How tools plug into:
+  - `IAgentToolExecutor`
+  - `AgentReasoner`
+  - `AgentExecuteRequest` / `AgentExecuteResponse`
+
+**Out of scope (for now)**
+
+- Detailed per-tool schemas (arguments / outputs for specific tools).
+- Full client-side execution flow (IDE integration, UI behavior, etc.).
+- Telemetry pipeline beyond the basic logging requirements.
+
+A future revision may add a dedicated “tool flows” DDR once we have real-world experience with the patterns defined here.
+
+---
+
+## 3. Execution Model Overview
+
+From the LLM’s perspective, every tool is just a JSON-described function that returns JSON. Internally, Aptix breaks tool execution into three layers:
+
+1. **Server Tool Implementation (`IAgentTool`)**
+   - Lives in the LagoVista backend.
+   - Implements validation, shaping, and optionally full server-side behavior.
+   - Exposes `IsToolFullyExecutedOnServer` to declare its execution mode.
+
+2. **Agent Tool Executor (`IAgentToolExecutor`)**
+   - Discovers and invokes `IAgentTool` instances.
+   - Maps tool implementations onto `AgentToolCall` results.
+   - Encodes whether further client-side execution is required.
+
+3. **Agent Reasoner (`AgentReasoner`)**
+   - Calls the LLM and receives tool calls.
+   - Uses `IAgentToolExecutor` to run tools.
+   - Decides whether:
+     - It can remain in a server-only loop (all tools fully handled on server), or
+     - It must return to the client for additional execution (one or more tools require client execution).
+
+**Important invariant**
+
+> Every tool the LLM can call has a server-side `IAgentTool` implementation. There are no “client-only” tools in the protocol.  
+>  
+> What we previously called “client tools” are now defined as tools whose server implementation performs only validation + shaping and declares that the final behavior must be executed by a client-side executor.
+
+---
+
+## 4. `IAgentTool` Contract
+
+All agent tools MUST implement the `IAgentTool` interface (namespace may differ slightly based on final project layout):
 
 ```csharp
-public interface IAgentTool
+using System.Threading;
+using System.Threading.Tasks;
+using LagoVista.Core.Validation;
+using LagoVista.AI.Models;
+
+namespace LagoVista.AI.Interfaces
 {
-    string Name { get; }
-
-    Task<InvokeResult<string>> ExecuteAsync(
-        string argumentsJson,
-        AgentToolExecutionContext context,
-        CancellationToken cancellationToken = default);
-
-    static object GetSchema();
-}
-```
-
-In addition, all tool *types* MUST define:
-
-```csharp
-public const string ToolUsageMetadata = """...""";
-```
-
-- `GetSchema()` exposes the OpenAI tool/function JSON schema.
-- `ToolUsageMetadata` exposes human-readable, LLM-facing usage guidance that the Reasoner will surface in the system prompt.
-
-> Note: `ToolUsageMetadata` is a **contractual requirement of this DDR**, but cannot be enforced via the `IAgentTool` interface because it is a static member. Compliance is enforced by convention, code review, and automated validation.
-
-### 2.2 Naming Rules
-- Unique system-wide
-- `lowercase_snake_case`
-- Must match the `name` inside `GetSchema()`
-- Used directly by the Reasoner to bind calls to tool instances
-
-Example:
-```csharp
-public const string ToolName = "testing_ping_pong";
-public string Name => ToolName;
-```
-
----
-
-## 3. Argument Handling
-
-### 3.1 JSON Arguments Only
-Tools receive the raw JSON string from the LLM tool call.
-
-Tools MUST:
-- Validate for null/empty
-- Deserialize using **Json.NET**
-- Never throw on deserialization errors
-- Treat missing/null fields as defaults
-- Return `InvokeResult<string>.FromError()` on validation issues
-
-DTOs SHOULD be private classes:
-```csharp
-private sealed class PingPongArgs
-{
-    public string Message { get; set; }
-    public int? Count { get; set; }
-}
-```
-
-### 3.2 Required Field Enforcement
-Tools MUST explicitly validate required fields and return structured error results.
-
----
-
-## 4. Return Values & Serialization
-
-### 4.1 Return Type
-Tools MUST return:
-```csharp
-InvokeResult<string>
-```
-where `.Result` contains a JSON string.
-
-### 4.2 Serialization
-Tools MUST serialize responses using **Json.NET**:
-```csharp
-var json = JsonConvert.SerializeObject(result);
-return InvokeResult<string>.Create(json);
-```
-
-### 4.3 Tools MUST NOT THROW
-Exceptions must be caught and wrapped:
-```csharp
-catch (Exception ex)
-{
-    _logger.AddException("[ToolName_ExecuteAsync__Exception]", ex);
-    return InvokeResult<string>.FromError("ToolName failed to process arguments.");
-}
-```
-
----
-
-## 5. Execution Context Requirements
-
-Tools receive:
-```csharp
-AgentToolExecutionContext context
-```
-
-Tools MUST include identifiers in results:
-```csharp
-SessionId = context?.SessionId,
-ConversationId = context?.Request?.ConversationId,
-```
-
-This ensures full traceability for sessions, turns, and replay.
-
----
-
-## 6. Logging Contract
-
-### 6.1 Required exception logging
-```csharp
-_logger.AddException("[<ToolName>_ExecuteAsync__Exception]", ex);
-```
-
-### 6.2 Custom event logging
-Tools MAY log custom events using **arrays of KeyValuePair**, NOT dictionaries:
-```csharp
-_logger.AddCustomEvent(
-    LogLevel.Error,
-    "FailureInjectionTool.ExecuteAsync",
-    "Intentional failure requested.",
-    new[]
+    public interface IAgentTool
     {
-        new KeyValuePair<string,string>("ConversationId", context?.Request?.ConversationId ?? ""),
-        new KeyValuePair<string,string>("SessionId", context?.SessionId ?? ""),
-        new KeyValuePair<string,string>("Payload", args.Payload ?? "")
-    });
-```
+        /// <summary>
+        /// Stable, unique tool name used in LLM tool schemas and in
+        /// AgentToolCall.ToolName. Must be globally unique within the
+        /// Aptix tool catalog.
+        /// </summary>
+        string Name { get; }
 
----
+        /// <summary>
+        /// Human-readable usage guidance for this tool. This content may
+        /// be surfaced to LLMs as part of system or developer prompts
+        /// and MUST be kept in sync with the actual behavior.
+        /// </summary>
+        string ToolUsageMetadata { get; }
 
-## 7. Static Schema & Usage Contract
+        /// <summary>
+        /// Declares whether this tool performs its full execution on the server.
+        ///
+        /// - true  => The tool validates inputs AND performs its final behavior
+        ///            entirely on the server. The JSON result returned from
+        ///            ExecuteAsync can be passed directly back to the LLM as
+        ///            a completed tool_result.
+        ///
+        /// - false => The tool performs only server-side validation, shaping,
+        ///            authorization checks, and/or enrichment. It does NOT
+        ///            perform the final side effect. Instead, it prepares a
+        ///            payload for a client-side executor to consume.
+        ///
+        /// In both cases, the tool still runs on the server and is invoked
+        /// via IAgentToolExecutor. This flag is the canonical source of truth
+        /// for execution mode decisions in the Reasoner.
+        /// </summary>
+        bool IsToolFullyExecutedOnServer { get; }
 
-All tools MUST define:
-
-```csharp
-public static object GetSchema()
-```
-
-and:
-
-```csharp
-public const string ToolUsageMetadata = """...""";
-```
-
-### 7.1 Schema (`GetSchema`)
-
-`GetSchema()` MUST return an anonymous object following the OpenAI "function" schema format:
-
-```csharp
-return new
-{
-    type = "function",
-    name = ToolName,
-    description = "...",
-    parameters = new
-    {
-        type = "object",
-        properties = new { /* ... */ },
-        required = Array.Empty<string>()
+        /// <summary>
+        /// Executes the tool logic.
+        ///
+        /// Implementations MUST:
+        /// - Never throw unhandled exceptions (return failures via InvokeResult).
+        /// - Respect the IsToolFullyExecutedOnServer contract.
+        /// - Populate the supplied AgentToolCall with status, messages, and
+        ///   any JSON payloads produced.
+        /// </summary>
+        Task<InvokeResult<AgentToolCall>> ExecuteAsync(
+            AgentToolCall call,
+            AgentToolExecutionContext context,
+            CancellationToken cancellationToken);
     }
-};
+}
 ```
 
-Schema requirements:
-- Must be deterministic and stable across process restarts.
-- Must fully describe all arguments the tool expects.
-- `name` must match `ToolName` and `IAgentTool.Name`.
-- `description` must be clear enough for the LLM to decide when to call the tool.
+Key points:
 
-The Reasoner uses this schema to populate the `/responses` request `tools` array. Without a valid schema, the tool cannot be safely exposed to the LLM.
-
-### 7.2 Usage Metadata (`ToolUsageMetadata`)
-
-Each tool MUST define a constant, multi-line string:
-
-```csharp
-public const string ToolUsageMetadata = """
-<detailed usage guidance>
-""";
-```
-
-This string:
-- Is **LLM-facing usage guidance** for how, when, and why to use the tool.
-- Is surfaced by the Aptix Reasoner in the system prompt alongside the tool schema.
-- Acts as the canonical, code-adjacent distillation of the DDR for that tool.
-
-#### 7.2.1 Content Requirements
-
-`ToolUsageMetadata` MUST:
-- Describe the tool's **primary purpose** and intent.
-- Explain **when to use** the tool and when **not** to use it.
-- Explain how to construct arguments (e.g., "always use DocPath from RAG snippet headers").
-- Describe important behavior such as:
-  - precedence rules (e.g., `ActiveFiles` vs. backing store)
-  - idempotency expectations
-  - paging/limits behavior
-  - performance considerations ("call sparingly" vs. "safe to call often")
-- Document known **error codes** or error shapes returned in the JSON payload.
-- Provide **good vs. bad usage examples** where relevant.
-- Be written in clear, concise English that the Reasoner can drop into the system prompt.
-
-`ToolUsageMetadata` MUST NOT:
-- Contain secrets, API keys, or environment-specific configuration.
-- Contradict the `GetSchema()` definition.
-- Make assumptions about internal implementation details that can change without breaking the contract.
-
-#### 7.2.2 Recommended Format
-
-While not strictly required, the following format is RECOMMENDED:
-
-```text
-<tool_name> — Usage Guide
-
-Primary purpose:
-- ...
-
-Rules:
-- ...
-
-Arguments:
-- path: ...
-- maxBytes: ...
-
-Error codes:
-- ALREADY_IN_CONTEXT: ...
-- NOT_FOUND: ...
-
-Good usage:
-- ...
-
-Bad usage:
-- ...
-```
-
-This structure makes it easy for the Reasoner to display the guidance in a consistent way for all tools.
-
-#### 7.2.3 Reasoner Responsibilities
-
-The Aptix Reasoner MUST:
-- Discover `ToolUsageMetadata` for each tool type via reflection.
-- Inject the usage text into the system prompt or a dedicated "tool guidance" section alongside the OpenAI tool schema.
-- Ensure that:
-  - `ToolUsageMetadata` is kept in sync with the exposed schema.
-  - Missing or empty `ToolUsageMetadata` is treated as a configuration error.
+- The **tool itself** declares whether it is **server-final** (`IsToolFullyExecutedOnServer = true`) or **server-preflight + client-final** (`IsToolFullyExecutedOnServer = false`).
+- `IAgentToolExecutor` and `AgentReasoner` MUST treat this property as the single source of truth for execution mode.
 
 ---
 
-## 8. Cancellation Support
+## 5. Agent Tool Executor Responsibilities
 
-Tools MUST support `CancellationToken`.
+The Agent Tool Executor is responsible for:
 
-For long-running actions:
-```csharp
-await Task.Delay(ms, cancellationToken);
-```
+1. **Discovery**
+   - Maintain a registry of `IAgentTool` instances keyed by `Name`.
+   - Return a clear failure if a requested tool name cannot be resolved.
 
-If canceled:
-- Tool MUST return a **successful InvokeResult** describing cancellation.
-- Tool MUST NOT throw.
+2. **Execution**
+   - For each `AgentToolCall` emitted by the LLM, find the matching `IAgentTool`.
+   - Invoke `ExecuteAsync`, passing:
+     - The `AgentToolCall` representing the LLM’s request.
+     - An `AgentToolExecutionContext` containing Agent/Conversation/Session/Org/User info.
 
----
+3. **Mapping to `AgentToolCall`**
+   - After execution, the executor MUST:
+     - Set `AgentToolCall.IsServerTool = true` (all tools are mediated by the server).
+     - Set `AgentToolCall.WasExecuted` based on whether `ExecuteAsync` completed successfully.
+     - Use `IAgentTool.IsToolFullyExecutedOnServer` to decide whether additional client-side execution is required.
 
-## 9. Error Propagation Rules
+   A typical mapping will look like:
 
-Tools may intentionally return:
-```csharp
-InvokeResult<string>.FromError("Message here");
-```
+   - **Server-final tools** (`IsToolFullyExecutedOnServer == true`)
+     - `IsServerTool = true`
+     - `WasExecuted = true` (unless there was a failure)
+     - Tool populates `ResultJson` with the final LLM-facing result.
+     - No explicit “client required” marker is needed for this mode.
 
-Tool failures MUST:
-- Propagate through the Tool Executor.
-- Be encoded as **tool error messages** in the `/responses` turn.
-- Allow the Reasoner to reconcile and continue.
+   - **Server-preflight tools** (`IsToolFullyExecutedOnServer == false`)
+     - `IsServerTool = true`
+     - `WasExecuted = true` (preflight completed)
+     - Tool populates a “prepared payload” for the client (e.g., a normalized request object).
+     - The executor/Reasoner will ultimately ensure that this tool call is surfaced back to the client for the final step.
 
-Tools MUST NOT:
-- Throw exceptions for normal failures.
-- Generate malformed JSON.
-- Crash the executor.
+4. **Error handling**
+   - The executor MUST never allow unhandled exceptions to escape.
+   - Failures MUST be converted into `InvokeResult` failure responses.
+   - `AgentToolCall` should carry error messages so they are visible to the Reasoner and ultimately to the client if needed.
 
----
-
-## 10. Reference Implementations
-
-The following tools strictly conform to this DDR:
-
-- `PingPongTool`
-- `CalculatorTool`
-- `DelayTool`
-- `FailureInjectionTool`
-
-These demonstrate valid patterns:
-- argument DTOs
-- deterministic schemas
-- cancellation support
-- error injection and propagation
-- structured logging
-- inclusion of `ToolUsageMetadata` with clear, LLM-facing guidance
+A future revision will define the exact `AgentToolCall` fields used to signal “client execution required” (e.g., a `RequiresClientExecution` flag and/or a dedicated client payload property). For now, **AGN-005 treats `IsToolFullyExecutedOnServer` as the canonical declaration of intent**, and the executor is responsible for mapping that intent into the transport model.
 
 ---
 
-## 11. Future Extensions
+## 6. Agent Reasoner Integration
 
-This DDR allows extension into:
-- multi-step or streaming tools
-- binary/base64 return payloads
-- complex nested JSON schemas
-- permission-aware tools
-- identity-aware tools using `context.UserId`
+The `AgentReasoner` uses tools via `IAgentToolExecutor`. The relevant control-flow rules are:
 
-No changes to the core interface are required. `ToolUsageMetadata` SHOULD be updated to reflect any new behavior or constraints.
+1. **Tool discovery loop**
+   - After each LLM call, the Reasoner inspects `AgentExecuteResponse.ToolCalls`.
+   - For each tool call, it invokes `IAgentToolExecutor.ExecuteServerToolAsync`.
+
+2. **Server-only loop vs. client handoff**
+   - If **all** tools associated with a response have `IsToolFullyExecutedOnServer == true` and execute successfully:
+     - The Reasoner MAY remain in a server-only loop:
+       - Collect tool results.
+       - Feed them back to the LLM via `AgentExecuteRequest.ToolResultsJson`.
+       - Continue until the LLM returns a response with no additional tool calls or the max iteration safeguard is hit.
+
+   - If **any** tool has `IsToolFullyExecutedOnServer == false`:
+     - The Reasoner MUST ensure that the corresponding `AgentToolCall` entries are returned to the client in `AgentExecuteResponse.ToolCalls`.
+     - The client is responsible for:
+       - Interpreting the preflighted payload from the server.
+       - Executing the final behavior locally (IDE, UI, etc.).
+       - Sending the final tool results back in a subsequent `AgentExecuteRequest` via `ToolResultsJson`.
+
+3. **How this answers “how we know” and “where it is used”**
+   - **How we know**  
+     - We know the intended execution mode of a tool because the tool itself declares it via `IAgentTool.IsToolFullyExecutedOnServer`.
+   - **Where it is used**  
+     - `IAgentToolExecutor` reads `IsToolFullyExecutedOnServer` and maps it into the `AgentToolCall` result.
+     - `AgentReasoner` uses those `AgentToolCall` instances (and associated flags) to decide whether it can stay in a server-only loop or must hand control back to the client.
 
 ---
 
-## 12. Acceptance Criteria
+## 7. Logging Contract
 
-A tool is compliant IFF:
-- It implements all requirements in sections **2–9**.
-- It defines a non-empty `ToolUsageMetadata` constant string describing how the tool should be used.
-- It never throws unhandled exceptions.
-- It includes session + conversation identifiers in results.
-- It returns stable JSON payloads.
-- The schema output is deterministic and matches the actual argument/response shapes.
-- Logging uses correct `KeyValuePair<string,string>` arrays.
-- Error results propagate correctly through the orchestrator.
-- The Reasoner can discover and surface both the schema (`GetSchema()`) and usage guidance (`ToolUsageMetadata`) for the tool.
+Tools MUST be well-behaved citizens in the logging ecosystem.
+
+1. **Required exception logging**
+
+   When a tool catches an exception, it MUST log it using the standard pattern:
+
+   ```csharp
+   _logger.AddException("[<ToolName>_ExecuteAsync__Exception]", ex);
+   ```
+
+2. **Custom events**
+
+   Tools MAY log custom events using arrays of `KeyValuePair<string,string>` (not dictionaries), for example:
+
+   ```csharp
+   _logger.AddCustomEvent(
+       LagoVista.Core.PlatformSupport.LogLevel.Error,
+       "<ToolName>_ExecuteAsync",
+       "Tool execution failed validation.",
+       new[]
+       {
+           new KeyValuePair<string, string>("ConversationId", context?.Request?.ConversationId ?? string.Empty),
+           new KeyValuePair<string, string>("SessionId", context?.SessionId ?? string.Empty)
+       });
+   ```
 
 ---
 
-**End of AGN-005**
+## 8. Compliance Checklist
+
+A tool is compliant with AGN-005 if and only if:
+
+- It implements `IAgentTool` exactly as defined in this DDR.
+- It provides a stable, unique `Name`.
+- It defines a non-empty `ToolUsageMetadata` string that accurately describes usage.
+- It sets `IsToolFullyExecutedOnServer` correctly to describe its intended execution mode.
+- It never allows unhandled exceptions to escape from `ExecuteAsync`.
+- It returns deterministic JSON payloads whose schema matches the advertised behavior.
+- It includes session and conversation identifiers in any result or log entries where appropriate.
+- It logs exceptions and optional custom events according to the logging contract.
+- It integrates cleanly with `IAgentToolExecutor` and can be exercised end-to-end via the Agent Reasoner.
+
+---
+
+**End of AGN-005 (v1.2)**
