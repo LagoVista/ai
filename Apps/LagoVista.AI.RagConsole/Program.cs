@@ -31,6 +31,7 @@ namespace LagoVista.AI.RagConsole
         static bool showHelp = false;
         static bool verbose = false;
         static bool dryRun = false;
+        static CodeSubKind? subKindFilter;
 
         public static async Task Main(string[] args)
         {
@@ -65,6 +66,19 @@ namespace LagoVista.AI.RagConsole
                 else if (arg.StartsWith("--repo=", StringComparison.OrdinalIgnoreCase))
                 {
                     repoId = arg.Substring("--repo=".Length);
+                }
+                else if (arg.StartsWith("--subkindfilter=", StringComparison.OrdinalIgnoreCase))
+                {
+                    var contentType = arg.Substring("--subkindfilter=".Length);
+                    if (Enum.TryParse<CodeSubKind>(contentType, true, out var parsed))
+                    {
+                        subKindFilter = parsed;
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Unknown subkind filter '{contentType}'.");
+                        showHelp = true;
+                    }
                 }
                 else if (arg.Equals("--repo", StringComparison.OrdinalIgnoreCase))
                 {
@@ -118,7 +132,7 @@ namespace LagoVista.AI.RagConsole
             LagoVista.AI.Rag.Startup.Init();
 
             var orchestrator = SLWIOC.Create<IIndexRunOrchestrator>();
-            await orchestrator.RunAsync(result.Result, mode, repoId, verbose, dryRun);
+            await orchestrator.RunAsync(result.Result, mode, repoId, subKindFilter, verbose, dryRun);
         }
 
         internal class OpenAISettings : IOpenAISettings

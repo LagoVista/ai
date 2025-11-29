@@ -8,6 +8,6 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Interfaces
 {
     public interface ISourceFileProcessor
     {
-        InvokeResult<ProcessedFileResults> BuildChunks(IndexFileContext indexFileContext, DomainModelCatalog catalog, IReadOnlyDictionary<string, string> resources);
+        InvokeResult<ProcessedFileResults> BuildChunks(IndexFileContext indexFileContext, DomainModelCatalog catalog, CodeSubKind? subKindFilter, IReadOnlyDictionary<string, string> resources);
     }
 }

@@ -39,7 +39,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
         /// <summary>
         /// Entry point: orchestrates the 7.x steps for a single file.
         /// </summary>
-        public InvokeResult<ProcessedFileResults> BuildChunks(IndexFileContext ctx, DomainModelCatalog catalog, IReadOnlyDictionary<string, string> resources)
+        public InvokeResult<ProcessedFileResults> BuildChunks(IndexFileContext ctx, DomainModelCatalog catalog, CodeSubKind? subTypeFilter, IReadOnlyDictionary<string, string> resources)
         {
             var filePath = ctx.FullPath;
 
@@ -59,7 +59,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                 ctx.Contents = System.Text.ASCIIEncoding.ASCII.GetBytes(fileText);
             }
 
-            if (ctx.RelativePath.StartsWith("ddrs"))
+            if (ctx.RelativePath.StartsWith("ddrs") && (!subTypeFilter.HasValue || subTypeFilter == CodeSubKind.Ddr))
             {
                 var description = _descriptionServices.BuildDdrDescription(ctx, fileText);
                 if(description.Successful)
@@ -87,6 +87,11 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                 foreach (var splitSymbol in splitSymbols)
                 {
                     var subKindResult = AnalyzeSubKinds(splitSymbol.Text, filePath);
+                    if(subTypeFilter.HasValue && subKindResult.SubKind != subTypeFilter)
+                    {
+                        continue;
+                    }
+
                     var symbolText = splitSymbol.Text;
                     switch (subKindResult.SubKind)
                     {

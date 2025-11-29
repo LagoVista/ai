@@ -142,7 +142,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                 payloadResults.Add(InvokeResult<IRagPoint>.Create( point));
             }
 
-            var uniqueBlobIds = payloadResults.Select(pay => pay.Result.Payload.BlobUri).Distinct();
+            var uniqueBlobIds = payloadResults.Select(pay => pay.Result.Payload.SnippetBlobUri).Distinct();
             if(uniqueBlobIds.Count() != payloadResults.Count())
             {
                 throw new ArgumentNullException("Blob uris within a vector payload must be unique");

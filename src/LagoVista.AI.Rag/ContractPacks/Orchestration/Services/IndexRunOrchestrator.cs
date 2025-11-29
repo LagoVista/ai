@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Rag.Chunkers.Interfaces;
+using LagoVista.AI.Rag.Chunkers.Models;
 using LagoVista.AI.Rag.Chunkers.Services;
 using LagoVista.AI.Rag.ContractPacks.Content.Interfaces;
 using LagoVista.AI.Rag.ContractPacks.Infrastructure.Interfaces;
@@ -88,7 +89,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
             _contentStorage = contentStorage ?? throw new ArgumentNullException(nameof(contentStorage));
         }
 
-        public async Task RunAsync(IngestionConfig config, string mode = null, string processRepo = null, bool verbose = false, bool dryrun = false, CancellationToken cancellationToken = default)
+        public async Task RunAsync(IngestionConfig config, string mode = null, string processRepo = null, CodeSubKind? subKindFilter = null, bool verbose = false, bool dryrun = false, CancellationToken cancellationToken = default)
         {
             // 1. Load configuration
             if (config == null)
@@ -163,7 +164,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
 
                     var  fileContext = await _indexFileContextBuilder.BuildAsync(config, gitInfo.Result, repoId, filePlan, localIndex, cancellationToken);
                    
-                    var fileProcessResult = _sourceFileProcessor.BuildChunks(fileContext, domainCatalog, resources);
+                    var fileProcessResult = _sourceFileProcessor.BuildChunks(fileContext, domainCatalog, subKindFilter, resources);
                     if (fileProcessResult.Successful)
                     {
                         if(fileProcessResult.Result.RagPoints.Count == 0)
@@ -183,7 +184,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
                             result.Vector = embedResult.Result.Vector;
                             result.Payload.EmbeddingModel = embedResult.Result.EmbeddingModel;
 
-                            await _contentStorage.AddContentAsync(result.Payload.BlobUri, result.Contents);
+                            await _contentStorage.AddContentAsync(result.Payload.SnippetBlobUri, result.Contents);
                         }
 
                         await _qdrantClient.UpsertInBatchesAsync(config.Qdrant.Collection, fileProcessResult.Result.RagPoints, config.Qdrant.VectorSize);
@@ -191,6 +192,8 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
                         var record = localIndex.GetOrAdd(fileContext.RelativePath, fileContext.DocumentIdentity.DocId);
                         record.ContentHash = await ContentHashUtil.ComputeFileContentHashAsync(fileContext.FullPath);
                         await _localIndexStore.SaveAsync(config, repoId, localIndex, cancellationToken);
+
+                        await _contentStorage.AddContentAsync(fileContext.FullPath,fileContext.Contents);
 
                         Console.WriteLine(new String('-', 80));
                     }
