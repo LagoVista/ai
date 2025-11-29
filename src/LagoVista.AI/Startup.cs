@@ -59,6 +59,7 @@ namespace LagoVista.AI
             services.AddSingleton<IAgentToolExecutor, AgentToolExecutor>();
             services.AddSingleton<IServerToolSchemaProvider, DefaultServerToolSchemaProvider>();
             services.AddSingleton<IAgentSessionNamingService, OpenAISessionNamingService>();
+            services.AddSingleton<IServerToolUsageMetadataProvider, DefaultServerToolUsageMetadataProvider>();
 
         }
     }

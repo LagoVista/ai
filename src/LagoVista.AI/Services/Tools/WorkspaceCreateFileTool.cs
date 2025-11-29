@@ -89,7 +89,7 @@ namespace LagoVista.AI.Services.Tools
                 // We also do not act on the arguments for this tool; the
                 // filesystem operation is always performed on the client.
 
-                Args? args = null;
+                Args args = null;
 
                 if (!string.IsNullOrWhiteSpace(argumentsJson))
                 {
