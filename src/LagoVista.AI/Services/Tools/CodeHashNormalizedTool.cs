@@ -21,6 +21,8 @@ namespace LagoVista.AI.Services.Tools
 
         public string Name => ToolName;
 
+        public bool IsToolFullyExecutedOnServer => true;
+
         private readonly IContentHashService _contentHashService;
         private readonly IAdminLogger _logger;
 

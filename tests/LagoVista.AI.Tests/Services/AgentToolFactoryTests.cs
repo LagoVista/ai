@@ -158,6 +158,8 @@ namespace LagoVista.AI.Tests.Services
         {
             public string Name => FakeTool.ToolName;
 
+            public bool IsToolFullyExecutedOnServer => true;
+
             public const string ToolName = "tests_fake_tool";
 
             public const string ToolUsageMetadata = "fake tool meta data";
@@ -184,6 +186,9 @@ namespace LagoVista.AI.Tests.Services
         private sealed class ExplodingTool : IAgentTool
         {
             public const string ToolName = "tests_exploding_tool";
+
+            public bool IsToolFullyExecutedOnServer => true;
+
 
             public string Name => ToolName;
 

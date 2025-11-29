@@ -31,7 +31,10 @@ namespace LagoVista.AI.Services.Tools
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public const string ToolUsageMetadata = "Send a ping, expect a pong!";
+        public bool IsToolFullyExecutedOnServer => true;
+
+
+        public const string ToolUsageMetadata = "This tool is used for testing the system only and should not be used unless explicitly asked for. Send a ping, expect a pong!";
 
         private sealed class PingPongArgs
         {

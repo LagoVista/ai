@@ -27,8 +27,10 @@ namespace LagoVista.AI.Services.Tools
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public const string ToolUsageMetadata = "Not much to do other than expect an error.";
+        public const string ToolUsageMetadata = "This tool is used for testing the system only and should not be used unless explicitly asked for.   Not much to do other than expect an error.";
 
+
+        public bool IsToolFullyExecutedOnServer => true;
 
         private sealed class FailureArgs
         {

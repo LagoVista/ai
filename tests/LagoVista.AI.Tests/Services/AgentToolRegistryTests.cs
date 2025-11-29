@@ -192,6 +192,7 @@ namespace LagoVista.AI.Tests.Services
         {
             public const string ToolName = "tests_valid_tool";
 
+            public bool IsToolFullyExecutedOnServer => true;
             public const string ToolUsageMetadata = "Valid Tool Meta Data";
 
             public string Name => ToolName;
@@ -220,6 +221,7 @@ namespace LagoVista.AI.Tests.Services
             public const string ToolName = ValidTool.ToolName;
             public const string ToolUsageMetadata = "Valid Tool Meta Data";
 
+            public bool IsToolFullyExecutedOnServer => true;
             public string Name => ToolName;
 
             public static object GetSchema()
@@ -246,6 +248,8 @@ namespace LagoVista.AI.Tests.Services
             // No ToolName const on purpose
             public string Name => "tests.no_const";
 
+
+            public bool IsToolFullyExecutedOnServer => true;
             public Task<InvokeResult<string>> ExecuteAsync(
                 string argumentsJson,
                 AgentToolExecutionContext context,
@@ -258,6 +262,8 @@ namespace LagoVista.AI.Tests.Services
         private sealed class EmptyToolNameConstTool : IAgentTool
         {
             public const string ToolName = "";
+
+            public bool IsToolFullyExecutedOnServer => true;
 
             public string Name => ToolName;
 
@@ -279,6 +285,7 @@ namespace LagoVista.AI.Tests.Services
         {
             public const string ToolName = "tests_missing_schema";
 
+            public bool IsToolFullyExecutedOnServer => true;
             public string Name => ToolName;
 
             // Intentionally no GetSchema()
@@ -296,6 +303,7 @@ namespace LagoVista.AI.Tests.Services
         {
             public const string ToolName = "tests_wrong_return_schema";
 
+            public bool IsToolFullyExecutedOnServer => true;
             public string Name => ToolName;
 
             public static string GetSchema()
@@ -318,6 +326,7 @@ namespace LagoVista.AI.Tests.Services
 
             public string Name => ToolName;
 
+            public bool IsToolFullyExecutedOnServer => true;
             public static object GetSchema(string someParam)
             {
                 return new { type = "function", name = ToolName };
@@ -339,7 +348,7 @@ namespace LagoVista.AI.Tests.Services
             public const string ToolName = "invalid.name";
 
             public string Name => ToolName;
-
+            public bool IsToolFullyExecutedOnServer => true;
             public static object GetSchema()
             {
                 // Schema shape doesn't matter here; we never get this far.

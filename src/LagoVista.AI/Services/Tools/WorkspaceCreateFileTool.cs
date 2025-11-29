@@ -28,6 +28,8 @@ namespace LagoVista.AI.Services.Tools
 
         private readonly IAdminLogger _logger;
 
+        public bool IsToolFullyExecutedOnServer => false;
+
         public WorkspaceCreateFileTool(IAdminLogger logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));

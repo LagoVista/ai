@@ -14,6 +14,15 @@ namespace LagoVista.AI.Interfaces
     public interface IAgentTool
     {
         /// <summary>
+        /// Some tools are executed on the agent client side to 
+        /// work with the local file system.  Others are entirey 
+        /// executed on the server.  If they are entirely exeucuted on
+        /// the server this should be true, if the server just 
+        /// pre-flights the client tool call, this should be false.
+        /// </summary>
+        bool IsToolFullyExecutedOnServer {get;}
+
+        /// <summary>
         /// Stable logical name of this tool. Must match the tool name
         /// used in the LLM "tools" parameter and registry registration.
         /// </summary>

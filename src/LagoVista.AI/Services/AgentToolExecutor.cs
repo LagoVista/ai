@@ -6,6 +6,7 @@ using LagoVista.AI.Models;
 using LagoVista.Core.AI.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
+using RingCentral;
 
 namespace LagoVista.AI.Services
 {
@@ -39,7 +40,6 @@ namespace LagoVista.AI.Services
             }
 
             // Default: assume not a server tool until proven otherwise.
-            call.IsServerTool = false;
             call.WasExecuted = false;
 
             if (string.IsNullOrWhiteSpace(call.Name))
@@ -61,7 +61,6 @@ namespace LagoVista.AI.Services
                     "Leaving for client execution.");
             }
 
-            call.IsServerTool = true;
 
             var toolResult = _toolFactory.GetTool(call.Name);
             if (!toolResult.Successful)
@@ -75,6 +74,7 @@ namespace LagoVista.AI.Services
             }
 
             var tool = toolResult.Result;
+            call.IsServerTool = tool.IsToolFullyExecutedOnServer;
             if (tool == null)
             {
                 call.ErrorMessage = $"Tool '{call.Name}' resolved to null instance.";

@@ -23,7 +23,10 @@ namespace LagoVista.AI.Services.Tools
 
         public string Name => ToolName;
 
-        public const string ToolUsageMetadata = "Provide a deley in milliseconds and wait";
+        public const string ToolUsageMetadata = "This tool is used for testing the system only and should not be used unless explicitly asked for. Provide a deley in milliseconds and wait";
+
+
+        public bool IsToolFullyExecutedOnServer => true;
 
 
         public DelayTool(IAdminLogger logger)

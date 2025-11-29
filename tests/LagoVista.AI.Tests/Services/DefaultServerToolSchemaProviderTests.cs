@@ -117,6 +117,7 @@ namespace LagoVista.AI.Tests.Services
 
             public const string ToolUsageMetadata = "Valid Tool Meta Data";
 
+            public bool IsToolFullyExecutedOnServer => true;
 
             public static object GetSchema()
             {
@@ -140,6 +141,7 @@ namespace LagoVista.AI.Tests.Services
         {
             public const string ToolName = "tests_schema_tool_2";
 
+            public bool IsToolFullyExecutedOnServer => true;
 
             public const string ToolUsageMetadata = "Valid Tool Meta Data";
 

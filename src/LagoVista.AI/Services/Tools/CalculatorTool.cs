@@ -20,7 +20,9 @@ namespace LagoVista.AI.Services.Tools
 
         public string Name => ToolName;
 
-        public const string ToolUsageMetadata = "Supply two numbers and an operator";
+        public bool IsToolFullyExecutedOnServer => true;
+
+        public const string ToolUsageMetadata = "This tool is used for testing the system only and should not be used unless explicitly asked for. Supply two numbers and an operator";
 
         public CalculatorTool(IAdminLogger logger)
         {

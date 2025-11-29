@@ -17,6 +17,9 @@ namespace LagoVista.AI.Services.Tools
 
         public string Name => ToolName;
 
+        public bool IsToolFullyExecutedOnServer => false;
+
+
         private readonly IWorkspaceWritePatchOrchestrator _orchestrator;
 
         public WorkspaceWritePatchTool(IWorkspaceWritePatchOrchestrator orchestrator)

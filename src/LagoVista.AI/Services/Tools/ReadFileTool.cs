@@ -21,6 +21,8 @@ namespace LagoVista.AI.Services.Tools
         public const string ToolName = "workspace_read_file";
 
         private readonly IAdminLogger _logger;
+        public bool IsToolFullyExecutedOnServer => true;
+
 
         public ReadFileTool(IAdminLogger logger)
         {
