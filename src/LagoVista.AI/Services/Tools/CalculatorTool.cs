@@ -20,6 +20,8 @@ namespace LagoVista.AI.Services.Tools
 
         public string Name => ToolName;
 
+        public const string ToolUsageMetadata = "Supply two numbers and an operator";
+
         public CalculatorTool(IAdminLogger logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));

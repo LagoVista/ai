@@ -101,7 +101,7 @@ namespace LagoVista.AI.Tests
             private readonly HttpClient _httpClient;
 
             public TestOpenAIResponsesClient(IOpenAISettings settings, IAdminLogger logger, INotificationPublisher publisher, HttpClient httpClient)
-                : base(settings, logger, publisher)
+                : base(settings, logger, new FakeMetaDataProvider(), publisher)
             {
                 _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             }
@@ -146,6 +146,14 @@ namespace LagoVista.AI.Tests
                 AgentContext = new Core.Models.EntityHeader { Id = "agent-1", Text = "Test Agent" },
                 ConversationContext = new Core.Models.EntityHeader { Id = "conv-ctx-1", Text = "Test Conversation Context" }
             };
+        }
+
+        private class FakeMetaDataProvider : IServerToolUsageMetadataProvider
+        {
+            public string GetToolUsageMetadata()
+            {
+                return "THIS IS HOW YOU USE THE TOOL!";
+            }
         }
 
         [Test]

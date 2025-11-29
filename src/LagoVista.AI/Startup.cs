@@ -24,8 +24,11 @@ namespace LagoVista.AI
             toolRegistry.RegisterTool<CalculatorTool>();
             toolRegistry.RegisterTool<DelayTool>();
             toolRegistry.RegisterTool<FailureInjectionTool>();
-            toolRegistry.RegisterTool<DelayTool>();
+
             toolRegistry.RegisterTool<ReadFileTool>();
+            toolRegistry.RegisterTool<WorkspaceWritePatchTool>();
+            toolRegistry.RegisterTool<CodeHashNormalizedTool>();
+            toolRegistry.RegisterTool<WorkspaceCreateFileTool>();
             /*--*/
 
             services.AddSingleton<IAgentToolRegistry>(toolRegistry);

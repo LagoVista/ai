@@ -31,6 +31,8 @@ namespace LagoVista.AI.Services.Tools
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
+        public const string ToolUsageMetadata = "Send a ping, expect a pong!";
+
         private sealed class PingPongArgs
         {
             public string Message { get; set; }

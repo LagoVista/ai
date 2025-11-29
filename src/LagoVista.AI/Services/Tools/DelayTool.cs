@@ -23,6 +23,9 @@ namespace LagoVista.AI.Services.Tools
 
         public string Name => ToolName;
 
+        public const string ToolUsageMetadata = "Provide a deley in milliseconds and wait";
+
+
         public DelayTool(IAdminLogger logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));

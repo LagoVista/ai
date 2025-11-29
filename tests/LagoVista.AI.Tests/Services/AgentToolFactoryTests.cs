@@ -160,6 +160,8 @@ namespace LagoVista.AI.Tests.Services
 
             public const string ToolName = "tests_fake_tool";
 
+            public const string ToolUsageMetadata = "fake tool meta data";
+
             public static object GetSchema()
             {
                 return new
@@ -184,6 +186,9 @@ namespace LagoVista.AI.Tests.Services
             public const string ToolName = "tests_exploding_tool";
 
             public string Name => ToolName;
+
+            public const string ToolUsageMetadata = "Exploding tool meta data";
+
 
             public ExplodingTool(IAdminLogger logger)
             {

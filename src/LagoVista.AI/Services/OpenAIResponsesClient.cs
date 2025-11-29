@@ -33,11 +33,12 @@ namespace LagoVista.AI.Services
         private readonly IServerToolUsageMetadataProvider _metaUsageProvider;
         private readonly INotificationPublisher _notificationPublisher;
 
-        public OpenAIResponsesClient(IOpenAISettings openAiSettings, IAdminLogger adminLogger, INotificationPublisher notificationPublisher)
+        public OpenAIResponsesClient(IOpenAISettings openAiSettings, IAdminLogger adminLogger,IServerToolUsageMetadataProvider usageProvider, INotificationPublisher notificationPublisher)
         {
             _openAiSettings = openAiSettings ?? throw new ArgumentNullException(nameof(openAiSettings));
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
             _notificationPublisher = notificationPublisher ?? throw new ArgumentNullException(nameof(notificationPublisher));
+            _metaUsageProvider = usageProvider ?? throw new ArgumentNullException(nameof(usageProvider));
         }
 
         public async Task<InvokeResult<AgentExecuteResponse>> GetAnswerAsync(

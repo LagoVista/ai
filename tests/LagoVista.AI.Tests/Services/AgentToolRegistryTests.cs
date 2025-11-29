@@ -192,6 +192,8 @@ namespace LagoVista.AI.Tests.Services
         {
             public const string ToolName = "tests_valid_tool";
 
+            public const string ToolUsageMetadata = "Valid Tool Meta Data";
+
             public string Name => ToolName;
 
             public static object GetSchema()
@@ -216,6 +218,7 @@ namespace LagoVista.AI.Tests.Services
         private sealed class AnotherValidToolWithSameName : IAgentTool
         {
             public const string ToolName = ValidTool.ToolName;
+            public const string ToolUsageMetadata = "Valid Tool Meta Data";
 
             public string Name => ToolName;
 

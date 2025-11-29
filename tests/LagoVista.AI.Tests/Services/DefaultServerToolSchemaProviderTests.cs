@@ -115,6 +115,9 @@ namespace LagoVista.AI.Tests.Services
 
             public string Name => ToolName;
 
+            public const string ToolUsageMetadata = "Valid Tool Meta Data";
+
+
             public static object GetSchema()
             {
                 // Simple, easy-to-assert schema
@@ -136,6 +139,9 @@ namespace LagoVista.AI.Tests.Services
         private sealed class AnotherSchemaReturningTool : IAgentTool
         {
             public const string ToolName = "tests_schema_tool_2";
+
+
+            public const string ToolUsageMetadata = "Valid Tool Meta Data";
 
             public string Name => ToolName;
 

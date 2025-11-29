@@ -27,6 +27,9 @@ namespace LagoVista.AI.Services.Tools
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
+        public const string ToolUsageMetadata = "Not much to do other than expect an error.";
+
+
         private sealed class FailureArgs
         {
             public bool? ShouldFail { get; set; }
