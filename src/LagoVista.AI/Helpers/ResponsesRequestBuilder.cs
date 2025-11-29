@@ -13,8 +13,9 @@ namespace LagoVista.AI.Helpers
     ///
     /// Combines:
     /// - ConversationContext (model, system/boot prompt, temperature)
-    /// - AgentExecuteRequest (mode, instruction, continuation id, tools, tool results)
+    /// - AgentExecuteRequest (mode, instruction, continuation id, tools, tool results, optional SystemPrompt)
     /// - ragContextBlock (pre-formatted [CONTEXT] block per AGN-002)
+    /// - toolUsageMetadataBlock (LLM-facing usage metadata for ALL server tools)
     /// </summary>
     public static class ResponsesRequestBuilder
     {
@@ -25,12 +26,14 @@ namespace LagoVista.AI.Helpers
         /// <param name="conversationContext">The reasoning profile / boot prompt for this conversation.</param>
         /// <param name="request">The agent execute request from the client.</param>
         /// <param name="ragContextBlock">The pre-formatted RAG context block (may be null or empty).</param>
+        /// <param name="toolUsageMetadataBlock">LLM-facing usage metadata block containing detailed instructions for all Aptix tools (may be null or empty).</param>
         /// <param name="stream">Whether to stream the response via SSE.</param>
         /// <returns>ResponsesApiRequest representing the body for the /responses call.</returns>
         public static ResponsesApiRequest Build(
             ConversationContext conversationContext,
             AgentExecuteRequest request,
             string ragContextBlock,
+            string toolUsageMetadataBlock,
             bool? stream = null)
         {
             if (conversationContext == null) throw new ArgumentNullException(nameof(conversationContext));
@@ -50,11 +53,11 @@ namespace LagoVista.AI.Helpers
                 dto.PreviousResponseId = request.ResponseContinuationId;
             }
 
-            //
-            // INPUT MESSAGES
-            //
+            // ---------------------------------------------------------------------
+            // (1) INPUT MESSAGES
+            // ---------------------------------------------------------------------
 
-            // 1) Initial turn: include system / boot prompt from ConversationContext
+            // Initial turn: include system / boot prompt + optional per-request SystemPrompt + tool usage metadata
             if (!isContinuation)
             {
                 var systemMessage = new ResponsesMessage
@@ -64,16 +67,37 @@ namespace LagoVista.AI.Helpers
                     {
                         new ResponsesMessageContent
                         {
-                            // Type defaults to "input_text" via DTO
                             Text = conversationContext.System ?? string.Empty
                         }
                     }
                 };
 
+                // Optional per-request SystemPrompt
+                // Allows an agent client to provide additional boot instructions for the LLM.
+                if (!string.IsNullOrWhiteSpace(request.SystemPrompt))
+                {
+                    systemMessage.Content.Add(new ResponsesMessageContent
+                    {
+                        Text = request.SystemPrompt
+                    });
+                }
+
+                // Include the LLM-facing usage metadata block (one big block for all tools)
+                if (!string.IsNullOrWhiteSpace(toolUsageMetadataBlock))
+                {
+                    systemMessage.Content.Add(new ResponsesMessageContent
+                    {
+                        Text = toolUsageMetadataBlock
+                    });
+                }
+
                 dto.Input.Add(systemMessage);
             }
 
-            // 2) User message: [MODE] + [INSTRUCTION] (+ optional [CONTEXT] and [TOOL_RESULTS])
+            // ---------------------------------------------------------------------
+            // (2) USER MESSAGE
+            // ---------------------------------------------------------------------
+
             var userMessage = new ResponsesMessage
             {
                 Role = "user",
@@ -83,7 +107,6 @@ namespace LagoVista.AI.Helpers
             var instructionBlock =
                 "[MODE: " + request.Mode + "]\n\n[INSTRUCTION]\n" + (request.Instruction ?? string.Empty);
 
-            // Primary instruction
             userMessage.Content.Add(new ResponsesMessageContent
             {
                 Text = instructionBlock
@@ -98,7 +121,7 @@ namespace LagoVista.AI.Helpers
                 });
             }
 
-            // Optional TOOL_RESULTS block as additional input_text
+            // Optional TOOL_RESULTS block
             if (!string.IsNullOrWhiteSpace(request.ToolResultsJson))
             {
                 var toolResultsText = ToolResultsTextBuilder.BuildFromToolResultsJson(request.ToolResultsJson);
@@ -113,9 +136,10 @@ namespace LagoVista.AI.Helpers
 
             dto.Input.Add(userMessage);
 
-            //
-            // 3) Tools (only on initial turn)
-            //
+            // ---------------------------------------------------------------------
+            // (3) TOOLS (initial turn only)
+            // ---------------------------------------------------------------------
+
             if (!string.IsNullOrWhiteSpace(request.ToolsJson) && !isContinuation)
             {
                 try
@@ -126,8 +150,7 @@ namespace LagoVista.AI.Helpers
                         dto.Tools = new List<JObject>();
                         foreach (var tool in toolsArray)
                         {
-                            var obj = tool as JObject;
-                            if (obj != null)
+                            if (tool is JObject obj)
                             {
                                 dto.Tools.Add(obj);
                             }
@@ -136,14 +159,14 @@ namespace LagoVista.AI.Helpers
                 }
                 catch (JsonException)
                 {
-                    // If ToolsJson is malformed, silently ignore here.
-                    // Higher-level code can log this if desired.
+                    // Ignore malformed ToolsJson; higher-level code may log
                 }
             }
 
-            //
-            // 4) Tool choice (if specified)
-            //
+            // ---------------------------------------------------------------------
+            // (4) TOOL CHOICE (optional)
+            // ---------------------------------------------------------------------
+
             if (!string.IsNullOrWhiteSpace(request.ToolChoiceName))
             {
                 dto.ToolChoice = new ResponsesToolChoice

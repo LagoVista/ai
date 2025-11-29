@@ -52,7 +52,7 @@ namespace LagoVista.AI.Tests
             var convCtx = CreateConversationContext();
             var request = CreateRequest();
 
-            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty);
+            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty);
             Assert.That(dto.Input[0].Content[0].Type, Is.EqualTo("input_text"));
         }
 
@@ -62,7 +62,7 @@ namespace LagoVista.AI.Tests
             var convCtx = CreateConversationContext();
             var request = CreateRequest();
 
-            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty);
+            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty);
 
             Assert.That(dto.Model, Is.EqualTo("gpt-5.1"));
             Assert.That(dto.Temperature, Is.EqualTo(0.7f));
@@ -77,12 +77,54 @@ namespace LagoVista.AI.Tests
         }
 
         [Test]
+        public void Build_InitialRequest_IncludesSystemPrompt_WhenProvided()
+        {
+            var convCtx = CreateConversationContext();
+            var request = CreateRequest();
+            request.SystemPrompt = "You are working only with billing-related data.";
+
+            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty);
+
+            Assert.That(dto.Input.Count, Is.GreaterThanOrEqualTo(2));
+
+            var systemMessage = dto.Input[0];
+            Assert.That(systemMessage.Role, Is.EqualTo("system"));
+            Assert.That(systemMessage.Content.Count, Is.EqualTo(2));
+
+            Assert.That(systemMessage.Content[0].Text, Is.EqualTo("You are the Aptix Reasoner."));
+            Assert.That(systemMessage.Content[1].Text, Is.EqualTo("You are working only with billing-related data."));
+        }
+
+        [Test]
+        public void Build_InitialRequest_IncludesSystemPrompt_AndToolUsageMetadata_WhenBothProvided()
+        {
+            var convCtx = CreateConversationContext();
+            var request = CreateRequest();
+            request.SystemPrompt = "You are working only with billing-related data.";
+
+            var toolUsageMetadataBlock = "<<<APTIX_SERVER_TOOL_USAGE_METADATA_BEGIN>>>\n...tool usage here...\n<<<APTIX_SERVER_TOOL_USAGE_METADATA_END>>>";
+
+            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, toolUsageMetadataBlock);
+
+            Assert.That(dto.Input.Count, Is.GreaterThanOrEqualTo(2));
+
+            var systemMessage = dto.Input[0];
+            Assert.That(systemMessage.Role, Is.EqualTo("system"));
+            Assert.That(systemMessage.Content.Count, Is.EqualTo(3));
+
+            Assert.That(systemMessage.Content[0].Text, Is.EqualTo("You are the Aptix Reasoner."));
+            Assert.That(systemMessage.Content[1].Text, Is.EqualTo("You are working only with billing-related data."));
+            Assert.That(systemMessage.Content[2].Text, Is.EqualTo(toolUsageMetadataBlock));
+        }
+
+        [Test]
         public void Build_ContinuationRequest_SetsPreviousResponseIdAndOmitsSystemMessage()
         {
             var convCtx = CreateConversationContext();
             var request = CreateRequest(previousResponseId: "resp_123");
+            request.SystemPrompt = "This should be ignored on continuation.";
 
-            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty);
+            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty);
 
             Assert.That(dto.PreviousResponseId, Is.EqualTo("resp_123"));
 
@@ -97,7 +139,7 @@ namespace LagoVista.AI.Tests
             var convCtx = CreateConversationContext();
             var request = CreateRequest(mode: "DDR_CREATION", instruction: "Create a DDR.");
 
-            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty);
+            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty);
 
             var userMessage = dto.Input[dto.Input.Count - 1];
             Assert.That(userMessage.Role, Is.EqualTo("user"));
@@ -116,7 +158,7 @@ namespace LagoVista.AI.Tests
             var request = CreateRequest();
             var ragContextBlock = "[CONTEXT]\n\n=== CHUNK 1 ===\nId: ctx_1";
 
-            var dto = ResponsesRequestBuilder.Build(convCtx, request, ragContextBlock);
+            var dto = ResponsesRequestBuilder.Build(convCtx, request, ragContextBlock, string.Empty);
 
             var userMessage = dto.Input[dto.Input.Count - 1];
             Assert.That(userMessage.Role, Is.EqualTo("user"));
@@ -137,7 +179,7 @@ namespace LagoVista.AI.Tests
 
             var request = CreateRequest(toolsJson: toolsJson);
 
-            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty);
+            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty);
 
             Assert.That(dto.Tools, Is.Not.Null);
             Assert.That(dto.Tools.Count, Is.EqualTo(1));
@@ -158,7 +200,7 @@ namespace LagoVista.AI.Tests
 
             var request = CreateRequest(previousResponseId: "resp_123", toolsJson: toolsJson);
 
-            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty);
+            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty);
 
             Assert.That(dto.Tools, Is.Null);
         }
@@ -169,7 +211,7 @@ namespace LagoVista.AI.Tests
             var convCtx = CreateConversationContext();
             var request = CreateRequest(toolChoiceName: "ddr_document");
 
-            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty);
+            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty);
 
             Assert.That(dto.ToolChoice, Is.Not.Null);
             Assert.That(dto.ToolChoice.Type, Is.EqualTo("tool"));
@@ -193,15 +235,15 @@ namespace LagoVista.AI.Tests
   {
     ""CallId"": ""call_123"",
     ""Name"": ""testing_ping_pong"",
-    ""ArgumentsJson"": ""{\""message\"":\""hello\"",\""count\"":0}"",
+    ""ArgumentsJson"": ""{\\""message\\"":\\""hello\\"",\\""count\\"":0}"",
     ""IsServerTool"": true,
     ""WasExecuted"": true,
-    ""ResultJson"": ""{\""Reply\"":\""pong: hello\"",\""Count\"":1}"",
+    ""ResultJson"": ""{\\""Reply\\"":\\""pong: hello\\"",\\""Count\\"":1}"",
     ""ErrorMessage"": null
   }
 ]";
 
-            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty);
+            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty);
 
             // Still a continuation.
             Assert.That(dto.PreviousResponseId, Is.EqualTo("resp_123"));
@@ -228,6 +270,43 @@ namespace LagoVista.AI.Tests
 
             // On continuation we still do NOT send tools again.
             Assert.That(dto.Tools, Is.Null);
+        }
+
+        [Test]
+        public void Build_InitialRequest_IncludesToolUsageMetadata_WhenProvided()
+        {
+            var convCtx = CreateConversationContext();
+            var request = CreateRequest();
+            var toolUsageMetadataBlock = "<<<APTIX_SERVER_TOOL_USAGE_METADATA_BEGIN>>>\n...tool usage here...\n<<<APTIX_SERVER_TOOL_USAGE_METADATA_END>>>";
+
+            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, toolUsageMetadataBlock);
+
+            Assert.That(dto.Input.Count, Is.GreaterThanOrEqualTo(2));
+
+            var systemMessage = dto.Input[0];
+            Assert.That(systemMessage.Role, Is.EqualTo("system"));
+            Assert.That(systemMessage.Content.Count, Is.EqualTo(2));
+
+            Assert.That(systemMessage.Content[0].Text, Is.EqualTo("You are the Aptix Reasoner."));
+            Assert.That(systemMessage.Content[1].Text, Is.EqualTo(toolUsageMetadataBlock));
+        }
+
+        [Test]
+        public void Build_ContinuationRequest_IgnoresToolUsageMetadataBlock()
+        {
+            var convCtx = CreateConversationContext();
+            var request = CreateRequest(previousResponseId: "resp_456");
+            var toolUsageMetadataBlock = "<<<APTIX_SERVER_TOOL_USAGE_METADATA_BEGIN>>>\n...tool usage here...\n<<<APTIX_SERVER_TOOL_USAGE_METADATA_END>>>";
+
+            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, toolUsageMetadataBlock);
+
+            // Continuation: we should still only have a user message, no system message,
+            // even though a non-empty toolUsageMetadataBlock was provided.
+            Assert.That(dto.PreviousResponseId, Is.EqualTo("resp_456"));
+            Assert.That(dto.Input.Count, Is.EqualTo(1));
+
+            var userMessage = dto.Input[0];
+            Assert.That(userMessage.Role, Is.EqualTo("user"));
         }
     }
 }

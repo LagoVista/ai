@@ -1,9 +1,9 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using LagoVista.AI.Rag.ContractPacks.Hashing.Interfaces;
+using LagoVista.AI.Interfaces;
 
-namespace LagoVista.AI.Rag.ContractPacks.Hashing.Services
+namespace LagoVista.AI.Services.Hashing
 {
     /// <summary>
     /// Default implementation of IContentHashService that wraps the

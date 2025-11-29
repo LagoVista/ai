@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace LagoVista.AI.Rag.ContractPacks.Hashing.Interfaces
+namespace LagoVista.AI.Interfaces
 {
     /// <summary>
     /// Contract for computing normalized content hashes used by the indexing

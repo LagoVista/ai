@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Reflection;
@@ -92,6 +92,36 @@ namespace LagoVista.AI.Services
 
             //
             // CONTRACT #3:
+            //   The tool MUST declare: public const string ToolUsageMetadata (non-empty)
+            //
+            var usageMetadataField = toolType.GetField(
+                "ToolUsageMetadata",
+                BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy);
+
+            if (usageMetadataField == null ||
+                usageMetadataField.FieldType != typeof(string) ||
+                usageMetadataField.IsLiteral == false)
+            {
+                var msg =
+                    $"Tool '{toolType.FullName}' must declare: public const string ToolUsageMetadata.";
+
+                _logger.AddError("[AgentToolRegistry_RegisterTool__MissingToolUsageMetadataConst]", msg);
+                throw new InvalidOperationException(msg);
+            }
+
+            var usageMetadata = usageMetadataField.GetRawConstantValue() as string;
+
+            if (string.IsNullOrWhiteSpace(usageMetadata))
+            {
+                var msg =
+                    $"Tool '{toolType.FullName}' declares an empty ToolUsageMetadata constant.";
+
+                _logger.AddError("[AgentToolRegistry_RegisterTool__EmptyToolUsageMetadataConst]", msg);
+                throw new InvalidOperationException(msg);
+            }
+
+            //
+            // CONTRACT #4:
             //   Prevent duplicate tool names
             //
             if (_toolsByName.ContainsKey(toolName))
@@ -115,7 +145,6 @@ namespace LagoVista.AI.Services
             _logger.Trace(
                 $"[AgentToolRegistry_RegisterTool] Registered tool '{toolName}' -> '{toolType.FullName}'.");
         }
-
 
         public bool HasTool(string toolName)
         {

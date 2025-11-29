@@ -2,7 +2,7 @@ using System;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace LagoVista.AI.Rag.ContractPacks.Hashing.Services
+namespace LagoVista.AI.Services.Hashing
 {
     /// <summary>
     /// Canonical content hashing implementation.

@@ -15,6 +15,7 @@ using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using RingCentral;
 
 namespace LagoVista.AI.Services
 {
@@ -29,6 +30,7 @@ namespace LagoVista.AI.Services
     {
         private readonly IOpenAISettings _openAiSettings;
         private readonly IAdminLogger _adminLogger;
+        private readonly IServerToolUsageMetadataProvider _metaUsageProvider;
         private readonly INotificationPublisher _notificationPublisher;
 
         public OpenAIResponsesClient(IOpenAISettings openAiSettings, IAdminLogger adminLogger, INotificationPublisher notificationPublisher)
@@ -66,7 +68,9 @@ namespace LagoVista.AI.Services
                 return InvokeResult<AgentExecuteResponse>.FromError("LlmApiKey is not configured on AgentContext.");
             }
 
-            var requestObject = ResponsesRequestBuilder.Build(conversationContext, executeRequest, ragContextBlock, true);
+            var toolUsageBlock = _metaUsageProvider.GetToolUsageMetadata();
+
+            var requestObject = ResponsesRequestBuilder.Build(conversationContext, executeRequest, ragContextBlock, toolUsageBlock, true);
 
             var requestJson = JsonConvert.SerializeObject(requestObject);
             Console.WriteLine($"OpenAI Responses Request JSON:\r\n=====\r\n{requestJson}====\r\n");
