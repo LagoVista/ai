@@ -16,6 +16,15 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         public string InterfaceName { get; set; }
 
 
+        public string OverviewSummary { get; set; }
+
+        public IReadOnlyList<string> Responsibilities { get; set; }
+
+        public IReadOnlyList<string> UsageNotes { get; set; }
+
+        public string SemanticSummary { get; set; }
+        public string LinkageSummary { get; set; }
+
         /// <summary>
         /// Fully qualified name, e.g. LagoVista.AI.Managers.IDeviceManager.
         /// </summary>
@@ -80,6 +89,8 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         /// Method name, e.g. CreateDeviceAsync.
         /// </summary>
         public string Name { get; set; }
+
+        public string SemanticSummary { get; set; }
 
         /// <summary>
         /// Raw C# return type string, e.g. Task&lt;InvokeResult&lt;Device&gt;&gt;.

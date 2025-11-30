@@ -1,3 +1,4 @@
+using LagoVista.AI.Models;
 using LagoVista.AI.Rag.Models;
 using System.Threading;
 using System.Threading.Tasks;

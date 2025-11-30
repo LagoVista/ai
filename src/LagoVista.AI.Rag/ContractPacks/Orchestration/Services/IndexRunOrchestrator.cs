@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
+using LagoVista.AI.Models;
 using LagoVista.AI.Rag.Chunkers.Interfaces;
 using LagoVista.AI.Rag.Chunkers.Services;
 using LagoVista.AI.Rag.ContractPacks.Content.Interfaces;
@@ -163,7 +164,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
 
                     var  fileContext = await _indexFileContextBuilder.BuildAsync(config, gitInfo.Result, repoId, filePlan, localIndex, cancellationToken);
                    
-                    var fileProcessResult = _sourceFileProcessor.BuildChunks(fileContext, domainCatalog, resources);
+                    var fileProcessResult = await _sourceFileProcessor.BuildChunks(config, fileContext, domainCatalog, resources);
                     if (fileProcessResult.Successful)
                     {
                         if(fileProcessResult.Result.RagPoints.Count == 0)
