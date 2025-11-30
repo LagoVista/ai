@@ -140,7 +140,6 @@ namespace LagoVista.AI.Tests.Services
             Assert.That(result.ErrorMessage, Does.Contain("Factory failed"));
 
             // Call flags
-            Assert.That(call.IsServerTool, Is.True);
             Assert.That(call.WasExecuted, Is.False);
             Assert.That(call.ResultJson, Is.Null);
             Assert.That(call.ErrorMessage, Is.EqualTo("Factory failed"));
@@ -163,6 +162,7 @@ namespace LagoVista.AI.Tests.Services
             _toolRegistry.Setup(r => r.HasTool(call.Name)).Returns(true);
 
             var toolMock = new Mock<IAgentTool>();
+            toolMock.Setup(t => t.IsToolFullyExecutedOnServer).Returns(true);
             toolMock
                 .Setup(t => t.ExecuteAsync(call.ArgumentsJson, context, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(InvokeResult<string>.Create("{\"reply\":\"pong: hi\"}"));
@@ -204,9 +204,12 @@ namespace LagoVista.AI.Tests.Services
             _toolRegistry.Setup(r => r.HasTool(call.Name)).Returns(true);
 
             var toolMock = new Mock<IAgentTool>();
+            toolMock.Setup(t => t.IsToolFullyExecutedOnServer).Returns(true);
             toolMock
-                .Setup(t => t.ExecuteAsync(call.ArgumentsJson, context, It.IsAny<CancellationToken>()))
+                 .Setup(t => t.ExecuteAsync(call.ArgumentsJson, context, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(InvokeResult<string>.FromError("Tool failed"));
+
+
 
             _toolFactory
                 .Setup(f => f.GetTool(call.Name))

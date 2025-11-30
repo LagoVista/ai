@@ -1,6 +1,8 @@
 using LagoVista.AI.Models;
 using LagoVista.AI.Rag.Chunkers.Models;
 using LagoVista.AI.Rag.Chunkers.Services;
+using LagoVista.IoT.Logging.Loggers;
+using Moq;
 using NUnit.Framework;
 using System.Collections.Generic;
 using System.IO;
@@ -35,7 +37,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             Assert.That(File.Exists(modelPath), Is.True, $"Model content file not found at {modelPath}");
 
             var source = File.ReadAllText(modelPath);
-            var scanner = new ResxLabelScanner();
+            var scanner = new ResxLabelScanner(new Mock<IAdminLogger>().Object);
             var resources = scanner.GetSingleResourceDictionary(".");
 
             var metadata = ModelMetadataDescriptionBuilder.FromSource(GetIndexFileContext(), source,resources).Result;
@@ -85,7 +87,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             Assert.That(File.Exists(modelPath), Is.True, $"Model content file not found at {modelPath}");
 
             var source = File.ReadAllText(modelPath);
-            var scanner = new ResxLabelScanner();
+            var scanner = new ResxLabelScanner(new Mock<IAdminLogger>().Object);
             var resources = scanner.GetSingleResourceDictionary(".");
 
             var metadata = ModelMetadataDescriptionBuilder.FromSource(GetIndexFileContext(), source, resources).Result;
@@ -129,7 +131,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             Assert.That(File.Exists(modelPath), Is.True, $"Layout sample content file not found at {modelPath}");
 
             var source = File.ReadAllText(modelPath);
-            var scanner = new ResxLabelScanner();
+            var scanner = new ResxLabelScanner(new Mock<IAdminLogger>().Object);
             var resources = scanner.GetSingleResourceDictionary(".");
 
             var metadata = ModelMetadataDescriptionBuilder.FromSource(GetIndexFileContext(), source,  resources).Result;

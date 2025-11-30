@@ -146,7 +146,7 @@ namespace LagoVista.AI.Rag.Tests.IndexStore
 
             await jsonStore.SaveAsync(GetConfig(), _repoId, local, CancellationToken.None);
 
-            var expectedPath = Path.Combine(_rootFolder, _repoId + ".local-index.json").Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
+            var expectedPath = Path.Combine(_rootFolder, _repoId, _repoId + ".local-index.json").Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
 
             Assert.That(File.Exists(expectedPath), Is.True);
         }

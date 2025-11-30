@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using LagoVista.AI.Rag.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using SharpCompress.Common;
 
 namespace LagoVista.AI.Rag.ContractPacks.IndexStore.Services
 {
@@ -63,6 +64,12 @@ namespace LagoVista.AI.Rag.ContractPacks.IndexStore.Services
                 throw new ArgumentNullException(nameof(store));
 
             var path = GetIndexPath(config, repoId);
+
+            var directory = Path.GetDirectoryName(path);
+            if (!string.IsNullOrEmpty(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
 
             store.RepoId = repoId;
             var json = JsonConvert.SerializeObject(store, Settings);

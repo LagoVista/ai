@@ -11,6 +11,7 @@ using LagoVista.AI.Rag.ContractPacks.Infrastructure.Services;
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Models;
 using LagoVista.Core.Models.UIMetaData;
 using LagoVista.Core.Validation;
+using LagoVista.IoT.Logging.Loggers;
 using Moq;
 using NUnit.Framework;
 
@@ -24,27 +25,15 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         [Test]
         public void Ctor_NullChunkerServices_Throws()
         {
-            Assert.Throws<ArgumentNullException>(() => new DomainModelCatalogBuilder(null, null));
+            Assert.Throws<ArgumentNullException>(() => new DomainModelCatalogBuilder(null, null, null));
         }
 
         private static IReadOnlyDictionary<string, string> LoadResources()
         {
             // Uses ResxLabelScanner helper to load a single resource dictionary
             // from the current directory (expects resources.resx in ./Content).
-            var scanner = new ResxLabelScanner();
+            var scanner = new ResxLabelScanner(new Mock<IAdminLogger>().Object);
             return scanner.GetSingleResourceDictionary(".");
-        }
-
-        [Test]
-        public void BuildAsync_NullRepoId_Throws()
-        {
-            var chunkerMock = new Mock<IChunkerServices>();
-            var descriptorMock = new Mock<ICodeDescriptionService>(MockBehavior.Strict);
-
-            var sut = new DomainModelCatalogBuilder(chunkerMock.Object, descriptorMock.Object);
-
-            Assert.ThrowsAsync<ArgumentNullException>(async () =>
-                await sut.BuildAsync(null, new List<DiscoveredFile>(),LoadResources()));
         }
 
         [Test]
@@ -52,8 +41,9 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         {
             var chunkerMock = new Mock<IChunkerServices>();
             var descriptorMock = new Mock<ICodeDescriptionService>(MockBehavior.Strict);
+            var adminMock = new Mock<IAdminLogger>();
 
-            var sut = new DomainModelCatalogBuilder(chunkerMock.Object, descriptorMock.Object);
+            var sut = new DomainModelCatalogBuilder(chunkerMock.Object, descriptorMock.Object, adminMock.Object);
 
             Assert.ThrowsAsync<ArgumentNullException>(async () =>
                 await sut.BuildAsync(RepoId, null, LoadResources()));
@@ -64,8 +54,9 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         {
             var chunkerMock = new Mock<IChunkerServices>(MockBehavior.Strict);
             var descriptorMock = new Mock<ICodeDescriptionService>(MockBehavior.Strict);
+            var adminMock = new Mock<IAdminLogger>();
 
-            var sut = new DomainModelCatalogBuilder(chunkerMock.Object, descriptorMock.Object);
+            var sut = new DomainModelCatalogBuilder(chunkerMock.Object, descriptorMock.Object, adminMock.Object);
 
             var tempDir = CreateTempDirectory();
 
@@ -106,8 +97,9 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         {
             var chunkerMock = new Mock<IChunkerServices>();
             var descriptorMock = new Mock<ICodeDescriptionService>(MockBehavior.Strict);
+            var adminMock = new Mock<IAdminLogger>();
 
-            var sut = new DomainModelCatalogBuilder(chunkerMock.Object, descriptorMock.Object);
+            var sut = new DomainModelCatalogBuilder(chunkerMock.Object, descriptorMock.Object, adminMock.Object);
 
             var tempDir = CreateTempDirectory();
 
@@ -210,8 +202,9 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         {
             var chunkerMock = new Mock<IChunkerServices>(MockBehavior.Strict);
             var descriptorMock = new Mock<ICodeDescriptionService>(MockBehavior.Strict);
+            var adminMock = new Mock<IAdminLogger>();
 
-            var sut = new DomainModelCatalogBuilder(chunkerMock.Object, descriptorMock.Object);
+            var sut = new DomainModelCatalogBuilder(chunkerMock.Object, descriptorMock.Object, adminMock.Object);
 
             var tempDir = CreateTempDirectory();
 

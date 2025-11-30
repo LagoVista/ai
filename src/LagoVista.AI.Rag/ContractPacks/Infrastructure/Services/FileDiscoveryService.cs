@@ -1,6 +1,7 @@
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Interfaces;
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Models;
 using LagoVista.AI.Rag.Models;
+using MongoDB.Bson.Serialization.IdGenerators;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -23,19 +24,21 @@ namespace LagoVista.AI.Rag.ContractPacks.Infrastructure.Services
             ".woff", ".woff2", ".eot", ".ttf", ".otf"
         };
 
-        public async Task<IReadOnlyList<DiscoveredFile>> DiscoverAsync(IngestionConfig config, string repoId, CancellationToken token = default)
+        public Task<IReadOnlyList<DiscoveredFile>> DiscoverAsync(IngestionConfig config, string extensionFilter = "", CancellationToken token = default)
         {
-            if (string.IsNullOrWhiteSpace(repoId))
-                throw new ArgumentNullException(nameof(repoId));
+            return DiscoverAsync(config, null, extensionFilter, token);
+        }
 
-            if (config.Ingestion?.Repositories == null || !config.Ingestion.Repositories.Contains(repoId))
+        public async Task<IReadOnlyList<DiscoveredFile>> DiscoverAsync(IngestionConfig config, string repoId, string extensionFilter = "", CancellationToken token = default)
+        {
+            if (!String.IsNullOrEmpty(repoId) && config.Ingestion?.Repositories != null && !config.Ingestion.Repositories.Contains(repoId))
                 throw new InvalidOperationException($"Repository '{repoId}' is not configured for ingestion.");
 
             var sourceRoot = config.Ingestion.SourceRoot;
             var include = config.Ingestion.Include;
             var exclude = config.Ingestion.Exclude;
 
-            var repoRoot = Path.Combine(sourceRoot, repoId);
+            var repoRoot = String.IsNullOrEmpty(repoId) ? sourceRoot : Path.Combine(sourceRoot, repoId);
 
             var results = new List<DiscoveredFile>();
 
@@ -53,7 +56,9 @@ namespace LagoVista.AI.Rag.ContractPacks.Infrastructure.Services
             if (includeRegex.Length == 0)
                 includeRegex = new[] { ToRegex("**/*") };
 
-            foreach (var file in Directory.EnumerateFiles(repoRoot, "*", SearchOption.AllDirectories))
+            var filter = String.IsNullOrEmpty(extensionFilter) ? "*" : extensionFilter;
+
+            foreach (var file in Directory.EnumerateFiles(repoRoot, filter, SearchOption.AllDirectories))
             {
                 if (token.IsCancellationRequested)
                     break;

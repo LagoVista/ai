@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -16,9 +17,11 @@ using LagoVista.AI.Rag.ContractPacks.Ingestion.Models;
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Services;
 using LagoVista.AI.Rag.ContractPacks.Orchestration.Interfaces;
 using LagoVista.AI.Rag.ContractPacks.Registry.Interfaces;
+using LagoVista.AI.Rag.Interfaces;
 using LagoVista.AI.Rag.Models;
 using LagoVista.Core.Interfaces;
 using LagoVista.IoT.Logging.Loggers;
+using Microsoft.Azure.Cosmos.Serialization.HybridRow.RecordIO;
 using Microsoft.CodeAnalysis.CSharp;
 
 namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
@@ -54,6 +57,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
         private readonly IEmbedder _embedder;
         private readonly IQdrantClient _qdrantClient;
         private readonly IContentStorage _contentStorage;
+        private readonly ITitleDescriptionRefinementOrchestrator _titleDescriptionRefinementOrchestrator;
 
         public IndexRunOrchestrator(
             IIngestionConfigProvider configProvider,
@@ -71,6 +75,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
             IEmbedder embedder,
             IContentStorage contentStorage,
             IQdrantClient qdrantClient,
+            ITitleDescriptionRefinementOrchestrator titleDescriptionRefinementOrchestrator,
             IMetadataRegistryClient metadataRegistryClient)
         {
             _indexFileContextBuilder = indexFileContextBuilder ?? throw new ArgumentNullException(nameof(indexFileContextBuilder));
@@ -88,6 +93,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
             _embedder = embedder ?? throw new ArgumentNullException(nameof(embedder));
             _qdrantClient = qdrantClient ?? throw new ArgumentNullException(nameof(qdrantClient));
             _contentStorage = contentStorage ?? throw new ArgumentNullException(nameof(contentStorage));
+            _titleDescriptionRefinementOrchestrator = titleDescriptionRefinementOrchestrator ?? throw new ArgumentNullException(nameof(titleDescriptionRefinementOrchestrator));
         }
 
         public async Task RunAsync(IngestionConfig config, string mode = null, string processRepo = null, CodeSubKind? subKindFilter = null, bool verbose = false, bool dryrun = false, CancellationToken cancellationToken = default)
@@ -105,128 +111,155 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
 
             await _qdrantClient.EnsureCollectionAsync(config.Qdrant.Collection);
 
-            var totalFilesFound = 0;
-            var totalPartsToIndex = 0;
-            foreach (var repoId in repos)
+            var sw = Stopwatch.StartNew();
+            _adminLogger.Trace("[IndexRunOrchestrator_RunAsync] - Finding all CSharp Files - this could take a moment.");
+            var allDiscoveredFiles = await _discoveryService.DiscoverAsync(config, "*.cs", cancellationToken);
+            _adminLogger.Trace($"[IndexRunOrchestrator_RunAsync] - Found {allDiscoveredFiles.Count} files in {sw.Elapsed.TotalMilliseconds}ms.");
+
+            sw.Restart();
+            _adminLogger.Trace("[IndexRunOrchestrator_RunAsync] - Finding all Resources - this could take a moment.");
+            var resourceFiles = _resxLabelScanner.ScanResxTree(config.Ingestion.SourceRoot);
+            var resources = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var parentDictionary in resourceFiles)
             {
-                cancellationToken.ThrowIfCancellationRequested();
-
-              
-                // 2. Resolve repo root
-                var sourceRoot = config.Ingestion?.SourceRoot ?? string.Empty;
-                var repoRoot = string.IsNullOrWhiteSpace(sourceRoot)
-                    ? repoId
-                    : Path.Combine(sourceRoot, repoId);
-
-                var resources = _resxLabelScanner.GetSingleResourceDictionary(repoRoot);
-
-                var gitInfo = _gitRepoInspector.GetRepoInfo(repoRoot);
-                if (!gitInfo.Successful)
+                foreach (var dictionary in parentDictionary.Value)
                 {
-                    _adminLogger.AddError($"[IndexRunOrchestrator_RunAsync]", $"Git - {gitInfo.ErrorMessage}");
-                }
-                _adminLogger.Trace($"[IndexRunOrchestrator_RunAsync] - Git Info {gitInfo.Result}");
-
-
-                _adminLogger.Trace($"[IndexRunOrchestrator_RunAsync] - Starting repo {repoId}; in folder {repoRoot} - {idx} of {repos.Count}.");
-                var localIndex = await _localIndexStore.LoadAsync(config, repoId, cancellationToken);
-                var discoveredFiles = await _discoveryService.DiscoverAsync(config, repoId, cancellationToken);
-                totalFilesFound += discoveredFiles.Count;
-                _adminLogger.Trace($"[IndexRunOrchestrator_RunAsync] - Found {discoveredFiles.Count} files.");
-                if (verbose)
-                {
-                    foreach( var file in discoveredFiles)
+                    if (!resources.ContainsKey(dictionary.Key))
                     {
-                        _adminLogger.Trace($"    Discovered: {file.RelativePath} (Size: {file.SizeBytes} bytes; IsBinary: {file.IsBinary})");
+                        resources[dictionary.Key] = dictionary.Value;
                     }
                 }
-
-                var relativePaths = new List<string>();
-                foreach (var file in discoveredFiles)
-                {
-                    if (!string.IsNullOrWhiteSpace(file.RelativePath))
-                    {
-                        relativePaths.Add(file.RelativePath);
-                    }
-                }
-
-                var domainCatalog = await _domainModelCatalogBuilder.BuildAsync(repoId, discoveredFiles, resources);
-
-
-                var plan = await _ingestionPlanner.BuildPlanAsync(repoId, relativePaths, localIndex, cancellationToken);
-
-                _adminLogger.Trace($"[IndexRunOrchestrator_RunAsync] Found {plan.FilesToIndex.Count} files to index.");
-
-                foreach(var filePlan in plan.FilesToIndex)
-                {
-                    var fullPath = Path.Combine(repoRoot, filePlan.CanonicalPath ?? string.Empty);
-                    if (!File.Exists(fullPath))
-                        continue;
-
-                    var  fileContext = await _indexFileContextBuilder.BuildAsync(config, gitInfo.Result, repoId, filePlan, localIndex, cancellationToken);
-                   
-                    var fileProcessResult = await _sourceFileProcessor.BuildChunks(config, fileContext, domainCatalog, subKindFilter, resources);
-                    if (fileProcessResult.Successful)
-                    {
-                        if(fileProcessResult.Result.RagPoints.Count == 0)
-                        {
-                            Console.WriteLine($"No points: {fileContext.RelativePath}");
-                        }
-
-                        foreach (var result in fileProcessResult.Result.RagPoints)
-                        {
-                            totalPartsToIndex++;
-                            if (String.IsNullOrEmpty(result.Payload.DocId))
-                                throw new ArgumentNullException("DocId");
-
-                            _adminLogger.Trace($"[IndexRunOrchestrator__RunAsync] {result.Payload.SemanticId}");
-
-                            var embedResult = await _embedder.EmbedAsync(System.Text.ASCIIEncoding.ASCII.GetString(result.Contents));
-                            result.Vector = embedResult.Result.Vector;
-                            result.Payload.EmbeddingModel = embedResult.Result.EmbeddingModel;
-
-                            await _contentStorage.AddContentAsync(result.Payload.SnippetBlobUri, result.Contents);
-                        }
-
-                        await _qdrantClient.UpsertInBatchesAsync(config.Qdrant.Collection, fileProcessResult.Result.RagPoints, config.Qdrant.VectorSize);
-
-                        var record = localIndex.GetOrAdd(fileContext.RelativePath, fileContext.DocumentIdentity.DocId);
-                        record.ContentHash = await ContentHashUtil.ComputeFileContentHashAsync(fileContext.FullPath);
-                        await _localIndexStore.SaveAsync(config, repoId, localIndex, cancellationToken);
-
-                        await _contentStorage.AddContentAsync(fileContext.FullPath,fileContext.Contents);
-
-                        Console.WriteLine(new String('-', 80));
-                    }
-                    else
-                    {
-                        _adminLogger.AddError($"[IndexRunOrchestrator_RunAsync]", $"{fileProcessResult.ErrorMessage} - {fullPath}");
-                    }
-                }
-
-
-                idx++;
             }
+            _adminLogger.Trace($"[IndexRunOrchestrator_RunAsync] - Found {resources.Count} in  all Resources {sw.Elapsed.TotalMilliseconds}ms.");
+            var fullDomainCatalog = await _domainModelCatalogBuilder.BuildAsync(allDiscoveredFiles, resources);
 
-            // After all repos, flush accumulated facets to metadata registry.
-            var allFacets = _facetAccumulator.GetAll();
-            if (allFacets.Count > 0)
+            if (mode == "refine")
             {
-                // Note: ProjectId / RepoId here may need to be expanded to a per-repo
-                // call in future. For now, we use the last config.ProjectId and leave
-                // the aggregation semantics to the implementation.
-                await _metadataRegistryClient
-                    .ReportFacetsAsync(
-                        orgId: null,            // TODO: supply org id when facet aggregation is wired
-                        projectId: null,        // TODO: supply project id
-                        repoId: null,           // TODO: supply repo id or support multi-repo aggregation
-                        facets: allFacets,
-                        cancellationToken: cancellationToken)
-                    .ConfigureAwait(false);
+
             }
+            else
+            {
+                var totalFilesFound = 0;
+                var totalPartsToIndex = 0;
+                foreach (var repoId in repos)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    // 2. Resolve repo root
+                    var sourceRoot = config.Ingestion?.SourceRoot ?? string.Empty;
+                    var repoRoot = string.IsNullOrWhiteSpace(sourceRoot)
+                        ? repoId
+                        : Path.Combine(sourceRoot, repoId);
 
 
-            _adminLogger.Trace($"[IndexRunOrchestrator_RunAsync] - Total Files Found {totalFilesFound} files, created {totalPartsToIndex} indexes.");
+                    var gitInfo = _gitRepoInspector.GetRepoInfo(repoRoot);
+                    if (!gitInfo.Successful)
+                    {
+                        _adminLogger.AddError($"[IndexRunOrchestrator_RunAsync]", $"Git - {gitInfo.ErrorMessage}");
+                    }
+                    _adminLogger.Trace($"[IndexRunOrchestrator_RunAsync] - Git Info {gitInfo.Result}");
+
+
+                    _adminLogger.Trace($"[IndexRunOrchestrator_RunAsync] - Starting repo {repoId}; in folder {repoRoot} - {idx} of {repos.Count}.");
+                    var localIndex = await _localIndexStore.LoadAsync(config, repoId, cancellationToken);
+                    var discoveredFiles = await _discoveryService.DiscoverAsync(config, repoId, null, cancellationToken);
+                    totalFilesFound += discoveredFiles.Count;
+                    _adminLogger.Trace($"[IndexRunOrchestrator_RunAsync] - Found {discoveredFiles.Count} files.");
+                    if (verbose)
+                    {
+                        foreach (var file in discoveredFiles)
+                        {
+                            _adminLogger.Trace($"    Discovered: {file.RelativePath} (Size: {file.SizeBytes} bytes; IsBinary: {file.IsBinary})");
+                        }
+                    }
+
+                    var relativePaths = new List<string>();
+                    foreach (var file in discoveredFiles)
+                    {
+                        if (!string.IsNullOrWhiteSpace(file.RelativePath))
+                        {
+                            relativePaths.Add(file.RelativePath);
+                        }
+                    }
+
+
+                    var domainCatalog = await _domainModelCatalogBuilder.BuildAsync(repoId, discoveredFiles, resources);
+
+                    var plan = await _ingestionPlanner.BuildPlanAsync(repoId, relativePaths, localIndex, cancellationToken);
+
+                    _adminLogger.Trace($"[IndexRunOrchestrator_RunAsync] Found {plan.FilesToIndex.Count} files to index.");
+
+                    foreach (var filePlan in plan.FilesToIndex)
+                    {
+                        var fullPath = Path.Combine(repoRoot, filePlan.CanonicalPath ?? string.Empty);
+                        if (!File.Exists(fullPath))
+                            continue;
+
+                        var fileContext = await _indexFileContextBuilder.BuildAsync(config, gitInfo.Result, repoId, filePlan, localIndex, cancellationToken);
+
+                        var fileProcessResult = await _sourceFileProcessor.BuildChunks(config, fileContext, domainCatalog, subKindFilter, resources);
+                        if (fileProcessResult.Successful)
+                        {
+                            if (fileProcessResult.Result.RagPoints.Count == 0)
+                            {
+                                Console.WriteLine($"No points: {fileContext.RelativePath}");
+                            }
+
+                            foreach (var result in fileProcessResult.Result.RagPoints)
+                            {
+                                totalPartsToIndex++;
+                                if (String.IsNullOrEmpty(result.Payload.DocId))
+                                    throw new ArgumentNullException("DocId");
+
+                                _adminLogger.Trace($"[IndexRunOrchestrator__RunAsync] {result.Payload.SemanticId}");
+
+                                var embedResult = await _embedder.EmbedAsync(System.Text.ASCIIEncoding.ASCII.GetString(result.Contents));
+                                result.Vector = embedResult.Result.Vector;
+                                result.Payload.EmbeddingModel = embedResult.Result.EmbeddingModel;
+
+                                await _contentStorage.AddContentAsync(result.Payload.SnippetBlobUri, result.Contents);
+                            }
+
+                            await _qdrantClient.UpsertInBatchesAsync(config.Qdrant.Collection, fileProcessResult.Result.RagPoints, config.Qdrant.VectorSize);
+
+                            var record = localIndex.GetOrAdd(fileContext.RelativePath, fileContext.DocumentIdentity.DocId);
+                            record.ContentHash = await ContentHashUtil.ComputeFileContentHashAsync(fileContext.FullPath);
+                            await _localIndexStore.SaveAsync(config, repoId, localIndex, cancellationToken);
+
+                            await _contentStorage.AddContentAsync(fileContext.FullPath, fileContext.Contents);
+
+                            Console.WriteLine(new String('-', 80));
+                        }
+                        else
+                        {
+                            _adminLogger.AddError($"[IndexRunOrchestrator_RunAsync]", $"{fileProcessResult.ErrorMessage} - {fullPath}");
+                        }
+                    }
+
+
+                    idx++;
+                }
+
+                // After all repos, flush accumulated facets to metadata registry.
+                var allFacets = _facetAccumulator.GetAll();
+                if (allFacets.Count > 0)
+                {
+                    // Note: ProjectId / RepoId here may need to be expanded to a per-repo
+                    // call in future. For now, we use the last config.ProjectId and leave
+                    // the aggregation semantics to the implementation.
+                    await _metadataRegistryClient
+                        .ReportFacetsAsync(
+                            orgId: null,            // TODO: supply org id when facet aggregation is wired
+                            projectId: null,        // TODO: supply project id
+                            repoId: null,           // TODO: supply repo id or support multi-repo aggregation
+                            facets: allFacets,
+                            cancellationToken: cancellationToken)
+                        .ConfigureAwait(false);
+                }
+
+
+                _adminLogger.Trace($"[IndexRunOrchestrator_RunAsync] - Total Files Found {totalFilesFound} files, created {totalPartsToIndex} indexes.");
+            }
         }
     }
 }

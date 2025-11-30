@@ -1,4 +1,5 @@
 using LagoVista.AI.Rag.Chunkers.Interfaces;
+using LagoVista.IoT.Logging.Loggers;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,6 +15,13 @@ namespace LagoVista.AI.Rag.Chunkers.Services
     /// </summary>
     public class ResxLabelScanner : IResxLabelScanner
     {
+        private readonly IAdminLogger _adminLogger;
+
+        public ResxLabelScanner(IAdminLogger adminLogger)
+        {
+            _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
+        }
+
         /// <summary>
         /// Scans a directory tree for *.resx files and returns a map:
         ///   relativePath (from root) → (labelName → labelValue).
@@ -42,7 +50,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 catch (Exception ex)
                 {
                     // For now, just log to console; you can swap this for your logging abstraction.
-                    Console.WriteLine($"[ResxLabelScanner] Failed to read '{fullPath}': {ex.Message}");
+                    _adminLogger.AddError("[ResxLabelScanner_ScanResxTree]",$"[ResxLabelScanner] Failed to read '{fullPath}': {ex.Message}");
                 }
             }
 
@@ -80,8 +88,10 @@ namespace LagoVista.AI.Rag.Chunkers.Services
         ///   labelName → labelValue
         /// for all &lt;data name="..."&gt;&lt;value&gt;...&lt;/value&gt;&lt;/data&gt; elements.
         /// </summary>
-        public static IReadOnlyDictionary<string, string> ReadResxFile(string resxPath)
+        public IReadOnlyDictionary<string, string> ReadResxFile(string resxPath)
         {
+            _adminLogger.Trace($"[ResxLabelScanner_ReadResxFile] - Starting {resxPath}");
+
             if (string.IsNullOrWhiteSpace(resxPath))
                 throw new ArgumentNullException(nameof(resxPath));
 
@@ -109,6 +119,8 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 // Last one wins if duplicates exist – tweak if you prefer first-wins.
                 dict[name] = value;
             }
+
+            _adminLogger.Trace($"[ResxLabelScanner_ReadResxFile] - Found {dict.Count}  resources in {resxPath}");
 
             return dict;
         }

@@ -19,6 +19,8 @@ using LagoVista.Core.IOC;
 using LagoVista.Core.PlatformSupport;
 using static LagoVista.AI.Startup;
 using System.Net.Http;
+using LagoVista.AI.Rag.Interfaces;
+using LagoVista.AI.Rag.Services;
 
 namespace LagoVista.AI.Rag
 {
@@ -54,6 +56,14 @@ namespace LagoVista.AI.Rag
             SLWIOC.RegisterSingleton<IEmbedder, OpenAIEmbedder>();
             SLWIOC.RegisterSingleton<IContentStorage, ContentStorage>();
             SLWIOC.Register<IIndexRunOrchestrator, IndexRunOrchestrator>();
+
+            SLWIOC.RegisterSingleton<ITitleDescriptionRefinementCatalogStore, JsonTitleDescriptionRefinementCatalogStore>();
+            SLWIOC.RegisterSingleton<IDomainMetadataSource, RoslynDomainMetadataSource>();
+            SLWIOC.RegisterSingleton<IModelMetadataSource, RoslynModelMetadataSource>();
+            SLWIOC.RegisterSingleton<ITitleDescriptionLlmClient, HttpLlmTitleDescriptionClient>();
+            SLWIOC.RegisterSingleton<ITitleDescriptionReviewService, TitleDescriptionReviewService>();
+
+            SLWIOC.RegisterSingleton<ITitleDescriptionRefinementOrchestrator, TitleDescriptionRefinementOrchestrator>();
         }
     }
 }

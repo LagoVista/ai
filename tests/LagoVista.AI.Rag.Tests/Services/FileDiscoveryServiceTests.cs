@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace LagoVista.AI.Rag.Tests.Services
@@ -49,7 +50,7 @@ namespace LagoVista.AI.Rag.Tests.Services
 
             var svc = new FileDiscoveryService();
 
-            var files = await svc.DiscoverAsync(config, "Repo1");
+            var files = await svc.DiscoverAsync(config, "Repo1", "", CancellationToken.None);
 
             Assert.That(files.Count, Is.EqualTo(2));
             Assert.That(files.Any(f => f.RelativePath == "test1.cs"), Is.True);
@@ -71,7 +72,7 @@ namespace LagoVista.AI.Rag.Tests.Services
             };
 
             var svc = new FileDiscoveryService();
-            var files = await svc.DiscoverAsync(config, "Repo1");
+            var files = await svc.DiscoverAsync(config, "Repo1", CancellationToken.None);
 
             Assert.That(files.Any(f => f.RelativePath.Contains("test.dll")), Is.False);
         }
@@ -90,7 +91,7 @@ namespace LagoVista.AI.Rag.Tests.Services
 
             var svc = new FileDiscoveryService();
 
-            Assert.ThrowsAsync<InvalidOperationException>(async () => await svc.DiscoverAsync(config, "BadRepo"));
+            Assert.ThrowsAsync<InvalidOperationException>(async () => await svc.DiscoverAsync(config, "BadRepo","", CancellationToken.None));
         }
     }
 }

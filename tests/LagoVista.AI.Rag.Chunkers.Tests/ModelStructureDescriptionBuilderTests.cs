@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.Resources;
 using LagoVista.AI.Rag.Chunkers.Models;
+using LagoVista.IoT.Logging.Loggers;
+using Moq;
 
 namespace LagoVista.AI.Rag.Chunkers.Tests
 {
@@ -44,7 +46,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
             Assert.That(File.Exists(repoPath), Is.True, $"Model content file not found at {repoPath}");
 
             var source = File.ReadAllText(modelPath);
-            var scanner = new ResxLabelScanner();
+            var scanner = new ResxLabelScanner(new Mock<IAdminLogger>().Object);
             var resources = scanner.GetSingleResourceDictionary(".");
 
             // FromSource is a static method

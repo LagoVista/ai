@@ -13,7 +13,8 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Interfaces
     /// </summary>
     public interface IFileDiscoveryService
     {
-        Task<IReadOnlyList<DiscoveredFile>> DiscoverAsync(IngestionConfig config, string repoId, CancellationToken token = default);
+        Task<IReadOnlyList<DiscoveredFile>> DiscoverAsync(IngestionConfig config, string repoId, string extension = "", CancellationToken token = default);
+        Task<IReadOnlyList<DiscoveredFile>> DiscoverAsync(IngestionConfig config, string extension = "", CancellationToken token = default);
     }
-    
+
 }

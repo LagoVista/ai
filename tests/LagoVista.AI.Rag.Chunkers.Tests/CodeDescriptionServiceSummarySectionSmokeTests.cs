@@ -5,6 +5,8 @@ using System.Linq;
 using LagoVista.AI.Rag.Chunkers.Models;
 using LagoVista.AI.Rag.Chunkers.Services;
 using LagoVista.Core.Utils;
+using LagoVista.IoT.Logging.Loggers;
+using Moq;
 using NUnit.Framework;
 
 namespace LagoVista.AI.Rag.Chunkers.Tests
@@ -48,7 +50,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         {
             // Uses ResxLabelScanner helper to load a single resource dictionary
             // from the current directory (expects resources.resx in ./Content).
-            var scanner = new ResxLabelScanner();
+            var scanner = new ResxLabelScanner(new Mock<IAdminLogger>().Object);
             return scanner.GetSingleResourceDictionary(".");
         }
 

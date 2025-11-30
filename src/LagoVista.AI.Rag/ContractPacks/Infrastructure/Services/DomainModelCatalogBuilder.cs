@@ -8,6 +8,7 @@ using LagoVista.AI.Rag.Chunkers.Models;
 using LagoVista.AI.Rag.Chunkers.Services;
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Interfaces;
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Models;
+using LagoVista.IoT.Logging.Loggers;
 
 namespace LagoVista.AI.Rag.ContractPacks.Infrastructure.Services
 {
@@ -19,12 +20,22 @@ namespace LagoVista.AI.Rag.ContractPacks.Infrastructure.Services
     public class DomainModelCatalogBuilder : IDomainModelCatalogBuilder
     {
         private readonly IChunkerServices _chunkerServices;
+        private readonly IAdminLogger _adminLogger;
         private readonly ICodeDescriptionService _codeDescriptionService;
 
-        public DomainModelCatalogBuilder(IChunkerServices chunkerServices, ICodeDescriptionService codeDescriptionService)
+        public DomainModelCatalogBuilder(IChunkerServices chunkerServices, ICodeDescriptionService codeDescriptionService, IAdminLogger adminLogger)
         {
             _chunkerServices = chunkerServices ?? throw new ArgumentNullException(nameof(chunkerServices));
             _codeDescriptionService = codeDescriptionService ?? throw new ArgumentNullException(nameof(codeDescriptionService));
+            _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger)); 
+        }
+
+        public Task<DomainModelCatalog> BuildAsync(
+           IReadOnlyList<DiscoveredFile> files,
+           IReadOnlyDictionary<string, string> resources,
+           CancellationToken token = default)
+        {
+            return BuildAsync(null, files, resources, token);
         }
 
         public async Task<DomainModelCatalog> BuildAsync(
@@ -33,19 +44,27 @@ namespace LagoVista.AI.Rag.ContractPacks.Infrastructure.Services
             IReadOnlyDictionary<string, string> resources,
             CancellationToken token = default)
         {
-            if (repoId == null) throw new ArgumentNullException(nameof(repoId));
             if (files == null) throw new ArgumentNullException(nameof(files));
 
             var domainsByKey = new Dictionary<string, DomainSummaryInfo>(StringComparer.OrdinalIgnoreCase);
             var domainsByKeyName = new Dictionary<string, DomainSummaryInfo>(StringComparer.OrdinalIgnoreCase);
             var modelsByQualifiedName = new Dictionary<string, ModelCatalogEntry>(StringComparer.OrdinalIgnoreCase);
 
+            _adminLogger.Trace($"[DomainModelCatalogBuilder__BuildAsync] - will scan {files.Count} for domain or models.");
+
+            var idx = 0;
+
             foreach (var file in files)
             {
+                if(idx % 100 == 0)
+                    _adminLogger.Trace($"[DomainModelCatalogBuilder__BuildAsync] - scanned {idx} of {files.Count} files - Found {domainsByKey.Count} domains and {modelsByQualifiedName.Count}, {(idx * 100.0 / files.Count).ToString("0.0")}% complete.");
+
                 if (token.IsCancellationRequested)
                 {
                     token.ThrowIfCancellationRequested();
                 }
+
+
 
                 // Only consider C# files for domain/model catalog.
                 if (!file.FullPath.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
@@ -109,6 +128,8 @@ namespace LagoVista.AI.Rag.ContractPacks.Infrastructure.Services
                         }
                     }
                 }
+
+                idx++;
             }
 
             return new DomainModelCatalog(domainsByKey, domainsByKeyName, modelsByQualifiedName);
