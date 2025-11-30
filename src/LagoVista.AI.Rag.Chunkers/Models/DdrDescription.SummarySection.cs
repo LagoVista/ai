@@ -40,6 +40,9 @@ namespace LagoVista.AI.Rag.Chunkers.Models
             var overlapTokens = Math.Min(256, Math.Max(0, maxTokens / 4));
             var overlapChars = overlapTokens * 4;
 
+            // Collect all detail parts keyed by final SectionKey
+            var detailParts = new List<(string SectionKey, string Text)>();
+
             foreach (var section in Sections ?? Array.Empty<DdrSectionDescription>())
             {
                 if (section == null || string.IsNullOrWhiteSpace(section.RawMarkdown))
@@ -68,23 +71,33 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                     continue;
                 }
 
-                var totalParts = parts.Count;
+                foreach (var part in parts)
+                {
+                    detailParts.Add((baseKey, part));
+                }
+            }
 
-                for (var i = 0; i < totalParts; i++)
+            // Now assign PartIndex/PartTotal per SectionKey group
+            foreach (var group in detailParts.GroupBy(p => p.SectionKey))
+            {
+                var totalParts = group.Count();
+                var index = 1;
+
+                foreach (var part in group)
                 {
                     var summary = new SummarySection
                     {
-                        SectionKey = baseKey,
+                        SectionKey = group.Key,
                         SectionType = Subtype,
                         SymbolType = "ddr",
                         Symbol = $"{DdrType}-{DdrNumber:000}",
                         Flavor = "Detail",
-                        PartIndex = i + 1,
+                        PartIndex = index++,
                         PartTotal = totalParts,
                         DomainKey = overview.DomainKey,
                         ModelClassName = overview.ModelClassName,
                         ModelName = overview.ModelName,
-                        SectionNormalizedText = parts[i]
+                        SectionNormalizedText = part.Text
                     };
 
                     results.Add(summary);
@@ -93,6 +106,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
 
             return results;
         }
+
 
         private SummarySection BuildOverviewSection(DomainModelHeaderInformation headerInfo)
         {
