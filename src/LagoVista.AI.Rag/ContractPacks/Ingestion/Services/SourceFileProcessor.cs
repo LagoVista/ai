@@ -1,21 +1,17 @@
 using System;
 using System.Collections.Generic;
-using System.Drawing.Text;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Security.Authentication.ExtendedProtection;
-using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Rag.Chunkers.Interfaces;
 using LagoVista.AI.Rag.Chunkers.Models;
 using LagoVista.AI.Rag.Chunkers.Services;
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Interfaces;
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Models;
+using LagoVista.AI.Rag.ContractPacks.Quality.Interfaces;
 using LagoVista.AI.Rag.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
-using ZstdSharp.Unsafe;
 
 namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
 {
@@ -28,18 +24,21 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
         private readonly IChunkerServices _chunkerServics;
         private readonly ICodeDescriptionService _descriptionServices;
         private readonly IAdminLogger _adminLogger;
+        private readonly IInterfaceSemanticEnricher _enricher;
 
-        public SourceFileProcessor(IChunkerServices chunkerServices, ICodeDescriptionService descriptionServices, IAdminLogger adminLogger)
+        public SourceFileProcessor(IChunkerServices chunkerServices, ICodeDescriptionService descriptionServices, IInterfaceSemanticEnricher enricher, 
+            IAdminLogger adminLogger)
         {
             _chunkerServics = chunkerServices ?? throw new ArgumentNullException(nameof(chunkerServices));
             _descriptionServices = descriptionServices ?? throw new ArgumentNullException(nameof(descriptionServices));
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
+            _enricher = enricher ?? throw new ArgumentNullException(nameof(enricher));
         }
 
         /// <summary>
         /// Entry point: orchestrates the 7.x steps for a single file.
         /// </summary>
-        public InvokeResult<ProcessedFileResults> BuildChunks(IndexFileContext ctx, DomainModelCatalog catalog, CodeSubKind? subTypeFilter, IReadOnlyDictionary<string, string> resources)
+        public async Task<InvokeResult<ProcessedFileResults>> BuildChunks(IngestionConfig config, IndexFileContext ctx, DomainModelCatalog catalog, CodeSubKind? subTypeFilter, IReadOnlyDictionary<string, string> resources)
         {
             var filePath = ctx.FullPath;
 
@@ -139,6 +138,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                                 {
                                     var headerInfo = FindDomainHeaderInfo(catalog, interfaceDescription.Result);
                                     interfaceDescription.Result.BuildSections(headerInfo.Result);
+                                    await _enricher.EnrichAsync(interfaceDescription.Result, config);
                                     var interfaceResults = interfaceDescription.Result.CreateIRagPoints();
                                     result.Result.RagPoints.AddRange(interfaceResults.Select(rp => rp.Result));
                                 }

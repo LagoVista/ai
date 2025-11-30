@@ -1,4 +1,5 @@
 ﻿using LagoVista.AI.Interfaces;
+using LagoVista.AI.Rag.Chunkers.Services;
 using LagoVista.AI.Rag.ContractPacks.Content.Interfaces;
 using LagoVista.AI.Rag.ContractPacks.Content.Services;
 using LagoVista.AI.Rag.ContractPacks.IndexStore.Services;
@@ -8,6 +9,7 @@ using LagoVista.AI.Rag.ContractPacks.Ingestion.Interfaces;
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Services;
 using LagoVista.AI.Rag.ContractPacks.Orchestration.Interfaces;
 using LagoVista.AI.Rag.ContractPacks.Orchestration.Services;
+using LagoVista.AI.Rag.ContractPacks.Quality.Interfaces;
 using LagoVista.AI.Rag.ContractPacks.Registry.Interfaces;
 using LagoVista.AI.Rag.ContractPacks.Registry.Services;
 using LagoVista.AI.Rag.Models;
@@ -36,6 +38,7 @@ namespace LagoVista.AI.Rag
             SLWIOC.RegisterSingleton<IMetadataRegistryClient, NuvIoTMetadataRegistryClient>();
             SLWIOC.RegisterSingleton<IEmbedder, OpenAIEmbedder>();
             SLWIOC.RegisterSingleton<IContentStorage, ContentStorage>();
+            SLWIOC.RegisterSingleton<IInterfaceSemanticEnricher, InterfaceSemanticEnricher>();
             SLWIOC.Register<IIndexRunOrchestrator, IndexRunOrchestrator>();
         }
     }
