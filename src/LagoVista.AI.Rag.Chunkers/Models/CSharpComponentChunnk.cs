@@ -108,11 +108,13 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                 CharStart = StartCharacter,
                 CharEnd = EndCharacter,
                 ContentTypeId = RagContentType.SourceCode,
-                BlobUri = $"{fileContext.BlobUri}.{SymbolKind}.{SymbolName}.{PartIndex}",
                 Language = "en-US",
                 Subtype = "RawCode",
                 SysDomain = "Backend",
             };
+
+            payload.FullDocumentBlobUri = fileContext.BlobUri;
+            payload.SnippetBlobUri = $"{fileContext.BlobUri}.{SymbolKind}.{SymbolName}.{PartIndex}";
 
             payload.Title = $"{SymbolKind}: {SymbolName} - {SectionKey} (Chunk {PartIndex} of {PartTotal})";
             payload.SemanticId = $"{fileContext.DocumentIdentity.OrgNamespace}:{fileContext.DocumentIdentity.ProjectId}:{fileContext.DocumentIdentity.RepoId}:{SymbolKind}:{SymbolName}:{SectionKey}:{PartIndex}".ToLower();

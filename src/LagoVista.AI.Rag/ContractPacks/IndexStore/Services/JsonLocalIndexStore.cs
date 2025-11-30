@@ -86,7 +86,7 @@ namespace LagoVista.AI.Rag.ContractPacks.IndexStore.Services
         private string GetIndexPath(IngestionConfig config, string repoId)
         {
             var safeRepoId = repoId.Replace('\\', '_').Replace('/', '_');
-            return Path.Combine(config.Ingestion.SourceRoot, safeRepoId + ".local-index.json");
+            return Path.Combine(config.Ingestion.SourceRoot, repoId, safeRepoId + ".local-index.json");
         }
     }
 }

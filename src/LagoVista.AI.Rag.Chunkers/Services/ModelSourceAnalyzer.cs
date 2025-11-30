@@ -230,8 +230,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 return null;
 
             if (!resources.TryGetValue(key, out var value))
-                throw new KeyNotFoundException(
-                    $"Resource key '{key}' required for {context} was not found in the provided dictionary.");
+                return key;
 
             return value;
         }
