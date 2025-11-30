@@ -57,6 +57,9 @@ namespace LagoVista.AI.Rag
             SLWIOC.RegisterSingleton<IContentStorage, ContentStorage>();
             SLWIOC.Register<IIndexRunOrchestrator, IndexRunOrchestrator>();
 
+            SLWIOC.RegisterSingleton<IResxUpdateService, ResxUpdateService>();
+            SLWIOC.RegisterSingleton<IDomainDescriptorUpdateService, DomainDescriptorUpdateService>();
+
             SLWIOC.RegisterSingleton<ITitleDescriptionRefinementCatalogStore, JsonTitleDescriptionRefinementCatalogStore>();
             SLWIOC.RegisterSingleton<IDomainMetadataSource, RoslynDomainMetadataSource>();
             SLWIOC.RegisterSingleton<IModelMetadataSource, RoslynModelMetadataSource>();

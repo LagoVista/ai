@@ -45,7 +45,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 try
                 {
                     var labels = ReadResxFile(fullPath);
-                    result[relPath] = labels;
+                    result[fullPath] = labels;
                 }
                 catch (Exception ex)
                 {
