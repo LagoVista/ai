@@ -39,9 +39,9 @@ namespace LagoVista.AI.Rag.Chunkers.Services
         private const int LinkageSummaryMaxLength = 320;
         private const int MethodSummaryMaxLength = 120;
 
-        public InterfaceSemanticEnricher()
+        public InterfaceSemanticEnricher(IHttpClientFactory factory)
         {
-            _httpClient = new HttpClient();
+            _httpClient = factory.CreateClient();
         }
 
         public async Task<InvokeResult<InterfaceDescription>> EnrichAsync(
@@ -67,10 +67,17 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             {
                 var prompt = BuildPrompt(description);
 
-                var llmResponseJson = await CallLlmAsync(
+                var llmResponse = await CallLlmAsync(
                     config,
                     prompt,
                     cancellationToken);
+
+                if(!llmResponse.Successful)
+                {
+                    return InvokeResult<InterfaceDescription>.FromInvokeResult(llmResponse.ToInvokeResult());
+                }
+
+                var llmResponseJson = llmResponse.Result;   
 
                 if (string.IsNullOrWhiteSpace(llmResponseJson))
                 {
@@ -78,26 +85,24 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                     return result;
                 }
 
-                var enrichment = ParseLlmResponse(llmResponseJson, result.ToInvokeResult());
+                var enrichment = ParseLlmResponse(llmResponseJson);
                 if (!result.Successful)
                 {
                     return result;
                 }
 
-                ApplyEnrichment(description, enrichment);
+                ApplyEnrichment(description, enrichment.Result);
 
                 result.Result = description;
                 return result;
             }
             catch (OperationCanceledException)
             {
-                result.AddSystemError("Interface enrichment was cancelled.");
-                return result;
+                return InvokeResult<InterfaceDescription>.FromError("Interface enrichment was cancelled.");
             }
             catch (Exception ex)
             {
-                result.AddSystemError($"Unexpected error during interface enrichment: {ex.Message}");
-                return result;
+                return InvokeResult<InterfaceDescription>.FromError($"Unexpected error during interface enrichment: {ex.Message}");
             }
         }
 
@@ -176,7 +181,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
         /// implementation (e.g. base URL, API key, model name, etc.). This is a template
         /// and may need to be wired into your existing OpenAIResponsesClient or equivalent.
         /// </summary>
-        private async Task<string> CallLlmAsync(
+        private async Task<InvokeResult<string>> CallLlmAsync(
             IngestionConfig agentContext,
             string prompt,
             CancellationToken cancellationToken)
@@ -187,13 +192,13 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             var endpoint = "https://api.openai.com/v1/responses"; // TODO: adjust to your model
             if (string.IsNullOrWhiteSpace(endpoint))
             {
-                throw new InvalidOperationException("AgentContext.LLMEndpointUrl is not configured.");
+                return InvokeResult<string>.FromError("AgentContext.LLMEndpointUrl is not configured.");
             }
 
             var apiKey = agentContext.Embeddings.ApiKey; // TODO: adjust to your model
             if (string.IsNullOrWhiteSpace(apiKey))
             {
-                throw new InvalidOperationException("AgentContext.ApiKey is not configured.");
+                return InvokeResult<string>.FromError("AgentContext.ApiKey is not configured.");
             }
 
             var modelName = "gpt-5.1";
@@ -202,7 +207,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             {
                 model = modelName,
                 // This payload is intentionally generic; adapt to your chosen LLM API.
-                messages = new[]
+                input = new[]
                 {
                     new
                     {
@@ -220,8 +225,12 @@ namespace LagoVista.AI.Rag.Chunkers.Services
 
                 using (var response = await _httpClient.SendAsync(request, cancellationToken))
                 {
-                    response.EnsureSuccessStatusCode();
-                    return await response.Content.ReadAsStringAsync(cancellationToken);
+                    var stringResponse = await response.Content.ReadAsStringAsync(cancellationToken);
+
+                    if (!response.IsSuccessStatusCode)
+                        return InvokeResult<string>.FromError(stringResponse);
+                   
+                    return InvokeResult<string>.Create(stringResponse);
                 }
             }
         }
@@ -229,31 +238,55 @@ namespace LagoVista.AI.Rag.Chunkers.Services
         /// <summary>
         /// Parses the LLM JSON response into a strongly typed enrichment object.
         /// </summary>
-        private static InterfaceEnrichmentResponse ParseLlmResponse(
-            string llmResponseJson,
-            InvokeResult result)
+        private static InvokeResult<InterfaceEnrichmentResponse> ParseLlmResponse(
+            string llmResponseJson)
         {
             try
             {
-                // Many chat APIs wrap the content; this assumes you've already extracted
-                // the tool / message content as raw JSON. If your API returns a different
-                // envelope, adapt this to pull out the JSON string first.
-                var enrichment = JsonConvert.DeserializeObject<InterfaceEnrichmentResponse>(llmResponseJson);
-
-                if (enrichment == null)
+                // Step 1: parse the Responses API envelope
+                var envelope = JsonConvert.DeserializeObject<ResponsesEnvelope>(llmResponseJson);
+                if (envelope?.Output == null || envelope.Output.Count == 0)
                 {
-                    result.AddSystemError("LLM response could not be deserialized into InterfaceEnrichmentResponse.");
-                    return null;
+                    return InvokeResult<InterfaceEnrichmentResponse>.FromError("LLM response did not contain any output messages.");
                 }
 
-                return enrichment;
+                // For now, just take the first message
+                var firstMessage = envelope.Output[0];
+                if (firstMessage.Content == null || firstMessage.Content.Count == 0)
+                {
+                    return InvokeResult<InterfaceEnrichmentResponse>.FromError("LLM response.output[0] has no content blocks.");
+                }
+
+                // Find the first output_text block
+                var textBlock = firstMessage.Content
+                    .FirstOrDefault(c => string.Equals(c.Type, "output_text", StringComparison.OrdinalIgnoreCase));
+
+                if (textBlock == null || string.IsNullOrWhiteSpace(textBlock.Text))
+                {
+                    return InvokeResult<InterfaceEnrichmentResponse>.FromError("LLM response did not contain an output_text content block.");
+                }
+
+                var innerJson = textBlock.Text;
+
+                // Step 2: deserialize the inner JSON into InterfaceEnrichmentResponse
+                var enrichment = JsonConvert.DeserializeObject<InterfaceEnrichmentResponse>(innerJson);
+                if (enrichment == null)
+                {
+                    return InvokeResult<InterfaceEnrichmentResponse>.FromError("LLM response text could not be deserialized into InterfaceEnrichmentResponse.");
+                }
+
+                return InvokeResult<InterfaceEnrichmentResponse>.Create(enrichment);
+            }
+            catch (JsonException jex)
+            {
+                return InvokeResult<InterfaceEnrichmentResponse>.FromError($"Failed to parse LLM enrichment response JSON: {jex.Message}");
             }
             catch (Exception ex)
             {
-                result.AddSystemError($"Failed to parse LLM enrichment response: {ex.Message}");
-                return null;
+                return InvokeResult<InterfaceEnrichmentResponse>.FromError($"Unexpected error while parsing LLM enrichment response: {ex.Message}");
             }
         }
+
 
         /// <summary>
         /// Applies the enrichment response to the InterfaceDescription, enforcing
@@ -354,5 +387,38 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             [JsonProperty("methods")]
             public Dictionary<string, string> Methods { get; set; }
         }
+
+        private class ResponsesEnvelope
+        {
+            [JsonProperty("output")]
+            public List<ResponsesOutputMessage> Output { get; set; }
+        }
+
+        private class ResponsesOutputMessage
+        {
+            [JsonProperty("id")]
+            public string Id { get; set; }
+
+            [JsonProperty("type")]
+            public string Type { get; set; }
+
+            [JsonProperty("status")]
+            public string Status { get; set; }
+
+            [JsonProperty("content")]
+            public List<ResponsesContentBlock> Content { get; set; }
+        }
+
+        private class ResponsesContentBlock
+        {
+            [JsonProperty("type")]
+            public string Type { get; set; } // e.g. "output_text"
+
+            [JsonProperty("text")]
+            public string Text { get; set; }
+
+            // annotations/logprobs exist but we don't care here
+        }
+
     }
 }

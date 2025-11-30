@@ -7,11 +7,8 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
   </ItemGroup>
-
-  
   
   <ItemGroup>
-    <ProjectReference Include="..\LagoVista.AI.CloudRepos\LagoVista.AI.CloudRepos.csproj" />
     <ProjectReference Include="..\LagoVista.AI.Rag.Chunkers\LagoVista.AI.Rag.Chunkers.csproj" />
   </ItemGroup>
 

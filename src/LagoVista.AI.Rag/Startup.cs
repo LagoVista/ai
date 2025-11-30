@@ -16,13 +16,27 @@ using LagoVista.AI.Rag.Models;
 using LagoVista.AI.Services;
 using LagoVista.Core.Interfaces;
 using LagoVista.Core.IOC;
+using LagoVista.Core.PlatformSupport;
+using static LagoVista.AI.Startup;
+using System.Net.Http;
 
 namespace LagoVista.AI.Rag
 {
     public static class Startup
     {
+        public class NuvIoTHttpClientFactory : IHttpClientFactory
+        {
+            public HttpClient CreateClient(string name)
+            {
+                return new HttpClient();
+            }
+        }
+
+
         public static void Init()
         {
+
+            SLWIOC.RegisterSingleton<IHttpClientFactory>(new NuvIoTHttpClientFactory());
             SLWIOC.RegisterSingleton<IQdrantClient, QdrantClient>();
             SLWIOC.RegisterSingleton<IIndexIdServices, IndexIdServices>();
             SLWIOC.RegisterSingleton<IIngestionConfigProvider, JsonIngestionConfigProvider>();
@@ -31,6 +45,7 @@ namespace LagoVista.AI.Rag
             SLWIOC.RegisterSingleton<IFileIngestionPlanner, DefaultIngestionPlanner>();
             SLWIOC.RegisterSingleton<IDomainModelCatalogBuilder, DomainModelCatalogBuilder>();
             SLWIOC.RegisterSingleton<ILocalIndexStore, JsonLocalIndexStore>();
+            SLWIOC.RegisterSingleton<IInterfaceSemanticEnricher, InterfaceSemanticEnricher>();
             SLWIOC.RegisterSingleton<ISourceFileProcessor, SourceFileProcessor>();
             SLWIOC.RegisterSingleton<IIndexingPipeline, DefaultIndexingPipeline>();
             SLWIOC.RegisterSingleton<IFacetAccumulator, InMemoryFacetAccumulator>();
@@ -38,7 +53,6 @@ namespace LagoVista.AI.Rag
             SLWIOC.RegisterSingleton<IMetadataRegistryClient, NuvIoTMetadataRegistryClient>();
             SLWIOC.RegisterSingleton<IEmbedder, OpenAIEmbedder>();
             SLWIOC.RegisterSingleton<IContentStorage, ContentStorage>();
-            SLWIOC.RegisterSingleton<IInterfaceSemanticEnricher, InterfaceSemanticEnricher>();
             SLWIOC.Register<IIndexRunOrchestrator, IndexRunOrchestrator>();
         }
     }

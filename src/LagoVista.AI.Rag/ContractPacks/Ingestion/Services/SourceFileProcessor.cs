@@ -138,7 +138,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                                 {
                                     var headerInfo = FindDomainHeaderInfo(catalog, interfaceDescription.Result);
                                     interfaceDescription.Result.BuildSections(headerInfo.Result);
-                                    await _enricher.EnrichAsync(interfaceDescription.Result, config);
+                                    var enrichResult = await _enricher.EnrichAsync(interfaceDescription.Result, config);
                                     var interfaceResults = interfaceDescription.Result.CreateIRagPoints();
                                     result.Result.RagPoints.AddRange(interfaceResults.Select(rp => rp.Result));
                                 }

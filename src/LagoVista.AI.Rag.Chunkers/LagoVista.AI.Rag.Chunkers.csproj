@@ -19,5 +19,10 @@
   <ItemGroup>
     <PackageReference Include="LagoVista.IoT.Logging" Version="3.0.3118.1713" />
   </ItemGroup>
+
+
+  <ItemGroup>
+    <ProjectReference Include="..\LagoVista.AI.CloudRepos\LagoVista.AI.CloudRepos.csproj" />
+  </ItemGroup>
   
 </Project>

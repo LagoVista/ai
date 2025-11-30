@@ -9,7 +9,9 @@ using LagoVista.AI.Services.Tools;
 using LagoVista.Core.AI.Interfaces;
 using LagoVista.Core.Interfaces;
 using LagoVista.IoT.Logging.Loggers;
+using Logzio.DotNet.Core.WebClient;
 using System;
+using System.Net.Http;
 
 namespace LagoVista.AI
 {
