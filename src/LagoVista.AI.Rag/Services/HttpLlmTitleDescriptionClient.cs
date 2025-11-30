@@ -204,7 +204,7 @@ namespace LagoVista.AI.Rag.Services
                         }
                     }
                 },
-                required = new[] { "title", "description", "hasChanges", "requiresAttention" },
+                required = new[] { "title", "description", "help", "hasChanges", "requiresAttention", "warnings" },
                 additionalProperties = false
             };
 

@@ -1,0 +1,78 @@
+{
+  "repoId": "ai.MachineLearning",
+  "records": {
+    "filehandling.md": {
+      "filePath": "filehandling.md",
+      "docId": "3E75EF93FB1059938BACF9487E4F5FBE",
+      "contentHash": "70c076de454d105ad355ca098e9cc8ccca64031cf981e8fe0d05f01ff9e8d530",
+      "activeContentHash": "70c076de454d105ad355ca098e9cc8ccca64031cf981e8fe0d05f01ff9e8d530",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "readme.md": {
+      "filePath": "readme.md",
+      "docId": "D1117A2F13A05FEDB58B3ABECF2956E2",
+      "contentHash": "4e7433245b0ff09bff5fd1aed938010a3b350f8f624cc46de63467a25b2c7d9a",
+      "activeContentHash": "4e7433245b0ff09bff5fd1aed938010a3b350f8f624cc46de63467a25b2c7d9a",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/agn-001 - aptix ddr management flow.md": {
+      "filePath": "ddrs/agn-001 - aptix ddr management flow.md",
+      "docId": "87ECAF68DCBD5B57BB98664E489FE83E",
+      "contentHash": "4f098bceb779c302683017234980fe022dcddecbb7ecc5ffd9dde0a5f8b33931",
+      "activeContentHash": "4f098bceb779c302683017234980fe022dcddecbb7ecc5ffd9dde0a5f8b33931",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/agn-002 - aptix rag context injection pattern.md": {
+      "filePath": "ddrs/agn-002 - aptix rag context injection pattern.md",
+      "docId": "81AF51328EDB5DF288A12FD4820AA986",
+      "contentHash": "8ed63c9afbb0b9d926266062bcfecf4ad80a406630e1564d450970b8db1dc4bd",
+      "activeContentHash": "8ed63c9afbb0b9d926266062bcfecf4ad80a406630e1564d450970b8db1dc4bd",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/agn-003 - aptix responses api request construction.md": {
+      "filePath": "ddrs/agn-003 - aptix responses api request construction.md",
+      "docId": "FEAF21559FBC5FD28D8FBCC564626AE1",
+      "contentHash": "52909b9e99565a4264839c16bc4265afc53c3f3bf81f6cd643df25aa00574406",
+      "activeContentHash": "52909b9e99565a4264839c16bc4265afc53c3f3bf81f6cd643df25aa00574406",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/agn-003 - responsesapirequest.md": {
+      "filePath": "ddrs/agn-003 - responsesapirequest.md",
+      "docId": "2E5B19310C3456ADA007939CCBCD1C50",
+      "contentHash": "00cb22d05e1acb4aa1212983957f0b4f9cd37f2868eaff919e8f50adc3344714",
+      "activeContentHash": "00cb22d05e1acb4aa1212983957f0b4f9cd37f2868eaff919e8f50adc3344714",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/agn-004 - aptix responses api result mapping.md": {
+      "filePath": "ddrs/agn-004 - aptix responses api result mapping.md",
+      "docId": "9ABEAEB1B6F353DF8D0189C2571C4664",
+      "contentHash": "f1467df0ae3bbf7a597360331f41f7788fdbcd79638e13eb25448697338cd8bc",
+      "activeContentHash": "f1467df0ae3bbf7a597360331f41f7788fdbcd79638e13eb25448697338cd8bc",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/agn-005 - agenttoolspec.md": {
+      "filePath": "ddrs/agn-005 - agenttoolspec.md",
+      "docId": "99BD3E2AC4725BC79A968106249B7FAD",
+      "contentHash": "dcd775d6cfe0d20747fb20bef46aa51eee6f664a81d44c2cd97be2f408f03ce4",
+      "activeContentHash": "dcd775d6cfe0d20747fb20bef46aa51eee6f664a81d44c2cd97be2f408f03ce4",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    }
+  },
+  "count": 8
+}

@@ -135,7 +135,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
 
             if (mode == "refine")
             {
-
+                await _titleDescriptionRefinementOrchestrator.RunAsync(allDiscoveredFiles, resourceFiles, cancellationToken);
             }
             else
             {

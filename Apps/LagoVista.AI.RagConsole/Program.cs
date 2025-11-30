@@ -48,6 +48,8 @@ namespace LagoVista.AI.RagConsole
                     var value = arg.Substring("--mode=".Length);
                     if (value.Equals("index", StringComparison.OrdinalIgnoreCase))
                         mode = "index";
+                    else if (value.Equals("refine", StringComparison.OrdinalIgnoreCase))
+                        mode = "refine"; 
                     else if (value.Equals("subkind", StringComparison.OrdinalIgnoreCase) ||
                              value.Equals("subkind-test", StringComparison.OrdinalIgnoreCase))
                         mode = "subkind";
