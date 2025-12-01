@@ -100,20 +100,20 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                                 if(modelStructureDescription.Successful)
                                 {                                   
                                     var headerInfo = FindDomainHeaderInfo(catalog, modelStructureDescription.Result);
-                                    modelStructureDescription.Result.BuildSections(headerInfo.Result);
+                                    modelStructureDescription.Result.BuildFinderSnippetSections(headerInfo.Result);
                                     var stucturedResults = modelStructureDescription.Result.CreateIRagPoints();
                                     result.Result.RagPoints.AddRange(stucturedResults.Select(rp => rp.Result));
 
                                 }
 
-                                var modelMetaDataDescription = _descriptionServices.BuildModelMetadataDescription(ctx, symbolText, resources);
-                                if (modelMetaDataDescription.Successful)
-                                {
-                                    var headerInfo = FindDomainHeaderInfo(catalog, modelMetaDataDescription.Result);
-                                    modelMetaDataDescription.Result.BuildSections(headerInfo.Result);
-                                    var metaDataResults = modelMetaDataDescription.Result.CreateIRagPoints();
-                                    result.Result.RagPoints.AddRange(metaDataResults.Select(rp => rp.Result));
-                                }
+                                //var modelMetaDataDescription = _descriptionServices.BuildModelMetadataDescription(ctx, symbolText, resources);
+                                //if (modelMetaDataDescription.Successful)
+                                //{
+                                //    var headerInfo = FindDomainHeaderInfo(catalog, modelMetaDataDescription.Result);
+                                //    modelMetaDataDescription.Result.BuildSections(headerInfo.Result);
+                                //    var metaDataResults = modelMetaDataDescription.Result.CreateIRagPoints();
+                                //    result.Result.RagPoints.AddRange(metaDataResults.Select(rp => rp.Result));
+                                //}
                             }
 
                             break;
@@ -186,12 +186,12 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                             break;
                     }
 
-                    var chunks = _chunkerServics.ChunkCSharpWithRoslyn(symbolText, fileInfo.Name);
-                    foreach (var chunk in chunks.Result)
-                    {
-                        var points = chunk.CreateIRagPoints(ctx);
-                        result.Result.RagPoints.AddRange(points.Select(pt => pt.Result));
-                    }
+                    //var chunks = _chunkerServics.ChunkCSharpWithRoslyn(symbolText, fileInfo.Name);
+                    //foreach (var chunk in chunks.Result)
+                    //{
+                    //    var points = chunk.CreateIRagPoints(ctx);
+                    //    result.Result.RagPoints.AddRange(points.Select(pt => pt.Result));
+                    //}
                 }
             }
 
@@ -218,16 +218,24 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
             {
                 var domainKey = model.Result.Structure.BusinessDomainKey;
                 var domain = catalog.GetDomainByKey(domainKey);
-
-                return InvokeResult<DomainModelHeaderInformation>.Create(new DomainModelHeaderInformation()
+                if (domain.Successful)
                 {
-                    DomainKey = domainKey,
-                    DomainName = domain.Result.Title,
-                    DomainTagLine = domain.Result.Description,
-                    ModelName = model.Result.Structure.ModelName,
-                    ModelClassName = fact.PrimaryEntity,
-                    ModelTagLine = model.Result.Structure.Description
-                });
+
+
+
+
+                    return InvokeResult<DomainModelHeaderInformation>.Create(new DomainModelHeaderInformation()
+                    {
+                        DomainKey = domainKey,
+                        DomainName = domain.Result.Title,
+                        DomainTagLine = domain.Result.Description,
+                        ModelName = model.Result.Structure.ModelName,
+                        ModelClassName = fact.PrimaryEntity,
+                        ModelTagLine = model.Result.Structure.Description
+                    });
+                }
+                else
+                    return InvokeResult<DomainModelHeaderInformation>.FromError("Domain not found in catalog.");
             }
             else
                 return InvokeResult<DomainModelHeaderInformation>.FromError("Model not found in catalog.");

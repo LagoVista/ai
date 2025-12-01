@@ -30,6 +30,8 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         public string Help { get; set; }
         public string Description { get; set; }
 
+        public string FullSourceText { get; set; }
+
         // ---------- Capabilities ----------
         public bool Cloneable { get; set; }
         public bool CanImport { get; set; }

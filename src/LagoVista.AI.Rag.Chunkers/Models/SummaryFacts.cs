@@ -136,6 +136,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                     PointId = Guid.NewGuid().ToString(),
                     Payload = payload,
                     Vector = section.Vectors,
+                    FinderSnippet = Encoding.UTF8.GetBytes(section.FinderSnippet ?? section.SectionNormalizedText),
                     Contents = Encoding.UTF8.GetBytes(section.SectionNormalizedText)
                 };
 

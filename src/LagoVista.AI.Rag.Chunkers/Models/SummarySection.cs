@@ -29,12 +29,28 @@ namespace LagoVista.AI.Rag.Chunkers.Models
 
         public string EmbeddingModel { get; set; }
 
+        /// <summary>
+        /// Canonical, normalized text used for embeddings. In unified
+        /// Finder Snippet mode, this will often be the same as
+        /// <see cref="FinderSnippet"/>.
+        /// </summary>
         public string SectionNormalizedText { get; set; }
+
+        /// <summary>
+        /// Optional, highly structured Finder Snippet text as defined
+        /// in IDX-068. When present, callers may treat this as the
+        /// canonical snippet text for retrieval while keeping richer
+        /// narrative content in backing artifacts.
+        /// </summary>
+        public string FinderSnippet { get; set; }
 
         public async Task<InvokeResult> CreateEmbeddingsAsync(IEmbedder embeder)
         {
+            // For now we continue to embed SectionNormalizedText. In unified
+            // Finder Snippet mode, builders should set SectionNormalizedText
+            // to the FinderSnippet text so existing callers continue to work.
             var result = await embeder.EmbedAsync(SectionNormalizedText);
-            if(result.Successful)
+            if (result.Successful)
             {
                 Vectors = result.Result.Vector;
                 EmbeddingModel = result.Result.EmbeddingModel;

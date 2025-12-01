@@ -51,6 +51,8 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             var analysis = analysisResult.Result;
             var result = new ModelStructureDescription
             {
+                FullSourceText = sourceText,
+
                 // Identity
                 ModelName = analysis.ModelName,
                 PrimaryEntity = analysis.ModelName,
