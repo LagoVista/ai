@@ -1,4 +1,5 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
@@ -24,6 +25,8 @@ namespace LagoVista.AI.Rag.Tests
             var catalogStore = new Mock<ITitleDescriptionRefinementCatalogStore>();
             var hashService = new Mock<IContentHashService>();
             var logger = new Mock<IAdminLogger>();
+            var resxUpdateService = new Mock<IResxUpdateService>();
+            var domainDescriptorUpdateService = new Mock<IDomainDescriptorUpdateService>();
 
             var files = new List<DiscoveredFile>();
             var resources = new Dictionary<string, IReadOnlyDictionary<string, string>>();
@@ -71,8 +74,9 @@ namespace LagoVista.AI.Rag.Tests
                 domainSource.Object,
                 catalogStore.Object,
                 hashService.Object,
-                logger.Object,
-                indexVersion: "1");
+                resxUpdateService.Object,
+                domainDescriptorUpdateService.Object,
+                logger.Object);
 
             await orchestrator.RunAsync(files, resources, CancellationToken.None);
 
@@ -89,12 +93,27 @@ namespace LagoVista.AI.Rag.Tests
             var catalogStore = new Mock<ITitleDescriptionRefinementCatalogStore>();
             var hashService = new Mock<IContentHashService>();
             var logger = new Mock<IAdminLogger>();
+            var resxUpdateService = new Mock<IResxUpdateService>();
+            var domainDescriptorUpdateService = new Mock<IDomainDescriptorUpdateService>();
 
             var files = new List<DiscoveredFile>();
-            var resources = new Dictionary<string, IReadOnlyDictionary<string, string>>();
+
+            // ✅ Provide resources so TitleKey / DescKey can be resolved to a RESX path.
+            var resources = new Dictionary<string, IReadOnlyDictionary<string, string>>
+    {
+        {
+            @"C:\fake\Strings.resx",
+            new Dictionary<string, string>
+            {
+                { "TitleKey", "Title" },
+                { "DescKey",  "Desc"  }
+            }
+        }
+    };
 
             var catalog = new TitleDescriptionCatalog();
-            catalogStore.Setup(s => s.LoadAsync(It.IsAny<CancellationToken>())).ReturnsAsync(catalog);
+            catalogStore.Setup(s => s.LoadAsync(It.IsAny<CancellationToken>()))
+                        .ReturnsAsync(catalog);
             catalogStore.Setup(s => s.SaveAsync(It.IsAny<TitleDescriptionCatalog>(), It.IsAny<CancellationToken>()))
                         .Returns(Task.CompletedTask);
 
@@ -130,6 +149,7 @@ namespace LagoVista.AI.Rag.Tests
             hashService.Setup(h => h.ComputeFileHashAsync("path.cs")).ReturnsAsync("hash1");
             hashService.Setup(h => h.ComputeFileHashAsync("domain.cs")).ReturnsAsync("hash2");
 
+            // ✅ Model review: successful, with changes.
             reviewService.Setup(r => r.ReviewAsync(
                     SummaryObjectKind.Model,
                     "AgentContext",
@@ -141,11 +161,16 @@ namespace LagoVista.AI.Rag.Tests
                 .ReturnsAsync(new TitleDescriptionReviewResult
                 {
                     IsError = false,
-                    Title = "Title",
-                    Description = "Desc",
+                    HasChanges = true,
+
+                    // Depending on your implementation you may also want to set the refined values:
+                    Title = "New Title",
+                    Description = "New Desc",
                     Help = null
                 });
 
+            // ✅ Domain review: successful, no changes required (so it goes down the "skipped" path
+            // but still records a DomainCatalogEntry).
             reviewService.Setup(r => r.ReviewAsync(
                     SummaryObjectKind.Domain,
                     "AIDomain",
@@ -157,9 +182,17 @@ namespace LagoVista.AI.Rag.Tests
                 .ReturnsAsync(new TitleDescriptionReviewResult
                 {
                     IsError = false,
+                    HasChanges = false,
                     Title = "AI Admin",
                     Description = "Domain desc"
                 });
+
+            // ✅ Make sure RESX writes don't throw (otherwise they'd be recorded as failures).
+            resxUpdateService.Setup(s => s.ApplyUpdatesAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<IReadOnlyDictionary<string, string>>(),
+                    It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
 
             var orchestrator = new TitleDescriptionRefinementOrchestrator(
                 reviewService.Object,
@@ -167,13 +200,18 @@ namespace LagoVista.AI.Rag.Tests
                 domainSource.Object,
                 catalogStore.Object,
                 hashService.Object,
-                logger.Object,
-                indexVersion: "1");
+                resxUpdateService.Object,
+                domainDescriptorUpdateService.Object,
+                logger.Object);
 
             await orchestrator.RunAsync(files, resources, CancellationToken.None);
+
+            Assert.That(catalog.Failures.Any(e => e.Kind == CatalogEntryKind.Model), Is.False,
+                "There should be no model failures in the happy-path test.");
 
             Assert.That(catalog.Refined, Has.Count.EqualTo(1));
             Assert.That(catalog.Domains, Has.Count.EqualTo(1));
         }
+
     }
 }
