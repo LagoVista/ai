@@ -126,8 +126,8 @@ namespace LagoVista.AI.Rag.Chunkers.Models
 
                 section.PopulateRagPayload(payload);
 
-                payload.FullDocumentBlobUri = this.BlobUri;
-                payload.SnippetBlobUri = $"{this.BlobUri}.{section.SectionKey}.{section.PartIndex}".ToLower().Replace(" ", "_");
+                payload.FullDocumentBlobUri = this.BlobUri.ToLower();
+                payload.SnippetBlobUri = $"{this.BlobUri}.{section.ModelClassName}/{section.SectionKey}.{section.PartIndex}".ToLower().Replace(" ", "_").ToLower();
 
                 var result = PopulateAdditionalRagProperties(payload);
 

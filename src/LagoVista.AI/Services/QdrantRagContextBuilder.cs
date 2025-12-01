@@ -10,6 +10,7 @@ using LagoVista.Core.Validation;
 using LagoVista.Core.Utils.Types.Nuviot.RagIndexing;
 using LagoVista.Core.Interfaces;
 using LagoVista.Core.AI.Models;
+using LagoVista.IoT.Logging.Loggers;
 
 namespace LagoVista.AI.Services
 {
@@ -23,6 +24,7 @@ namespace LagoVista.AI.Services
         private readonly IQdrantClient _qdrantClient;
         private readonly ILLMContentRepo _contentRepo;
         private readonly int _topK;
+        private readonly IAdminLogger _adminLogger;
 
         /// <summary>
         /// Creates a new <see cref="QdrantRagContextBuilder"/>.
@@ -33,11 +35,13 @@ namespace LagoVista.AI.Services
         public QdrantRagContextBuilder(
             IEmbedder embedder,
             IQdrantClient qdrantClient,
-            ILLMContentRepo contentRepo)
+            ILLMContentRepo contentRepo,
+            IAdminLogger adminLogger)
         {
             _embedder = embedder ?? throw new ArgumentNullException(nameof(embedder));
             _qdrantClient = qdrantClient ?? throw new ArgumentNullException(nameof(qdrantClient));
             _contentRepo = contentRepo ?? throw new ArgumentNullException(nameof(contentRepo));
+            _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
             _topK = 8;
         }
 
@@ -76,6 +80,8 @@ namespace LagoVista.AI.Services
             var hits = await _qdrantClient.SearchAsync(
                 agentContext.VectorDatabaseCollectionName,
                 searchRequest).ConfigureAwait(false);
+
+            _adminLogger.Trace($"[QdrantRagContextBuilder__BuildContextSectionAsync] Query Completed, found {hits.Count} results.");
 
             if (hits == null || hits.Count == 0)
             {
@@ -143,6 +149,7 @@ namespace LagoVista.AI.Services
         /// </summary>
         private async Task<string> BuildContextBlockAsync(AgentContext agentContext, IReadOnlyList<QdrantScoredPoint> selected)
         {
+
             var sb = new StringBuilder();
             sb.AppendLine("[CONTEXT]");
             sb.AppendLine();
@@ -158,10 +165,13 @@ namespace LagoVista.AI.Services
             {
                 if (hit.Payload == null)
                 {
+                    _adminLogger.AddError($"[QdrantRagContextBuilder__BuildContextBlockAsync]", "[QdrantRagContextBuilder__BuildContextSectionAsync] Query Completed, did not have have payload.");
                     continue;
                 }
 
                 var payload = RagVectorPayload.FromDictionary(hit.Payload);
+
+                _adminLogger.Trace($"[QdrantRagContextBuilder__BuildContextBlockAsync] Processing payload {payload.SemanticId}, path {payload.SnippetBlobUri}.");
 
                 var path = !string.IsNullOrWhiteSpace(payload.Path)
                     ? payload.Path
@@ -181,8 +191,8 @@ namespace LagoVista.AI.Services
                     : InferLanguageFromPath(path);
 
                 // Resolve blob/file name: prefer BlobUri, then FullDocumentBlobUri, then Path
-                var blobName = !string.IsNullOrWhiteSpace(payload.BlobUri)
-                    ? payload.BlobUri
+                var blobName = !string.IsNullOrWhiteSpace(payload.SnippetBlobUri)
+                    ? payload.SnippetBlobUri
                     : (!string.IsNullOrWhiteSpace(payload.FullDocumentBlobUri)
                         ? payload.FullDocumentBlobUri
                         : payload.Path);
@@ -206,8 +216,11 @@ namespace LagoVista.AI.Services
                 sb.AppendLine("Path: " + (path ?? string.Empty));
                 sb.AppendLine("Lines: " + startLine + "-" + endLine);
                 sb.AppendLine("Language: " + language);
+
+                Console.WriteLine($"---\r\n{sb.ToString()}\r\n----\r\n\r\n");
+
                 sb.AppendLine("```" + language);
-                sb.AppendLine(snippet ?? string.Empty);
+                sb.AppendLine(contentResult.Result);
                 sb.AppendLine("```");
                 sb.AppendLine();
 

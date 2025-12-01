@@ -86,8 +86,10 @@ namespace LagoVista.AI.Services
                         Content = new StringContent(requestJson, Encoding.UTF8, "application/json")
                     };
 
+                    Console.WriteLine($"IMMEDIATELY BEFORE THE CALL: {DateTime.Now}");
                     var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
 
+                    Console.WriteLine($"INITIAL RESPONSE: {DateTime.Now} - {response.StatusCode}");
                     if (!response.IsSuccessStatusCode)
                     {
                         var errorBody = await response.Content.ReadAsStringAsync();
@@ -185,6 +187,8 @@ namespace LagoVista.AI.Services
                     // Blank line => end of one SSE event
                     if (string.IsNullOrWhiteSpace(line))
                     {
+                        Console.WriteLine($"LINE RECEIVED: {DateTime.Now} - line");
+
                         if (dataBuilder.Length > 0)
                         {
                             var dataJson = dataBuilder.ToString();
@@ -229,6 +233,9 @@ namespace LagoVista.AI.Services
                         dataBuilder.AppendLine(dataPart);
                     }
                 }
+
+                Console.WriteLine($"COMPLETED EVENT: {DateTime.Now}");
+
 
                 Console.WriteLine($"Commpleted JSON\r\n===={completedEventJson}\r\n====");
 

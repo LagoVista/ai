@@ -2407,8 +2407,8 @@
     "src/lagovista.ai/services/qdrantragcontextbuilder.cs": {
       "filePath": "src/lagovista.ai/services/qdrantragcontextbuilder.cs",
       "docId": "5CC45542ABBD5942BA7B2E0BBB30D359",
-      "contentHash": "e87edabac3d5a34e8fe0ab4a8a1881fe130458558798e385180b9cae746a2070",
-      "activeContentHash": "e87edabac3d5a34e8fe0ab4a8a1881fe130458558798e385180b9cae746a2070",
+      "contentHash": "910cdc830e2806e7b1da74c8bad89b1f7cf17745d8811156f3193dbf23b769bb",
+      "activeContentHash": "910cdc830e2806e7b1da74c8bad89b1f7cf17745d8811156f3193dbf23b769bb",
       "reindex": "full",
       "facets": [],
       "isActive": false
@@ -3019,8 +3019,8 @@
     "src/lagovista.ai.rag.chunkers/models/modelstructuredescription.findersnippet.cs": {
       "filePath": "src/lagovista.ai.rag.chunkers/models/modelstructuredescription.findersnippet.cs",
       "docId": "4BC34EEB94EA52F4840DA10FDC20C715",
-      "contentHash": "2bdf36e5efe7e70e9696e504c5511706f38857dfd44c270ea267aa58286828b3",
-      "activeContentHash": "2bdf36e5efe7e70e9696e504c5511706f38857dfd44c270ea267aa58286828b3",
+      "contentHash": "38ff3b7bce5bd9734f63a9802210b9e4d56f1438d63157626afe7aac5879dd99",
+      "activeContentHash": "38ff3b7bce5bd9734f63a9802210b9e4d56f1438d63157626afe7aac5879dd99",
       "reindex": "full",
       "facets": [],
       "isActive": false
@@ -3118,8 +3118,8 @@
     "src/lagovista.ai.rag.chunkers/models/summaryfacts.cs": {
       "filePath": "src/lagovista.ai.rag.chunkers/models/summaryfacts.cs",
       "docId": "FAA8239A25E951EDB92D4383C2524C9B",
-      "contentHash": "8c68571a2b86c93e9f042e0363e90afd9fb4f6fac98764c8e60c209da2951b65",
-      "activeContentHash": "8c68571a2b86c93e9f042e0363e90afd9fb4f6fac98764c8e60c209da2951b65",
+      "contentHash": "32b3dfc24d253e313265aa754e491ca9134286b7f7fa180be4e40e8bf90287b3",
+      "activeContentHash": "32b3dfc24d253e313265aa754e491ca9134286b7f7fa180be4e40e8bf90287b3",
       "reindex": "full",
       "facets": [],
       "isActive": false
@@ -3991,8 +3991,8 @@
     "src/lagovista.ai.rag/contractpacks/ingestion/services/sourcefileprocessor.cs": {
       "filePath": "src/lagovista.ai.rag/contractpacks/ingestion/services/sourcefileprocessor.cs",
       "docId": "B3DE497DCEA35102BB1CE4846CFA1E78",
-      "contentHash": "df6b35ddc0a271e784ff0da148c36f9612a98b144a14107a9dcdb91f7d754dd6",
-      "activeContentHash": "df6b35ddc0a271e784ff0da148c36f9612a98b144a14107a9dcdb91f7d754dd6",
+      "contentHash": "352a261c5bd06162e6c3c316c425645a78fd73a74e451e991e61ce4e328c5997",
+      "activeContentHash": "352a261c5bd06162e6c3c316c425645a78fd73a74e451e991e61ce4e328c5997",
       "reindex": "full",
       "facets": [],
       "isActive": false
