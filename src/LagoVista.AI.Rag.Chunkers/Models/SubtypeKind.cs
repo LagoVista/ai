@@ -6,7 +6,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
     /// Logical subkind classification for server-side C# artifacts.
     /// Extracted from the original SubKindDetector for reuse by SourceKindAnalyzer.
     /// </summary>
-    public enum CodeSubKind
+    public enum SubtypeKind
     {
         DomainDescription,
         Model,

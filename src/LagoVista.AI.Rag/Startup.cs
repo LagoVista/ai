@@ -43,6 +43,7 @@ namespace LagoVista.AI.Rag
             SLWIOC.RegisterSingleton<IIndexIdServices, IndexIdServices>();
             SLWIOC.RegisterSingleton<IIngestionConfigProvider, JsonIngestionConfigProvider>();
             SLWIOC.RegisterSingleton<IIndexFileContextBuilder, IndexFileContextBuilder>();
+            SLWIOC.RegisterSingleton<IStructuredTextLlmService, HttpStructuredTextLlmService>();
             SLWIOC.RegisterSingleton<IFileDiscoveryService, FileDiscoveryService>();
             SLWIOC.RegisterSingleton<IFileIngestionPlanner, DefaultIngestionPlanner>();
             SLWIOC.RegisterSingleton<IDomainModelCatalogBuilder, DomainModelCatalogBuilder>();

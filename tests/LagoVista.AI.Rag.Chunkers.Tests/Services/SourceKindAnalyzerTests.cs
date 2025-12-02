@@ -15,7 +15,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests.Services
 
             Assert.Multiple(() =>
             {
-                Assert.That(result.SubKind, Is.EqualTo(CodeSubKind.ResourceFile));
+                Assert.That(result.SubKind, Is.EqualTo(SubtypeKind.ResourceFile));
                 Assert.That(result.PrimaryTypeName, Is.Null);
                 Assert.That(result.IsMixed, Is.False);
                 Assert.That(result.Reason, Does.Contain("ResourceFile"));
@@ -37,7 +37,7 @@ public class Device
 
             Assert.Multiple(() =>
             {
-                Assert.That(result.SubKind, Is.EqualTo(CodeSubKind.Model));
+                Assert.That(result.SubKind, Is.EqualTo(SubtypeKind.Model));
                 Assert.That(result.PrimaryTypeName, Is.EqualTo("Device"));
                 Assert.That(result.IsMixed, Is.False);
                 Assert.That(result.Reason, Does.Contain("EntityDescription"));
@@ -59,7 +59,7 @@ public class AIDomain
 
             Assert.Multiple(() =>
             {
-                Assert.That(result.SubKind, Is.EqualTo(CodeSubKind.DomainDescription));
+                Assert.That(result.SubKind, Is.EqualTo(SubtypeKind.DomainDescription));
                 Assert.That(result.PrimaryTypeName, Is.EqualTo("AIDomain"));
                 Assert.That(result.Reason, Does.Contain("DomainDescriptor"));
             });
@@ -80,7 +80,7 @@ public class AIDomain
 
             Assert.Multiple(() =>
             {
-                Assert.That(result.SubKind, Is.EqualTo(CodeSubKind.Model));
+                Assert.That(result.SubKind, Is.EqualTo(SubtypeKind.Model));
                 Assert.That(result.PrimaryTypeName, Is.EqualTo("AgentContext"));
                 Assert.That(result.Reason, Does.Contain("EntityBase"));
             });
@@ -102,7 +102,7 @@ public class AIDomain
 
             Assert.Multiple(() =>
             {
-                Assert.That(result.SubKind, Is.EqualTo(CodeSubKind.SummaryListModel));
+                Assert.That(result.SubKind, Is.EqualTo(SubtypeKind.SummaryListModel));
                 Assert.That(result.PrimaryTypeName, Is.EqualTo("AgentContextSummary"));
                 Assert.That(result.Reason, Does.Contain("SummaryData"));
             });
@@ -123,7 +123,7 @@ public class AIDomain
 
             Assert.Multiple(() =>
             {
-                Assert.That(result.SubKind, Is.EqualTo(CodeSubKind.Manager));
+                Assert.That(result.SubKind, Is.EqualTo(SubtypeKind.Manager));
                 Assert.That(result.PrimaryTypeName, Is.EqualTo("AgentContextManager"));
                 Assert.That(result.Reason, Does.Contain("ManagerBase").Or.Contain("Managers"));
             });
@@ -144,7 +144,7 @@ public class AIDomain
 
             Assert.Multiple(() =>
             {
-                Assert.That(result.SubKind, Is.EqualTo(CodeSubKind.Repository));
+                Assert.That(result.SubKind, Is.EqualTo(SubtypeKind.Repository));
                 Assert.That(result.PrimaryTypeName, Is.EqualTo("AgentContextRepository"));
                 Assert.That(result.Reason, Does.Contain("repository base type").Or.Contain("Repositories"));
             });
@@ -168,7 +168,7 @@ namespace LagoVista.AI.Controllers
 
             Assert.Multiple(() =>
             {
-                Assert.That(result.SubKind, Is.EqualTo(CodeSubKind.Controller));
+                Assert.That(result.SubKind, Is.EqualTo(SubtypeKind.Controller));
                 Assert.That(result.PrimaryTypeName, Is.EqualTo("AgentContextController"));
                 Assert.That(result.Reason, Does.Contain("ApiController").Or.Contain("controller base type"));
             });
@@ -190,7 +190,7 @@ namespace LagoVista.AI.Controllers
 
             Assert.Multiple(() =>
             {
-                Assert.That(result.SubKind, Is.EqualTo(CodeSubKind.Service));
+                Assert.That(result.SubKind, Is.EqualTo(SubtypeKind.Service));
                 Assert.That(result.PrimaryTypeName, Is.EqualTo("AgentContextService"));
                 Assert.That(result.Reason, Does.Contain("Service"));
             });
@@ -231,7 +231,7 @@ namespace LagoVista.AI.Controllers
 
             Assert.Multiple(() =>
             {
-                Assert.That(result.SubKind, Is.EqualTo(CodeSubKind.Interface));
+                Assert.That(result.SubKind, Is.EqualTo(SubtypeKind.Interface));
                 Assert.That(result.PrimaryTypeName, Is.EqualTo("IAgentContext"));
                 Assert.That(result.Reason, Does.Contain("interface"));
             });
@@ -249,7 +249,7 @@ namespace LagoVista.AI.Controllers
 
             Assert.Multiple(() =>
             {
-                Assert.That(result.SubKind, Is.EqualTo(CodeSubKind.Startup));
+                Assert.That(result.SubKind, Is.EqualTo(SubtypeKind.Startup));
                 Assert.That(result.PrimaryTypeName, Is.EqualTo("Startup"));
             });
         }
@@ -268,7 +268,7 @@ public class AgentContextException : Exception
 
             Assert.Multiple(() =>
             {
-                Assert.That(result.SubKind, Is.EqualTo(CodeSubKind.Exception));
+                Assert.That(result.SubKind, Is.EqualTo(SubtypeKind.Exception));
                 Assert.That(result.PrimaryTypeName, Is.EqualTo("AgentContextException"));
                 Assert.That(result.Reason, Does.Contain("inherits from Exception"));
             });
@@ -283,7 +283,7 @@ public class AgentContextException : Exception
 
             Assert.Multiple(() =>
             {
-                Assert.That(result.SubKind, Is.EqualTo(CodeSubKind.Other));
+                Assert.That(result.SubKind, Is.EqualTo(SubtypeKind.Other));
                 Assert.That(result.PrimaryTypeName, Is.Null);
                 Assert.That(result.Reason, Does.Contain("No top-level types"));
             });

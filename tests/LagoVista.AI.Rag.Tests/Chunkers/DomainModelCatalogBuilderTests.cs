@@ -120,7 +120,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
 
                 var detectionResult = new SourceKindResult
                 {
-                    SubKind = CodeSubKind.Model,
+                    SubKind = SubtypeKind.Model,
                     PrimaryTypeName = "Device",
                     SymbolText = null
                 };
@@ -170,7 +170,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
                 var modelEntry = models["LagoVista.Devices.Device"];
                 Assert.That(modelEntry.RepoId, Is.EqualTo(RepoId));
                 Assert.That(modelEntry.RelativePath, Is.EqualTo("Models/Device.cs"));
-                Assert.That(modelEntry.SubKind, Is.EqualTo(CodeSubKind.Model));
+                Assert.That(modelEntry.SubKind, Is.EqualTo(SubtypeKind.Model));
                 Assert.That(modelEntry.Structure, Is.Not.Null);
                 Assert.That(modelEntry.Structure.QualifiedName, Is.EqualTo("LagoVista.Devices.Device"));
 

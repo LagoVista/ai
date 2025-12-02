@@ -15,7 +15,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         public string Summary { get; set; }
 
         /// <summary>The inferred SubKind for this specific type.</summary>
-        public CodeSubKind SubKind { get; set; }
+        public SubtypeKind SubKind { get; set; }
 
         public string SubKindString => SubKind.ToString();
 
