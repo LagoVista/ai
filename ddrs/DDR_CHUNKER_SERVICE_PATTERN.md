@@ -39,6 +39,7 @@ All new functionality should follow a **three-layer pattern**:
 
 3. **Expose via Interface (Service Layer)**
    - Top-level abstraction that higher layers call
+   
    - Internally delegates to the static helpers
    - Enables mocking, swapping, orchestration
    - Examples:

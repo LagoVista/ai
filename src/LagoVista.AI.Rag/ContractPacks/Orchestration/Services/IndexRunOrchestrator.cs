@@ -130,12 +130,11 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
                     }
                 }
             }
-          /*  _adminLogger.Trace($"[IndexRunOrchestrator_RunAsync] - Found {resources.Count} in  all Resources {sw.Elapsed.TotalMilliseconds}ms.");
+            _adminLogger.Trace($"[IndexRunOrchestrator_RunAsync] - Found {resources.Count} in  all Resources {sw.Elapsed.TotalMilliseconds}ms.");
             var fullDomainCatalog = await _domainModelCatalogBuilder.BuildAsync(allDiscoveredFiles, resources);
-            */
             if (mode == "refine")
             {
-                //await _titleDescriptionRefinementOrchestrator.RunAsync(allDiscoveredFiles, resourceFiles, cancellationToken);
+                await _titleDescriptionRefinementOrchestrator.RunAsync(allDiscoveredFiles, resourceFiles, cancellationToken);
             }
             else
             {
