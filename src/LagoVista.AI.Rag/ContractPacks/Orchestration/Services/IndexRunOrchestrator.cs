@@ -96,7 +96,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
             _titleDescriptionRefinementOrchestrator = titleDescriptionRefinementOrchestrator ?? throw new ArgumentNullException(nameof(titleDescriptionRefinementOrchestrator));
         }
 
-        public async Task RunAsync(IngestionConfig config, string mode = null, string processRepo = null, CodeSubKind? subKindFilter = null, bool verbose = false, bool dryrun = false, CancellationToken cancellationToken = default)
+        public async Task RunAsync(IngestionConfig config, string mode = null, string processRepo = null, SubtypeKind? subKindFilter = null, bool verbose = false, bool dryrun = false, CancellationToken cancellationToken = default)
         {
             // 1. Load configuration
             if (config == null)

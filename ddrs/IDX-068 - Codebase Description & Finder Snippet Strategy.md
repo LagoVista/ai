@@ -152,13 +152,20 @@ Represents individual DDRs such as SYS-001, IDX-066, and this document. These ar
 
 Finder Snippet:
 
-Domain: Architecture
-DomainSummary: Cross cutting design and governance specifications.
+Domain: Aptix
+Kind: Ddr
+Flavor: SpecSection
 
-Kind: DDR
+DDR-ID: IDX-067
+DDR-TLA: IDX
+TLA-Purpose: Defines indexing, embedding, scoring, and vector retrieval architecture.
 
-Artifact: DdrId
-PrimaryEntity: OptionalEntityName
+DdrName: Summary Section Scoring Rules
+DdrStatus: Draft
+
+DdrSummary: Defines how summary sections are scored and how low-score rewrites are performed.
+
+Artifact: IDX-067
 
 SectionPurpose: Short description of what this DDR governs
 

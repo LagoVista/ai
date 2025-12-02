@@ -38,7 +38,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
         /// <summary>
         /// Entry point: orchestrates the 7.x steps for a single file.
         /// </summary>
-        public async Task<InvokeResult<ProcessedFileResults>> BuildChunks(IngestionConfig config, IndexFileContext ctx, DomainModelCatalog catalog, CodeSubKind? subTypeFilter, IReadOnlyDictionary<string, string> resources)
+        public async Task<InvokeResult<ProcessedFileResults>> BuildChunks(IngestionConfig config, IndexFileContext ctx, DomainModelCatalog catalog, SubtypeKind? subTypeFilter, IReadOnlyDictionary<string, string> resources)
         {
             var filePath = ctx.FullPath;
 
@@ -58,7 +58,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                 ctx.Contents = System.Text.ASCIIEncoding.ASCII.GetBytes(fileText);
             }
 
-            if (ctx.RelativePath.StartsWith("ddrs") && (!subTypeFilter.HasValue || subTypeFilter == CodeSubKind.Ddr))
+            if (ctx.RelativePath.StartsWith("ddrs") && (!subTypeFilter.HasValue || subTypeFilter == SubtypeKind.Ddr))
             {
                 var description = _descriptionServices.BuildDdrDescription(ctx, fileText);
                 if(description.Successful)
@@ -94,7 +94,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                     var symbolText = splitSymbol.Text;
                     switch (subKindResult.SubKind)
                     {
-                        case CodeSubKind.Model:
+                        case SubtypeKind.Model:
                             {
                                 var modelStructureDescription = _descriptionServices.BuildModelStructureDescription(ctx, symbolText, resources);
                                 if(modelStructureDescription.Successful)
@@ -117,7 +117,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                             }
 
                             break;
-                        case CodeSubKind.Manager:
+                        case SubtypeKind.Manager:
                             {
                                 var managerDescription = _descriptionServices.BuildManagerDescription(ctx, symbolText);
                                 if (managerDescription.Successful)
@@ -131,7 +131,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                             }
                             break;
 
-                        case CodeSubKind.Interface:
+                        case SubtypeKind.Interface:
                             {
                                 var interfaceDescription = _descriptionServices.BuildInterfaceDescription(ctx, symbolText);
                                 if (interfaceDescription.Successful)
@@ -145,7 +145,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                             }
                             break;
 
-                        case CodeSubKind.Repository:
+                        case SubtypeKind.Repository:
                             {
                                 var repoDescription = _descriptionServices.BuildRepositoryDescription(ctx, symbolText);
                                 if (repoDescription.Successful)
@@ -157,7 +157,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                                 }
                             }
                             break;
-                        case CodeSubKind.Controller:
+                        case SubtypeKind.Controller:
                             {
                                 var controllerDescription = _descriptionServices.BuildEndpointDescriptions(ctx, symbolText);
                                 if (controllerDescription.Successful)
@@ -174,7 +174,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
 
                             break;
 
-                        case CodeSubKind.SummaryListModel:
+                        case SubtypeKind.SummaryListModel:
                             var summaryListDescription = _descriptionServices.BuildSummaryDescription(ctx, symbolText, resources);
                             if (summaryListDescription.Successful)
                             {

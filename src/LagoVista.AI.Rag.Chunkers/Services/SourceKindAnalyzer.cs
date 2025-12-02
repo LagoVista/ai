@@ -37,7 +37,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 return new SourceKindResult
                 {
                     Path = relativePath,
-                    SubKind = CodeSubKind.ResourceFile,
+                    SubKind = SubtypeKind.ResourceFile,
                     PrimaryTypeName = null,
                     IsMixed = false,
                     Reason = "File name ended with .resx, classified as ResourceFile.",
@@ -68,7 +68,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 return new SourceKindResult
                 {
                     Path = relativePath,
-                    SubKind = CodeSubKind.Other,
+                    SubKind = SubtypeKind.Other,
                     PrimaryTypeName = null,
                     IsMixed = false,
                     Reason = "No top-level types found; defaulting SubKind=Other.",
@@ -92,70 +92,70 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             var ns = GetNamespace(type);
 
             // Primary classification (priority order).
-            CodeSubKind kind;
+            SubtypeKind kind;
 
             if (IsTest(type, ns, segments, evidence))
             {
-                kind = CodeSubKind.Test;
+                kind = SubtypeKind.Test;
             }
             else if(IsDdr(type, ns, segments, evidence))
             {
-                kind = CodeSubKind.Ddr;
+                kind = SubtypeKind.Ddr;
             }
             else if (IsMarkDown(type, ns, segments, evidence))
             {
-                kind = CodeSubKind.MarkDown;
+                kind = SubtypeKind.MarkDown;
             }
             else if (IsDomainDescription(type, ns, segments, evidence))
             {
-                kind = CodeSubKind.DomainDescription;
+                kind = SubtypeKind.DomainDescription;
             }
             else if (IsException(type, ns, segments, evidence))
             {
-                kind = CodeSubKind.Exception;
+                kind = SubtypeKind.Exception;
             }
             else if (IsListModel(type, ns, segments, evidence))
             {
-                kind = CodeSubKind.SummaryListModel;
+                kind = SubtypeKind.SummaryListModel;
             }
             else if (IsModel(type, ns, segments, evidence))
             {
-                kind = CodeSubKind.Model;
+                kind = SubtypeKind.Model;
             }
             else if (IsManager(type, ns, segments, evidence))
             {
-                kind = CodeSubKind.Manager;
+                kind = SubtypeKind.Manager;
             }
             else if (IsRepository(type, ns, segments, evidence))
             {
-                kind = CodeSubKind.Repository;
+                kind = SubtypeKind.Repository;
             }
             else if (IsController(type, ns, segments, evidence))
             {
-                kind = CodeSubKind.Controller;
+                kind = SubtypeKind.Controller;
             }
             else if (IsService(type, ns, segments, evidence))
             {
-                kind = CodeSubKind.Service;
+                kind = SubtypeKind.Service;
             }
             else if (IsInterfaceType(type, ns, segments, evidence))
             {
-                kind = CodeSubKind.Interface;
+                kind = SubtypeKind.Interface;
             }
             else if (IsStartup(type, ns, segments, evidence))
             {
-                kind = CodeSubKind.Startup;
+                kind = SubtypeKind.Startup;
             }
             else
             {
-                kind = CodeSubKind.Other;
+                kind = SubtypeKind.Other;
             }
 
             // Fallback name/path-based detection if still Other.
-            if (kind == CodeSubKind.Other)
+            if (kind == SubtypeKind.Other)
             {
                 if (FallbackSubKindDetector(type.Identifier.ValueText, segments, out var fallbackKind) &&
-                    fallbackKind != CodeSubKind.Other)
+                    fallbackKind != SubtypeKind.Other)
                 {
                     kind = fallbackKind;
                     evidence.Add($"FallbackSubKindDetector matched '{type.Identifier.ValueText}'/path pattern -> {fallbackKind}.");
@@ -179,114 +179,114 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             };
         }
 
-        private static bool FallbackSubKindDetector(string typeName, string[] segments, out CodeSubKind subKind)
+        private static bool FallbackSubKindDetector(string typeName, string[] segments, out SubtypeKind subKind)
         {
             var fileName = segments.Length > 0 ? segments[^1] : string.Empty;
 
             if (ClassEndsWith(typeName, "repo", "repository"))
             {
-                subKind = CodeSubKind.Repository;
+                subKind = SubtypeKind.Repository;
                 return true;
             }
 
             if (ClassEndsWith(typeName, "handler"))
             {
-                subKind = CodeSubKind.Handler;
+                subKind = SubtypeKind.Handler;
                 return true;
             }
 
             if (ClassEndsWith(typeName, "client"))
             {
-                subKind = CodeSubKind.Client;
+                subKind = SubtypeKind.Client;
                 return true;
             }
 
             if (ClassEndsWith(typeName, "config"))
             {
-                subKind = CodeSubKind.Configuration;
+                subKind = SubtypeKind.Configuration;
                 return true;
             }
 
             if (ClassEndsWith(typeName, "extensions"))
             {
-                subKind = CodeSubKind.ExtensionMethods;
+                subKind = SubtypeKind.ExtensionMethods;
                 return true;
             }
 
             if (typeName.Equals("program", StringComparison.OrdinalIgnoreCase))
             {
-                subKind = CodeSubKind.Program;
+                subKind = SubtypeKind.Program;
                 return true;
             }
 
             if (ClassEndsWith(typeName, "service") || ClassEndsWith(typeName, "services"))
             {
-                subKind = CodeSubKind.Service;
+                subKind = SubtypeKind.Service;
                 return true;
             }
 
             if (ClassEndsWith(typeName, "attribute"))
             {
-                subKind = CodeSubKind.CodeAttribute;
+                subKind = SubtypeKind.CodeAttribute;
                 return true;
             }
 
             if (typeName.Equals("startup", StringComparison.OrdinalIgnoreCase))
             {
-                subKind = CodeSubKind.Startup;
+                subKind = SubtypeKind.Startup;
                 return true;
             }
 
             if (ClassEndsWith(typeName, "request"))
             {
-                subKind = CodeSubKind.Request;
+                subKind = SubtypeKind.Request;
                 return true;
             }
 
             if (ClassEndsWith(typeName, "result"))
             {
-                subKind = CodeSubKind.Result;
+                subKind = SubtypeKind.Result;
                 return true;
             }
 
             if (ClassEndsWith(typeName, "response"))
             {
-                subKind = CodeSubKind.Response;
+                subKind = SubtypeKind.Response;
                 return true;
             }
 
             if (ClassEndsWith(typeName, "message"))
             {
-                subKind = CodeSubKind.Message;
+                subKind = SubtypeKind.Message;
                 return true;
             }
 
             if (ClassEndsWith(typeName, "proxy"))
             {
-                subKind = CodeSubKind.ProxyServices;
+                subKind = SubtypeKind.ProxyServices;
                 return true;
             }
 
             var fileLower = fileName.ToLowerInvariant();
             if (fileLower.EndsWith("result") || fileLower.EndsWith("results"))
             {
-                subKind = CodeSubKind.Result;
+                subKind = SubtypeKind.Result;
                 return true;
             }
 
             if (segments.Any(seg => seg.ToLowerInvariant().Contains("proxy")))
             {
-                subKind = CodeSubKind.ProxyServices;
+                subKind = SubtypeKind.ProxyServices;
                 return true;
             }
 
             if (segments.Any(seg => seg.Equals("extensions", StringComparison.OrdinalIgnoreCase)))
             {
-                subKind = CodeSubKind.ExtensionMethods;
+                subKind = SubtypeKind.ExtensionMethods;
                 return true;
             }
 
-            subKind = CodeSubKind.Other;
+            subKind = SubtypeKind.Other;
             return false;
         }
 

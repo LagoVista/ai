@@ -82,7 +82,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
     {
         public string RepoId { get; set; }
         public string RelativePath { get; set; }
-        public CodeSubKind SubKind { get; set; }
+        public SubtypeKind SubKind { get; set; }
         public ModelStructureDescription Structure { get; set; }
     }
 }

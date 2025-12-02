@@ -31,7 +31,7 @@ namespace LagoVista.AI.RagConsole
         static bool showHelp = false;
         static bool verbose = false;
         static bool dryRun = false;
-        static CodeSubKind? subKindFilter;
+        static SubtypeKind? subKindFilter;
 
         public static async Task Main(string[] args)
         {
@@ -72,7 +72,7 @@ namespace LagoVista.AI.RagConsole
                 else if (arg.StartsWith("--subkindfilter=", StringComparison.OrdinalIgnoreCase))
                 {
                     var contentType = arg.Substring("--subkindfilter=".Length);
-                    if (Enum.TryParse<CodeSubKind>(contentType, true, out var parsed))
+                    if (Enum.TryParse<SubtypeKind>(contentType, true, out var parsed))
                     {
                         subKindFilter = parsed;
                     }
