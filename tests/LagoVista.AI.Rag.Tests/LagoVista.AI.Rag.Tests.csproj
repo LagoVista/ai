@@ -15,6 +15,7 @@
     <EmbeddedResource Remove="Content\resources.resx" />
   </ItemGroup>
   <ItemGroup>
+    <None Remove="Content\AIDomain.txt" />
     <None Remove="Content\IAgentContextManager.txt" />
   </ItemGroup>
   <ItemGroup>
@@ -28,6 +29,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\AgentContextTestRepository.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\AIDomain.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\IAgentContextManager.txt">

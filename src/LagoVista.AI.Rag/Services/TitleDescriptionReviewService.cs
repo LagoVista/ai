@@ -29,8 +29,7 @@ namespace LagoVista.AI.Rag.Services
         private readonly ITitleDescriptionLlmClient _llmClient;
         private readonly IAdminLogger _logger;
 
-        public TitleDescriptionReviewService(
-            ITitleDescriptionLlmClient llmClient,
+        public TitleDescriptionReviewService(ITitleDescriptionLlmClient llmClient,
             IAdminLogger logger)
         {
             _llmClient = llmClient ?? throw new ArgumentNullException(nameof(llmClient));
@@ -59,8 +58,7 @@ namespace LagoVista.AI.Rag.Services
                 Title = title,
                 Description = description,
                 Help = help,
-                Model = HttpLlmTitleDescriptionClient.DefaultModel,
-
+                
                 // Domain and field context will be populated by higher-level callers
                 // as those pieces of metadata become available. For now they are
                 // optional and may remain empty.
