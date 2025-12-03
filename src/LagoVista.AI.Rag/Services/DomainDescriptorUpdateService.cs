@@ -15,6 +15,22 @@ namespace LagoVista.AI.Rag.Services
     /// <summary>
     /// Roslyn-based implementation of <see cref="IDomainDescriptorUpdateService"/>.
     /// Safely rewrites DomainDescription initializers for domain descriptors.
+    ///
+    /// Primary pattern (preferred):
+    ///   [DomainDescription(SomeDomainKey)]
+    ///   public static readonly DomainDescription SomeDomainDescription = new DomainDescription { ... };
+    ///
+    /// Fallback patterns supported for legacy code:
+    ///   [DomainDescription(SomeDomainKey)]
+    ///   public static DomainDescription SomeDomainDescription => new DomainDescription { ... };
+    ///
+    ///   [DomainDescription(SomeDomainKey)]
+    ///   public static DomainDescription SomeDomainDescription
+    ///   {
+    ///       get { return new DomainDescription { ... }; }
+    ///   }
+    ///
+    /// Any other shapes will log a failure and be skipped for update.
     /// </summary>
     public class DomainDescriptorUpdateService : IDomainDescriptorUpdateService
     {
@@ -50,40 +66,30 @@ namespace LagoVista.AI.Rag.Services
                 throw new InvalidOperationException($"Unable to parse domain descriptor file: {domain.FullPath}");
             }
 
-            // Locate field that holds the DomainDescription for this domain.
-            var field = root
-                .DescendantNodes()
-                .OfType<FieldDeclarationSyntax>()
-                .FirstOrDefault(f => f.Declaration?.Variables
-                    .Any(v => string.Equals(v.Identifier.Text, domain.DomainKey, StringComparison.Ordinal)) == true);
-
-            if (field == null)
+            // Locate member (field or property) that holds the DomainDescription for this domain.
+            var member = FindDomainDescriptionMember(root);
+            if (member == null)
             {
                 throw new InvalidOperationException(
-                    $"Could not find a field named '{domain.DomainKey}' in '{domain.FullPath}'.");
+                    $"Could not find a static field or property with [DomainDescription] of type DomainDescription in '{domain.FullPath}'.");
             }
 
-            var variable = field.Declaration.Variables
-                .First(v => string.Equals(v.Identifier.Text, domain.DomainKey, StringComparison.Ordinal));
-
-            var objectCreation = variable.Initializer?.Value as ObjectCreationExpressionSyntax;
-            if (objectCreation == null)
+            if (!TryGetDomainDescriptionObjectCreation(member, out var objectCreation))
             {
                 throw new InvalidOperationException(
-                    $"Field '{domain.DomainKey}' in '{domain.FullPath}' does not have a DomainDescription initializer.");
+                    $"Domain descriptor member in '{domain.FullPath}' does not have a DomainDescription object initializer.");
             }
 
-            var initializer = objectCreation.Initializer;
-            if (initializer == null)
+            if (objectCreation.Initializer == null)
             {
                 throw new InvalidOperationException(
-                    $"DomainDescription initializer for '{domain.DomainKey}' in '{domain.FullPath}' has no object initializer.");
+                    $"DomainDescription initializer in '{domain.FullPath}' has no object initializer.");
             }
 
-            var updatedInitializer = UpdateProperty(initializer, "Name", review.RefinedTitle);
+            var updatedInitializer = UpdateProperty(objectCreation.Initializer, "Name", review.RefinedTitle);
             updatedInitializer = UpdateProperty(updatedInitializer, "Description", review.RefinedDescription);
 
-            if (updatedInitializer == initializer)
+            if (updatedInitializer == objectCreation.Initializer)
             {
                 // Nothing changed; no need to rewrite.
                 return Task.CompletedTask;
@@ -99,6 +105,163 @@ namespace LagoVista.AI.Rag.Services
                 $"[DomainDescriptorUpdateService] Updated domain '{domain.DomainKey}' in '{domain.FullPath}'.");
 
             return Task.CompletedTask;
+        }
+
+        private static MemberDeclarationSyntax FindDomainDescriptionMember(CompilationUnitSyntax root)
+        {
+            return root
+                .DescendantNodes()
+                .OfType<MemberDeclarationSyntax>()
+                .FirstOrDefault(m => HasDomainDescriptionAttribute(m) && IsDomainDescriptionMember(m));
+        }
+
+        private static bool HasDomainDescriptionAttribute(MemberDeclarationSyntax member)
+        {
+            if (member == null)
+            {
+                return false;
+            }
+
+            return member.AttributeLists
+                .SelectMany(l => l.Attributes)
+                .Any(a =>
+                {
+                    var name = a.Name.ToString();
+                    return string.Equals(name, "DomainDescription", StringComparison.Ordinal) ||
+                           name.EndsWith(".DomainDescription", StringComparison.Ordinal);
+                });
+        }
+
+        private static bool IsDomainDescriptionMember(MemberDeclarationSyntax member)
+        {
+            switch (member)
+            {
+                case FieldDeclarationSyntax field:
+                    return field.Modifiers.Any(m => m.IsKind(SyntaxKind.StaticKeyword)) &&
+                           IsDomainDescriptionType(field.Declaration?.Type);
+
+                case PropertyDeclarationSyntax property:
+                    return property.Modifiers.Any(m => m.IsKind(SyntaxKind.StaticKeyword)) &&
+                           IsDomainDescriptionType(property.Type);
+
+                default:
+                    return false;
+            }
+        }
+
+        private static bool IsDomainDescriptionType(TypeSyntax type)
+        {
+            if (type == null)
+            {
+                return false;
+            }
+
+            var typeName = type.ToString();
+            return string.Equals(typeName, "DomainDescription", StringComparison.Ordinal) ||
+                   typeName.EndsWith(".DomainDescription", StringComparison.Ordinal);
+        }
+
+        private static bool TryGetDomainDescriptionObjectCreation(
+            MemberDeclarationSyntax member,
+            out ObjectCreationExpressionSyntax objectCreation)
+        {
+            switch (member)
+            {
+                case FieldDeclarationSyntax field:
+                    return TryGetDomainDescriptionObjectCreation(field, out objectCreation);
+
+                case PropertyDeclarationSyntax property:
+                    return TryGetDomainDescriptionObjectCreation(property, out objectCreation);
+
+                default:
+                    objectCreation = null;
+                    return false;
+            }
+        }
+
+        private static bool TryGetDomainDescriptionObjectCreation(
+            FieldDeclarationSyntax field,
+            out ObjectCreationExpressionSyntax objectCreation)
+        {
+            objectCreation = null;
+
+            if (field?.Declaration?.Variables == null || field.Declaration.Variables.Count == 0)
+            {
+                return false;
+            }
+
+            var variableWithInitializer = field.Declaration.Variables
+                .FirstOrDefault(v => v.Initializer != null);
+
+            if (variableWithInitializer == null)
+            {
+                return false;
+            }
+
+            objectCreation = variableWithInitializer.Initializer.Value as ObjectCreationExpressionSyntax;
+
+            return objectCreation != null && IsDomainDescriptionType(objectCreation.Type);
+        }
+
+        private static bool TryGetDomainDescriptionObjectCreation(
+            PropertyDeclarationSyntax property,
+            out ObjectCreationExpressionSyntax objectCreation)
+        {
+            objectCreation = null;
+
+            if (property == null)
+            {
+                return false;
+            }
+
+            // Expression-bodied property:
+            //   public static DomainDescription X => new DomainDescription { ... };
+            if (property.ExpressionBody?.Expression is ObjectCreationExpressionSyntax exprBodyCreation &&
+                IsDomainDescriptionType(exprBodyCreation.Type))
+            {
+                objectCreation = exprBodyCreation;
+                return true;
+            }
+
+            if (property.AccessorList == null)
+            {
+                return false;
+            }
+
+            var getter = property.AccessorList.Accessors
+                .FirstOrDefault(a => a.IsKind(SyntaxKind.GetAccessorDeclaration));
+
+            if (getter == null)
+            {
+                return false;
+            }
+
+            // Expression-bodied getter:
+            //   get => new DomainDescription { ... };
+            if (getter.ExpressionBody?.Expression is ObjectCreationExpressionSyntax getterExprBodyCreation &&
+                IsDomainDescriptionType(getterExprBodyCreation.Type))
+            {
+                objectCreation = getterExprBodyCreation;
+                return true;
+            }
+
+            // Block-bodied getter with a single return statement:
+            //   get { return new DomainDescription { ... }; }
+            if (getter.Body != null)
+            {
+                var returnStatement = getter.Body.Statements
+                    .OfType<ReturnStatementSyntax>()
+                    .SingleOrDefault();
+
+                if (returnStatement?.Expression is ObjectCreationExpressionSyntax returnCreation &&
+                    IsDomainDescriptionType(returnCreation.Type))
+                {
+                    objectCreation = returnCreation;
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static InitializerExpressionSyntax UpdateProperty(

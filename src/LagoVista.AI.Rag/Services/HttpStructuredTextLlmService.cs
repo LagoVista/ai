@@ -357,7 +357,9 @@ namespace LagoVista.AI.Rag.Services
                 };
             }
 
-            // Treat as object/POCO
+            // Treat as object/POCO – for structured outputs we must:
+            // - include "required"
+            // - list *every* property name in "required"
             var properties = new JObject();
             var required = new JArray();
 
@@ -371,26 +373,21 @@ namespace LagoVista.AI.Rag.Services
                 var propSchema = BuildJsonSchemaForType(prop.PropertyType);
                 properties[prop.Name] = propSchema;
 
-                if (prop.PropertyType.IsValueType && Nullable.GetUnderlyingType(prop.PropertyType) == null)
-                {
-                    required.Add(prop.Name);
-                }
+                // For OpenAI structured outputs, ALL properties must appear in "required"
+                required.Add(prop.Name);
             }
 
             var obj = new JObject
             {
                 ["type"] = "object",
                 ["properties"] = properties,
-                ["additionalProperties"] = false
+                ["additionalProperties"] = false,
+                ["required"] = required
             };
-
-            if (required.Count > 0)
-            {
-                obj["required"] = required;
-            }
 
             return obj;
         }
+
 
         private static bool IsNumericType(Type type)
         {

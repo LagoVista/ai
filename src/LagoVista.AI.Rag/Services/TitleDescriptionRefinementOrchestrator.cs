@@ -90,6 +90,9 @@ namespace LagoVista.AI.Rag.Services
 
             foreach (var model in models)
             {
+                if (model.FullPath.ToLower().Contains("test"))
+                    continue;
+
                 cancellationToken.ThrowIfCancellationRequested();
 
                 var fileHash = await _hashService.ComputeFileHashAsync(model.FullPath).ConfigureAwait(false);
@@ -127,10 +130,7 @@ namespace LagoVista.AI.Rag.Services
                     // Structural issues: treat as failure, no LLM call.
                     var reason = string.Join("; ", model.Errors);
 
-                    catalog.Failures.RemoveAll(e =>
-                        e.Kind == CatalogEntryKind.Model &&
-                        e.File == model.FullPath &&
-                        e.SymbolName == model.ClassName);
+                    ClearModelEntries(catalog, model.FullPath, model.ClassName);
 
                     catalog.Failures.Add(new TitleDescriptionCatalogEntry
                     {
@@ -169,7 +169,7 @@ namespace LagoVista.AI.Rag.Services
 
                 if (!review.IsSuccessful)
                 {
-                    catalog.Failures.RemoveAll(e => e.Kind == CatalogEntryKind.Model && e.File == model.FullPath && e.SymbolName == model.ClassName);
+                    ClearModelEntries(catalog, model.FullPath, model.ClassName);
 
                     catalog.Failures.Add(new TitleDescriptionCatalogEntry
                     {
@@ -195,7 +195,7 @@ namespace LagoVista.AI.Rag.Services
 
                 if (review.RequiresAttention)
                 {
-                    catalog.Warnings.RemoveAll(e => e.Kind == CatalogEntryKind.Model && e.File == model.FullPath && e.SymbolName == model.ClassName);
+                    ClearModelEntries(catalog, model.FullPath, model.ClassName);
 
                     catalog.Warnings.Add(new TitleDescriptionCatalogEntry
                     {
@@ -222,7 +222,7 @@ namespace LagoVista.AI.Rag.Services
                 if (!review.HasChanges)
                 {
                     // Successful, but LLM indicated no changes.
-                    catalog.Skipped.RemoveAll(e => e.Kind == CatalogEntryKind.Model && e.File == model.FullPath && e.SymbolName == model.ClassName);
+                    ClearModelEntries(catalog, model.FullPath, model.ClassName);
 
                     catalog.Skipped.Add(new TitleDescriptionCatalogEntry
                     {
@@ -289,7 +289,7 @@ namespace LagoVista.AI.Rag.Services
                 {
                     var reason = $"Unable to resolve RESX path for resource keys: {string.Join(", ", missingKeys)}.";
 
-                    catalog.Failures.RemoveAll(e => e.Kind == CatalogEntryKind.Model && e.File == model.FullPath && e.SymbolName == model.ClassName);
+                    ClearModelEntries(catalog, model.FullPath, model.ClassName);
 
                     catalog.Failures.Add(new TitleDescriptionCatalogEntry
                     {
@@ -320,7 +320,7 @@ namespace LagoVista.AI.Rag.Services
                 {
                     // LLM changed something conceptually, but nothing on RESX-backed keys.
                     // Record as a warning and keep suggestions in the catalog only.
-                    catalog.Warnings.RemoveAll(e => e.Kind == CatalogEntryKind.Model && e.File == model.FullPath && e.SymbolName == model.ClassName);
+                    ClearModelEntries(catalog, model.FullPath, model.ClassName);
 
                     catalog.Warnings.Add(new TitleDescriptionCatalogEntry
                     {
@@ -371,7 +371,7 @@ namespace LagoVista.AI.Rag.Services
 
                 if (resxWriteFailed)
                 {
-                    catalog.Failures.RemoveAll(e => e.Kind == CatalogEntryKind.Model && e.File == model.FullPath && e.SymbolName == model.ClassName);
+                    ClearModelEntries(catalog, model.FullPath, model.ClassName);
 
                     catalog.Failures.Add(new TitleDescriptionCatalogEntry
                     {
@@ -399,7 +399,7 @@ namespace LagoVista.AI.Rag.Services
                 }
 
                 // RESX write succeeded; record as refined.
-                catalog.Refined.RemoveAll(e => e.Kind == CatalogEntryKind.Model && e.File == model.FullPath && e.SymbolName == model.ClassName);
+                ClearModelEntries(catalog, model.FullPath, model.ClassName);
 
                 catalog.Refined.Add(new TitleDescriptionCatalogEntry
                 {
@@ -850,6 +850,33 @@ namespace LagoVista.AI.Rag.Services
             }
 
             return map;
+        }
+
+        private static void ClearModelEntries(TitleDescriptionCatalog catalog, string file, string symbolName)
+        {
+            if (catalog == null) throw new ArgumentNullException(nameof(catalog));
+            if (file == null) throw new ArgumentNullException(nameof(file));
+            if (symbolName == null) throw new ArgumentNullException(nameof(symbolName));
+
+            catalog.Failures.RemoveAll(e =>
+                e.Kind == CatalogEntryKind.Model &&
+                string.Equals(e.File, file, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(e.SymbolName, symbolName, StringComparison.Ordinal));
+
+            catalog.Warnings.RemoveAll(e =>
+                e.Kind == CatalogEntryKind.Model &&
+                string.Equals(e.File, file, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(e.SymbolName, symbolName, StringComparison.Ordinal));
+
+            catalog.Skipped.RemoveAll(e =>
+                e.Kind == CatalogEntryKind.Model &&
+                string.Equals(e.File, file, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(e.SymbolName, symbolName, StringComparison.Ordinal));
+
+            catalog.Refined.RemoveAll(e =>
+                e.Kind == CatalogEntryKind.Model &&
+                string.Equals(e.File, file, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(e.SymbolName, symbolName, StringComparison.Ordinal));
         }
     }
 }

@@ -14,7 +14,6 @@ namespace LagoVista.AI.Models
     public class AIDomain
     {
         public const string AIAdmin = "AI Admin";
-
         [DomainDescription(AIAdmin)]
         public static DomainDescription AIAdminDescription
         {
@@ -22,9 +21,9 @@ namespace LagoVista.AI.Models
             {
                 return new DomainDescription()
                 {
-                    Description = "A set of classes that contains meta data for managing machine learning models.",
+                    Description = "Tools and data structures for configuring and managing AI models, agents, and their conversations.",
                     DomainType = DomainDescription.DomainTypes.BusinessObject,
-                    Name = "AI Admin",
+                    Name = "AI Administration",
                     CurrentVersion = new Core.Models.VersionInfo()
                     {
                         Major = 0,
