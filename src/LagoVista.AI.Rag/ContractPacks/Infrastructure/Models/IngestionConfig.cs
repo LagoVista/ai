@@ -22,7 +22,7 @@ namespace LagoVista.AI.Rag.Models
         /// </summary>
         public string Reindex { get; set; }
 
-        public string DomainCatalogPath { get; set; } = "../rag-common/domain-master-catalog.json"; 
+        public string DomainCatalogPath { get; set; } = "rag-common"; 
 
         public int IndexVersion { get; set; }
 

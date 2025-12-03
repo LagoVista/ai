@@ -32,7 +32,7 @@ namespace LagoVista.AI.Rag.Services
 
         public JsonTitleDescriptionRefinementCatalogStore(IngestionConfig config, IAdminLogger logger)
         {
-            _catalogPath = config.DomainCatalogPath;
+            _catalogPath =  Path.Combine(config.Ingestion.SourceRoot, config.DomainCatalogPath, "domain-master-catalog.json");
 
             if (string.IsNullOrWhiteSpace(_catalogPath))
             {

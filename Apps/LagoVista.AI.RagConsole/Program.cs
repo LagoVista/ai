@@ -2,23 +2,15 @@
 // ContentHash: 84feeaeb64610697ce02a858eb217cf406b5821707963650d179e5c3e6374064
 // IndexVersion: 2
 // --- END CODE INDEX META ---
-using LagoVista.AI.Models;
-using LagoVista.AI.Rag.Chunkers.Services;
 using LagoVista.AI.Rag.Models;
-using LagoVista.Core.Models;
-using Newtonsoft.Json;
 using LagoVista.AI.Rag.Chunkers.Models;
-using LagoVista.AI.Rag.ContractPacks.Ingestion.Services;
 using LagoVista.AI.Rag.ContractPacks.Infrastructure.Services;
 using LagoVista.Core.IOC;
 using LagoVista.AI.Rag.ContractPacks.Orchestration.Interfaces;
-using LagoVista.AI.Rag;
-using Svg;
 using LagoVista.AI.Services;
 using LagoVista.AI.Interfaces;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.IoT.Logging.Utils;
-using LagoVista.Core.Interfaces;
 
 namespace LagoVista.AI.RagConsole
 {
@@ -49,7 +41,9 @@ namespace LagoVista.AI.RagConsole
                     if (value.Equals("index", StringComparison.OrdinalIgnoreCase))
                         mode = "index";
                     else if (value.Equals("refine", StringComparison.OrdinalIgnoreCase))
-                        mode = "refine"; 
+                        mode = "refine";
+                    else if (value.Equals("domaincatalog", StringComparison.OrdinalIgnoreCase))
+                        mode = "domaincatalog";
                     else if (value.Equals("subkind", StringComparison.OrdinalIgnoreCase) ||
                              value.Equals("subkind-test", StringComparison.OrdinalIgnoreCase))
                         mode = "subkind";

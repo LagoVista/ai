@@ -19,6 +19,7 @@ using LagoVista.AI.Rag.ContractPacks.Orchestration.Interfaces;
 using LagoVista.AI.Rag.ContractPacks.Registry.Interfaces;
 using LagoVista.AI.Rag.Interfaces;
 using LagoVista.AI.Rag.Models;
+using LagoVista.AI.Rag.Services;
 using LagoVista.Core.Interfaces;
 using LagoVista.IoT.Logging.Loggers;
 using Microsoft.Azure.Cosmos.Serialization.HybridRow.RecordIO;
@@ -58,6 +59,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
         private readonly IQdrantClient _qdrantClient;
         private readonly IContentStorage _contentStorage;
         private readonly ITitleDescriptionRefinementOrchestrator _titleDescriptionRefinementOrchestrator;
+        private readonly IDomainCatalogService _domainCatalogService;
 
         public IndexRunOrchestrator(
             IIngestionConfigProvider configProvider,
@@ -75,6 +77,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
             IEmbedder embedder,
             IContentStorage contentStorage,
             IQdrantClient qdrantClient,
+            IDomainCatalogService domainCatalogService,
             ITitleDescriptionRefinementOrchestrator titleDescriptionRefinementOrchestrator,
             IMetadataRegistryClient metadataRegistryClient)
         {
@@ -93,6 +96,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
             _embedder = embedder ?? throw new ArgumentNullException(nameof(embedder));
             _qdrantClient = qdrantClient ?? throw new ArgumentNullException(nameof(qdrantClient));
             _contentStorage = contentStorage ?? throw new ArgumentNullException(nameof(contentStorage));
+            _domainCatalogService = domainCatalogService ?? throw new ArgumentNullException(nameof(domainCatalogService));
             _titleDescriptionRefinementOrchestrator = titleDescriptionRefinementOrchestrator ?? throw new ArgumentNullException(nameof(titleDescriptionRefinementOrchestrator));
         }
 
@@ -131,10 +135,14 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
                 }
             }
             _adminLogger.Trace($"[IndexRunOrchestrator_RunAsync] - Found {resources.Count} in  all Resources {sw.Elapsed.TotalMilliseconds}ms.");
-            var fullDomainCatalog = await _domainModelCatalogBuilder.BuildAsync(allDiscoveredFiles, resources);
             if (mode == "refine")
             {
+                //var fullDomainCatalog = await _domainModelCatalogBuilder.BuildAsync(allDiscoveredFiles, resources);
                 await _titleDescriptionRefinementOrchestrator.RunAsync(allDiscoveredFiles, resourceFiles, cancellationToken);
+            }
+            else if(mode == "domaincatalog")
+            {
+                await _domainCatalogService.BuildCatalogAsync(allDiscoveredFiles, resources, cancellationToken);
             }
             else
             {

@@ -9,7 +9,9 @@ using LagoVista.AI.Interfaces;
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Models;
 using LagoVista.AI.Rag.Interfaces;
 using LagoVista.AI.Rag.Models;
+using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
+using Newtonsoft.Json;
 
 namespace LagoVista.AI.Rag.Services
 {
@@ -17,36 +19,40 @@ namespace LagoVista.AI.Rag.Services
     /// High-level orchestration for IDX-066. This implementation focuses on
     /// sequencing, safety, and catalog rules and delegates parsing to
     /// IModelMetadataSource and IDomainMetadataSource.
+    ///
+    /// After refactoring, this orchestrator now calls IStructuredTextLlmService
+    /// directly for title/description refinement instead of chaining through
+    /// multiple intermediate services.
     /// </summary>
     public class TitleDescriptionRefinementOrchestrator : ITitleDescriptionRefinementOrchestrator
     {
-        private readonly ITitleDescriptionReviewService _reviewService;
         private readonly IModelMetadataSource _modelSource;
         private readonly IDomainMetadataSource _domainSource;
         private readonly ITitleDescriptionRefinementCatalogStore _catalogStore;
         private readonly IContentHashService _hashService;
         private readonly IResxUpdateService _resxUpdateService;
         private readonly IDomainDescriptorUpdateService _domainDescriptorUpdateService;
+        private readonly IStructuredTextLlmService _structuredTextLlmService;
         private readonly IAdminLogger _logger;
         private readonly string _indexVersion;
 
         public TitleDescriptionRefinementOrchestrator(
-            ITitleDescriptionReviewService reviewService,
             IModelMetadataSource modelSource,
             IDomainMetadataSource domainSource,
             ITitleDescriptionRefinementCatalogStore catalogStore,
             IContentHashService hashService,
             IResxUpdateService resxUpdateService,
             IDomainDescriptorUpdateService domainDescriptorUpdateService,
+            IStructuredTextLlmService structuredTextLlmService,
             IAdminLogger logger)
         {
-            _reviewService = reviewService ?? throw new ArgumentNullException(nameof(reviewService));
             _modelSource = modelSource ?? throw new ArgumentNullException(nameof(modelSource));
             _domainSource = domainSource ?? throw new ArgumentNullException(nameof(domainSource));
             _catalogStore = catalogStore ?? throw new ArgumentNullException(nameof(catalogStore));
             _hashService = hashService ?? throw new ArgumentNullException(nameof(hashService));
             _resxUpdateService = resxUpdateService ?? throw new ArgumentNullException(nameof(resxUpdateService));
             _domainDescriptorUpdateService = domainDescriptorUpdateService ?? throw new ArgumentNullException(nameof(domainDescriptorUpdateService));
+            _structuredTextLlmService = structuredTextLlmService ?? throw new ArgumentNullException(nameof(structuredTextLlmService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _indexVersion = "1";
         }
@@ -152,7 +158,7 @@ namespace LagoVista.AI.Rag.Services
 
                 _logger.Trace($"[TitleDescriptionRefinementOrchestrator_RunAsync] Reviewing model {model.ClassName} in {model.FullPath}.");
 
-                var review = await _reviewService.ReviewAsync(
+                var review = await ReviewAsync(
                     SummaryObjectKind.Model,
                     model.ClassName,
                     model.Title,
@@ -437,7 +443,7 @@ namespace LagoVista.AI.Rag.Services
                 var originalHash = await _hashService.ComputeFileHashAsync(domain.FullPath).ConfigureAwait(false);
                 var contextBlob = BuildDomainContextBlob(domain);
 
-                var review = await _reviewService.ReviewAsync(
+                var review = await ReviewAsync(
                     SummaryObjectKind.Domain,
                     domain.ClassName,
                     domain.Name,
@@ -594,6 +600,169 @@ namespace LagoVista.AI.Rag.Services
 
                 await _catalogStore.SaveAsync(catalog, cancellationToken).ConfigureAwait(false);
             }
+        }
+
+        /// <summary>
+        /// Perform a single title/description review by calling the generic
+        /// structured text LLM service. This method is responsible for:
+        /// - Building a system prompt,
+        /// - Building a compact JSON payload from the inputs and context,
+        /// - Calling IStructuredTextLlmService,
+        /// - Applying guard rails and enrichment (HasChanges, RequiresAttention, Notes, etc.).
+        /// </summary>
+        private async Task<TitleDescriptionReviewResult> ReviewAsync(
+            SummaryObjectKind kind,
+            string symbolName,
+            string title,
+            string description,
+            string help,
+            string contextBlob,
+            CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(symbolName))
+            {
+                throw new ArgumentException("Symbol name is required.", nameof(symbolName));
+            }
+
+            var systemPrompt = BuildTitleDescriptionSystemPrompt();
+
+            var payload = new
+            {
+                kind = kind.ToString(),
+                symbolName,
+                title,
+                description,
+                help,
+                extraContext = contextBlob
+            };
+
+            var inputText = JsonConvert.SerializeObject(payload, Formatting.None);
+
+            InvokeResult<TitleDescriptionReviewResult> invokeResult;
+
+            try
+            {
+                invokeResult = await _structuredTextLlmService.ExecuteAsync<TitleDescriptionReviewResult>(
+                        systemPrompt,
+                        inputText,
+                        model: null,
+                        operationName: "TitleDescriptionReview",
+                        correlationId: symbolName,
+                        cancellationToken: cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                _logger.AddException("TitleDescriptionRefinementOrchestrator_ReviewAsync", ex);
+
+                return TitleDescriptionReviewResult.FromError(
+                    kind,
+                    symbolName,
+                    title,
+                    description,
+                    help,
+                    ex.Message);
+            }
+
+            if (!invokeResult.Successful || invokeResult.Result == null)
+            {
+                var reason = invokeResult.Successful
+                    ? "LLM returned null result."
+                    : string.Join("; ", invokeResult.Errors.Select(e => e.Message));
+
+                return TitleDescriptionReviewResult.FromError(
+                    kind,
+                    symbolName,
+                    title,
+                    description,
+                    help,
+                    reason);
+            }
+
+            var llmResult = invokeResult.Result;
+
+            // Build the final, enriched result that includes originals and guard-rails.
+            var final = new TitleDescriptionReviewResult
+            {
+                Kind = kind,
+                SymbolName = symbolName,
+                OriginalTitle = title,
+                OriginalDescription = description,
+                OriginalHelp = help,
+
+                Title = string.IsNullOrWhiteSpace(llmResult?.Title) ? title : llmResult.Title,
+                Description = string.IsNullOrWhiteSpace(llmResult?.Description) ? description : llmResult.Description,
+                Help = llmResult?.Help ?? help,
+
+                HasChanges = llmResult?.HasChanges ?? false,
+                RequiresAttention = llmResult?.RequiresAttention ?? false,
+                IsError = false
+            };
+
+            if (llmResult?.Warnings != null)
+            {
+                foreach (var warning in llmResult.Warnings)
+                {
+                    if (!string.IsNullOrWhiteSpace(warning))
+                    {
+                        final.Warnings.Add(warning.Trim());
+                    }
+                }
+            }
+
+            // Guard rail: if the LLM produced empty title/description, fall back to
+            // originals but mark this item as requiring attention.
+            if (string.IsNullOrWhiteSpace(llmResult?.Title) ||
+                string.IsNullOrWhiteSpace(llmResult?.Description))
+            {
+                final.HasChanges = false;
+                final.RequiresAttention = true;
+                final.Warnings.Add("LLM returned empty title and/or description; original values were preserved.");
+            }
+
+            // Derive HasChanges if the LLM did not set it or set it incorrectly.
+            if (!final.HasChanges)
+            {
+                if (!string.Equals(final.Title ?? string.Empty, title ?? string.Empty, StringComparison.Ordinal) ||
+                    !string.Equals(final.Description ?? string.Empty, description ?? string.Empty, StringComparison.Ordinal) ||
+                    !string.Equals(final.Help ?? string.Empty, help ?? string.Empty, StringComparison.Ordinal))
+                {
+                    final.HasChanges = true;
+                }
+            }
+
+            // Populate Notes from warnings so the catalog can store
+            // a single human-readable string when appropriate.
+            if (final.Warnings.Count > 0)
+            {
+                final.Notes = string.Join("; ", final.Warnings);
+            }
+
+            return final;
+        }
+
+        /// <summary>
+        /// System prompt used for all title/description refinement calls.
+        /// Mirrors the earlier HttpLlmTitleDescriptionClient behavior but is now
+        /// owned directly by the orchestrator.
+        /// </summary>
+        private static string BuildTitleDescriptionSystemPrompt()
+        {
+            var sb = new StringBuilder();
+
+            sb.AppendLine("You are an expert technical editor for a large enterprise codebase.");
+            sb.AppendLine("Your job is to refine domain and model titles/descriptions/help text used in UI metadata.");
+            sb.AppendLine();
+            sb.AppendLine("Requirements:");
+            sb.AppendLine("- Preserve the original semantic meaning.");
+            sb.AppendLine("- Improve clarity, grammar, and spelling.");
+            sb.AppendLine("- Keep text concise and user-facing (no internal jargon).");
+            sb.AppendLine("- Do NOT invent features or behavior that are not implied by the input.");
+            sb.AppendLine();
+            sb.AppendLine("You must respond with data that can be interpreted as a TitleDescriptionReviewResult instance.");
+            sb.AppendLine("Each property of TitleDescriptionReviewResult must be populated according to its meaning.");
+
+            return sb.ToString();
         }
 
         private static string BuildModelContextBlob(ModelMetadata model)
