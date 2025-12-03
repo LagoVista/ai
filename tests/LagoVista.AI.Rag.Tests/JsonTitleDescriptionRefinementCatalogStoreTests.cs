@@ -15,17 +15,20 @@ namespace LagoVista.AI.Rag.Tests
     {
         private static string CreateTempPath()
         {
-            var fileName = $"title-desc-catalog-{Guid.NewGuid():N}.json";
-            return Path.Combine(Path.GetTempPath(), fileName);
+            return Path.GetTempPath();
         }
 
         [Test]
         public async Task LoadAsync_WhenFileDoesNotExist_ReturnsEmptyCatalog()
         {
             var path = CreateTempPath();
-            if (File.Exists(path)) File.Delete(path);
+
+            var config = new IngestionConfig() { Ingestion = new FileIngestionConfig() { SourceRoot = path }, DomainCatalogPath = "rag-content" };
+            var fullPath = Path.Combine(config.Ingestion.SourceRoot, config.DomainCatalogPath, JsonTitleDescriptionRefinementCatalogStore.CatalogFileName);
+
+            if (File.Exists(fullPath)) File.Delete(fullPath);
             var logger = new Mock<IAdminLogger>();
-            var store = new JsonTitleDescriptionRefinementCatalogStore(new IngestionConfig() { DomainCatalogPath =  path }, logger.Object);
+            var store = new JsonTitleDescriptionRefinementCatalogStore(config, logger.Object);
 
             var catalog = await store.LoadAsync(CancellationToken.None);
 
@@ -42,7 +45,9 @@ namespace LagoVista.AI.Rag.Tests
             var path = CreateTempPath();
             var logger = new Mock<IAdminLogger>();
 
-            var store = new JsonTitleDescriptionRefinementCatalogStore(new IngestionConfig() { DomainCatalogPath = path }, logger.Object);
+            var config = new IngestionConfig() { Ingestion = new FileIngestionConfig() { SourceRoot = CreateTempPath() }, DomainCatalogPath = "rag-content" };
+
+            var store = new JsonTitleDescriptionRefinementCatalogStore(config, logger.Object);
 
             var catalog = new TitleDescriptionCatalog();
             catalog.Refined.Add(new TitleDescriptionCatalogEntry
@@ -60,11 +65,13 @@ namespace LagoVista.AI.Rag.Tests
                 RefinedDescription = "New Desc"
             });
 
+            var fullPath = Path.Combine(config.Ingestion.SourceRoot, config.DomainCatalogPath, JsonTitleDescriptionRefinementCatalogStore.CatalogFileName);
+
             await store.SaveAsync(catalog, CancellationToken.None);
 
-            Assert.That(File.Exists(path), Is.True);
+            Assert.That(File.Exists(fullPath), Is.True);
 
-            var text = await File.ReadAllTextAsync(path);
+            var text = await File.ReadAllTextAsync(fullPath);
             Assert.That(text, Does.Contain("----- IDX-066 SUMMARY -----"));
             Assert.That(text, Does.Contain("Refined Models: 1"));
 

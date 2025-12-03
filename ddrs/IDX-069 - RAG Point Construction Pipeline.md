@@ -97,7 +97,7 @@ public interface IDescriptionBuilder
     Task<InvokeResult<IRagDescription>> BuildAsync(
         IndexFileContext fileContext,
         string symbolText,
-        IDomainCatalog domainCatalog,
+        IDomainCatalogService domainCatalogService,
         IResourceDictionary resourceDictionary);
 }
 ```
@@ -346,7 +346,7 @@ foreach (var builder in builders)
     var result = await builder.BuildAsync(
         ctx,
         symbolText,
-        domainCatalog,
+        domainCatalogService,
         resourceDictionary);
 
     if (result.Successful && result.Result != null)

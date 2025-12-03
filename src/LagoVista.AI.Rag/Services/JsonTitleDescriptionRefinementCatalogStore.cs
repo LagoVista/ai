@@ -30,9 +30,11 @@ namespace LagoVista.AI.Rag.Services
 
         private const string FooterMarker = "----- IDX-066 SUMMARY -----";
 
+        public const string CatalogFileName = "domain-model-index.json";
+
         public JsonTitleDescriptionRefinementCatalogStore(IngestionConfig config, IAdminLogger logger)
         {
-            _catalogPath =  Path.Combine(config.Ingestion.SourceRoot, config.DomainCatalogPath, "domain-model-index.json");
+            _catalogPath =  Path.Combine(config.Ingestion.SourceRoot, config.DomainCatalogPath, CatalogFileName);
 
             if (string.IsNullOrWhiteSpace(_catalogPath))
             {
