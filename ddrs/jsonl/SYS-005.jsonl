@@ -1,0 +1,41 @@
+{"ddr":"SYS-005","section":"header","t":"SYS-005 — InvokeResult Usage & Semantics. ID: SYS-005. Status: Approved.","kind":"ddr"}
+{"ddr":"SYS-005","section":"approval","t":"Approved By: Kevin Wolf. Approval Timestamp: 2025-12-03 17:00:00 EST (UTC-05:00).","kind":"ddr"}
+{"ddr":"SYS-005","section":"1.audience","t":"InvokeResult and InvokeResult<T> are the only sanctioned result types for operations that can fail. Public signatures must use them. ValidationResult inheritance is an implementation detail and must never be surfaced.","kind":"ddr"}
+{"ddr":"SYS-005","section":"1.signatures","t":"Permitted signatures: InvokeResult, InvokeResult<T>, Task<InvokeResult>, Task<InvokeResult<T>>. Pure helpers may return plain types.","kind":"ddr"}
+{"ddr":"SYS-005","section":"2.success_failure","t":"Success occurs when no errors are present. Failure occurs when any errors exist. Warnings do not invalidate success.","kind":"ddr"}
+{"ddr":"SYS-005","section":"2.construct_success","t":"Commands use InvokeResult.Success or new InvokeResult(). Queries use InvokeResult<T>.Create().","kind":"ddr"}
+{"ddr":"SYS-005","section":"2.construct_failure","t":"Expected failures: FromError, FromErrors. Unexpected failures: FromException with reserved EXC9xxx codes.","kind":"ddr"}
+{"ddr":"SYS-005","section":"2.payload","t":"InvokeResult<T>.Result is only meaningful on success. Callers must check success before reading Result.","kind":"ddr"}
+{"ddr":"SYS-005","section":"2.warnings","t":"Warnings represent non-fatal degraded states. If the caller must treat the outcome as failed, the issue must be an error, not a warning.","kind":"ddr"}
+{"ddr":"SYS-005","section":"2.translate","t":"Transform<T2>() preserves errors, warnings, timings when converting types. FromInvokeResult preserves state across typed/untyped boundaries.","kind":"ddr"}
+{"ddr":"SYS-005","section":"3.signatures","t":"Service methods must return InvokeResult or InvokeResult<T> and async variants. No IActionResult or custom wrappers.","kind":"ddr"}
+{"ddr":"SYS-005","section":"3.layering","t":"Domain services, orchestrators, and controllers all return InvokeResult. Mapping to HTTP happens in adapters outside DDR scope.","kind":"ddr"}
+{"ddr":"SYS-005","section":"3.fail_fast","t":"Fail-fast chaining: validate → call upstream → if failure, return immediately (possibly with Transform).","kind":"ddr"}
+{"ddr":"SYS-005","section":"3.multi_ops","t":"All-or-nothing workflows return on first failure. Best-effort workflows may downgrade non-critical failures to warnings.","kind":"ddr"}
+{"ddr":"SYS-005","section":"3.validation","t":"Validation helpers must return InvokeResult and use AddUserError for problems. Errors should be propagated upward unchanged.","kind":"ddr"}
+{"ddr":"SYS-005","section":"3.cmd_query","t":"Commands return InvokeResult. Queries return InvokeResult<T>. Distinguish clearly.","kind":"ddr"}
+{"ddr":"SYS-005","section":"3.async_timings","t":"Async flows must await upstream operations. TimingBuilder may be used to collect ResultTiming data.","kind":"ddr"}
+{"ddr":"SYS-005","section":"4.planes","t":"Three error planes: validation errors, business rule errors, and system errors.","kind":"ddr"}
+{"ddr":"SYS-005","section":"4.validation_errors","t":"Validation errors come from malformed or incomplete input. Use AddUserError or FromError.","kind":"ddr"}
+{"ddr":"SYS-005","section":"4.business_errors","t":"Business rule errors occur when input is valid but action is disallowed. Use user-error mechanisms.","kind":"ddr"}
+{"ddr":"SYS-005","section":"4.system_errors","t":"System errors include exceptions, network failures, etc. Must be converted using FromException.","kind":"ddr"}
+{"ddr":"SYS-005","section":"4.error_codes","t":"Domain DDRs define required error codes. EXC9xxx reserved for exception flows.","kind":"ddr"}
+{"ddr":"SYS-005","section":"4.aggregate","t":"Use Concat, FromInvokeResult, and Transform to merge errors, warnings, timings across layers.","kind":"ddr"}
+{"ddr":"SYS-005","section":"4.msg_details","t":"Message must be user-facing. Details may contain debugging info such as stack traces.","kind":"ddr"}
+{"ddr":"SYS-005","section":"5.exception_rules","t":"Exceptions must not be used for normal flow. All expected failures must be represented as InvokeResult errors.","kind":"ddr"}
+{"ddr":"SYS-005","section":"5.acceptable_exceptions","t":"Exceptions allowed only for catastrophic runtime failure, invariant violations, or shutdown control flows.","kind":"ddr"}
+{"ddr":"SYS-005","section":"5.catch_boundaries","t":"Orchestrators, controllers, and tool boundaries must catch exceptions and convert to InvokeResult.","kind":"ddr"}
+{"ddr":"SYS-005","section":"5.record_not_found","t":"RecordNotFoundException is a sanctioned exception for required-record lookups with central top-level handler.","kind":"ddr"}
+{"ddr":"SYS-005","section":"5.propagation","t":"Exceptions must be converted or rethrown intentionally. Never swallowed silently.","kind":"ddr"}
+{"ddr":"SYS-005","section":"6.principles","t":"Tests must assert success/failure explicitly. Payload assertions occur only on success.","kind":"ddr"}
+{"ddr":"SYS-005","section":"6.success_tests","t":"Successful tests assert Successful==true and inspect payload when relevant.","kind":"ddr"}
+{"ddr":"SYS-005","section":"6.failure_tests","t":"Failure tests assert errors, codes, and domain wording when needed.","kind":"ddr"}
+{"ddr":"SYS-005","section":"6.warning_tests","t":"Warnings asserted only when expected in domain rules.","kind":"ddr"}
+{"ddr":"SYS-005","section":"6.timing_tests","t":"Timings are asserted only when timing data is part of the domain contract.","kind":"ddr"}
+{"ddr":"SYS-005","section":"6.transform_tests","t":"Transform<T2> and FromInvokeResult tests must verify error propagation and failure preservation.","kind":"ddr"}
+{"ddr":"SYS-005","section":"6.exception_tests","t":"Tests for FromException must assert EXC9xxx codes and presence of stack trace details.","kind":"ddr"}
+{"ddr":"SYS-005","section":"7.allowed_extensions","t":"Domains may extend error codes, messages, timing keys, and validation rules.","kind":"ddr"}
+{"ddr":"SYS-005","section":"7.prohibited_changes","t":"Domains may not change InvokeResult structure, redefine success semantics, or introduce competing wrapper types.","kind":"ddr"}
+{"ddr":"SYS-005","section":"7.operation_guidelines","t":"New operations must decide command vs query, define failure surfaces, not-found behavior, codes, messages, timings.","kind":"ddr"}
+{"ddr":"SYS-005","section":"7.chaining_rules","t":"When composing domains, errors, warnings, and timings must be preserved using Concat, FromInvokeResult, Transform.","kind":"ddr"}
+{"ddr":"SYS-005","section":"7.sys001","t":"All DDRs must follow SYS-001: stored in ./ddrs, globally indexed, drift handled as critical issue.","kind":"ddr"}
