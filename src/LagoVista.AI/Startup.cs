@@ -31,6 +31,35 @@ namespace LagoVista.AI
             toolRegistry.RegisterTool<WorkspaceWritePatchTool>();
             toolRegistry.RegisterTool<CodeHashNormalizedTool>();
             toolRegistry.RegisterTool<WorkspaceCreateFileTool>();
+
+            // --- DDR / TLA Tools ---
+            toolRegistry.RegisterTool<GetTlaCatalogAgentTool>();
+            toolRegistry.RegisterTool<AddTlaAgentTool>();
+            toolRegistry.RegisterTool<CreateDdrAgentTool>();
+            toolRegistry.RegisterTool<UpdateDdrMetadataAgentTool>();
+            toolRegistry.RegisterTool<MoveDdrTlaAgentTool>();
+
+            // --- Goal Tools ---
+            toolRegistry.RegisterTool<SetGoalAgentTool>();
+            toolRegistry.RegisterTool<ApproveGoalAgentTool>();
+
+            // --- Chapter Tools ---
+            toolRegistry.RegisterTool<AddChapterAgentTool>();
+            toolRegistry.RegisterTool<AddChaptersAgentTool>();
+            toolRegistry.RegisterTool<UpdateChapterSummaryAgentTool>();
+            toolRegistry.RegisterTool<UpdateChapterDetailsAgentTool>();
+            toolRegistry.RegisterTool<ApproveChapterAgentTool>();
+            toolRegistry.RegisterTool<ListChaptersAgentTool>();
+            toolRegistry.RegisterTool<ReorderChaptersAgentTool>();
+            toolRegistry.RegisterTool<DeleteChapterAgentTool>();
+
+            // --- DDR Status & Approval ---
+            toolRegistry.RegisterTool<SetDdrStatusAgentTool>();
+            toolRegistry.RegisterTool<ApproveDdrAgentTool>();
+
+            // --- DDR Retrieval ---
+            toolRegistry.RegisterTool<GetDdrAgentTool>();
+            toolRegistry.RegisterTool<ListDdrsAgentTool>();
             /*--*/
 
             services.AddSingleton<IAgentToolRegistry>(toolRegistry);
@@ -41,6 +70,7 @@ namespace LagoVista.AI
             services.AddTransient<ITrainingDataSetManager, TrainingDataSetManager>();
             services.AddTransient<ISampleManager, SampleManager>();
             services.AddTransient<ILabelManager, LabelManager>();
+            services.AddTransient<IDdrManager, IDdrManager>();
             services.AddTransient<IExperimentResultManager, ExperimentResultManager>();
             services.AddTransient<ITextQueryManager, OpenAIManager>();
             services.AddTransient<IImageGeneratorManager, OpenAIManager>();

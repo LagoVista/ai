@@ -134,6 +134,9 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
                     }
                 }
             }
+
+            var resourceDictionary = new ResourceDictionary(resources);
+
             _adminLogger.Trace($"[IndexRunOrchestrator_RunAsync] - Found {resources.Count} in  all Resources {sw.Elapsed.TotalMilliseconds}ms.");
             if (mode == "refine")
             {
@@ -224,7 +227,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
                                 result.Vector = embedResult.Result.Vector;
                                 result.Payload.EmbeddingModel = embedResult.Result.EmbeddingModel;
 
-                                await _contentStorage.AddContentAsync(result.Payload.SnippetBlobUri, result.Contents);
+                                await _contentStorage.AddContentAsync(result.Payload.SourceSliceBlobUri, result.Contents);
                             }
 
                             await _qdrantClient.UpsertInBatchesAsync(config.Qdrant.Collection, fileProcessResult.Result.RagPoints, config.Qdrant.VectorSize);

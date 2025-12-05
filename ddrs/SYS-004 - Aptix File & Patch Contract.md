@@ -231,9 +231,16 @@ Agents MUST:
 3. Put opening `{` and closing `}` on their own lines.
 4. Never emit single-line JSON.
 5. Match the style of examples in this DDR.
+6. Convert all newline characters to \n
+7. Escape all double quotes (\")
+8. Escape all backslashes (\\)
+9. Escape any other characters required by JSON string encoding
+
 
 If formatting cannot be guaranteed, agents MUST NOT emit JSON in that response and must instead reply in natural language.
 
+Agents MUST NOT include raw multiline text inside the "content" field.
+Even though the JSON bundle itself is multiline, every "content" field MUST always be a valid single-line JSON string literal when serialized.
 ---
 
 ## 8. Guarded Code Blocks & Syntax Highlighting

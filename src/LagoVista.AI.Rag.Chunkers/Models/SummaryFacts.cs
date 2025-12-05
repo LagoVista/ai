@@ -88,7 +88,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
             // Override in derived classes to populate additional properties
         }   
 
-        public IEnumerable<InvokeResult<IRagPoint>> CreateIRagPoints()
+        public IEnumerable<InvokeResult<IRagPoint>> BuildRagPoints()
         {
             var payloadResults = new List<InvokeResult<IRagPoint>>();
 
@@ -127,7 +127,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                 section.PopulateRagPayload(payload);
 
                 payload.FullDocumentBlobUri = this.BlobUri.ToLower();
-                payload.SnippetBlobUri = $"{this.BlobUri}.{section.ModelClassName}/{section.SectionKey}.{section.PartIndex}".ToLower().Replace(" ", "_").ToLower();
+                payload.DescriptionBlobUri = $"{this.BlobUri}.{section.ModelClassName}/{section.SectionKey}.{section.PartIndex}".ToLower().Replace(" ", "_").ToLower();
 
                 var result = PopulateAdditionalRagProperties(payload);
 
@@ -143,7 +143,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                 payloadResults.Add(InvokeResult<IRagPoint>.Create( point));
             }
 
-            var uniqueBlobIds = payloadResults.Select(pay => pay.Result.Payload.SnippetBlobUri).Distinct();
+            var uniqueBlobIds = payloadResults.Select(pay => pay.Result.Payload.DescriptionBlobUri).Distinct();
             if(uniqueBlobIds.Count() != payloadResults.Count())
             {
                 throw new ArgumentNullException("Blob uris within a vector payload must be unique");

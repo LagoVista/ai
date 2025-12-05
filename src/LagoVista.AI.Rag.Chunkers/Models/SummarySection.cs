@@ -36,6 +36,9 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         /// </summary>
         public string SectionNormalizedText { get; set; }
 
+        public string RawSourceArtifact { get; set; }
+        public string BackingArtifact { get; set; }
+
         /// <summary>
         /// Optional, highly structured Finder Snippet text as defined
         /// in IDX-068. When present, callers may treat this as the

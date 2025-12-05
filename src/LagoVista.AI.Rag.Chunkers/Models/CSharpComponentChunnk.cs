@@ -114,7 +114,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
             };
 
             payload.FullDocumentBlobUri = fileContext.BlobUri;
-            payload.SnippetBlobUri = $"{fileContext.BlobUri}.{SymbolKind}.{SymbolName}.{PartIndex}";
+            payload.SourceSliceBlobUri = $"{fileContext.BlobUri}.{SymbolKind}.{SymbolName}.{PartIndex}";
 
             payload.Title = $"{SymbolKind}: {SymbolName} - {SectionKey} (Chunk {PartIndex} of {PartTotal})";
             payload.SemanticId = $"{fileContext.DocumentIdentity.OrgNamespace}:{fileContext.DocumentIdentity.ProjectId}:{fileContext.DocumentIdentity.RepoId}:{SymbolKind}:{SymbolName}:{SectionKey}:{PartIndex}".ToLower();

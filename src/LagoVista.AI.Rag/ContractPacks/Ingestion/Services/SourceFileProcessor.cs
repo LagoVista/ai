@@ -65,7 +65,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                 {
                     var ddr = description.Result;
                     ddr.BuildSections(null);
-                    var ddrRagPoints = ddr.CreateIRagPoints();
+                    var ddrRagPoints = ddr.BuildRagPoints();
                     result.Result.RagPoints.AddRange(ddrRagPoints.Select(rp => rp.Result));
                 }
             }
@@ -101,7 +101,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                                 {                                   
                                     var headerInfo = FindDomainHeaderInfo(catalog, modelStructureDescription.Result);
                                     modelStructureDescription.Result.BuildFinderSnippetSections(headerInfo.Result);
-                                    var stucturedResults = modelStructureDescription.Result.CreateIRagPoints();
+                                    var stucturedResults = modelStructureDescription.Result.BuildRagPoints();
                                     result.Result.RagPoints.AddRange(stucturedResults.Select(rp => rp.Result));
 
                                 }
@@ -111,7 +111,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                                 //{
                                 //    var headerInfo = FindDomainHeaderInfo(catalog, modelMetaDataDescription.Result);
                                 //    modelMetaDataDescription.Result.BuildSections(headerInfo.Result);
-                                //    var metaDataResults = modelMetaDataDescription.Result.CreateIRagPoints();
+                                //    var metaDataResults = modelMetaDataDescription.Result.BuildRagPoints();
                                 //    result.Result.RagPoints.AddRange(metaDataResults.Select(rp => rp.Result));
                                 //}
                             }
@@ -124,7 +124,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                                 {
                                     var headerInfo = FindDomainHeaderInfo(catalog, managerDescription.Result);
                                     managerDescription.Result.BuildSections(headerInfo.Result);
-                                    var managerResults = managerDescription.Result.CreateIRagPoints();
+                                    var managerResults = managerDescription.Result.BuildRagPoints();
                                     managerDescription.Result.BuildSections(headerInfo.Result);
                                     result.Result.RagPoints.AddRange(managerResults.Select(rp => rp.Result));
                                 }
@@ -139,7 +139,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                                     var headerInfo = FindDomainHeaderInfo(catalog, interfaceDescription.Result);
                                     interfaceDescription.Result.BuildSections(headerInfo.Result);
                                     var enrichResult = await _enricher.EnrichAsync(interfaceDescription.Result, config);
-                                    var interfaceResults = interfaceDescription.Result.CreateIRagPoints();
+                                    var interfaceResults = interfaceDescription.Result.BuildRagPoints();
                                     result.Result.RagPoints.AddRange(interfaceResults.Select(rp => rp.Result));
                                 }
                             }
@@ -152,7 +152,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                                 {
                                     var headerInfo = FindDomainHeaderInfo(catalog, repoDescription.Result);
                                     repoDescription.Result.BuildSections(headerInfo.Result);
-                                    var repoResults = repoDescription.Result.CreateIRagPoints();
+                                    var repoResults = repoDescription.Result.BuildRagPoints();
                                     result.Result.RagPoints.AddRange(repoResults.Select(rp => rp.Result));
                                 }
                             }
@@ -166,7 +166,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                                     {
                                         var headerInfo = FindDomainHeaderInfo(catalog, endpoint);
                                         endpoint.BuildSections(headerInfo.Result);
-                                        var endpointRagPoints = endpoint.CreateIRagPoints();
+                                        var endpointRagPoints = endpoint.BuildRagPoints();
                                         result.Result.RagPoints.AddRange(endpointRagPoints.Select(rp => rp.Result));
                                     }
                                 }
@@ -180,7 +180,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                             {
                                 var headerInfo = FindDomainHeaderInfo(catalog, summaryListDescription.Result);
                                 summaryListDescription.Result.BuildSections(headerInfo.Result);
-                                var summaryResults = summaryListDescription.Result.CreateIRagPoints();
+                                var summaryResults = summaryListDescription.Result.BuildRagPoints();
                                 result.Result.RagPoints.AddRange(summaryResults.Select(rp => rp.Result));
                             }
                             break;
@@ -189,7 +189,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                     //var chunks = _chunkerServics.ChunkCSharpWithRoslyn(symbolText, fileInfo.Name);
                     //foreach (var chunk in chunks.Result)
                     //{
-                    //    var points = chunk.CreateIRagPoints(ctx);
+                    //    var points = chunk.BuildRagPoints(ctx);
                     //    result.Result.RagPoints.AddRange(points.Select(pt => pt.Result));
                     //}
                 }

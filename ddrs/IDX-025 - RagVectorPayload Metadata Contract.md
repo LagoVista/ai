@@ -166,8 +166,9 @@ These are optional at the core contract level but may be required by specific DD
 ### 3.7 Raw Source Pointers
 
 Pointers back to the original asset:
-
-- `BlobUri` – URI to backing blob
+- `FullDocumentBlobUri` – URI to backing blob
+- `SourceSliceBlobUri` – The exact source code that was used for this indexed entity
+- `DescriptionBlobUri` – A textual/human readable description.
 - `BlobVersionId` – version/ETag identifier
 - `SourceSha256` – SHA-256 of source text
 

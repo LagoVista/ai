@@ -1,4 +1,4 @@
-﻿/*11/26/2025 3:24:11 PM*/
+﻿/*12/4/2025 4:08:19 PM*/
 using System.Globalization;
 using System.Reflection;
 
@@ -159,6 +159,45 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:Common_Status_Pending
 
 		public static string Common_Status_Pending { get { return GetResourceString("Common_Status_Pending"); } }
+//Resources:AIResources:DDR_Chapter
+
+		public static string DDR_Chapter { get { return GetResourceString("DDR_Chapter"); } }
+//Resources:AIResources:DDR_Chapter_Description
+
+		public static string DDR_Chapter_Description { get { return GetResourceString("DDR_Chapter_Description"); } }
+//Resources:AIResources:DDR_Chapter_Help
+
+		public static string DDR_Chapter_Help { get { return GetResourceString("DDR_Chapter_Help"); } }
+//Resources:AIResources:DDR_Description
+
+		public static string DDR_Description { get { return GetResourceString("DDR_Description"); } }
+//Resources:AIResources:DDR_Help
+
+		public static string DDR_Help { get { return GetResourceString("DDR_Help"); } }
+//Resources:AIResources:DDR_Title
+
+		public static string DDR_Title { get { return GetResourceString("DDR_Title"); } }
+//Resources:AIResources:Ddr_Tla
+
+		public static string Ddr_Tla { get { return GetResourceString("Ddr_Tla"); } }
+//Resources:AIResources:Ddr_Tla_Description
+
+		public static string Ddr_Tla_Description { get { return GetResourceString("Ddr_Tla_Description"); } }
+//Resources:AIResources:Ddr_Tla_Help
+
+		public static string Ddr_Tla_Help { get { return GetResourceString("Ddr_Tla_Help"); } }
+//Resources:AIResources:DDRs_Title
+
+		public static string DDRs_Title { get { return GetResourceString("DDRs_Title"); } }
+//Resources:AIResources:DdrTla_Catalog
+
+		public static string DdrTla_Catalog { get { return GetResourceString("DdrTla_Catalog"); } }
+//Resources:AIResources:DdrTla_Catalog_Description
+
+		public static string DdrTla_Catalog_Description { get { return GetResourceString("DdrTla_Catalog_Description"); } }
+//Resources:AIResources:DdrTla_Catalog_Help
+
+		public static string DdrTla_Catalog_Help { get { return GetResourceString("DdrTla_Catalog_Help"); } }
 //Resources:AIResources:Experiemnt_Help
 
 		public static string Experiemnt_Help { get { return GetResourceString("Experiemnt_Help"); } }
@@ -635,6 +674,19 @@ namespace LagoVista.AI.Models.Resources
 			public const string Common_Status_Failed = "Common_Status_Failed";
 			public const string Common_Status_New = "Common_Status_New";
 			public const string Common_Status_Pending = "Common_Status_Pending";
+			public const string DDR_Chapter = "DDR_Chapter";
+			public const string DDR_Chapter_Description = "DDR_Chapter_Description";
+			public const string DDR_Chapter_Help = "DDR_Chapter_Help";
+			public const string DDR_Description = "DDR_Description";
+			public const string DDR_Help = "DDR_Help";
+			public const string DDR_Title = "DDR_Title";
+			public const string Ddr_Tla = "Ddr_Tla";
+			public const string Ddr_Tla_Description = "Ddr_Tla_Description";
+			public const string Ddr_Tla_Help = "Ddr_Tla_Help";
+			public const string DDRs_Title = "DDRs_Title";
+			public const string DdrTla_Catalog = "DdrTla_Catalog";
+			public const string DdrTla_Catalog_Description = "DdrTla_Catalog_Description";
+			public const string DdrTla_Catalog_Help = "DdrTla_Catalog_Help";
 			public const string Experiemnt_Help = "Experiemnt_Help";
 			public const string Experiment_Description = "Experiment_Description";
 			public const string Experiment_Instructions = "Experiment_Instructions";

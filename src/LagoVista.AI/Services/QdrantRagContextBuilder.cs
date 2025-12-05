@@ -123,8 +123,8 @@ namespace LagoVista.AI.Services
 
                 var path = !string.IsNullOrWhiteSpace(payload.Path)
                     ? payload.Path
-                    : (!string.IsNullOrWhiteSpace(payload.BlobUri)
-                        ? payload.BlobUri
+                    : (!string.IsNullOrWhiteSpace(payload.FullDocumentBlobUri)
+                        ? payload.FullDocumentBlobUri
                         : string.Empty);
 
                 var sym = payload.Symbol ?? string.Empty;
@@ -171,12 +171,12 @@ namespace LagoVista.AI.Services
 
                 var payload = RagVectorPayload.FromDictionary(hit.Payload);
 
-                _adminLogger.Trace($"[QdrantRagContextBuilder__BuildContextBlockAsync] Processing payload {payload.SemanticId}, path {payload.SnippetBlobUri}.");
+                _adminLogger.Trace($"[QdrantRagContextBuilder__BuildContextBlockAsync] Processing payload {payload.SemanticId}, path {payload.SourceSliceBlobUri}.");
 
                 var path = !string.IsNullOrWhiteSpace(payload.Path)
                     ? payload.Path
-                    : (!string.IsNullOrWhiteSpace(payload.BlobUri)
-                        ? payload.BlobUri
+                    : (!string.IsNullOrWhiteSpace(payload.FullDocumentBlobUri)
+                        ? payload.FullDocumentBlobUri
                         : string.Empty);
 
                 var startLine = payload.LineStart ?? payload.StartLine ?? 1;
@@ -191,8 +191,8 @@ namespace LagoVista.AI.Services
                     : InferLanguageFromPath(path);
 
                 // Resolve blob/file name: prefer BlobUri, then FullDocumentBlobUri, then Path
-                var blobName = !string.IsNullOrWhiteSpace(payload.SnippetBlobUri)
-                    ? payload.SnippetBlobUri
+                var blobName = !string.IsNullOrWhiteSpace(payload.SourceSliceBlobUri)
+                    ? payload.SourceSliceBlobUri
                     : (!string.IsNullOrWhiteSpace(payload.FullDocumentBlobUri)
                         ? payload.FullDocumentBlobUri
                         : payload.Path);
