@@ -30,11 +30,19 @@ namespace LagoVista.AI.Models
 
         public string StatusTimestamp { get; set; }
 
-        public List<DdrChapter> Chapters { get; set; }
+        public List<DdrChapter> Chapters { get; set; } = new List<DdrChapter>();
 
         public string ApprovedTimestamp { get; set; }
         public EntityHeader ApprovedBy { get; set; }
 
+        public string ContentDiscoveryCompletedTimestamp { get; set; }
+
+        public string ContentDiscoverySummary { get; set; }
+
+        public string BaselineResponseId { get; set; }
+
+        public List<DdrContentDiscoveryArtifact> ContentDiscoveryArtifacts { get; set; } = new List<DdrContentDiscoveryArtifact>();
+        
         public DetailedDesignReviewSummary CreateSummary()
         {
             var summary = new DetailedDesignReviewSummary();
@@ -49,6 +57,16 @@ namespace LagoVista.AI.Models
             return this.CreateSummary();
         }
     }
+
+    public class DdrContentDiscoveryArtifact
+    {
+        public string Id { get; set; }          // RAG asset id or URI
+        public string BlobUri { get; set; }
+        public string Title { get; set; }       // Human readable
+        public string SourceKind { get; set; }  // DDR / Domain / Spec / Code / etc.
+        public string Reason { get; set; }      // Why we pulled it in
+    }
+
 
 
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.DDRs_Title, AIResources.Names.DDR_Help, AIResources.Names.DDR_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIDomain))]
@@ -71,8 +89,16 @@ namespace LagoVista.AI.Models
         public string Summary { get; set; }
         public string Details { get; set; }
     
+        public string Status { get; set; }
+
         public EntityHeader ApprovedBy { get; set; }
         public string ApprovedTimestamp { get; set; }
+
+        public int DurableSummaryCount { get; set; }
+        public string LastDurableSummaryTimestamp { get; set; }
+
+        public List<DdrContentDiscoveryArtifact> ContentDiscoveryArtifacts { get; set; } = new List<DdrContentDiscoveryArtifact>();
+
     }
 
 }
