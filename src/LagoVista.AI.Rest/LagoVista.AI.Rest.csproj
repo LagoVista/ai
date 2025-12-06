@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="LagoVista.IoT.Web.Common" Version="3.0.3124.0923" />
-    <PackageReference Include="LagoVista.UserAdmin" Version="3.0.3124.0923" />
+    <PackageReference Include="LagoVista.IoT.Web.Common" Version="3.0.3125.0837" />
+    <PackageReference Include="LagoVista.UserAdmin" Version="3.0.3125.0837" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.22.1" />
   </ItemGroup>
 

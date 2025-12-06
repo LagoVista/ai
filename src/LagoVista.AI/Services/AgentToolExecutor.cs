@@ -50,6 +50,8 @@ namespace LagoVista.AI.Services
                 return InvokeResult<AgentToolCall>.FromError($"[AgentToolExecutor_ExecuteServerToolAsync__EmptyName] {call.ErrorMessage}");
             }
 
+            _logger.Trace($"[AgentToolExecutor_ExecuteServerToolAsync] Tool '{call.Name}' Was Called, Starting Execution with Arguments\r\n{call.ArgumentsJson}\r\n");
+
             // If the registry does not know this tool, it's a client-only tool.
             if (!_toolRegistry.HasTool(call.Name))
             {
@@ -99,6 +101,9 @@ namespace LagoVista.AI.Services
 
                     return InvokeResult<AgentToolCall>.FromInvokeResult(execResult.ToInvokeResult());
                 }
+
+                _logger.Trace($"[AgentToolExecutor_ExecuteServerToolAsync] Tool '{call.Name}' Was Successfully Executed, Response\r\n{execResult.Result}\r\n");
+
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {

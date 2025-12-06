@@ -703,4 +703,16 @@
   <data name="Ddr_Tla_Help" xml:space="preserve">
     <value>A TLA is a three letter aryonym that describes a category of a DDR</value>
   </data>
+  <data name="AgentSession_Description" xml:space="preserve">
+    <value>An agent session is the log that get created when a user interacts with an Agent.</value>
+  </data>
+  <data name="AgentSession_Help" xml:space="preserve">
+    <value>An agent session is the log that get created when a user interacts with an Agent.</value>
+  </data>
+  <data name="AgentSession_Title" xml:space="preserve">
+    <value>APTIX Session</value>
+  </data>
+  <data name="AgentSessions_Title" xml:space="preserve">
+    <value>Aptix Sessions</value>
+  </data>
 </root>

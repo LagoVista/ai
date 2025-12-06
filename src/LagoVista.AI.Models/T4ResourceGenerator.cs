@@ -1,4 +1,4 @@
-﻿/*12/4/2025 4:08:19 PM*/
+﻿/*12/6/2025 8:01:55 AM*/
 using System.Globalization;
 using System.Reflection;
 
@@ -90,6 +90,18 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:AgentContext_LlmProvider_Select
 
 		public static string AgentContext_LlmProvider_Select { get { return GetResourceString("AgentContext_LlmProvider_Select"); } }
+//Resources:AIResources:AgentSession_Description
+
+		public static string AgentSession_Description { get { return GetResourceString("AgentSession_Description"); } }
+//Resources:AIResources:AgentSession_Help
+
+		public static string AgentSession_Help { get { return GetResourceString("AgentSession_Help"); } }
+//Resources:AIResources:AgentSession_Title
+
+		public static string AgentSession_Title { get { return GetResourceString("AgentSession_Title"); } }
+//Resources:AIResources:AgentSessions_Title
+
+		public static string AgentSessions_Title { get { return GetResourceString("AgentSessions_Title"); } }
 //Resources:AIResources:AiAgentContext_Description
 
 		public static string AiAgentContext_Description { get { return GetResourceString("AiAgentContext_Description"); } }
@@ -651,6 +663,10 @@ namespace LagoVista.AI.Models.Resources
 			public const string AgentContext_DefaultConversationContext_Select = "AgentContext_DefaultConversationContext_Select";
 			public const string AgentContext_LlmProvider = "AgentContext_LlmProvider";
 			public const string AgentContext_LlmProvider_Select = "AgentContext_LlmProvider_Select";
+			public const string AgentSession_Description = "AgentSession_Description";
+			public const string AgentSession_Help = "AgentSession_Help";
+			public const string AgentSession_Title = "AgentSession_Title";
+			public const string AgentSessions_Title = "AgentSessions_Title";
 			public const string AiAgentContext_Description = "AiAgentContext_Description";
 			public const string AiAgentContext_Title = "AiAgentContext_Title";
 			public const string AiAgentContexts_Title = "AiAgentContexts_Title";

@@ -40,6 +40,8 @@ namespace LagoVista.AI.Models
         Domain
     }
 
+    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.AgentSession_Title, AIResources.Names.AgentSession_Help, AIResources.Names.AgentSession_Description,  EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIDomain),
+        Icon: "icon-ae-creativity", ListUIUrl: "/mlworkbench/aptixsessions", EditUIUrl: "/mlworkbench/aptixsession/{id}", GetListUrl: "/api/ai/agent/sessions", GetUrl: "/api/ai/agent/session/{id}")]
     public class AgentSession : EntityBase, ISummaryFactory, IValidateable
     {
         public const string OperationKind_Code = "code";
@@ -55,6 +57,8 @@ namespace LagoVista.AI.Models
         public string WorkspaceId { get; set; }
 
         public string Repo { get; set; }
+
+        public string Mode { get; set; }
 
         public string DefaultLanguage { get; set; }
 
@@ -184,6 +188,9 @@ namespace LagoVista.AI.Models
 
         public bool WasTooLargeToSend { get; set; }
     }
+
+    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.AgentSessions_Title, AIResources.Names.AgentSession_Help, AIResources.Names.AgentSession_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIDomain),
+        Icon: "icon-ae-creativity", ListUIUrl: "/mlworkbench/aptixsessions", EditUIUrl: "/mlworkbench/aptixsession/{id}", GetListUrl: "/api/ai/agent/sessions", GetUrl: "/api/ai/agent/session/{id}")]
 
     public class AgentSessionSummary : SummaryData
     {

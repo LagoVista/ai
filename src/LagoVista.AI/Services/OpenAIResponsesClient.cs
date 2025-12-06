@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -74,7 +75,7 @@ namespace LagoVista.AI.Services
             var requestObject = ResponsesRequestBuilder.Build(conversationContext, executeRequest, ragContextBlock, toolUsageBlock, true);
 
             var requestJson = JsonConvert.SerializeObject(requestObject);
-            Console.WriteLine($"OpenAI Responses Request JSON:\r\n=====\r\n{requestJson}====\r\n");
+            _adminLogger.Trace($"[OpenAIResponsesClient__GetAnswerAsync] Call LLM with JSON\r\n=====\r\n{requestJson}\r\n====");
             try
             {
                 await PublishLlmEventAsync(sessionId, "LLMStarted", "in-progress", "Calling OpenAI model...", null, cancellationToken);
@@ -86,10 +87,9 @@ namespace LagoVista.AI.Services
                         Content = new StringContent(requestJson, Encoding.UTF8, "application/json")
                     };
 
-                    Console.WriteLine($"IMMEDIATELY BEFORE THE CALL: {DateTime.Now}");
+                    var sw = Stopwatch.StartNew();
                     var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
 
-                    Console.WriteLine($"INITIAL RESPONSE: {DateTime.Now} - {response.StatusCode}");
                     if (!response.IsSuccessStatusCode)
                     {
                         var errorBody = await response.Content.ReadAsStringAsync();
@@ -123,7 +123,7 @@ namespace LagoVista.AI.Services
 
                     }
 
-                    var agentResponse = await ReadStreamingResponseAsync(response, executeRequest, sessionId, cancellationToken);
+                    var agentResponse = await ReadStreamingResponseAsync(response, executeRequest, sessionId, sw, cancellationToken);
 
                     if (!agentResponse.Successful)
                         return agentResponse;
@@ -158,6 +158,7 @@ namespace LagoVista.AI.Services
             HttpResponseMessage httpResponse,
             AgentExecuteRequest request,
             string sessionId,
+            Stopwatch sw,
             CancellationToken cancellationToken)
         {
             using (var stream = await httpResponse.Content.ReadAsStreamAsync())
@@ -235,7 +236,7 @@ namespace LagoVista.AI.Services
                 }
 
 
-                Console.WriteLine($"COMPLETED JSON\r\n===={completedEventJson}\r\n====");
+                _adminLogger.Trace($"[OpenAIResponseClient_ReadStreamingResponseAsync] Agent Response in {sw.Elapsed.TotalSeconds} seconds. JSON\r\n====\r\n{completedEventJson}\r\n====");
 
                 // If we never got any text or a completed event, treat as null/empty
                 if (string.IsNullOrWhiteSpace(completedEventJson))

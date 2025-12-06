@@ -22,20 +22,20 @@ namespace LagoVista.AI
             var toolRegistry = new AgentToolRegistry(adminLogger);
 
             ///* define our agent tools here */
-            //toolRegistry.RegisterTool<PingPongTool>();
-            //toolRegistry.RegisterTool<CalculatorTool>();
-            //toolRegistry.RegisterTool<DelayTool>();
-            //toolRegistry.RegisterTool<FailureInjectionTool>();
+            toolRegistry.RegisterTool<PingPongTool>();
+            toolRegistry.RegisterTool<CalculatorTool>();
+            toolRegistry.RegisterTool<DelayTool>();
+            toolRegistry.RegisterTool<FailureInjectionTool>();
 
-            //toolRegistry.RegisterTool<ReadFileTool>();
-            //toolRegistry.RegisterTool<WorkspaceWritePatchTool>();
-            //toolRegistry.RegisterTool<CodeHashNormalizedTool>();
-            //toolRegistry.RegisterTool<WorkspaceCreateFileTool>();
+            toolRegistry.RegisterTool<ReadFileTool>();
+            toolRegistry.RegisterTool<WorkspaceWritePatchTool>();
+            toolRegistry.RegisterTool<CodeHashNormalizedTool>();
+            toolRegistry.RegisterTool<WorkspaceCreateFileTool>();
 
             ///* workflow authoring + registry tools */
-            //toolRegistry.RegisterTool<ListWorkflowsTool>();
-            //toolRegistry.RegisterTool<GetWorkflowManifestTool>();
-            //toolRegistry.RegisterTool<MatchWorkflowTool>();
+            toolRegistry.RegisterTool<ListWorkflowsTool>();
+            toolRegistry.RegisterTool<GetWorkflowManifestTool>();
+            toolRegistry.RegisterTool<MatchWorkflowTool>();
 
             /* CRUD authoring tools */
             toolRegistry.RegisterTool<CreateWorkflowTool>();

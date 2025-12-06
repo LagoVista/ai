@@ -18,6 +18,11 @@ namespace LagoVista.AI.Models
         public string OpenAIRequestBlobUrl { get; set; }
         public string OpenAIResponseBlobUrl { get; set; }
 
+        public string Mode { get; set; }
+
+        public int InputTokens { get; set; }
+        public int OutputTokens { get; set; }
+
         public List<string> Warnings { get; set; } = new List<string>();
         public List<string> Errors { get; set; } = new List<string>();
 

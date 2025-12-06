@@ -84,8 +84,6 @@ namespace LagoVista.AI.Services
             }
 
             request.ToolsJson = merged.ToString(Newtonsoft.Json.Formatting.None);
-
-            Console.WriteLine($"TOOLS JSON =>>{request.ToolsJson}<<=");
         }
 
         private async Task<InvokeResult<AgentExecuteResponse>> HandleNewSessionAsync(AgentExecuteRequest request, EntityHeader org, EntityHeader user, string correlationId, CancellationToken cancellationToken)
