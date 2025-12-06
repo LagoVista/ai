@@ -22,10 +22,14 @@ namespace LagoVista.AI
             var toolRegistry = new AgentToolRegistry(adminLogger);
 
             ///* define our agent tools here */
+            toolRegistry.RegisterTool<HelloWorldTool>();
             toolRegistry.RegisterTool<PingPongTool>();
             toolRegistry.RegisterTool<CalculatorTool>();
             toolRegistry.RegisterTool<DelayTool>();
             toolRegistry.RegisterTool<FailureInjectionTool>();
+
+
+            toolRegistry.RegisterTool<ModeChangeTool>();
 
             toolRegistry.RegisterTool<ReadFileTool>();
             toolRegistry.RegisterTool<WorkspaceWritePatchTool>();
@@ -42,34 +46,34 @@ namespace LagoVista.AI
             toolRegistry.RegisterTool<UpdateWorkflowTool>();
             toolRegistry.RegisterTool<DeleteWorkflowTool>();
 
-            //// --- DDR / TLA Tools ---
-            //toolRegistry.RegisterTool<GetTlaCatalogAgentTool>();
-            //toolRegistry.RegisterTool<AddTlaAgentTool>();
-            //toolRegistry.RegisterTool<CreateDdrAgentTool>();
-            //toolRegistry.RegisterTool<UpdateDdrMetadataAgentTool>();
-            //toolRegistry.RegisterTool<MoveDdrTlaAgentTool>();
+            // --- DDR / TLA Tools ---
+            toolRegistry.RegisterTool<GetTlaCatalogAgentTool>();
+            toolRegistry.RegisterTool<AddTlaAgentTool>();
+            toolRegistry.RegisterTool<CreateDdrAgentTool>();
+            toolRegistry.RegisterTool<UpdateDdrMetadataAgentTool>();
+            toolRegistry.RegisterTool<MoveDdrTlaAgentTool>();
 
-            //// --- Goal Tools ---
-            //toolRegistry.RegisterTool<SetGoalAgentTool>();
-            //toolRegistry.RegisterTool<ApproveGoalAgentTool>();
+            // --- Goal Tools ---
+            toolRegistry.RegisterTool<SetGoalAgentTool>();
+            toolRegistry.RegisterTool<ApproveGoalAgentTool>();
 
-            //// --- Chapter Tools ---
-            //toolRegistry.RegisterTool<AddChapterAgentTool>();
-            //toolRegistry.RegisterTool<AddChaptersAgentTool>();
-            //toolRegistry.RegisterTool<UpdateChapterSummaryAgentTool>();
-            //toolRegistry.RegisterTool<UpdateChapterDetailsAgentTool>();
-            //toolRegistry.RegisterTool<ApproveChapterAgentTool>();
-            //toolRegistry.RegisterTool<ListChaptersAgentTool>();
-            //toolRegistry.RegisterTool<ReorderChaptersAgentTool>();
-            //toolRegistry.RegisterTool<DeleteChapterAgentTool>();
+            // --- Chapter Tools ---
+            toolRegistry.RegisterTool<AddChapterAgentTool>();
+            toolRegistry.RegisterTool<AddChaptersAgentTool>();
+            toolRegistry.RegisterTool<UpdateChapterSummaryAgentTool>();
+            toolRegistry.RegisterTool<UpdateChapterDetailsAgentTool>();
+            toolRegistry.RegisterTool<ApproveChapterAgentTool>();
+            toolRegistry.RegisterTool<ListChaptersAgentTool>();
+            toolRegistry.RegisterTool<ReorderChaptersAgentTool>();
+            toolRegistry.RegisterTool<DeleteChapterAgentTool>();
 
-            //// --- DDR Status & Approval ---
-            //toolRegistry.RegisterTool<SetDdrStatusAgentTool>();
-            //toolRegistry.RegisterTool<ApproveDdrAgentTool>();
+            // --- DDR Status & Approval ---
+            toolRegistry.RegisterTool<SetDdrStatusAgentTool>();
+            toolRegistry.RegisterTool<ApproveDdrAgentTool>();
 
-            //// --- DDR Retrieval ---
-            //toolRegistry.RegisterTool<GetDdrAgentTool>();
-            //toolRegistry.RegisterTool<ListDdrsAgentTool>();
+            // --- DDR Retrieval ---
+            toolRegistry.RegisterTool<GetDdrAgentTool>();
+            toolRegistry.RegisterTool<ListDdrsAgentTool>();
             /*--*/
 
             services.AddTransient<IDdrManager, DdrManager>();

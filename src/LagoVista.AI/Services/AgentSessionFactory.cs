@@ -41,6 +41,8 @@ namespace LagoVista.AI.Services
                 OperationKind = EntityHeader<OperationKinds>.Create(kind),
                 WorkspaceId = request.WorkspaceId,
                 Repo = request.Repo,
+                ModeReason = "initial startup",
+                ModeSetTimestamp = now,
                 DefaultLanguage = request.Language
             };
 

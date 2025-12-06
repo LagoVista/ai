@@ -58,13 +58,19 @@ namespace LagoVista.AI.Models
 
         public string Repo { get; set; }
 
-        public string Mode { get; set; }
+        public string Mode { get; set; } = "general";
+
+        public string ModeSetTimestamp { get; set; }
+
+        public string ModeReason { get; set; }
 
         public string DefaultLanguage { get; set; }
 
         public EntityHeader<OperationKinds> OperationKind { get; set; }
 
         public List<AgentSessionTurn> Turns { get; set; } = new List<AgentSessionTurn>();
+
+        public List<ModeHistory> ModeHistory { get; set; } = new List<ModeHistory>();
 
         public AgentSessionSummary CreateSummary()
         {
@@ -76,6 +82,10 @@ namespace LagoVista.AI.Models
             summary.ConversationContextName = ConversationContext.Text;
             summary.ConversationContextId = ConversationContext.Id;
             summary.TurnCount = Turns.Count;
+            summary.Mode = Mode;
+            summary.ModeSetTimestamp = ModeSetTimestamp;
+            summary.ModeReason = ModeReason;
+
             var lastTurn = Turns.LastOrDefault();
             if (lastTurn != null)
             {
@@ -90,6 +100,14 @@ namespace LagoVista.AI.Models
         {
             return this.CreateSummary();
         }
+    }
+
+    public class ModeHistory
+    {
+        public string PreviousMode { get; set; }
+        public string NewMode { get; set; }
+        public string TimeStamp { get; set; }
+        public string Reason { get; set; }
     }
 
     public class AgentSessionTurn : IValidateable
@@ -207,5 +225,9 @@ namespace LagoVista.AI.Models
         public string LastTurnDate { get; set; }
 
         public int TurnCount { get; set; }
+
+        public string Mode { get; set; }
+        public string ModeSetTimestamp { get; set; }
+        public string ModeReason { get; set; }
     }
 }

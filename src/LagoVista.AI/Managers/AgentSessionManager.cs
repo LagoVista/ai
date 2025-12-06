@@ -155,5 +155,30 @@ namespace LagoVista.AI.Managers
 
             await _repo.UpdateSessionAsyunc(session);
         }
+
+        public async Task<InvokeResult> SetSessionModeAsync(string sessionId, string mode, string reason, EntityHeader org, EntityHeader user)
+        {
+            var session = await GetAgentSessionAsync(sessionId, org, user);
+
+            var now = DateTime.UtcNow.ToJSONString();
+            session.ModeHistory.Add(new ModeHistory()
+            {
+                PreviousMode = mode,
+                NewMode = mode,
+                Reason = reason,
+                TimeStamp = now,
+            });
+
+            session.Mode = mode;
+            session.ModeReason = reason;
+            session.ModeSetTimestamp = now;
+            session.LastUpdatedDate = now;
+
+            ValidationCheck(session, Actions.Update);
+
+            await _repo.UpdateSessionAsyunc(session);
+
+            return InvokeResult.Success;
+        }
     }
 }

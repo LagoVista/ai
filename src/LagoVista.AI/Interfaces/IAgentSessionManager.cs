@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using LagoVista.AI.Models;
 using LagoVista.Core.Models;
 using LagoVista.Core.Models.UIMetaData;
+using LagoVista.Core.Validation;
 
 namespace LagoVista.AI.Interfaces
 {
@@ -31,5 +32,7 @@ namespace LagoVista.AI.Interfaces
 
         Task<ListResponse<AgentSessionSummary>> GetAgentSessionsForUserAsync(string userId, ListRequest listRequest,
             EntityHeader org, EntityHeader user);
+
+        Task<InvokeResult> SetSessionModeAsync(string sessionId, string mode, string reason, EntityHeader org, EntityHeader user);
     }
 }
