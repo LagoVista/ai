@@ -61,7 +61,7 @@ A workflow, as returned by TUL-006, must therefore include:
   - how to move step-by-step through the task  
 - **Required Inputs** — what the LLM must collect before continuing  
 - **Permitted Tools** — explicit list of IAgentTool names the LLM is allowed to call during this workflow  
-- **User Intent Patterns** — phrases that imply “The user is asking to begin this workflow”  
+- **User Intent Patterns** — phrases that imply “The user is asking to begin this workflow”   
 - **Completion Conditions** — how the LLM determines the workflow is finished  
 - **Optional Follow-up Guidance** — what the LLM might suggest after completing the workflow  
 

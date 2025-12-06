@@ -22,6 +22,7 @@ namespace LagoVista.AI.Tests.Services
         private Mock<IAdminLogger> _adminLogger;
         private Mock<IAgentReasoner> _reasoner;
         private Mock<IRagContextBuilder> _ragContextBuilder;
+        private Mock<IAgentModeCatalogService> _catalogService;
 
         private AgentExecutionService _sut;
 
@@ -32,11 +33,13 @@ namespace LagoVista.AI.Tests.Services
             _adminLogger = new Mock<IAdminLogger>(MockBehavior.Loose);
             _reasoner = new Mock<IAgentReasoner>(MockBehavior.Strict);
             _ragContextBuilder = new Mock<IRagContextBuilder>(MockBehavior.Strict);
+            _catalogService = new Mock<IAgentModeCatalogService>();
 
             _sut = new AgentExecutionService(
                 _agentContextManager.Object,
                 _reasoner.Object,
                 _ragContextBuilder.Object,
+                _catalogService.Object,
                 _adminLogger.Object);
         }
 
@@ -46,28 +49,28 @@ namespace LagoVista.AI.Tests.Services
         public void Ctor_NullAgentContextManager_Throws()
         {
             Assert.Throws<ArgumentNullException>(
-                () => new AgentExecutionService(null, _reasoner.Object, _ragContextBuilder.Object, _adminLogger.Object));
+                () => new AgentExecutionService(null, _reasoner.Object, _ragContextBuilder.Object, _catalogService.Object, _adminLogger.Object));
         }
 
         [Test]
         public void Ctor_NullReasoner_Throws()
         {
             Assert.Throws<ArgumentNullException>(
-                () => new AgentExecutionService(_agentContextManager.Object, null, _ragContextBuilder.Object, _adminLogger.Object));
+                () => new AgentExecutionService(_agentContextManager.Object, null, _ragContextBuilder.Object, _catalogService.Object, _adminLogger.Object));
         }
 
         [Test]
         public void Ctor_NullRagContextBuilder_Throws()
         {
             Assert.Throws<ArgumentNullException>(
-                () => new AgentExecutionService(_agentContextManager.Object, _reasoner.Object, null, _adminLogger.Object));
+                () => new AgentExecutionService(_agentContextManager.Object, _reasoner.Object, null, _catalogService.Object, _adminLogger.Object));
         }
 
         [Test]
         public void Ctor_NullAdminLogger_Throws()
         {
             Assert.Throws<ArgumentNullException>(
-                () => new AgentExecutionService(_agentContextManager.Object, _reasoner.Object, _ragContextBuilder.Object, null));
+                () => new AgentExecutionService(_agentContextManager.Object, _reasoner.Object, _ragContextBuilder.Object, _catalogService.Object, null));
         }
 
         #endregion

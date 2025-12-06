@@ -143,7 +143,7 @@ namespace LagoVista.AI.Models
 
         [FormField(LabelResource: AIResources.Names.AgentContext_ConversationContext_System, HelpResource: AIResources.Names.AgentContext_ConversationContext_System_Help,
             FieldType: FieldTypes.MultiLineText, IsRequired: true, ResourceType: typeof(AIResources))]
-        public string System { get; set; }
+        public List<string> SystemPrompts { get; set; }
 
         [FormField(LabelResource: AIResources.Names.AgentContext_ConversationContext_Temperature, HelpResource: AIResources.Names.AgentContext_ConversationContext_Temperature_Help,
             FieldType: FieldTypes.Decimal, IsRequired: true, ResourceType: typeof(AIResources))]

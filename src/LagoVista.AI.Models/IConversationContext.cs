@@ -11,7 +11,7 @@ namespace LagoVista.AI.Models
         string Id { get; set; }
         string ModelName { get; set; }
         string Name { get; set; }
-        string System { get; set; }
+        List<string> SystemPrompts { get; set; }
         float Temperature { get; set; }
 
         List<string> GetFormFields();

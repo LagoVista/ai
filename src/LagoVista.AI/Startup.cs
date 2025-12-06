@@ -28,7 +28,7 @@ namespace LagoVista.AI
             toolRegistry.RegisterTool<DelayTool>();
             toolRegistry.RegisterTool<FailureInjectionTool>();
 
-
+            toolRegistry.RegisterTool<AgentListModesTool>();
             toolRegistry.RegisterTool<ModeChangeTool>();
 
             toolRegistry.RegisterTool<ReadFileTool>();
@@ -91,7 +91,6 @@ namespace LagoVista.AI
             services.AddTransient<IExperimentResultManager, ExperimentResultManager>();
             services.AddTransient<ITextQueryManager, OpenAIManager>();
             services.AddTransient<IImageGeneratorManager, OpenAIManager>();
-            services.AddTransient<IRagAnswerService, RagAnswerService>();
             services.AddTransient<IQdrantClient, QdrantClient>();
             services.AddSingleton<IEmbedder, OpenAIEmbedder>();
             services.AddSingleton<IAgentContextManager, AgentContextManager>();

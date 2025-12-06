@@ -18,6 +18,8 @@ using System.Threading.Tasks;
 
 namespace LagoVista.AI.Rest
 {
+    /*
+    CAN DELETE AFTER JAN 1, 2026
     [Authorize]
     [ConfirmedUser]
     public class RAGController : LagoVistaBaseController
@@ -53,5 +55,5 @@ namespace LagoVista.AI.Rest
         {
             return _answerService.GetContentAsync(path, fileName, start, end, OrgEntityHeader, UserEntityHeader);
         }
-    }
+    }*/
 }

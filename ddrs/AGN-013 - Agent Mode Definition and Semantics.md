@@ -59,6 +59,19 @@ A Mode is a static configuration object containing the following fields.
 ### `Description`
 - Short explanation of the Mode's purpose and domain.
 
+### `When to Use`
+- A single-line sentence that describes when this mode should be selected.
+- Optimized for inclusion in system prompts and catalogs.
+- Used by the Mode Catalog and prompt builders to tell the LLM: “If the user request looks like X, prefer this mode.”
+- MUST be concise enough to read as:
+```
+<key>: <when-to-use sentence>
+```
+
+### `Summary`
+- Description explains what the mode is and covers.
+- WhenToUse explains when the agent should choose this mode.
+
 ---
 
 ## 3.2 User Interaction Metadata

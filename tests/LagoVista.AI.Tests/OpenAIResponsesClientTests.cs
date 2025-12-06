@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -131,7 +132,7 @@ namespace LagoVista.AI.Tests
                 Id = "conv-ctx-1",
                 Name = "Test Conversation Context",
                 ModelName = "gpt-5.1",
-                System = "You are the Aptix Reasoner.",
+                SystemPrompts = new List<string>() { "You are the Aptix Reasoner." },
                 Temperature = 0.7f
             };
         }

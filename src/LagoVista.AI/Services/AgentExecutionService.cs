@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
+using LagoVista.AI.Services.Tools;
 using LagoVista.Core;
 using LagoVista.Core.AI.Interfaces;
 using LagoVista.Core.AI.Models;
@@ -18,14 +19,16 @@ namespace LagoVista.AI.Services
         private readonly IAdminLogger _adminLogger;
         private readonly IAgentReasoner _reasoner;
         private readonly IRagContextBuilder _ragContextBuilder;
+        private readonly IAgentModeCatalogService _modeCatalogService;
 
 
-        public AgentExecutionService(IAgentContextManager agentContextManager, IAgentReasoner agentReasoner, IRagContextBuilder ragContextBuilder, IAdminLogger adminLogger)
+        public AgentExecutionService(IAgentContextManager agentContextManager, IAgentReasoner agentReasoner, IRagContextBuilder ragContextBuilder, IAgentModeCatalogService modeCatalogService, IAdminLogger adminLogger)
         {
             _agentContextManager = agentContextManager ?? throw new ArgumentNullException(nameof(agentContextManager));
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
             _reasoner = agentReasoner ?? throw new ArgumentNullException(nameof(agentReasoner));
             _ragContextBuilder = ragContextBuilder ?? throw new ArgumentNullException(nameof(ragContextBuilder));
+            _modeCatalogService = modeCatalogService ?? throw new ArgumentNullException(nameof(modeCatalogService));
         }
 
         public async Task<InvokeResult<AgentExecuteResponse>> ExecuteAsync(AgentExecuteRequest request, EntityHeader org, EntityHeader user, CancellationToken cancellationToken = default)
@@ -115,6 +118,10 @@ namespace LagoVista.AI.Services
 
             var conversationId = String.IsNullOrWhiteSpace(request.ConversationId) ? Guid.NewGuid().ToId() : request.ConversationId;
             var conversationContext = agentContext.ConversationContexts.Single(ctx => ctx.Id == conversationContextId);
+
+            var modeCatalogSystemPrompt = _modeCatalogService.BuildSystemPrompt(request.Mode);
+            if (!String.IsNullOrEmpty(modeCatalogSystemPrompt))
+                conversationContext.SystemPrompts.Add(modeCatalogSystemPrompt);
 
             _adminLogger.Trace(
                 $"[AgentExecutionService_ExecuteAsync__RAG] Invoking RAG pipeline. " +

@@ -1,4 +1,4 @@
-// --- BEGIN CODE INDEX META (do not edit) ---
+/*// --- BEGIN CODE INDEX META (do not edit) ---
 // ContentHash: ce4acfcee6a4021f0d967d95c54e97475fe820d9193577afc6f33af02dc79149
 // IndexVersion: 2
 // --- END CODE INDEX META ---
@@ -180,7 +180,7 @@ namespace LagoVista.AI.Services
                 // We can still send a multi-message conversation structure.
                 input = new[]
                 {
-                    new { role = "system",    content = conversationContext.System },
+                   // new { role = "system",    content = conversationContext.System },
                     new { role = "user",      content = prompt.User },
                     new { role = "assistant", content = prompt.Context }
                 }
@@ -329,7 +329,7 @@ namespace LagoVista.AI.Services
                 sb.AppendLine(text[i]);
             }
 
-            return InvokeResult<string>.Create(sb.ToString());*/
+            return InvokeResult<string>.Create(sb.ToString());
         }
 
         public async Task<InvokeResult<string>> GetContentAsync(string vectorDbId, string path, int start, int end, EntityHeader org, EntityHeader user)
@@ -361,37 +361,8 @@ namespace LagoVista.AI.Services
         }
     }
 
-    public sealed class OpenAIErrorResponse
-    {
-        [JsonProperty("error")]
-        public OpenAIError Error { get; set; }
-
-        public override string ToString()
-        {
-            if (Error == null)
-                return base.ToString();
-
-            var paramInfo = string.IsNullOrEmpty(Error.Param) ? "" : $" (param: {Error.Param})";
-            var codeInfo = string.IsNullOrEmpty(Error.Code) ? "" : $" (code: {Error.Code})";
-            return $"OpenAI error: {Error.Message} [{Error.Type}]{paramInfo}{codeInfo}";
-        }
-    }
-
-    public sealed class OpenAIError
-    {
-        [JsonProperty("message")]
-        public string Message { get; set; }
-
-        [JsonProperty("type")]
-        public string Type { get; set; }
-
-        [JsonProperty("param")]
-        public string Param { get; set; }
-
-        [JsonProperty("code")]
-        public string Code { get; set; }
-    }
 
    
 
 }
+*/

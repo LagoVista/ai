@@ -60,6 +60,10 @@ namespace LagoVista.AI.Helpers
             // Initial turn: include system / boot prompt + optional per-request SystemPrompt + tool usage metadata
             if (!isContinuation)
             {
+                foreach(var systemPrompt in conversationContext.SystemPrompts)
+                {
+
+                
                 var systemMessage = new ResponsesMessage
                 {
                     Role = "system",
@@ -67,7 +71,7 @@ namespace LagoVista.AI.Helpers
                     {
                         new ResponsesMessageContent
                         {
-                            Text = conversationContext.System ?? string.Empty
+                            Text = systemPrompt ?? string.Empty
                         }
                     }
                 };
@@ -92,6 +96,7 @@ namespace LagoVista.AI.Helpers
                 }
 
                 dto.Input.Add(systemMessage);
+                }
             }
 
             // ---------------------------------------------------------------------
