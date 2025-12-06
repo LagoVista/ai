@@ -122,11 +122,14 @@ namespace LagoVista.AI.Services
                 $"repo={request.Repo}, language={request.Language ?? "csharp"}");
 
 
-            var ragContextBlock = await _ragContextBuilder.BuildContextSectionAsync(agentContext, request.Instruction, request.RagScopeFilter);
-            if(!ragContextBlock.Successful)
-                return InvokeResult<AgentExecuteResponse>.FromInvokeResult(ragContextBlock.ToInvokeResult());
+            //var ragContextBlock = await _ragContextBuilder.BuildContextSectionAsync(agentContext, request.Instruction, request.RagScopeFilter);
+            //if(!ragContextBlock.Successful)
+            //    return InvokeResult<AgentExecuteResponse>.FromInvokeResult(ragContextBlock.ToInvokeResult());
 
-            return await _reasoner.ExecuteAsync(agentContext,conversationContext,request, ragContextBlock.Result, correlationId, // or real sessionId, depending how you wire it
+            var ragContextBlock = String.Empty;
+
+
+            return await _reasoner.ExecuteAsync(agentContext,conversationContext,request, ragContextBlock, correlationId, // or real sessionId, depending how you wire it
                                                 org, user, cancellationToken);
         }
 

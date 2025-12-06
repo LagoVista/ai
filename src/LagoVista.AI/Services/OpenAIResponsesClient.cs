@@ -187,7 +187,7 @@ namespace LagoVista.AI.Services
                     // Blank line => end of one SSE event
                     if (string.IsNullOrWhiteSpace(line))
                     {
-                        Console.WriteLine($"LINE RECEIVED: {DateTime.Now} - line");
+                        Console.Write($".");
 
                         if (dataBuilder.Length > 0)
                         {
@@ -234,10 +234,8 @@ namespace LagoVista.AI.Services
                     }
                 }
 
-                Console.WriteLine($"COMPLETED EVENT: {DateTime.Now}");
 
-
-                Console.WriteLine($"Commpleted JSON\r\n===={completedEventJson}\r\n====");
+                Console.WriteLine($"COMPLETED JSON\r\n===={completedEventJson}\r\n====");
 
                 // If we never got any text or a completed event, treat as null/empty
                 if (string.IsNullOrWhiteSpace(completedEventJson))
@@ -309,8 +307,6 @@ namespace LagoVista.AI.Services
           CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(dataJson)) return;
-
-            Console.WriteLine($"Process Sse {_idx++} - {eventName} - {dataJson}");
 
             try
             {

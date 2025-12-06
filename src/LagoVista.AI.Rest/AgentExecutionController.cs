@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
@@ -10,6 +11,7 @@ using LagoVista.UserAdmin.Models.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.Cosmos;
 
 namespace LagoVista.AI.Rest
 {
@@ -31,11 +33,17 @@ namespace LagoVista.AI.Rest
         /// and dispatched to the orchestrator.
         /// </summary>
         [HttpPost("/api/ai/agent/execute")]
-        public Task<InvokeResult<AgentExecuteResponse>> ExecuteAsync([FromBody] AgentExecuteRequest request)
+        public async Task<InvokeResult<AgentExecuteResponse>> ExecuteAsync([FromBody] AgentExecuteRequest request)
         {
+            Console.WriteLine($">>>> Received AgentExecuteRequest: {request.ResponseContinuationId}");
+
             var cancellationToken = HttpContext?.RequestAborted ?? CancellationToken.None;
 
-            return _agentRequestHandler.HandleAsync(request, OrgEntityHeader, UserEntityHeader, cancellationToken);
+            var result = await _agentRequestHandler.HandleAsync(request, OrgEntityHeader, UserEntityHeader, cancellationToken);
+
+            Console.WriteLine($">>>> Received AgentExecuteRequest: {request.ResponseContinuationId} => {result.Result.ResponseContinuationId}\r\n====\r\n");
+
+            return result;
         }
 
         [HttpGet("/api/ai/agent/ping")]

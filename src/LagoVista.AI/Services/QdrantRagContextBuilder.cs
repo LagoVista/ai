@@ -98,7 +98,9 @@ namespace LagoVista.AI.Services
 
             // 5) Build the AGN-002 compliant context block
             var contextBlock = await BuildContextBlockAsync(agentContext, selected).ConfigureAwait(false);
-            return InvokeResult<string>.Create(contextBlock);
+
+            //TODO: Need to be smarter about doing our RAG query.
+            return InvokeResult<string>.Create(String.Empty);
         }
 
         /// <summary>

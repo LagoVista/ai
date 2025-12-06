@@ -29,7 +29,8 @@ namespace LagoVista.AI.CloudRepos
             services.AddSingleton<IAiConversationRepo, AiConversationRepo>();
             services.AddSingleton<IAgentSessionRepo, AgentSessionRepo>();
             services.AddSingleton<IDdrRepo, DdrRepo>();
-            services.AddSingleton<ITlaCatalogRepo, ITlaCatalogRepo>();
+            services.AddSingleton<IWorkflowDefinitionRepo, WorkflowDefinitionRepo>();
+            services.AddSingleton<ITlaCatalogRepo, TlaCatalogRepo>();
         }
     }
 }

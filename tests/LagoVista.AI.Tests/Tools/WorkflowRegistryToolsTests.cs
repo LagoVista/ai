@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
 using LagoVista.AI.Services.Tools;
+using LagoVista.Core.Models;
 using LagoVista.Core.Models.UIMetaData;
 using LagoVista.IoT.Logging.Loggers;
 using Moq;
@@ -56,10 +57,10 @@ namespace LagoVista.AI.Tests
             };
 
             _manager
-                .Setup(mgr => mgr.GetWorkflowDefinitionsAsync(It.IsAny<ListRequest>(), null, null))
+                .Setup(mgr => mgr.GetWorkflowDefinitionsAsync(It.IsAny<ListRequest>(), EntityHeader.Create("ID", "TEXT"), EntityHeader.Create("ID", "TEXT")))
                 .ReturnsAsync(defs);
 
-            var result = await _tool.ExecuteAsync("{}", null, CancellationToken.None);
+            var result = await _tool.ExecuteAsync("{}", new AgentToolExecutionContext() { Org = EntityHeader.Create("ID", "TEXT"), User = EntityHeader.Create("ID", "TEXT") }, CancellationToken.None);
 
             Assert.That(result.Successful, Is.True);
 
@@ -95,6 +96,8 @@ namespace LagoVista.AI.Tests
             Assert.That(result.ErrorMessage, Does.Contain("non-empty arguments object"));
         }
 
+
+
         [Test]
         public async Task ExecuteAsync_WorkflowFound_ReturnsManifest()
         {
@@ -109,7 +112,7 @@ namespace LagoVista.AI.Tests
             };
 
             _manager
-                .Setup(mgr => mgr.GetWorkflowDefinitionAsync("create_ddr", null, null))
+                .Setup(mgr => mgr.GetWorkflowDefinitionAsync("create_ddr", It.IsAny<EntityHeader>(), It.IsAny<EntityHeader>()))
                 .ReturnsAsync(def);
 
             var args = new JObject
@@ -117,16 +120,18 @@ namespace LagoVista.AI.Tests
                 ["workflowId"] = "create_ddr"
             };
 
-            var result = await _tool.ExecuteAsync(args.ToString(), null, CancellationToken.None);
+            var result = await _tool.ExecuteAsync(args.ToString(), new AgentToolExecutionContext() { Org = EntityHeader.Create("ID", "TEXT"), User = EntityHeader.Create("ID", "TEXT") }, CancellationToken.None);
 
             Assert.That(result.Successful, Is.True);
 
             var parsed = JObject.Parse(result.Result);
             var workflow = parsed["Workflow"];
 
-            Assert.That((string)workflow["Id"], Is.EqualTo("create_ddr"));
+            // NOTE: 'id' is lower-case, 'Name' is PascalCase
+            Assert.That((string)workflow["id"], Is.EqualTo("create_ddr"));
             Assert.That((string)workflow["Name"], Is.EqualTo("Create DDR"));
         }
+
 
         [Test]
         public async Task ExecuteAsync_WorkflowMissing_ReturnsError()
@@ -140,7 +145,7 @@ namespace LagoVista.AI.Tests
                 ["workflowId"] = "missing"
             };
 
-            var result = await _tool.ExecuteAsync(args.ToString(), null, CancellationToken.None);
+            var result = await _tool.ExecuteAsync(args.ToString(), new AgentToolExecutionContext() { Org = EntityHeader.Create("ID", "TEXT"), User = EntityHeader.Create("ID", "TEXT") }, CancellationToken.None);
 
             Assert.That(result.Successful, Is.False);
             Assert.That(result.ErrorMessage, Does.Contain("was not found"));
@@ -165,9 +170,9 @@ namespace LagoVista.AI.Tests
         [Test]
         public async Task ExecuteAsync_EmptyArgs_ReturnsError()
         {
-            var result = await _tool.ExecuteAsync(string.Empty, null, CancellationToken.None);
+            var result = await _tool.ExecuteAsync(string.Empty, new AgentToolExecutionContext() { Org = EntityHeader.Create("ID", "TEXT"), User = EntityHeader.Create("ID", "TEXT") }, CancellationToken.None);
 
-            Assert.That(result.Successful, Is.False);
+        Assert.That(result.Successful, Is.False);
             Assert.That(result.ErrorMessage, Does.Contain("non-empty arguments object"));
         }
 
@@ -202,7 +207,7 @@ namespace LagoVista.AI.Tests
             };
 
             _manager
-                .Setup(mgr => mgr.GetWorkflowDefinitionsAsync(It.IsAny<ListRequest>(), null, null))
+                .Setup(mgr => mgr.GetWorkflowDefinitionsAsync(It.IsAny<ListRequest>(), It.IsAny<EntityHeader>(), It.IsAny<EntityHeader>()))
                 .ReturnsAsync(defs);
 
             var args = new JObject
@@ -210,7 +215,7 @@ namespace LagoVista.AI.Tests
                 ["userMessage"] = "Can you create a new DDR for me?"
             };
 
-            var result = await _tool.ExecuteAsync(args.ToString(), null, CancellationToken.None);
+            var result = await _tool.ExecuteAsync(args.ToString(), new AgentToolExecutionContext() { Org = EntityHeader.Create("ID","TEXT"), User = EntityHeader.Create("id","EXT") }, CancellationToken.None);
 
             Assert.That(result.Successful, Is.True);
 
