@@ -1,5 +1,6 @@
 ﻿using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
+using LagoVista.Core.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -205,6 +206,17 @@ namespace LagoVista.AI.Services
             WeakSignals = new[] { "improve this process", "show workflow details" }
         }
     };
+
+        public string GetWelcomeMessage(string modeKey)
+        {
+            var mode = _modes.SingleOrDefault(m =>
+                string.Equals(m.Key, modeKey, StringComparison.OrdinalIgnoreCase));
+
+            if(mode == null)
+                throw new RecordNotFoundException(typeof(AgentMode).Name, modeKey)
+                ;
+            return mode.WelcomeMessage;
+        }
 
         public Task<IReadOnlyList<AgentModeSummary>> GetAllModesAsync(CancellationToken cancellationToken)
             => Task.FromResult(_modes.Select(m => m.CreateSummary()).ToList().AsReadOnly() as IReadOnlyList<AgentModeSummary>);

@@ -34,5 +34,12 @@ namespace LagoVista.AI.Interfaces
         /// Returns an empty list if the key is unknown.
         /// </summary>
         List<string> GetToolsForMode(string modeKey);
+
+        /// <summary>
+        /// When the user transitions into a new mode, we should send them the
+        /// welcome message associated with that mode.
+        /// </summary>
+        /// <returns></returns>
+        string GetWelcomeMessage(string modeKey);
     }
 }
