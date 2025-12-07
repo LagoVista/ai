@@ -151,7 +151,7 @@ namespace LagoVista.AI.Tests
 
         private class FakeMetaDataProvider : IServerToolUsageMetadataProvider
         {
-            public string GetToolUsageMetadata()
+            public string GetToolUsageMetadata(string mode)
             {
                 return "THIS IS HOW YOU USE THE TOOL!";
             }

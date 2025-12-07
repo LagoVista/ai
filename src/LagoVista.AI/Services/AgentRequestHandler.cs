@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
@@ -28,14 +27,12 @@ namespace LagoVista.AI.Services
         private readonly IAgentOrchestrator _orchestrator;
         private readonly IAdminLogger _adminLogger;
         private readonly IServerToolSchemaProvider _serverToolSchemaProvider;
-        private readonly IAgentModeCatalogService _agentModeCatalogService;
 
-        public AgentRequestHandler(IAgentOrchestrator orchestrator, IAdminLogger adminLogger, IServerToolSchemaProvider serverToolSchemaProvider, IAgentModeCatalogService agentModeCatalogService)
+        public AgentRequestHandler(IAgentOrchestrator orchestrator, IAdminLogger adminLogger, IServerToolSchemaProvider serverToolSchemaProvider)
         {
             _orchestrator = orchestrator ?? throw new ArgumentNullException(nameof(orchestrator));
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
             _serverToolSchemaProvider = serverToolSchemaProvider ?? throw new ArgumentNullException(nameof(serverToolSchemaProvider));
-            _agentModeCatalogService = agentModeCatalogService ?? throw new ArgumentNullException(nameof(agentModeCatalogService));
         }
 
         public async Task<InvokeResult<AgentExecuteResponse>> HandleAsync(AgentExecuteRequest request, EntityHeader org, EntityHeader user, CancellationToken cancellationToken = default)
@@ -72,23 +69,8 @@ namespace LagoVista.AI.Services
 
         private void MergeServerTools(AgentExecuteRequest request)
         {
-            if (request == null)
-            {
-                throw new ArgumentNullException(nameof(request));
-            }
-
-            //
-            // 1) Normalize mode – defensive fallback to "general"
-            //
-            if (string.IsNullOrWhiteSpace(request.Mode))
-            {
-                request.Mode = "general";
-            }
-
-            //
-            // 2) Start from any client-provided tools
-            //
             var clientToolsJson = request.ToolsJson;
+            var serverTools = _serverToolSchemaProvider.GetToolSchemas(request);
 
             var clientToolsArray = string.IsNullOrWhiteSpace(clientToolsJson)
                 ? new Newtonsoft.Json.Linq.JArray()
@@ -96,62 +78,15 @@ namespace LagoVista.AI.Services
 
             var merged = new Newtonsoft.Json.Linq.JArray(clientToolsArray);
 
-            //
-            // 3) Ask the mode catalog which server tools should be available
-            //    for this mode / agent / workspace.
-            //
-            //    Interface is illustrative – adapt to your actual IAgentModeCatalogService.
-            //
-            var allowedServerToolNames = _agentModeCatalogService.GetToolsForMode(request.Mode);
-
-            //
-            // 4) Get full schemas for those tools from the schema provider.
-            //    Again, adapt the helper method name/signature to your actual implementation.
-            //
-            var serverTools = _serverToolSchemaProvider.GetToolSchemas(allowedServerToolNames);
-
             foreach (var srv in serverTools)
             {
                 merged.Add(Newtonsoft.Json.Linq.JObject.FromObject(srv));
             }
 
-            //
-            // 5) Ensure agent_change_mode is always present (TUL-007).
-            //
-            var hasChangeMode = false;
-
-            foreach (var token in merged)
-            {
-                if (token is Newtonsoft.Json.Linq.JObject obj)
-                {
-                    var nameProp = obj["name"] ?? obj["function"]?["name"];
-                    var toolName = nameProp?.ToString();
-
-                    if (!string.IsNullOrWhiteSpace(toolName) &&
-                        string.Equals(toolName, "agent_change_mode", StringComparison.OrdinalIgnoreCase))
-                    {
-                        hasChangeMode = true;
-                        break;
-                    }
-                }
-            }
-
-            if (!hasChangeMode)
-            {
-                var changeModeSchema = _serverToolSchemaProvider.GetToolSchema("agent_change_mode");
-                if (changeModeSchema != null)
-                {
-                    merged.Add(Newtonsoft.Json.Linq.JObject.FromObject(changeModeSchema));
-                }
-            }
-
-            //
-            // 6) Serialize back to a compact JSON string
-            //
             request.ToolsJson = merged.ToString(Newtonsoft.Json.Formatting.None);
+
+            Console.WriteLine($"TOOLS JSON =>>{request.ToolsJson}<<=");
         }
-
-
 
         private async Task<InvokeResult<AgentExecuteResponse>> HandleNewSessionAsync(AgentExecuteRequest request, EntityHeader org, EntityHeader user, string correlationId, CancellationToken cancellationToken)
         {
@@ -166,6 +101,7 @@ namespace LagoVista.AI.Services
             }
 
             MergeServerTools(request);
+
 
             return await _orchestrator.BeginNewSessionAsync(request, org, user, cancellationToken);
         }
@@ -182,7 +118,6 @@ namespace LagoVista.AI.Services
                 return InvokeResult<AgentExecuteResponse>.FromError(msg, "AGENT_REQ_MISSING_SESSION_ID");
             }
 
-            MergeServerTools(request);
 
             return await _orchestrator.ExecuteTurnAsync(request, org, user, cancellationToken);
         }

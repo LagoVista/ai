@@ -10,6 +10,7 @@ using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json;
+using LagoVista.AI.Services.Tools;
 
 namespace LagoVista.AI.Services
 {
@@ -24,6 +25,10 @@ namespace LagoVista.AI.Services
     ///    client can fulfill them.
     /// 5) If only server tools existed and succeeded => feed their results
     ///    back into the LLM via ToolResultsJson and repeat.
+    ///
+    /// AGN-011 additionally requires:
+    /// - Detecting mode changes via ModeChangeTool (TUL-007).
+    /// - Updating request.Mode and response.Mode accordingly.
     /// </summary>
     public class AgentReasoner : IAgentReasoner
     {
@@ -92,6 +97,13 @@ namespace LagoVista.AI.Services
                     _logger.Trace(
                         "[AgentReasoner_ExecuteAsync] No tool calls detected. " +
                         "Returning final LLM response.");
+
+                    // If LLM didn't set Mode, default to request.Mode.
+                    if (string.IsNullOrWhiteSpace(lastResponse.Mode) && !string.IsNullOrWhiteSpace(request.Mode))
+                    {
+                        lastResponse.Mode = request.Mode;
+                    }
+
                     return llmResult;
                 }
 
@@ -121,30 +133,109 @@ namespace LagoVista.AI.Services
                         toolContext,
                         cancellationToken);
 
-                    if(!updatedCallResponse.Successful) 
-                        return InvokeResult < AgentExecuteResponse >.FromInvokeResult(updatedCallResponse.ToInvokeResult());
+                    if (!updatedCallResponse.Successful)
+                        return InvokeResult<AgentExecuteResponse>.FromInvokeResult(updatedCallResponse.ToInvokeResult());
 
                     var updatedCall = updatedCallResponse.Result;
 
-                    if (updatedCall.IsServerTool && updatedCall.WasExecuted)
+                    // All server executions should mark IsServerTool = true. If not, log.
+                    if (!updatedCall.IsServerTool)
                     {
+                        _logger.AddError(
+                            "[AgentReasoner_ExecuteAsync__UnexpectedNonServerToolCall]",
+                            $"Tool '{updatedCall?.Name ?? "<null>"}' returned IsServerTool=false during server execution.");
+                    }
+
+                    if (updatedCall.WasExecuted && !updatedCall.RequiresClientExecution)
+                    {
+                        // Either:
+                        // - Server-final tool (IsToolFullyExecutedOnServer == true), OR
+                        // - Preflight failed/short-circuited, and we do NOT want a client retry.
                         executedServerCalls.Add(updatedCall);
                     }
-                    else if (!updatedCall.IsServerTool)
+                    else if (updatedCall.WasExecuted && updatedCall.RequiresClientExecution)
                     {
-                        // Not a server tool => leave for client execution.
+                        // Server preflight succeeded, but final behavior needs client execution.
                         pendingClientCalls.Add(updatedCall);
                     }
                     else
                     {
-                        // IsServerTool == true but WasExecuted == false
-                        // (e.g., error or cancellation). We keep it in the
-                        // list so the caller can see the error, but we do not
-                        // retry it on the client.
+                        // WasExecuted == false -> error/cancellation prior to running logic.
+                        // Surface to caller for visibility, but do not send to client.
                         executedServerCalls.Add(updatedCall);
                     }
                 }
 
+                //
+                // MODE CHANGE HANDLING (TUL-007 / AGN-011)
+                //
+                string newModeFromTool = null;
+                bool modeChangeDetected = false;
+                int successfulModeChangeCount = 0;
+
+                foreach (var call in executedServerCalls)
+                {
+                    if (!call.IsServerTool ||
+                        !call.WasExecuted ||
+                        !string.Equals(call.Name, ModeChangeTool.ToolName, StringComparison.OrdinalIgnoreCase) ||
+                        string.IsNullOrWhiteSpace(call.ResultJson))
+                    {
+                        continue;
+                    }
+
+                    try
+                    {
+                        var modeResult = JsonConvert.DeserializeObject<ModeChangeResult>(call.ResultJson);
+                        if (modeResult == null)
+                        {
+                            continue;
+                        }
+
+                        if (modeResult.Success && !string.IsNullOrWhiteSpace(modeResult.Mode))
+                        {
+                            successfulModeChangeCount++;
+                            modeChangeDetected = true;
+                            newModeFromTool = modeResult.Mode;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.AddException(
+                            "[AgentReasoner_ExecuteAsync__ModeChangeResultDeserializeError]",
+                            ex);
+                    }
+                }
+
+                if (successfulModeChangeCount > 1 && !string.IsNullOrWhiteSpace(newModeFromTool))
+                {
+                    _logger.AddError(
+                        "[AgentReasoner_ExecuteAsync__MultipleModeChanges]",
+                        $"Detected {successfulModeChangeCount} successful mode-change " +
+                        $"tool calls in a single turn. Using last mode '{newModeFromTool}'.");
+                }
+
+                if (modeChangeDetected && !string.IsNullOrWhiteSpace(newModeFromTool))
+                {
+                    // Update the in-flight request mode so any subsequent LLM
+                    // calls in this session use the new mode.
+                    request.Mode = newModeFromTool;
+
+                    // Ensure the current response also reflects the new mode.
+                    lastResponse.Mode = newModeFromTool;
+                }
+                else
+                {
+                    // If no mode change occurred, make sure response mode at
+                    // least reflects the current request mode for this turn.
+                    if (string.IsNullOrWhiteSpace(lastResponse.Mode) && !string.IsNullOrWhiteSpace(request.Mode))
+                    {
+                        lastResponse.Mode = request.Mode;
+                    }
+                }
+
+                //
+                // Build tool outputs for the Responses API tool-result continuation flow.
+                //
                 var toolOutputs = executedServerCalls
                     .Where(c => c.IsServerTool && c.WasExecuted && !string.IsNullOrWhiteSpace(c.CallId))
                     .Select(c => new ResponsesToolOutput
@@ -154,7 +245,7 @@ namespace LagoVista.AI.Services
                     })
                     .ToList();
 
-                                request.ToolResultsJson = JsonConvert.SerializeObject(toolOutputs);
+                request.ToolResultsJson = JsonConvert.SerializeObject(toolOutputs);
 
                 // If there are any client tools, we stop here.
                 if (pendingClientCalls.Count > 0)
@@ -207,20 +298,13 @@ namespace LagoVista.AI.Services
                     return InvokeResult<AgentExecuteResponse>.FromError(msg);
                 }
 
-                //// Carry forward the response continuation id if present so the
-                //// LLM can "continue" the prior response.
-                //if (!string.IsNullOrWhiteSpace(lastResponse.ResponseContinuationId))
-                //{
-                //    request.ResponseContinuationId = lastResponse.ResponseContinuationId;
-                //}
-
-                // IMPORTANT CHANGE:
+                // IMPORTANT:
                 // We do NOT propagate the previous response id when feeding back tool results
                 // as plain text. Doing so would cause the Responses API to expect structured
                 // tool outputs for the earlier function_call ids.
                 request.ResponseContinuationId = null;
 
-                // Loop back to call the LLM again, now with tool results.
+                // Loop back to call the LLM again, now with tool results (and possibly updated mode).
             }
 
             // If we reach here, we hit the max iteration safety cap.
@@ -235,6 +319,12 @@ namespace LagoVista.AI.Services
                 }
 
                 lastResponse.Warnings.Add(warning);
+
+                // Ensure final response mode reflects the effective request mode.
+                if (string.IsNullOrWhiteSpace(lastResponse.Mode) && !string.IsNullOrWhiteSpace(request.Mode))
+                {
+                    lastResponse.Mode = request.Mode;
+                }
 
                 return InvokeResult<AgentExecuteResponse>.Create(lastResponse);
             }
@@ -253,7 +343,20 @@ namespace LagoVista.AI.Services
             [JsonProperty("output")]
             public string Output { get; set; }
         }
-    }
 
-    
+        private sealed class ModeChangeResult
+        {
+            [JsonProperty("success")]
+            public bool Success { get; set; }
+
+            [JsonProperty("mode")]
+            public string Mode { get; set; }
+
+            [JsonProperty("branch")]
+            public bool Branch { get; set; }
+
+            [JsonProperty("reason")]
+            public string Reason { get; set; }
+        }
+    }
 }

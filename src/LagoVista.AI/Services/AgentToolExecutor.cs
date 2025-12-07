@@ -39,9 +39,6 @@ namespace LagoVista.AI.Services
                 throw new ArgumentNullException(nameof(call));
             }
 
-            // Default: assume not a server tool until proven otherwise.
-            call.WasExecuted = false;
-
             if (string.IsNullOrWhiteSpace(call.Name))
             {
                 call.ErrorMessage = "Tool call name is empty.";
@@ -76,7 +73,6 @@ namespace LagoVista.AI.Services
             }
 
             var tool = toolResult.Result;
-            call.IsServerTool = tool.IsToolFullyExecutedOnServer;
             if (tool == null)
             {
                 call.ErrorMessage = $"Tool '{call.Name}' resolved to null instance.";
@@ -87,6 +83,12 @@ namespace LagoVista.AI.Services
 
             try
             {
+                call.IsServerTool = true;                 // produced by server
+                call.RequiresClientExecution = false;     // default
+                call.WasExecuted = false;                 // will flip on success
+                call.ErrorMessage = null;
+
+
                 var execResult = await tool.ExecuteAsync(call.ArgumentsJson, context, cancellationToken);
 
                 call.WasExecuted = execResult.Successful;
@@ -100,6 +102,15 @@ namespace LagoVista.AI.Services
                         $"Tool '{call.Name}' execution failed: {call.ErrorMessage}");
 
                     return InvokeResult<AgentToolCall>.FromInvokeResult(execResult.ToInvokeResult());
+                }
+
+                if (tool.IsToolFullyExecutedOnServer)
+                {
+                    call.RequiresClientExecution = false;
+                }
+                else
+                {
+                    call.RequiresClientExecution = true;
                 }
 
                 _logger.Trace($"[AgentToolExecutor_ExecuteServerToolAsync] Tool '{call.Name}' Was Successfully Executed, Response\r\n{execResult.Result}\r\n");

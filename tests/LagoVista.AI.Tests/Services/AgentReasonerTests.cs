@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
@@ -11,262 +12,466 @@ using LagoVista.IoT.Logging.Loggers;
 using Moq;
 using Newtonsoft.Json;
 using NUnit.Framework;
+using LagoVista.AI.Services.Tools;
 
 namespace LagoVista.AI.Tests.Services
 {
     [TestFixture]
     public class AgentReasonerTests
     {
-        private Mock<ILLMClient> _llmClientMock;
-        private Mock<IAgentToolExecutor> _toolExecutorMock;
-        private Mock<IAdminLogger> _loggerMock;
-        private AgentReasoner _reasoner;
-        private AgentContext _agentContext;
-        private ConversationContext _conversationContext;
-        private AgentExecuteRequest _request;
-        private EntityHeader _org;
-        private EntityHeader _user;
+        private Mock<ILLMClient> _llmClient;
+        private Mock<IAgentToolExecutor> _toolExecutor;
+        private Mock<IAdminLogger> _logger;
+        private AgentReasoner _sut;
 
         [SetUp]
         public void SetUp()
         {
-            _llmClientMock = new Mock<ILLMClient>(MockBehavior.Strict);
-            _toolExecutorMock = new Mock<IAgentToolExecutor>(MockBehavior.Strict);
-            _loggerMock = new Mock<IAdminLogger>(MockBehavior.Loose);
+            _llmClient = new Mock<ILLMClient>();
+            _toolExecutor = new Mock<IAgentToolExecutor>();
+            _logger = new Mock<IAdminLogger>();
 
-            _reasoner = new AgentReasoner(_llmClientMock.Object, _toolExecutorMock.Object, _loggerMock.Object);
-
-            _agentContext = new AgentContext { Id = "agent-1" };
-            _conversationContext = new ConversationContext { Id = "conv-ctx-1" };
-            _request = new AgentExecuteRequest
-            {
-                Mode = "ask",
-                Instruction = "do something",
-                ConversationId = "conv-1"
-            };
-
-            _org = EntityHeader.Create("org-1", "Org 1");
-            _user = EntityHeader.Create("user-1", "User 1");
+            _sut = new AgentReasoner(_llmClient.Object, _toolExecutor.Object, _logger.Object);
         }
 
-        [Test]
-        public async Task ExecuteAsync_NoToolCalls_ReturnsFirstLlmResponse()
-        {
-            var response = new AgentExecuteResponse
+        #region Helpers
+
+        private static AgentContext CreateAgentContext() =>
+            new AgentContext
             {
-                Kind = "ok",
-                Text = "hello world",
-                ToolCalls = new List<AgentToolCall>()
+                Id = "agent-1",
+                Name = "Test Agent"
             };
 
-            var llmResult = InvokeResult<AgentExecuteResponse>.Create(response);
+        private static ConversationContext CreateConversationContext() =>
+            new ConversationContext
+            {
+                Id = "conv-1",
+                Name = "Test Conversation"
+            };
 
-            _llmClientMock
-                .Setup(c => c.GetAnswerAsync(_agentContext, _conversationContext, _request, "RAG", "session-1", It.IsAny<CancellationToken>()))
-                .ReturnsAsync(llmResult);
+        private static EntityHeader CreateOrg() =>
+            new EntityHeader { Id = "org-1", Text = "Org 1" };
 
-            var result = await _reasoner.ExecuteAsync(
-                _agentContext,
-                _conversationContext,
-                _request,
-                "RAG",
-                "session-1",
-                _org,
-                _user,
-                CancellationToken.None);
+        private static EntityHeader CreateUser() =>
+            new EntityHeader { Id = "user-1", Text = "User 1" };
+
+        private static AgentExecuteRequest CreateRequest(string mode = "general")
+        {
+            return new AgentExecuteRequest
+            {
+                ConversationId = "conv-1",
+                Mode = mode,
+                Instruction = "do something",
+                AgentContext = new EntityHeader { Id = "agent-1", Text = "Agent" },
+                RagScopeFilter = new RagScopeFilter(),
+                ActiveFiles = new List<ActiveFile>()
+            };
+        }
+
+        #endregion
+
+        #region Tests
+
+        [Test]
+        public async Task ExecuteAsync_NoToolCalls_SetsResponseModeToRequestMode_WhenResponseModeMissing()
+        {
+            var agentContext = CreateAgentContext();
+            var conversationContext = CreateConversationContext();
+            var org = CreateOrg();
+            var user = CreateUser();
+            var request = CreateRequest(mode: "general");
+
+            var llmResponse = new AgentExecuteResponse
+            {
+                // Note: Mode is intentionally left null to exercise the override.
+                Mode = null,
+                ToolCalls = new List<AgentToolCall>(),
+                Text = "final answer"
+            };
+
+            _llmClient
+                .Setup(c => c.GetAnswerAsync(
+                    It.IsAny<AgentContext>(),
+                    It.IsAny<ConversationContext>(),
+                    It.IsAny<AgentExecuteRequest>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(InvokeResult<AgentExecuteResponse>.Create(llmResponse));
+
+            var result = await _sut.ExecuteAsync(
+                agentContext,
+                conversationContext,
+                request,
+                ragContextBlock: null,
+                sessionId: "session-1",
+                org: org,
+                user: user,
+                cancellationToken: CancellationToken.None);
 
             Assert.That(result.Successful, Is.True);
-            Assert.That(result.Result.Text, Is.EqualTo("hello world"));
-
-            _llmClientMock.Verify(c => c.GetAnswerAsync(_agentContext, _conversationContext, _request, "RAG", "session-1", It.IsAny<CancellationToken>()), Times.Once);
-            _toolExecutorMock.Verify(e => e.ExecuteServerToolAsync(It.IsAny<AgentToolCall>(), It.IsAny<AgentToolExecutionContext>(), It.IsAny<CancellationToken>()), Times.Never);
+            Assert.That(result.Result, Is.Not.Null);
+            Assert.That(result.Result.Mode, Is.EqualTo("general"), "Response.Mode should default to request.Mode when missing.");
         }
 
         [Test]
-        public async Task ExecuteAsync_ServerToolOnly_ExecutesTool_AndCallsLlmTwice()
+        public async Task ExecuteAsync_ModeChangeTool_UpdatesRequestAndResponseMode()
         {
+            var agentContext = CreateAgentContext();
+            var conversationContext = CreateConversationContext();
+            var org = CreateOrg();
+            var user = CreateUser();
+            var request = CreateRequest(mode: "general");
+
+            // First LLM call: asks for mode change via tool.
             var firstResponse = new AgentExecuteResponse
             {
-                Kind = "tool",
-                Text = null,
-                ResponseContinuationId = "resp-1",
                 ToolCalls = new List<AgentToolCall>
                 {
                     new AgentToolCall
                     {
                         CallId = "call-1",
-                        Name = "server-tool",
-                        ArgumentsJson = "{\"msg\":\"hi\"}"
+                        Name = ModeChangeTool.ToolName,
+                        IsServerTool = true,
+                        WasExecuted = false
                     }
-                }
+                },
+                Text = "calling mode change tool"
             };
 
+            // Second LLM call: no tools, final answer.
             var secondResponse = new AgentExecuteResponse
             {
-                Kind = "ok",
-                Text = "final answer",
-                ToolCalls = new List<AgentToolCall>()
+                ToolCalls = new List<AgentToolCall>(),
+                Mode = null, // Let Reasoner stamp this based on request.Mode
+                Text = "final answer in new mode"
             };
 
-            var firstResult = InvokeResult<AgentExecuteResponse>.Create(firstResponse);
-            var secondResult = InvokeResult<AgentExecuteResponse>.Create(secondResponse);
+            _llmClient
+                .SetupSequence(c => c.GetAnswerAsync(
+                    It.IsAny<AgentContext>(),
+                    It.IsAny<ConversationContext>(),
+                    It.IsAny<AgentExecuteRequest>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(InvokeResult<AgentExecuteResponse>.Create(firstResponse))
+                .ReturnsAsync(InvokeResult<AgentExecuteResponse>.Create(secondResponse));
 
-            _llmClientMock
-                .SetupSequence(c => c.GetAnswerAsync(_agentContext, _conversationContext, _request, "RAG", "session-1", It.IsAny<CancellationToken>()))
-                .ReturnsAsync(firstResult)
-                .ReturnsAsync(secondResult);
+            // Tool executor: execute the mode-change tool, returning a successful result.
+            var updatedCall = new AgentToolCall
+            {
+                CallId = "call-1",
+                Name = ModeChangeTool.ToolName,
+                IsServerTool = true,
+                WasExecuted = true,
+                ResultJson = JsonConvert.SerializeObject(new
+                {
+                    success = true,
+                    mode = "ddr_authoring",
+                    branch = false,
+                    reason = "Switch to DDR authoring for this request."
+                })
+            };
 
-            _toolExecutorMock
-                .Setup(e => e.ExecuteServerToolAsync(
-                    It.Is<AgentToolCall>(c => c.Name == "server-tool"),
+            _toolExecutor
+                .Setup(t => t.ExecuteServerToolAsync(
+                    It.IsAny<AgentToolCall>(),
                     It.IsAny<AgentToolExecutionContext>(),
                     It.IsAny<CancellationToken>()))
-                .ReturnsAsync((AgentToolCall call, 
-                               AgentToolExecutionContext ctx, 
-                               CancellationToken ct) =>
-                {
-                    call.IsServerTool = true;
-                    call.WasExecuted = true;
-                    call.ResultJson = "{\"handledBy\":\"server\"}";
-                    return InvokeResult<AgentToolCall>.Create(call);
-                });
+                .ReturnsAsync(InvokeResult<AgentToolCall>.Create(updatedCall));
 
-            var result = await _reasoner.ExecuteAsync(
-                _agentContext,
-                _conversationContext,
-                _request,
-                "RAG",
-                "session-1",
-                _org,
-                _user,
-                CancellationToken.None);
+            var result = await _sut.ExecuteAsync(
+                agentContext,
+                conversationContext,
+                request,
+                ragContextBlock: null,
+                sessionId: "session-1",
+                org: org,
+                user: user,
+                cancellationToken: CancellationToken.None);
 
             Assert.That(result.Successful, Is.True);
-            Assert.That(result.Result.Text, Is.EqualTo("final answer"));
+            Assert.That(result.Result, Is.Not.Null);
 
-            _llmClientMock.Verify(c => c.GetAnswerAsync(_agentContext, _conversationContext, _request, "RAG", "session-1", It.IsAny<CancellationToken>()), Times.Exactly(2));
-            _toolExecutorMock.Verify(e => e.ExecuteServerToolAsync(It.Is<AgentToolCall>(c => c.Name == "server-tool"), It.IsAny<AgentToolExecutionContext>(), It.IsAny<CancellationToken>()), Times.Once);
+            // Request mode should be updated in-flight.
+            Assert.That(request.Mode, Is.EqualTo("ddr_authoring"));
 
-            Assert.That(_request.ToolResults, Is.Not.Null);
-            Assert.That(_request.ToolResults.Count, Is.EqualTo(1));
-            Assert.That(_request.ToolResults[0].Name, Is.EqualTo("server-tool"));
-            Assert.That(_request.ToolResultsJson, Is.Not.Null.And.Not.Empty);
-
-            var parsed = JsonConvert.DeserializeObject<List<AgentToolCall>>(_request.ToolResultsJson);
-            Assert.That(parsed.Count, Is.EqualTo(1));
-            Assert.That(parsed[0].Name, Is.EqualTo("server-tool"));
+            // Final response mode should reflect the new mode.
+            Assert.That(result.Result.Mode, Is.EqualTo("ddr_authoring"));
+            Assert.That(result.Result.Text, Is.EqualTo("final answer in new mode"));
         }
 
         [Test]
-        public async Task ExecuteAsync_MixedServerAndClientTools_StopsAfterFirstIteration()
+        public async Task ExecuteAsync_MultipleModeChangeCalls_UsesLastModeAndLogsWarning()
         {
-            var response = new AgentExecuteResponse
+            var agentContext = CreateAgentContext();
+            var conversationContext = CreateConversationContext();
+            var org = CreateOrg();
+            var user = CreateUser();
+            var request = CreateRequest(mode: "general");
+
+            // First LLM call: two mode-change tool calls.
+            var firstResponse = new AgentExecuteResponse
             {
-                Kind = "tool",
-                Text = null,
                 ToolCalls = new List<AgentToolCall>
                 {
                     new AgentToolCall
                     {
                         CallId = "call-1",
-                        Name = "server-tool",
-                        ArgumentsJson = "{}"
+                        Name = ModeChangeTool.ToolName,
+                        IsServerTool = true,
+                        WasExecuted = false
                     },
                     new AgentToolCall
                     {
                         CallId = "call-2",
-                        Name = "client-tool",
-                        ArgumentsJson = "{}"
+                        Name = ModeChangeTool.ToolName,
+                        IsServerTool = true,
+                        WasExecuted = false
                     }
-                }
+                },
+                Text = "multiple mode changes"
             };
 
-            var llmResult = InvokeResult<AgentExecuteResponse>.Create(response);
+            // Second LLM call: no tools, final answer.
+            var secondResponse = new AgentExecuteResponse
+            {
+                ToolCalls = new List<AgentToolCall>(),
+                Mode = null,
+                Text = "final answer after multiple mode changes"
+            };
 
-            _llmClientMock
-                .Setup(c => c.GetAnswerAsync(_agentContext, _conversationContext, _request, "RAG", "session-1", It.IsAny<CancellationToken>()))
-                .ReturnsAsync(llmResult);
-
-            _toolExecutorMock
-                .Setup(e => e.ExecuteServerToolAsync(
-                    It.Is<AgentToolCall>(c => c.Name == "server-tool"),
-                    It.IsAny<AgentToolExecutionContext>(),
+            _llmClient
+                .SetupSequence(c => c.GetAnswerAsync(
+                    It.IsAny<AgentContext>(),
+                    It.IsAny<ConversationContext>(),
+                    It.IsAny<AgentExecuteRequest>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
                     It.IsAny<CancellationToken>()))
-                .ReturnsAsync((AgentToolCall call, AgentToolExecutionContext ctx, CancellationToken ct) =>
-                 {
-                    call.IsServerTool = true;
-                    call.WasExecuted = true;
-                    call.ResultJson = "{\"handledBy\":\"server\"}";
-                     return InvokeResult<AgentToolCall>.Create(call);
-                 });
+                .ReturnsAsync(InvokeResult<AgentExecuteResponse>.Create(firstResponse))
+                .ReturnsAsync(InvokeResult<AgentExecuteResponse>.Create(secondResponse));
 
-            _toolExecutorMock
-                .Setup(e => e.ExecuteServerToolAsync(
-                    It.Is<AgentToolCall>(c => c.Name == "client-tool"),
-                    It.IsAny<AgentToolExecutionContext>(),
-                    It.IsAny<CancellationToken>()))
-                .ReturnsAsync((AgentToolCall call, AgentToolExecutionContext ctx, CancellationToken ct) =>
+            // First mode-change result: switch to ddr_authoring.
+            var firstUpdatedCall = new AgentToolCall
+            {
+                CallId = "call-1",
+                Name = ModeChangeTool.ToolName,
+                IsServerTool = true,
+                WasExecuted = true,
+                ResultJson = JsonConvert.SerializeObject(new
                 {
-                    return InvokeResult<AgentToolCall>.Create(call);
-                });
-                
+                    success = true,
+                    mode = "ddr_authoring",
+                    branch = false,
+                    reason = "First mode change."
+                })
+            };
 
-            var result = await _reasoner.ExecuteAsync(
-                _agentContext,
-                _conversationContext,
-                _request,
-                "RAG",
-                "session-1",
-                _org,
-                _user,
-                CancellationToken.None);
+            // Second mode-change result: switch to workflow_authoring.
+            var secondUpdatedCall = new AgentToolCall
+            {
+                CallId = "call-2",
+                Name = ModeChangeTool.ToolName,
+                IsServerTool = true,
+                WasExecuted = true,
+                ResultJson = JsonConvert.SerializeObject(new
+                {
+                    success = true,
+                    mode = "workflow_authoring",
+                    branch = false,
+                    reason = "Second mode change."
+                })
+            };
+
+            // The Reasoner will call ExecuteServerToolAsync twice in order, once per tool call.
+            _toolExecutor
+                .SetupSequence(t => t.ExecuteServerToolAsync(
+                    It.IsAny<AgentToolCall>(),
+                    It.IsAny<AgentToolExecutionContext>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(InvokeResult<AgentToolCall>.Create(firstUpdatedCall))
+                .ReturnsAsync(InvokeResult<AgentToolCall>.Create(secondUpdatedCall));
+
+            var result = await _sut.ExecuteAsync(
+                agentContext,
+                conversationContext,
+                request,
+                ragContextBlock: null,
+                sessionId: "session-1",
+                org: org,
+                user: user,
+                cancellationToken: CancellationToken.None);
 
             Assert.That(result.Successful, Is.True);
+            Assert.That(result.Result, Is.Not.Null);
 
-            _llmClientMock.Verify(c => c.GetAnswerAsync(_agentContext, _conversationContext, _request, "RAG", "session-1", It.IsAny<CancellationToken>()), Times.Once);
-            _toolExecutorMock.Verify(e => e.ExecuteServerToolAsync(It.IsAny<AgentToolCall>(), It.IsAny<AgentToolExecutionContext>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+            // The last mode change should win.
+            Assert.That(request.Mode, Is.EqualTo("workflow_authoring"));
+            Assert.That(result.Result.Mode, Is.EqualTo("workflow_authoring"));
 
-            Assert.That(result.Result.ToolCalls, Is.Not.Null);
-            Assert.That(result.Result.ToolCalls.Count, Is.EqualTo(2));
-
-            var serverCall = result.Result.ToolCalls.Find(c => c.Name == "server-tool");
-            var clientCall = result.Result.ToolCalls.Find(c => c.Name == "client-tool");
-
-            Assert.That(serverCall, Is.Not.Null);
-            Assert.That(serverCall.IsServerTool, Is.True);
-            Assert.That(serverCall.WasExecuted, Is.True);
-            Assert.That(serverCall.ResultJson, Is.EqualTo("{\"handledBy\":\"server\"}"));
-
-            Assert.That(clientCall, Is.Not.Null);
-            Assert.That(clientCall.IsServerTool, Is.False);
-            Assert.That(clientCall.WasExecuted, Is.False);
-            Assert.That(clientCall.ResultJson, Is.Null);
+            // We should log a warning that multiple mode changes occurred.
+            _logger.Verify(
+                l => l.AddError(
+                    "[AgentReasoner_ExecuteAsync__MultipleModeChanges]",
+                    It.Is<string>(msg => msg.Contains("Detected 2 successful mode-change tool calls"))),
+                Times.Once);
         }
 
         [Test]
-        public async Task ExecuteAsync_LlmError_PropagatesError()
+        public async Task ExecuteAsync_AllServerFinalTools_StaysOnServerAndFeedsToolResultsBackToLLM()
         {
-            var llmError = InvokeResult<AgentExecuteResponse>.FromError("LLM error");
+            var agentContext = CreateAgentContext();
+            var conversationContext = CreateConversationContext();
+            var org = CreateOrg();
+            var user = CreateUser();
+            var request = CreateRequest(mode: "general");
 
-            _llmClientMock
-                .Setup(c => c.GetAnswerAsync(_agentContext, _conversationContext, _request, "RAG", "session-1", It.IsAny<CancellationToken>()))
-                .ReturnsAsync(llmError);
+            // First LLM call: one server-final tool
+            var firstResponse = new AgentExecuteResponse
+            {
+                ToolCalls = new List<AgentToolCall>
+        {
+            new AgentToolCall
+            {
+                CallId = "call-1",
+                Name = "testing_ping_pong"
+            }
+        },
+                Text = "calling ping tool"
+            };
 
-            var result = await _reasoner.ExecuteAsync(
-                _agentContext,
-                _conversationContext,
-                _request,
-                "RAG",
-                "session-1",
-                _org,
-                _user,
-                CancellationToken.None);
+            // Second LLM call: no tools, final answer
+            var secondResponse = new AgentExecuteResponse
+            {
+                ToolCalls = new List<AgentToolCall>(),
+                Mode = null,
+                Text = "final answer after server tool"
+            };
 
-            Assert.That(result.Successful, Is.False);
-            Assert.That(result.ErrorMessage, Does.Contain("LLM error"));
+            _llmClient
+                .SetupSequence(c => c.GetAnswerAsync(
+                    It.IsAny<AgentContext>(),
+                    It.IsAny<ConversationContext>(),
+                    It.IsAny<AgentExecuteRequest>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(InvokeResult<AgentExecuteResponse>.Create(firstResponse))
+                .ReturnsAsync(InvokeResult<AgentExecuteResponse>.Create(secondResponse));
 
-            _llmClientMock.Verify(c => c.GetAnswerAsync(_agentContext, _conversationContext, _request, "RAG", "session-1", It.IsAny<CancellationToken>()), Times.Once);
-            _toolExecutorMock.Verify(e => e.ExecuteServerToolAsync(It.IsAny<AgentToolCall>(), It.IsAny<AgentToolExecutionContext>(), It.IsAny<CancellationToken>()), Times.Never);
+            // Executor returns a server-final tool call (RequiresClientExecution=false)
+            var updatedCall = new AgentToolCall
+            {
+                CallId = "call-1",
+                Name = "testing_ping_pong",
+                IsServerTool = true,
+                WasExecuted = true,
+                RequiresClientExecution = false,
+                ResultJson = "{\"reply\":\"pong\"}"
+            };
+
+            _toolExecutor
+                .Setup(t => t.ExecuteServerToolAsync(
+                    It.IsAny<AgentToolCall>(),
+                    It.IsAny<AgentToolExecutionContext>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(InvokeResult<AgentToolCall>.Create(updatedCall));
+
+            var result = await _sut.ExecuteAsync(
+                agentContext,
+                conversationContext,
+                request,
+                ragContextBlock: null,
+                sessionId: "session-1",
+                org: org,
+                user: user,
+                cancellationToken: CancellationToken.None);
+
+            Assert.That(result.Successful, Is.True);
+            Assert.That(result.Result.Text, Is.EqualTo("final answer after server tool"));
+
+            // No client handoff: the final response should have no ToolCalls.
+            Assert.That(result.Result.ToolCalls, Is.Null.Or.Empty);
         }
+
+        [Test]
+        public async Task ExecuteAsync_ClientFinalTool_StopsAndReturnsPendingToolCallToClient()
+        {
+            var agentContext = CreateAgentContext();
+            var conversationContext = CreateConversationContext();
+            var org = CreateOrg();
+            var user = CreateUser();
+            var request = CreateRequest(mode: "general");
+
+            // LLM: asks to apply a file bundle (client-final tool)
+            var firstResponse = new AgentExecuteResponse
+            {
+                ToolCalls = new List<AgentToolCall>
+        {
+            new AgentToolCall
+            {
+                CallId = "call-1",
+                Name = "apply_file_bundle"
+            }
+        },
+                Text = "calling apply_file_bundle"
+            };
+
+            _llmClient
+                .Setup(c => c.GetAnswerAsync(
+                    It.IsAny<AgentContext>(),
+                    It.IsAny<ConversationContext>(),
+                    It.IsAny<AgentExecuteRequest>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(InvokeResult<AgentExecuteResponse>.Create(firstResponse));
+
+            // Executor: preflight succeeded, but final behavior must be done on client.
+            var updatedCall = new AgentToolCall
+            {
+                CallId = "call-1",
+                Name = "apply_file_bundle",
+                IsServerTool = true,
+                WasExecuted = true,
+                RequiresClientExecution = true,
+                ResultJson = "{\"bundleId\":\"B-123\",\"files\":[\"foo.cs\"]}"
+            };
+
+            _toolExecutor
+                .Setup(t => t.ExecuteServerToolAsync(
+                    It.IsAny<AgentToolCall>(),
+                    It.IsAny<AgentToolExecutionContext>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(InvokeResult<AgentToolCall>.Create(updatedCall));
+
+            var result = await _sut.ExecuteAsync(
+                agentContext,
+                conversationContext,
+                request,
+                ragContextBlock: null,
+                sessionId: "session-1",
+                org: org,
+                user: user,
+                cancellationToken: CancellationToken.None);
+
+            Assert.That(result.Successful, Is.True);
+            Assert.That(result.Result, Is.Not.Null);
+
+            // Reasoner should STOP and return the tool call to the client, not call LLM again.
+            Assert.That(result.Result.ToolCalls, Is.Not.Null);
+            Assert.That(result.Result.ToolCalls.Count, Is.EqualTo(1));
+
+            var returnedCall = result.Result.ToolCalls[0];
+            Assert.That(returnedCall.CallId, Is.EqualTo("call-1"));
+            Assert.That(returnedCall.RequiresClientExecution, Is.True);
+            Assert.That(returnedCall.IsServerTool, Is.True);       // produced by server
+            Assert.That(returnedCall.ResultJson, Does.Contain("bundleId"));
+        }
+
+        #endregion
     }
 }

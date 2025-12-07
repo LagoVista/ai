@@ -70,7 +70,7 @@ namespace LagoVista.AI.Services
                 return InvokeResult<AgentExecuteResponse>.FromError("LlmApiKey is not configured on AgentContext.");
             }
 
-            var toolUsageBlock = _metaUsageProvider.GetToolUsageMetadata();
+            var toolUsageBlock = _metaUsageProvider.GetToolUsageMetadata(executeRequest.Mode);
 
             var requestObject = ResponsesRequestBuilder.Build(conversationContext, executeRequest, ragContextBlock, toolUsageBlock, true);
 

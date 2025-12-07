@@ -79,6 +79,7 @@ namespace LagoVista.AI.Tests.Services
             Assert.That(call.IsServerTool, Is.False);
             Assert.That(call.WasExecuted, Is.False);
             Assert.That(call.ErrorMessage, Is.EqualTo("Tool call name is empty."));
+            Assert.That(call.RequiresClientExecution, Is.False);
 
             _toolRegistry.Verify(r => r.HasTool(It.IsAny<string>()), Times.Never);
             _toolFactory.Verify(f => f.GetTool(It.IsAny<string>()), Times.Never);
@@ -110,7 +111,9 @@ namespace LagoVista.AI.Tests.Services
             // Call is still marked as client-only / not executed
             Assert.That(call.IsServerTool, Is.False);
             Assert.That(call.WasExecuted, Is.False);
-            Assert.That(call.ErrorMessage, Is.Null);
+            Assert.That(call.RequiresClientExecution, Is.False); // NEW
+            Assert.That(call.ErrorMessage, Is.Null);             // as today, or set it if you decide to
+
 
             _toolFactory.Verify(f => f.GetTool(It.IsAny<string>()), Times.Never);
         }
@@ -140,8 +143,9 @@ namespace LagoVista.AI.Tests.Services
             Assert.That(result.ErrorMessage, Does.Contain("Factory failed"));
 
             // Call flags
+            Assert.That(call.IsServerTool, Is.False);          // no tool instance
             Assert.That(call.WasExecuted, Is.False);
-            Assert.That(call.ResultJson, Is.Null);
+            Assert.That(call.RequiresClientExecution, Is.False); // NEW
             Assert.That(call.ErrorMessage, Is.EqualTo("Factory failed"));
 
             _toolFactory.Verify(f => f.GetTool(call.Name), Times.Once);
@@ -180,6 +184,7 @@ namespace LagoVista.AI.Tests.Services
             // Call mutated
             Assert.That(call.IsServerTool, Is.True);
             Assert.That(call.WasExecuted, Is.True);
+            Assert.That(call.RequiresClientExecution, Is.False); // NEW
             Assert.That(call.ErrorMessage, Is.Null);
             Assert.That(call.ResultJson, Is.EqualTo("{\"reply\":\"pong: hi\"}"));
 
@@ -224,8 +229,10 @@ namespace LagoVista.AI.Tests.Services
             // Call mutated
             Assert.That(call.IsServerTool, Is.True);
             Assert.That(call.WasExecuted, Is.False);
+            Assert.That(call.RequiresClientExecution, Is.False); // NEW
             Assert.That(call.ErrorMessage, Is.EqualTo("Tool failed"));
             Assert.That(call.ResultJson, Is.Null);
+
 
             _logger.Verify(
                 l => l.AddError(
@@ -233,5 +240,48 @@ namespace LagoVista.AI.Tests.Services
                     It.Is<string>(msg => msg.Contains("Tool 'testing_ping_pong' execution failed: Tool failed"))),
                 Times.Once);
         }
+
+        [Test]
+        public async Task ExecuteServerToolAsync_ClientFinalTool_SetsRequiresClientExecutionTrue()
+        {
+            var call = new AgentToolCall
+            {
+                CallId = "call-1",
+                Name = "apply_file_patch",
+                ArgumentsJson = "{\"patchId\":\"123\"}"
+            };
+
+            var context = new AgentToolExecutionContext();
+
+            _toolRegistry.Setup(r => r.HasTool(call.Name)).Returns(true);
+
+            var toolMock = new Mock<IAgentTool>();
+
+            // This is the key: tool is NOT fully executed on the server.
+            toolMock.Setup(t => t.IsToolFullyExecutedOnServer).Returns(false);
+
+            // Whatever your current signature is, adapt this:
+            toolMock
+                .Setup(t => t.ExecuteAsync(call.ArgumentsJson, context, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(InvokeResult<string>.Create("{\"normalizedPatchId\":\"123\"}"));
+
+            _toolFactory
+                .Setup(f => f.GetTool(call.Name))
+                .Returns(InvokeResult<IAgentTool>.Create(toolMock.Object));
+
+            var result = await _sut.ExecuteServerToolAsync(call, context, CancellationToken.None);
+
+            Assert.That(result.Successful, Is.True);
+            Assert.That(result.Result, Is.SameAs(call));
+
+            Assert.That(call.IsServerTool, Is.True);
+            Assert.That(call.WasExecuted, Is.True);
+
+            // NEW invariant:
+            Assert.That(call.RequiresClientExecution, Is.True);
+            Assert.That(call.ErrorMessage, Is.Null);
+            Assert.That(call.ResultJson, Is.EqualTo("{\"normalizedPatchId\":\"123\"}"));
+        }
+
     }
 }

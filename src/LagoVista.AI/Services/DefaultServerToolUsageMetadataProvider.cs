@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 using LagoVista.AI.Interfaces;
@@ -18,14 +19,16 @@ namespace LagoVista.AI.Services
     {
         private readonly IAgentToolRegistry _toolRegistry;
         private readonly IAdminLogger _logger;
+        private readonly IAgentModeCatalogService _modeCatalogService;
 
-        public DefaultServerToolUsageMetadataProvider(IAgentToolRegistry toolRegistry, IAdminLogger logger)
+        public DefaultServerToolUsageMetadataProvider(IAgentToolRegistry toolRegistry, IAgentModeCatalogService modeCatalogService, IAdminLogger logger)
         {
             _toolRegistry = toolRegistry ?? throw new ArgumentNullException(nameof(toolRegistry));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _modeCatalogService = modeCatalogService ?? throw new ArgumentNullException(nameof(modeCatalogService));
         }
 
-        public string GetToolUsageMetadata()
+        public string GetToolUsageMetadata(string modeKey)
         {
             var registered = _toolRegistry.GetRegisteredTools();
 
@@ -33,10 +36,12 @@ namespace LagoVista.AI.Services
 
             sb.AppendLine("<<<APTIX_SERVER_TOOL_USAGE_METADATA_BEGIN>>>");
 
-            foreach (var kvp in registered)
+            var applicableToolsFormode = _modeCatalogService.GetToolsForMode(modeKey);
+          
+            foreach (var key in applicableToolsFormode)
             {
-                var toolName = kvp.Key;
-                var toolType = kvp.Value;
+                var toolName = key;
+                var toolType = registered[toolName];
 
                 try
                 {
