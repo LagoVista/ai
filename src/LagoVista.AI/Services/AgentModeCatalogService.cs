@@ -181,6 +181,32 @@ namespace LagoVista.AI.Services
             WeakSignals = new[] { "improve this document", "rewrite this section" }
         },
 
+                new AgentMode
+        {
+            // ORIGINAL: A9E1F9C1-5A0C-4F8D-9AF5-1F3E8B2A6D22
+            Id = "D11C9951BA6E4C679DD722996784884C",
+            Key = "ddr_import",
+            DisplayName = "DDR Importing",
+            Description = "A process that let's the user upload DDR's to be imported into more formal storage.",
+            WhenToUse = "Use this mode when the user wants to import a DDR.",
+            IsDefault = false,
+            Status = "active",
+            Version = "v1",
+
+            WelcomeMessage = "You are now in DDR Import mode. Please paste your DDR into the chat window and press send.",
+            ModeInstructions = new[] { "Follow the prompt as supplied." },
+            BehaviorHints = new[] { "preferStructuredOutput", "avoidDestructiveTools" },
+            HumanRoleHints = new[] { "The human is importing a DDR.", "The human may paste existing DDR text for refinement." },
+            ExampleUtterances = new[] { "I need to import a DDR.", "Please import a DDr." },
+
+            AssociatedToolIds = new[] {  ModeChangeTool.ToolName, AgentListModesTool.ToolName, RequestUserApprovalAgentTool.ToolName, GetTlaCatalogAgentTool.ToolName, AddTlaAgentTool.ToolName, ListDdrsAgentTool.ToolName, GetDdrAgentTool.ToolName, CreateDdrAgentTool.ToolName, SetGoalAgentTool.ToolName, SetDdrStatusAgentTool.ToolName, ListChaptersAgentTool.ToolName, ApproveChapterAgentTool.ToolName, ApproveDdrAgentTool.ToolName, ApproveGoalAgentTool.ToolName,  MoveDdrTlaAgentTool.ToolName, UpdateDdrMetadataAgentTool.ToolName, ReorderChaptersAgentTool.ToolName,UpdateChapterSummaryAgentTool.ToolName, UpdateChapterDetailsAgentTool.ToolName  },
+            ToolGroupHints = new[] { "ddr" },
+            RagScopeHints = new[] { "boost:ddr_specs" },
+
+            StrongSignals = new[] { "import a ddr" },
+            WeakSignals = new[] { "import a document", "create a document" }
+        },
+
         new AgentMode
         {
             // ORIGINAL: 0FB81E6A-8337-444B-A00A-0CE28E3A1F78
