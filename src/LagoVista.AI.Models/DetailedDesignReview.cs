@@ -20,6 +20,8 @@ namespace LagoVista.AI.Models
 
         public EntityHeader GoalApprovedBy { get; set; }
 
+        public string Notes { get; set; }
+
         public string Tla { get; set; }
 
         public int Index { get; set; }

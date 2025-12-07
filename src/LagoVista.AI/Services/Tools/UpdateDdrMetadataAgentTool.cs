@@ -59,6 +59,11 @@ namespace LagoVista.AI.Services.Tools
                         {
                             type = "string",
                             description = "Optional new DDR summary/description. If omitted, the summary is not changed."
+                        },
+                        notes = new
+                        {
+                            type = "string",
+                            description = "Optional note containing any relevant information such as warnings."
                         }
                     },
                     required = new[] { "identifier" }
@@ -78,6 +83,7 @@ namespace LagoVista.AI.Services.Tools
             var identifier = payload.Value<string>("identifier")?.Trim();
             var title = payload.Value<string>("title")?.Trim();
             var summary = payload.Value<string>("summary")?.Trim();
+            var notes = payload.Value<string>("notes")?.Trim();
 
             if (string.IsNullOrWhiteSpace(identifier))
             {
@@ -111,6 +117,11 @@ namespace LagoVista.AI.Services.Tools
                     ddr.Description = summary;
                 }
 
+                if (!string.IsNullOrWhiteSpace(notes))
+                {
+                    ddr.Notes = notes;
+                }
+
                 await _ddrManager.UpdateDdrAsync(ddr, context.Org, context.User);
 
                 var envelope = new JObject
@@ -120,7 +131,8 @@ namespace LagoVista.AI.Services.Tools
                     {
                         ["identifier"] = identifier,
                         ["title"] = ddr.Name,
-                        ["summary"] = ddr.Description
+                        ["summary"] = ddr.Description,
+                        ["notes"] = ddr.Notes
                     }
                 };
 
