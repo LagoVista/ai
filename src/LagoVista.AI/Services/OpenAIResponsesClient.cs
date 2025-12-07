@@ -32,6 +32,7 @@ namespace LagoVista.AI.Services
         private readonly IAdminLogger _adminLogger;
         private readonly IServerToolUsageMetadataProvider _metaUsageProvider;
         private readonly INotificationPublisher _notificationPublisher;
+        private readonly IServerToolSchemaProvider _toolSchemaProvider;
         private readonly IAgentModeCatalogService _agentModeCatalogService;
 
         // NEW: toggle whether we use SSE streaming or a simple JSON response.
@@ -42,6 +43,7 @@ namespace LagoVista.AI.Services
             IAdminLogger adminLogger,
             IServerToolUsageMetadataProvider usageProvider,
             INotificationPublisher notificationPublisher,
+            IServerToolSchemaProvider toolSchemaProvider,
             IAgentModeCatalogService agentModeCatalogService)
         {
             _openAiSettings = openAiSettings ?? throw new ArgumentNullException(nameof(openAiSettings));
@@ -49,6 +51,7 @@ namespace LagoVista.AI.Services
             _notificationPublisher = notificationPublisher ?? throw new ArgumentNullException(nameof(notificationPublisher));
             _metaUsageProvider = usageProvider ?? throw new ArgumentNullException(nameof(usageProvider));
             _agentModeCatalogService = agentModeCatalogService ?? throw new ArgumentNullException(nameof(agentModeCatalogService));
+            _toolSchemaProvider = toolSchemaProvider ?? throw new ArgumentNullException(nameof(toolSchemaProvider));
         }
 
         public async Task<InvokeResult<AgentExecuteResponse>> GetAnswerAsync(
@@ -80,6 +83,8 @@ namespace LagoVista.AI.Services
             }
 
             var toolUsageBlock = _metaUsageProvider.GetToolUsageMetadata(executeRequest.Mode);
+
+            executeRequest.ToolsJson = JsonConvert.SerializeObject(_toolSchemaProvider.GetToolSchemas(executeRequest));
 
             conversationContext.SystemPrompts.Add(_agentModeCatalogService.BuildSystemPrompt(executeRequest.Mode));
 

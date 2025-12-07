@@ -190,16 +190,18 @@ namespace LagoVista.AI.Services
                 $"correlationId={correlationId}, conversationId={conversationId}, " +
                 $"repo={request.Repo}, language={request.Language ?? "csharp"}");
 
-            var ragContextBlock = await _ragContextBuilder.BuildContextSectionAsync(
-                agentContext,
-                request.Instruction,
-                request.RagScopeFilter);
+            //var ragContextBlock = await _ragContextBuilder.BuildContextSectionAsync(
+            //    agentContext,
+            //    request.Instruction,
+            //    request.RagScopeFilter);
 
-            if (!ragContextBlock.Successful)
-            {
-                return InvokeResult<AgentExecuteResponse>.FromInvokeResult(
-                    ragContextBlock.ToInvokeResult());
-            }
+            //if (!ragContextBlock.Successful)
+            //{
+            //    return InvokeResult<AgentExecuteResponse>.FromInvokeResult(
+            //        ragContextBlock.ToInvokeResult());
+            //}
+
+            var ragContextBlock = InvokeResult<string>.Create("");
 
             // correlationId is used as the sessionId for the Reasoner; if/when you
             // introduce a formal AgentSession id here, you can swap it in.
@@ -208,7 +210,7 @@ namespace LagoVista.AI.Services
                 conversationContext,
                 request,
                 ragContextBlock.Result,
-                correlationId,
+                conversationId,
                 org,
                 user,
                 cancellationToken);

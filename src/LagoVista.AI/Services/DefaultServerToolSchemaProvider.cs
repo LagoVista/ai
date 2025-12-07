@@ -12,11 +12,13 @@ namespace LagoVista.AI.Services
     {
         private readonly IAgentToolRegistry _toolRegistry;
         private readonly IAdminLogger _logger;
+        private readonly IAgentModeCatalogService _catalogService;
 
-        public DefaultServerToolSchemaProvider(IAgentToolRegistry toolRegistry, IAdminLogger logger)
+        public DefaultServerToolSchemaProvider(IAgentToolRegistry toolRegistry, IAgentModeCatalogService cataogService, IAdminLogger logger)
         {
             _toolRegistry = toolRegistry ?? throw new ArgumentNullException(nameof(toolRegistry));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _catalogService = cataogService ?? throw new ArgumentNullException(nameof(cataogService));
         }
 
         /// <summary>
@@ -32,8 +34,9 @@ namespace LagoVista.AI.Services
                 throw new ArgumentNullException(nameof(request));
             }
 
+            var tools = _catalogService.GetToolsForMode(request.Mode);
             var registered = _toolRegistry.GetRegisteredTools();
-            return GetToolSchemas(registered.Keys);
+            return GetToolSchemas(tools);
         }
 
         /// <summary>

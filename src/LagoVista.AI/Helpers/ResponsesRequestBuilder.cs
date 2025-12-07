@@ -5,6 +5,7 @@ using Newtonsoft.Json.Linq;
 using LagoVista.AI.Models;
 using LagoVista.Core.AI.Models;
 using System.Text;
+using System.Linq;
 
 namespace LagoVista.AI.Helpers
 {

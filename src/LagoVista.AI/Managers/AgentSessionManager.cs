@@ -177,7 +177,6 @@ namespace LagoVista.AI.Managers
             ValidationCheck(session, Actions.Update);
 
             await _repo.UpdateSessionAsyunc(session);
-
             return InvokeResult.Success;
         }
     }

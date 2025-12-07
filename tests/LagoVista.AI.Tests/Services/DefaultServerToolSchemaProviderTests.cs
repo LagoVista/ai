@@ -17,6 +17,8 @@ namespace LagoVista.AI.Tests.Services
     public class DefaultServerToolSchemaProviderTests
     {
         private Mock<IAdminLogger> _logger;
+        private Mock<IAgentModeCatalogService> _catalogService;
+
         private AgentToolRegistry _registry;
         private DefaultServerToolSchemaProvider _sut;
 
@@ -24,8 +26,15 @@ namespace LagoVista.AI.Tests.Services
         public void SetUp()
         {
             _logger = new Mock<IAdminLogger>();
+
+            _catalogService = new Mock<IAgentModeCatalogService>();
+
+            _catalogService.Setup(ctg=> ctg.GetToolsForMode(It.IsAny<string>()))
+                .Returns(new List<string>()
+                { SchemaReturningTool.ToolName, AnotherSchemaReturningTool.ToolName});
+
             _registry = new AgentToolRegistry(_logger.Object);
-            _sut = new DefaultServerToolSchemaProvider(_registry, _logger.Object);
+            _sut = new DefaultServerToolSchemaProvider(_registry, _catalogService.Object, _logger.Object);
         }
 
         #region Ctor Guards
@@ -34,14 +43,22 @@ namespace LagoVista.AI.Tests.Services
         public void Ctor_NullRegistry_Throws()
         {
             Assert.Throws<ArgumentNullException>(
-                () => new DefaultServerToolSchemaProvider(null, _logger.Object));
+                () => new DefaultServerToolSchemaProvider(null, _catalogService.Object, _logger.Object));
         }
 
         [Test]
         public void Ctor_NullLogger_Throws()
         {
             Assert.Throws<ArgumentNullException>(
-                () => new DefaultServerToolSchemaProvider(_registry, null));
+                () => new DefaultServerToolSchemaProvider(_registry, _catalogService.Object, null));
+        }
+
+
+        [Test]
+        public void Ctor_NullCatalog_Throws()
+        {
+            Assert.Throws<ArgumentNullException>(
+                () => new DefaultServerToolSchemaProvider(_registry, null, _logger.Object));
         }
 
         #endregion
@@ -65,7 +82,7 @@ namespace LagoVista.AI.Tests.Services
             // Arrange: register a valid tool that has a simple, testable schema.
             _registry.RegisterTool<SchemaReturningTool>();
 
-            var request = new AgentExecuteRequest();
+            var request = new AgentExecuteRequest() { Mode= "general" };
 
             // Act
             var schemas = _sut.GetToolSchemas(request);
@@ -84,7 +101,7 @@ namespace LagoVista.AI.Tests.Services
             _registry.RegisterTool<SchemaReturningTool>();
             _registry.RegisterTool<AnotherSchemaReturningTool>();
 
-            var request = new AgentExecuteRequest();
+            var request = new AgentExecuteRequest() { Mode = "general" };
 
             var schemas = _sut.GetToolSchemas(request);
 

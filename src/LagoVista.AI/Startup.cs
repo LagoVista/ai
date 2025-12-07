@@ -32,6 +32,7 @@ namespace LagoVista.AI
 
             toolRegistry.RegisterTool<AgentListModesTool>();
             toolRegistry.RegisterTool<ModeChangeTool>();
+            toolRegistry.RegisterTool<RequestUserApprovalAgentTool>();
 
             toolRegistry.RegisterTool<ReadFileTool>();
             toolRegistry.RegisterTool<WorkspaceWritePatchTool>();

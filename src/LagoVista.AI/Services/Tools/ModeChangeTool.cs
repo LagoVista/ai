@@ -69,6 +69,8 @@ namespace LagoVista.AI.Services.Tools
             AgentToolExecutionContext context,
             CancellationToken cancellationToken = default)
         {
+            Console.WriteLine($"----\r\n{argumentsJson}\r\n---");
+
             if (string.IsNullOrWhiteSpace(argumentsJson))
             {
                 return InvokeResult<string>.FromError("ModeChangeTool requires a non-empty arguments object.");
@@ -110,6 +112,9 @@ namespace LagoVista.AI.Services.Tools
                         "ModeChangeTool requires a non-empty 'reason' string explaining why the mode change is needed.");
                 }
 
+
+                Console.WriteLine($"----1\r\n{argumentsJson}\r\n---");
+
                 var setSessionModeResult = await _sessionManager.SetSessionModeAsync(
                     context.SessionId,
                     args.Mode,
@@ -117,7 +122,10 @@ namespace LagoVista.AI.Services.Tools
                     context.Org,
                     context.User);
 
-                if(!setSessionModeResult.Successful)
+                Console.WriteLine($"----2\r\n{argumentsJson}\r\n---");
+
+
+                if (!setSessionModeResult.Successful)
                 {
                     return InvokeResult<string>.FromInvokeResult(setSessionModeResult);
                 }

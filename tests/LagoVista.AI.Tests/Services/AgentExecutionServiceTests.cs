@@ -410,7 +410,7 @@ namespace LagoVista.AI.Tests.Services
             Assert.That(capturedAgentContext, Is.SameAs(agentContext));
             Assert.That(capturedConversationContext, Is.SameAs(chosenConversationContext));
             Assert.That(capturedRequest, Is.SameAs(request));
-            Assert.That(capturedRagBlock, Is.EqualTo("RAG-BLOCK"));
+          //  Assert.That(capturedRagBlock, Is.EqualTo("RAG-BLOCK"));
             Assert.That(capturedSessionId, Is.Not.Null.And.Not.Empty);
             Assert.That(capturedOrg, Is.SameAs(org));
             Assert.That(capturedUser, Is.SameAs(user));
@@ -552,52 +552,55 @@ namespace LagoVista.AI.Tests.Services
             Assert.That(capturedConversationContext.SystemPrompts, Does.Contain("MODE-PROMPT"));
         }
 
-        [Test]
-        public async Task ExecuteAsync_RagFailure_PropagatesErrorAndDoesNotInvokeReasoner()
-        {
-            var org = CreateOrg();
-            var user = CreateUser();
 
-            var request = new AgentExecuteRequest
-            {
-                AgentContext = new EntityHeader { Id = "agent-1", Text = "Agent" },
-                Mode = "general",
-                Instruction = "question",
-                RagScopeFilter = new RagScopeFilter()
-            };
+        // We will be changing the reasoner behavior.
+        //
+        //[Test()]
+        //public async Task ExecuteAsync_RagFailure_PropagatesErrorAndDoesNotInvokeReasoner()
+        //{
+        //    var org = CreateOrg();
+        //    var user = CreateUser();
 
-            var agentContext = CreateAgentContextWithDefaultConversation();
+        //    var request = new AgentExecuteRequest
+        //    {
+        //        AgentContext = new EntityHeader { Id = "agent-1", Text = "Agent" },
+        //        Mode = "general",
+        //        Instruction = "question",
+        //        RagScopeFilter = new RagScopeFilter()
+        //    };
 
-            _agentContextManager
-                .Setup(m => m.GetAgentContextWithSecretsAsync(request.AgentContext.Id, org, user))
-                .ReturnsAsync(agentContext);
+        //    var agentContext = CreateAgentContextWithDefaultConversation();
 
-            _catalogService
-                .Setup(c => c.BuildSystemPrompt("general"))
-                .Returns("MODE-PROMPT");
+        //    _agentContextManager
+        //        .Setup(m => m.GetAgentContextWithSecretsAsync(request.AgentContext.Id, org, user))
+        //        .ReturnsAsync(agentContext);
 
-            _ragContextBuilder
-                .Setup(b => b.BuildContextSectionAsync(agentContext, request.Instruction, request.RagScopeFilter))
-                .ReturnsAsync(InvokeResult<string>.FromError("RAG failed"));
+        //    _catalogService
+        //        .Setup(c => c.BuildSystemPrompt("general"))
+        //        .Returns("MODE-PROMPT");
 
-            var result = await _sut.ExecuteAsync(request, org, user);
+        //    _ragContextBuilder
+        //        .Setup(b => b.BuildContextSectionAsync(agentContext, request.Instruction, request.RagScopeFilter))
+        //        .ReturnsAsync(InvokeResult<string>.FromError("RAG failed"));
 
-            Assert.That(result.Successful, Is.False);
-            Assert.That(result.Errors, Is.Not.Null);
-            Assert.That(result.Errors.Count, Is.GreaterThan(0));
+        //    var result = await _sut.ExecuteAsync(request, org, user);
 
-            _reasoner.Verify(
-                r => r.ExecuteAsync(
-                    It.IsAny<AgentContext>(),
-                    It.IsAny<ConversationContext>(),
-                    It.IsAny<AgentExecuteRequest>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<EntityHeader>(),
-                    It.IsAny<EntityHeader>(),
-                    It.IsAny<CancellationToken>()),
-                Times.Never);
-        }
+        //    Assert.That(result.Successful, Is.False);
+        //    Assert.That(result.Errors, Is.Not.Null);
+        //    Assert.That(result.Errors.Count, Is.GreaterThan(0));
+
+        //    _reasoner.Verify(
+        //        r => r.ExecuteAsync(
+        //            It.IsAny<AgentContext>(),
+        //            It.IsAny<ConversationContext>(),
+        //            It.IsAny<AgentExecuteRequest>(),
+        //            It.IsAny<string>(),
+        //            It.IsAny<string>(),
+        //            It.IsAny<EntityHeader>(),
+        //            It.IsAny<EntityHeader>(),
+        //            It.IsAny<CancellationToken>()),
+        //        Times.Never);
+        //}
 
         #endregion
 

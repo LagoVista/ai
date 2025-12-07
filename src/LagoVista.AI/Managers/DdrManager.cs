@@ -49,6 +49,8 @@ namespace LagoVista.AI.Managers
             {
                 return InvokeResult.FromError($"TLA {ddrTla.Tla} already exists in the catalog.");
             }
+
+            tlaCatalog.Tlas.Add(ddrTla);
             await _tlaCatalogRepo.UpdateTlaCatalog(tlaCatalog);
 
             return InvokeResult.Success;
