@@ -307,5 +307,41 @@ namespace LagoVista.AI.Tests
             var userMessage = dto.Input[0];
             Assert.That(userMessage.Role, Is.EqualTo("user"));
         }
+
+        [Test]
+        public void Build_DefaultStreamParameter_LeavesStreamNull()
+        {
+            var convCtx = CreateConversationContext();
+            var request = CreateRequest();
+
+            // Call without the optional 'stream' argument – should use the default (null)
+            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty);
+
+            Assert.That(dto.Stream, Is.Null);
+        }
+
+        [Test]
+        public void Build_WithStreamTrue_SetsStreamTrueOnDto()
+        {
+            var convCtx = CreateConversationContext();
+            var request = CreateRequest();
+
+            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty, true);
+
+            Assert.That(dto.Stream, Is.True);
+        }
+
+        [Test]
+        public void Build_WithStreamFalse_SetsStreamFalseOnDto()
+        {
+            var convCtx = CreateConversationContext();
+            var request = CreateRequest();
+
+            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty, false);
+
+            Assert.That(dto.Stream, Is.False);
+        }
+
+
     }
 }

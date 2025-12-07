@@ -439,6 +439,90 @@ namespace LagoVista.AI.Tests
                 Times.Once);
         }
 
+        [Test]
+        public async Task GetAnswerAsync_NonStreamingResponse_ReturnsOkResultWithText()
+        {
+            var settings = new Mock<IOpenAISettings>();
+            settings.SetupGet(s => s.OpenAIUrl).Returns("https://api.openai.com");
+
+            var logger = new Mock<IAdminLogger>();
+            var publisher = new Mock<INotificationPublisher>();
+            var catalogService = new Mock<IAgentModeCatalogService>();
+            catalogService.Setup(cs => cs.BuildSystemPrompt(It.IsAny<string>()))
+                .Returns("YOU ARE IN A GREAT MODE!");
+
+            // Non-streaming JSON body – matches the shape the parser already knows
+            var handler = new DelegatingHandlerStub((request, token) =>
+            {
+                var json =
+                    "{" +
+                    "\"id\":\"resp_123\"," +
+                    "\"object\":\"response\"," +
+                    "\"model\":\"gpt-5.1\"," +
+                    "\"usage\":{\"prompt_tokens\":10,\"completion_tokens\":5,\"total_tokens\":15}," +
+                    "\"output\":[{" +
+                    "\"type\":\"output_text\"," +
+                    "\"text\":\"Hello world!\"," +
+                    "\"finish_reason\":\"stop\"" +
+                    "}]" +
+                    "}";
+
+                var resp = new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(json, Encoding.UTF8, "application/json")
+                };
+
+                return Task.FromResult(resp);
+            });
+
+            var httpClient = new HttpClient(handler);
+            var client = new TestOpenAIResponsesClient(settings.Object, logger.Object, publisher.Object, catalogService.Object, httpClient)
+            {
+                UseStreaming = false // NEW: exercise non-streaming path
+            };
+
+            var agentContext = CreateAgentContext();
+            var conversationContext = CreateConversationContext();
+            var executeRequest = CreateExecuteRequest();
+
+            var result = await client.GetAnswerAsync(
+                agentContext,
+                conversationContext,
+                executeRequest,
+                string.Empty,
+                "session-nonstream",
+                CancellationToken.None);
+
+            Assert.That(result.Successful, Is.True);
+            Assert.That(result.Result, Is.Not.Null);
+
+            var response = result.Result;
+            Assert.That(response.Text, Is.EqualTo("Hello world!"));
+            Assert.That(response.ModelId, Is.EqualTo("gpt-5.1"));
+            Assert.That(response.Usage.PromptTokens, Is.EqualTo(10));
+            Assert.That(response.Usage.CompletionTokens, Is.EqualTo(5));
+            Assert.That(response.Usage.TotalTokens, Is.EqualTo(15));
+            Assert.That(response.Kind, Is.EqualTo("ok"));
+
+            // No LLMDelta events expected in non-streaming mode
+            publisher.Verify(p => p.PublishAsync(
+                    Targets.WebSocket,
+                    Channels.Entity,
+                    "session-nonstream",
+                    It.Is<AptixOrchestratorEvent>(e => e.Stage == "LLMDelta"),
+                    NotificationVerbosity.Diagnostics),
+                Times.Never);
+
+            // Still expect LLMCompleted once
+            publisher.Verify(p => p.PublishAsync(
+                    Targets.WebSocket,
+                    Channels.Entity,
+                    "session-nonstream",
+                    It.Is<AptixOrchestratorEvent>(e => e.Stage == "LLMCompleted"),
+                    NotificationVerbosity.Diagnostics),
+                Times.Once);
+        }
+
         private class DelegatingHandlerStub : HttpMessageHandler
         {
             private readonly Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> _handlerFunc;

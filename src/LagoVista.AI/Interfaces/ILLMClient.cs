@@ -28,5 +28,7 @@ namespace LagoVista.AI.Interfaces
             string ragContextBlock,
             string sessionId,
             CancellationToken cancellationToken = default);
+
+        bool UseStreaming { get; set; }
     }
 }

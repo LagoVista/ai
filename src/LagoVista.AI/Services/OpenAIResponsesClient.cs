@@ -15,7 +15,6 @@ using LagoVista.Core.Interfaces;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using RingCentral;
 
 namespace LagoVista.AI.Services
@@ -35,15 +34,21 @@ namespace LagoVista.AI.Services
         private readonly INotificationPublisher _notificationPublisher;
         private readonly IAgentModeCatalogService _agentModeCatalogService;
 
-        public OpenAIResponsesClient(IOpenAISettings openAiSettings, IAdminLogger adminLogger,IServerToolUsageMetadataProvider usageProvider, 
-            INotificationPublisher notificationPublisher, IAgentModeCatalogService agentModeCatalogService)
+        // NEW: toggle whether we use SSE streaming or a simple JSON response.
+        public bool UseStreaming { get; set; } = true;
+
+        public OpenAIResponsesClient(
+            IOpenAISettings openAiSettings,
+            IAdminLogger adminLogger,
+            IServerToolUsageMetadataProvider usageProvider,
+            INotificationPublisher notificationPublisher,
+            IAgentModeCatalogService agentModeCatalogService)
         {
             _openAiSettings = openAiSettings ?? throw new ArgumentNullException(nameof(openAiSettings));
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
             _notificationPublisher = notificationPublisher ?? throw new ArgumentNullException(nameof(notificationPublisher));
             _metaUsageProvider = usageProvider ?? throw new ArgumentNullException(nameof(usageProvider));
             _agentModeCatalogService = agentModeCatalogService ?? throw new ArgumentNullException(nameof(agentModeCatalogService));
-
         }
 
         public async Task<InvokeResult<AgentExecuteResponse>> GetAnswerAsync(
@@ -78,7 +83,13 @@ namespace LagoVista.AI.Services
 
             conversationContext.SystemPrompts.Add(_agentModeCatalogService.BuildSystemPrompt(executeRequest.Mode));
 
-            var requestObject = ResponsesRequestBuilder.Build(conversationContext, executeRequest, ragContextBlock, toolUsageBlock, true);
+            // CHANGED: last parameter now uses UseStreaming instead of hard-coded true
+            var requestObject = ResponsesRequestBuilder.Build(
+                conversationContext,
+                executeRequest,
+                ragContextBlock,
+                toolUsageBlock,
+                UseStreaming);
 
             var requestJson = JsonConvert.SerializeObject(requestObject);
             _adminLogger.Trace($"[OpenAIResponsesClient__GetAnswerAsync] Call LLM with JSON\r\n=====\r\n{requestJson}\r\n====");
@@ -126,15 +137,24 @@ namespace LagoVista.AI.Services
                             cancellationToken);
 
                         return InvokeResult<AgentExecuteResponse>.FromError($"{errorMessage}; {reasonSuffix}");
-
                     }
 
-                    var agentResponse = await ReadStreamingResponseAsync(response, executeRequest, sessionId, sw, cancellationToken);
+                    // NEW: choose streaming vs non-streaming response handling.
+                    InvokeResult<AgentExecuteResponse> agentResponse;
+                    if (UseStreaming)
+                    {
+                        agentResponse = await ReadStreamingResponseAsync(
+                            response, executeRequest, sessionId, sw, cancellationToken);
+                    }
+                    else
+                    {
+                        agentResponse = await ReadNonStreamingResponseAsync(
+                            response, executeRequest, sw, cancellationToken);
+                    }
 
                     if (!agentResponse.Successful)
                         return agentResponse;
 
-  
                     await PublishLlmEventAsync(sessionId, "LLMCompleted", "completed", "Model response received.", null, cancellationToken);
 
                     return agentResponse;
@@ -158,6 +178,54 @@ namespace LagoVista.AI.Services
 
                 return InvokeResult<AgentExecuteResponse>.FromError(msg);
             }
+        }
+
+        /// <summary>
+        /// Handles the non-streaming /v1/responses JSON shape directly (stream:false).
+        /// </summary>
+        private async Task<InvokeResult<AgentExecuteResponse>> ReadNonStreamingResponseAsync(
+            HttpResponseMessage httpResponse,
+            AgentExecuteRequest request,
+            Stopwatch sw,
+            CancellationToken cancellationToken)
+        {
+            var json = await httpResponse.Content.ReadAsStringAsync();
+
+            _adminLogger.Trace(
+                $"[OpenAIResponsesClient_ReadNonStreamingResponseAsync] Agent Response in {sw.Elapsed.TotalSeconds} seconds. JSON\r\n====\r\n{json}\r\n====");
+
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                _adminLogger.AddError(
+                    "[OpenAIResponsesClient_ReadNonStreamingResponseAsync_Finalize]",
+                    "Empty response JSON.");
+
+                return InvokeResult<AgentExecuteResponse>.Create(new AgentExecuteResponse
+                {
+                    Kind = "empty",
+                    ConversationContextId = request.ConversationContext?.Id,
+                    AgentContextId = request.AgentContext?.Id,
+                    Mode = request.Mode,
+                    Text = string.Empty,
+                    RawResponseJson = json,
+                    ResponseContinuationId = null,
+                });
+            }
+
+            // Non-streaming JSON should already match the shape expected by AgentExecuteResponseParser.
+            var agentResponse = AgentExecuteResponseParser.Parse(json, request);
+            if (!agentResponse.Successful)
+            {
+                return agentResponse;
+            }
+
+            // Preserve raw JSON for diagnostics.
+            agentResponse.Result.RawResponseJson = json;
+
+            _adminLogger.Trace(
+                $"[OpenAIResponsesClient_ReadNonStreamingResponseAsync_Finalize] - Built Agent response {agentResponse.Result.ResponseContinuationId}.");
+
+            return agentResponse;
         }
 
         private async Task<InvokeResult<AgentExecuteResponse>> ReadStreamingResponseAsync(
@@ -202,7 +270,7 @@ namespace LagoVista.AI.Services
                             rawEventLogBuilder.AppendLine(dataJson);
 
                             // Capture the completed event payload so we can reconstruct
-                            // the full /responses object for AgentExecuteResponseParser.
+                            // the full /responses object for AgentExecuteResponseResponseParser.
                             if (string.Equals(currentEvent, "response.completed", StringComparison.OrdinalIgnoreCase))
                             {
                                 completedEventJson = dataJson;
@@ -241,7 +309,6 @@ namespace LagoVista.AI.Services
                     }
                 }
 
-
                 _adminLogger.Trace($"[OpenAIResponseClient_ReadStreamingResponseAsync] Agent Response in {sw.Elapsed.TotalSeconds} seconds. JSON\r\n====\r\n{completedEventJson}\r\n====");
 
                 // If we never got any text or a completed event, treat as null/empty
@@ -263,19 +330,18 @@ namespace LagoVista.AI.Services
 
                 // Convert the streaming response.completed payload into the
                 // non-stream /responses JSON shape expected by AgentExecuteResponseParser.
-                var finalResponse = OpenAiStreamingEventHelper.ExtractCompletedResponseJson(completedEventJson); 
-                if(!finalResponse.Successful)
+                var finalResponse = OpenAiStreamingEventHelper.ExtractCompletedResponseJson(completedEventJson);
+                if (!finalResponse.Successful)
                 {
                     return InvokeResult<AgentExecuteResponse>.FromInvokeResult(finalResponse.ToInvokeResult());
                 }
 
                 var finalResponseJson = finalResponse.Result;
 
-               
                 // Parse into our normalized envelope
                 var agentResponse = AgentExecuteResponseParser.Parse(finalResponseJson, request);
 
-                if(!agentResponse.Successful)
+                if (!agentResponse.Successful)
                 {
                     return agentResponse;
                 }
@@ -306,12 +372,12 @@ namespace LagoVista.AI.Services
         private int _idx = 1;
 
         private async Task ProcessSseEventAsync(
-          string eventName,
-          string sessionId,
-          string dataJson,
-          StringBuilder fullTextBuilder,
-          Action<string> setResponseId,
-          CancellationToken cancellationToken)
+            string eventName,
+            string sessionId,
+            string dataJson,
+            StringBuilder fullTextBuilder,
+            Action<string> setResponseId,
+            CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(dataJson)) return;
 
@@ -345,12 +411,17 @@ namespace LagoVista.AI.Services
             }
         }
 
-        
         /// <summary>
         /// Publish a lightweight LLM-related event if a session id is available.
         /// This keeps narration fully optional and scoped to the LLM implementation.
         /// </summary>
-        private async Task PublishLlmEventAsync(string sessionId, string stage, string status, string message, double? elapsedMs, CancellationToken cancellationToken)
+        private async Task PublishLlmEventAsync(
+            string sessionId,
+            string stage,
+            string status,
+            string message,
+            double? elapsedMs,
+            CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(sessionId)) return;
 
@@ -367,14 +438,18 @@ namespace LagoVista.AI.Services
 
             try
             {
-                await _notificationPublisher.PublishAsync(Targets.WebSocket, Channels.Entity, sessionId, evt, NotificationVerbosity.Diagnostics);
+                await _notificationPublisher.PublishAsync(
+                    Targets.WebSocket,
+                    Channels.Entity,
+                    sessionId,
+                    evt,
+                    NotificationVerbosity.Diagnostics);
             }
             catch (Exception ex)
             {
                 _adminLogger.AddException("[OpenAIResponsesClient_PublishLlmEventAsync__Exception]", ex);
             }
         }
-
 
         /// <summary>
         /// Factory method for HttpClient so tests can override and inject fake handlers.
@@ -423,5 +498,4 @@ namespace LagoVista.AI.Services
         [JsonProperty("code")]
         public string Code { get; set; }
     }
-
 }
