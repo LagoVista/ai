@@ -129,12 +129,15 @@ namespace LagoVista.AI.Services
                 {
                     // Let the executor decide if this is a server tool or not.
                     var updatedCallResponse = await _toolExecutor.ExecuteServerToolAsync(
-                        toolCall,
-                        toolContext,
-                        cancellationToken);
+                          toolCall,
+                          toolContext,
+                          cancellationToken);
 
                     if (!updatedCallResponse.Successful)
-                        return InvokeResult<AgentExecuteResponse>.FromInvokeResult(updatedCallResponse.ToInvokeResult());
+                    {
+                        return InvokeResult<AgentExecuteResponse>.FromInvokeResult(
+                            updatedCallResponse.ToInvokeResult());
+                    }
 
                     var updatedCall = updatedCallResponse.Result;
 
