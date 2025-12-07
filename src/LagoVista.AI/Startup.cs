@@ -21,6 +21,8 @@ namespace LagoVista.AI
         {
             var toolRegistry = new AgentToolRegistry(adminLogger);
 
+            adminLogger.Trace("[AgentToolRegistry_RegisterTool] - Start Register Server Tools - vvvv");
+
             ///* define our agent tools here */
             toolRegistry.RegisterTool<HelloWorldTool>();
             toolRegistry.RegisterTool<PingPongTool>();
@@ -76,10 +78,13 @@ namespace LagoVista.AI
             toolRegistry.RegisterTool<ListDdrsAgentTool>();
             /*--*/
 
+            adminLogger.Trace("[AgentToolRegistry_RegisterTool] - All server tools registered - ^^^");
+
+
             services.AddTransient<IDdrManager, DdrManager>();
             services.AddTransient<IWorkflowDefinitionManager, WorkflowDefinitionManager>();
 
-
+            services.AddSingleton<IAgentModeCatalogService,AgentModeCatalogService>();
             services.AddSingleton<IAgentToolRegistry>(toolRegistry);
             services.AddTransient<IModelCategoryManager, ModelCategoryManager>();
             services.AddTransient<IModelManager, ModelManager>();

@@ -20,7 +20,6 @@ namespace LagoVista.AI.Tests.Services
     {
         private Mock<IAgentOrchestrator> _orchestrator;
         private Mock<IAdminLogger> _adminLogger;
-        private Mock<IServerToolSchemaProvider> _serverToolScheamaProvider;
         private AgentRequestHandler _sut;
 
         [SetUp]
@@ -28,14 +27,9 @@ namespace LagoVista.AI.Tests.Services
         {
             _orchestrator = new Mock<IAgentOrchestrator>();
             _adminLogger = new Mock<IAdminLogger>();
-            _serverToolScheamaProvider = new Mock<IServerToolSchemaProvider>();
+            
 
-            // Default: no server tools, unless a test overrides this.
-            _serverToolScheamaProvider
-                .Setup(p => p.GetToolSchemas(It.IsAny<AgentExecuteRequest>()))
-                .Returns(Array.Empty<object>());
-
-            _sut = new AgentRequestHandler(_orchestrator.Object, _adminLogger.Object, _serverToolScheamaProvider.Object);
+            _sut = new AgentRequestHandler(_orchestrator.Object, _adminLogger.Object);
         }
 
         #region Ctor Guards
@@ -44,21 +38,14 @@ namespace LagoVista.AI.Tests.Services
         public void Ctor_NullOrchestrator_Throws()
         {
             Assert.Throws<ArgumentNullException>(
-                () => new AgentRequestHandler(null, _adminLogger.Object, _serverToolScheamaProvider.Object));
+                () => new AgentRequestHandler(null, _adminLogger.Object));
         }
 
         [Test]
         public void Ctor_NullAdminLogger_Throws()
         {
             Assert.Throws<ArgumentNullException>(
-                () => new AgentRequestHandler(_orchestrator.Object, null, _serverToolScheamaProvider.Object));
-        }
-
-        [Test]
-        public void Ctor_NullServerToolSchemaProvider_Throws()
-        {
-            Assert.Throws<ArgumentNullException>(
-                () => new AgentRequestHandler(_orchestrator.Object, _adminLogger.Object, null));
+                () => new AgentRequestHandler(_orchestrator.Object, null));
         }
 
         #endregion
@@ -90,7 +77,6 @@ namespace LagoVista.AI.Tests.Services
                 o => o.ExecuteTurnAsync(It.IsAny<AgentExecuteRequest>(), org, user, It.IsAny<CancellationToken>()),
                 Times.Never);
 
-            _serverToolScheamaProvider.Verify(p => p.GetToolSchemas(It.IsAny<AgentExecuteRequest>()), Times.Never);
         }
 
         [Test]
@@ -121,8 +107,6 @@ namespace LagoVista.AI.Tests.Services
             _orchestrator.Verify(
                 o => o.ExecuteTurnAsync(It.IsAny<AgentExecuteRequest>(), org, user, It.IsAny<CancellationToken>()),
                 Times.Never);
-
-            _serverToolScheamaProvider.Verify(p => p.GetToolSchemas(It.IsAny<AgentExecuteRequest>()), Times.Never);
         }
 
         #endregion
@@ -156,80 +140,8 @@ namespace LagoVista.AI.Tests.Services
             _orchestrator.Verify(
                 o => o.BeginNewSessionAsync(It.IsAny<AgentExecuteRequest>(), org, user, It.IsAny<CancellationToken>()),
                 Times.Never);
-
-            _serverToolScheamaProvider.Verify(p => p.GetToolSchemas(It.IsAny<AgentExecuteRequest>()), Times.Never);
         }
 
-        [Test]
-        public async Task HandleAsync_NewSession_DelegatesToBeginNewSession_MergesServerTools_AndPassesThroughResponse()
-        {
-            var org = CreateOrg();
-            var user = CreateUser();
-
-            var request = new AgentExecuteRequest
-            {
-                ConversationId = null, // new session
-                Instruction = "do something",
-                AgentContext = new EntityHeader { Id = "agent-1", Text = "Agent" },
-                Mode = "ask",
-                WorkspaceId = "ws-1",
-                Repo = "repo-1",
-                Language = "csharp",
-                ActiveFiles = new List<ActiveFile>(),
-                RagScopeFilter = new RagScopeFilter(),
-                ToolsJson = null // client can be null; server will merge its tools
-            };
-
-            // Fake server tool schema (e.g., PingPongTool)
-            var serverToolSchema = new
-            {
-                type = "function",
-                name = "testing.ping_pong"
-            };
-
-            _serverToolScheamaProvider
-                .Setup(p => p.GetToolSchemas(It.IsAny<AgentExecuteRequest>()))
-                .Returns(new object[] { serverToolSchema });
-
-            var orchestratorResponse = new AgentExecuteResponse
-            {
-                Text = "final answer",
-                FullResponseUrl = "https://responses/1.json",
-                ResponseContinuationId = "resp-1",
-                Warnings = new List<string> { "warn-1" }
-            };
-
-            AgentExecuteRequest capturedRequest = null;
-
-            _orchestrator
-                .Setup(o => o.BeginNewSessionAsync(It.IsAny<AgentExecuteRequest>(), org, user, It.IsAny<CancellationToken>()))
-                .Callback<AgentExecuteRequest, EntityHeader, EntityHeader, CancellationToken>((req, _, __, ___) => capturedRequest = req)
-                .ReturnsAsync(InvokeResult<AgentExecuteResponse>.Create(orchestratorResponse));
-
-            var result = await _sut.HandleAsync(request, org, user);
-
-            Assert.That(result.Successful, Is.True);
-            Assert.That(result.Result, Is.SameAs(orchestratorResponse));
-
-            _orchestrator.Verify(
-                o => o.BeginNewSessionAsync(It.IsAny<AgentExecuteRequest>(), org, user, It.IsAny<CancellationToken>()),
-                Times.Once);
-
-            _orchestrator.Verify(
-                o => o.ExecuteTurnAsync(It.IsAny<AgentExecuteRequest>(), org, user, It.IsAny<CancellationToken>()),
-                Times.Never);
-
-            _serverToolScheamaProvider.Verify(p => p.GetToolSchemas(It.IsAny<AgentExecuteRequest>()), Times.Once);
-
-            Assert.That(capturedRequest, Is.Not.Null, "BeginNewSessionAsync should receive a non-null request.");
-            Assert.That(capturedRequest.ToolsJson, Is.Not.Null.And.Not.Empty, "Server tools should be merged into ToolsJson.");
-
-            var toolsArray = JArray.Parse(capturedRequest.ToolsJson);
-            Assert.That(toolsArray.Count, Is.EqualTo(1), "Expected exactly one server tool to be merged.");
-
-            var toolName = toolsArray[0]["name"]?.ToString();
-            Assert.That(toolName, Is.EqualTo("testing.ping_pong"));
-        }
 
         #endregion
 
@@ -282,9 +194,6 @@ namespace LagoVista.AI.Tests.Services
             _orchestrator.Verify(
                 o => o.BeginNewSessionAsync(It.IsAny<AgentExecuteRequest>(), org, user, It.IsAny<CancellationToken>()),
                 Times.Never);
-
-            // For follow-up turns, we should NOT merge server-side tools.
-            _serverToolScheamaProvider.Verify(p => p.GetToolSchemas(It.IsAny<AgentExecuteRequest>()), Times.Never);
 
             Assert.That(capturedRequest, Is.Not.Null);
             Assert.That(capturedRequest.ToolsJson, Is.EqualTo(request.ToolsJson));

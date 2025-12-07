@@ -2,6 +2,7 @@
 using LagoVista.AI;
 using LagoVista.Core.Interfaces;
 using LagoVista.IoT.Logging.Loggers;
+using LagoVista.IoT.Logging.Utils;
 using Moq;
 using NUnit.Framework;
 
@@ -16,7 +17,7 @@ namespace LagoVista.AI.Tests
             // Arrange
             var services = new Mock<IServiceCollection>().Object;
             var serviceProvider = new Mock<IServiceProvider>().Object;
-            var adminLogger = new Mock<IAdminLogger>().Object;
+            var adminLogger = new AdminLogger(new ConsoleLogWriter());
 
             // Act + Assert
             Assert.DoesNotThrow(() =>

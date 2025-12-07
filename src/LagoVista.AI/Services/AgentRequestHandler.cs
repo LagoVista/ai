@@ -26,13 +26,11 @@ namespace LagoVista.AI.Services
     {
         private readonly IAgentOrchestrator _orchestrator;
         private readonly IAdminLogger _adminLogger;
-        private readonly IServerToolSchemaProvider _serverToolSchemaProvider;
 
-        public AgentRequestHandler(IAgentOrchestrator orchestrator, IAdminLogger adminLogger, IServerToolSchemaProvider serverToolSchemaProvider)
+        public AgentRequestHandler(IAgentOrchestrator orchestrator, IAdminLogger adminLogger)
         {
             _orchestrator = orchestrator ?? throw new ArgumentNullException(nameof(orchestrator));
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
-            _serverToolSchemaProvider = serverToolSchemaProvider ?? throw new ArgumentNullException(nameof(serverToolSchemaProvider));
         }
 
         public async Task<InvokeResult<AgentExecuteResponse>> HandleAsync(AgentExecuteRequest request, EntityHeader org, EntityHeader user, CancellationToken cancellationToken = default)
@@ -67,27 +65,6 @@ namespace LagoVista.AI.Services
             return await HandleFollowupTurnAsync(request, org, user, correlationId, cancellationToken);
         }
 
-        private void MergeServerTools(AgentExecuteRequest request)
-        {
-            var clientToolsJson = request.ToolsJson;
-            var serverTools = _serverToolSchemaProvider.GetToolSchemas(request);
-
-            var clientToolsArray = string.IsNullOrWhiteSpace(clientToolsJson)
-                ? new Newtonsoft.Json.Linq.JArray()
-                : Newtonsoft.Json.Linq.JArray.Parse(clientToolsJson);
-
-            var merged = new Newtonsoft.Json.Linq.JArray(clientToolsArray);
-
-            foreach (var srv in serverTools)
-            {
-                merged.Add(Newtonsoft.Json.Linq.JObject.FromObject(srv));
-            }
-
-            request.ToolsJson = merged.ToString(Newtonsoft.Json.Formatting.None);
-
-            Console.WriteLine($"TOOLS JSON =>>{request.ToolsJson}<<=");
-        }
-
         private async Task<InvokeResult<AgentExecuteResponse>> HandleNewSessionAsync(AgentExecuteRequest request, EntityHeader org, EntityHeader user, string correlationId, CancellationToken cancellationToken)
         {
             _adminLogger.Trace("[AgentRequestHandler_HandleNewSessionAsync] Normalizing new session request. " + $"correlationId={correlationId}, org={org?.Id}, user={user?.Id}");
@@ -99,9 +76,6 @@ namespace LagoVista.AI.Services
 
                 return InvokeResult<AgentExecuteResponse>.FromError(msg, "AGENT_REQ_MISSING_AGENT_CONTEXT");
             }
-
-            MergeServerTools(request);
-
 
             return await _orchestrator.BeginNewSessionAsync(request, org, user, cancellationToken);
         }
