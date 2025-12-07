@@ -29,21 +29,28 @@ namespace LagoVista.AI.Services
     /// AGN-011 additionally requires:
     /// - Detecting mode changes via ModeChangeTool (TUL-007).
     /// - Updating request.Mode and response.Mode accordingly.
+    /// - Emitting a mode-specific welcome message when the mode changes.
     /// </summary>
     public class AgentReasoner : IAgentReasoner
     {
         private readonly ILLMClient _llmClient;
         private readonly IAgentToolExecutor _toolExecutor;
         private readonly IAdminLogger _logger;
+        private readonly IAgentModeCatalogService _agentModeCatalogService;
 
         // Safety cap to avoid runaway tool-trigger loops.
         private const int MaxReasoningIterations = 4;
 
-        public AgentReasoner(ILLMClient llmClient, IAgentToolExecutor toolExecutor, IAdminLogger logger)
+        public AgentReasoner(
+            ILLMClient llmClient,
+            IAgentToolExecutor toolExecutor,
+            IAdminLogger logger,
+            IAgentModeCatalogService agentModeCatalogService)
         {
             _llmClient = llmClient ?? throw new ArgumentNullException(nameof(llmClient));
             _toolExecutor = toolExecutor ?? throw new ArgumentNullException(nameof(toolExecutor));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _agentModeCatalogService = agentModeCatalogService ?? throw new ArgumentNullException(nameof(agentModeCatalogService));
         }
 
         public async Task<InvokeResult<AgentExecuteResponse>> ExecuteAsync(
@@ -62,6 +69,10 @@ namespace LagoVista.AI.Services
 
             AgentExecuteResponse lastResponse = null;
 
+            // Accumulate the "mode welcome" across iterations.
+            // If multiple mode changes occur, the *last* one wins.
+            string pendingWelcomeMessage = null;
+
             for (var iteration = 0; iteration < MaxReasoningIterations; iteration++)
             {
                 _logger.Trace(
@@ -78,7 +89,8 @@ namespace LagoVista.AI.Services
 
                 if (!llmResult.Successful)
                 {
-                    _logger.AddError("[AgentReasoner_ExecuteAsync__LLMFailed]",
+                    _logger.AddError(
+                        "[AgentReasoner_ExecuteAsync__LLMFailed]",
                         $"LLM call failed on iteration {iteration + 1}: {llmResult.ErrorMessage}");
                     return llmResult;
                 }
@@ -102,6 +114,22 @@ namespace LagoVista.AI.Services
                     if (string.IsNullOrWhiteSpace(lastResponse.Mode) && !string.IsNullOrWhiteSpace(request.Mode))
                     {
                         lastResponse.Mode = request.Mode;
+                    }
+
+                    // If a mode change happened in a prior iteration, prepend the welcome now.
+                    if (!string.IsNullOrWhiteSpace(pendingWelcomeMessage))
+                    {
+                        if (string.IsNullOrWhiteSpace(lastResponse.Text))
+                        {
+                            lastResponse.Text = pendingWelcomeMessage;
+                        }
+                        else
+                        {
+                            lastResponse.Text = pendingWelcomeMessage + "\n\n" + lastResponse.Text;
+                        }
+
+                        // Make sure the InvokeResult we return sees the updated response.
+                        llmResult.Result = lastResponse;
                     }
 
                     return llmResult;
@@ -129,9 +157,9 @@ namespace LagoVista.AI.Services
                 {
                     // Let the executor decide if this is a server tool or not.
                     var updatedCallResponse = await _toolExecutor.ExecuteServerToolAsync(
-                          toolCall,
-                          toolContext,
-                          cancellationToken);
+                        toolCall,
+                        toolContext,
+                        cancellationToken);
 
                     if (!updatedCallResponse.Successful)
                     {
@@ -225,10 +253,27 @@ namespace LagoVista.AI.Services
 
                     // Ensure the current response also reflects the new mode.
                     lastResponse.Mode = newModeFromTool;
+
+                    // Fetch and store the mode-specific welcome message.
+                    try
+                    {
+                        var welcome = _agentModeCatalogService.GetWelcomeMessage(newModeFromTool);
+                        if (!string.IsNullOrWhiteSpace(welcome))
+                        {
+                            // Last welcome wins if multiple changes occur.
+                            pendingWelcomeMessage = welcome;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.AddException(
+                            "[AgentReasoner_ExecuteAsync__WelcomeMessageException]",
+                            ex);
+                    }
                 }
                 else
                 {
-                    // If no mode change occurred, make sure response mode at
+                    // If no mode change occurred in this iteration, make sure response mode at
                     // least reflects the current request mode for this turn.
                     if (string.IsNullOrWhiteSpace(lastResponse.Mode) && !string.IsNullOrWhiteSpace(request.Mode))
                     {
@@ -263,6 +308,19 @@ namespace LagoVista.AI.Services
 
                     lastResponse.ToolCalls = mergedCalls;
 
+                    // If we have a welcome pending, prepend it to the text before returning.
+                    if (!string.IsNullOrWhiteSpace(pendingWelcomeMessage))
+                    {
+                        if (string.IsNullOrWhiteSpace(lastResponse.Text))
+                        {
+                            lastResponse.Text = pendingWelcomeMessage;
+                        }
+                        else
+                        {
+                            lastResponse.Text = pendingWelcomeMessage + "\n\n" + lastResponse.Text;
+                        }
+                    }
+
                     return InvokeResult<AgentExecuteResponse>.Create(lastResponse);
                 }
 
@@ -273,6 +331,20 @@ namespace LagoVista.AI.Services
                     _logger.Trace(
                         "[AgentReasoner_ExecuteAsync] Only server tools requested, but none executed. " +
                         "Returning last response as-is.");
+
+                    // Apply pending welcome if we have one.
+                    if (!string.IsNullOrWhiteSpace(pendingWelcomeMessage))
+                    {
+                        if (string.IsNullOrWhiteSpace(lastResponse.Text))
+                        {
+                            lastResponse.Text = pendingWelcomeMessage;
+                        }
+                        else
+                        {
+                            lastResponse.Text = pendingWelcomeMessage + "\n\n" + lastResponse.Text;
+                        }
+                    }
+
                     return InvokeResult<AgentExecuteResponse>.Create(lastResponse);
                 }
 
@@ -327,6 +399,19 @@ namespace LagoVista.AI.Services
                 if (string.IsNullOrWhiteSpace(lastResponse.Mode) && !string.IsNullOrWhiteSpace(request.Mode))
                 {
                     lastResponse.Mode = request.Mode;
+                }
+
+                // Apply pending welcome, if any.
+                if (!string.IsNullOrWhiteSpace(pendingWelcomeMessage))
+                {
+                    if (string.IsNullOrWhiteSpace(lastResponse.Text))
+                    {
+                        lastResponse.Text = pendingWelcomeMessage;
+                    }
+                    else
+                    {
+                        lastResponse.Text = pendingWelcomeMessage + "\n\n" + lastResponse.Text;
+                    }
                 }
 
                 return InvokeResult<AgentExecuteResponse>.Create(lastResponse);

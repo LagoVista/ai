@@ -22,6 +22,7 @@ namespace LagoVista.AI.Tests.Services
         private Mock<ILLMClient> _llmClient;
         private Mock<IAgentToolExecutor> _toolExecutor;
         private Mock<IAdminLogger> _logger;
+        private Mock<IAgentModeCatalogService> _agentModeCatalogService;
         private AgentReasoner _sut;
 
         [SetUp]
@@ -30,8 +31,13 @@ namespace LagoVista.AI.Tests.Services
             _llmClient = new Mock<ILLMClient>();
             _toolExecutor = new Mock<IAgentToolExecutor>();
             _logger = new Mock<IAdminLogger>();
+            _agentModeCatalogService = new Mock<IAgentModeCatalogService>();
 
-            _sut = new AgentReasoner(_llmClient.Object, _toolExecutor.Object, _logger.Object);
+            _sut = new AgentReasoner(
+                _llmClient.Object,
+                _toolExecutor.Object,
+                _logger.Object,
+                _agentModeCatalogService.Object);
         }
 
         #region Helpers
@@ -116,7 +122,7 @@ namespace LagoVista.AI.Tests.Services
         }
 
         [Test]
-        public async Task ExecuteAsync_ModeChangeTool_UpdatesRequestAndResponseMode()
+        public async Task ExecuteAsync_ModeChangeTool_UpdatesRequestAndResponseMode_AndPrependsWelcomeMessage()
         {
             var agentContext = CreateAgentContext();
             var conversationContext = CreateConversationContext();
@@ -182,6 +188,11 @@ namespace LagoVista.AI.Tests.Services
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(InvokeResult<AgentToolCall>.Create(updatedCall));
 
+            // Catalog welcome message for the new mode.
+            _agentModeCatalogService
+                .Setup(c => c.GetWelcomeMessage("ddr_authoring"))
+                .Returns("Welcome to DDR Authoring mode!");
+
             var result = await _sut.ExecuteAsync(
                 agentContext,
                 conversationContext,
@@ -200,7 +211,11 @@ namespace LagoVista.AI.Tests.Services
 
             // Final response mode should reflect the new mode.
             Assert.That(result.Result.Mode, Is.EqualTo("ddr_authoring"));
-            Assert.That(result.Result.Text, Is.EqualTo("final answer in new mode"));
+
+            // Welcome message should be prepended to the final answer text.
+            var text = result.Result.Text;
+            Assert.That(text, Does.Contain("Welcome to DDR Authoring mode!"));
+            Assert.That(text, Does.Contain("final answer in new mode"));
         }
 
         [Test]
@@ -286,7 +301,6 @@ namespace LagoVista.AI.Tests.Services
                 })
             };
 
-            // The Reasoner will call ExecuteServerToolAsync twice in order, once per tool call.
             _toolExecutor
                 .SetupSequence(t => t.ExecuteServerToolAsync(
                     It.IsAny<AgentToolCall>(),
@@ -294,6 +308,15 @@ namespace LagoVista.AI.Tests.Services
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(InvokeResult<AgentToolCall>.Create(firstUpdatedCall))
                 .ReturnsAsync(InvokeResult<AgentToolCall>.Create(secondUpdatedCall));
+
+            // Welcome messages for both modes; last one should "win".
+            _agentModeCatalogService
+                .Setup(c => c.GetWelcomeMessage("ddr_authoring"))
+                .Returns("Welcome to DDR Authoring mode!");
+
+            _agentModeCatalogService
+                .Setup(c => c.GetWelcomeMessage("workflow_authoring"))
+                .Returns("Welcome to Workflow Authoring mode!");
 
             var result = await _sut.ExecuteAsync(
                 agentContext,
@@ -311,6 +334,10 @@ namespace LagoVista.AI.Tests.Services
             // The last mode change should win.
             Assert.That(request.Mode, Is.EqualTo("workflow_authoring"));
             Assert.That(result.Result.Mode, Is.EqualTo("workflow_authoring"));
+
+            var text = result.Result.Text;
+            Assert.That(text, Does.Contain("Welcome to Workflow Authoring mode!"));
+            Assert.That(text, Does.Contain("final answer after multiple mode changes"));
 
             // We should log a warning that multiple mode changes occurred.
             _logger.Verify(
