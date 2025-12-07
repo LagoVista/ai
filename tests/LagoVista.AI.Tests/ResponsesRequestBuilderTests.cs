@@ -119,19 +119,52 @@ namespace LagoVista.AI.Tests
         }
 
         [Test]
-        public void Build_ContinuationRequest_SetsPreviousResponseIdAndOmitsSystemMessage()
+        public void Build_InitialRequest_IncludesSystemPrompt_AndToolUsageMetadata_WhenNoConversationSystemPrompts()
+        {
+            var convCtx = CreateConversationContext();
+            convCtx.SystemPrompts.Clear();
+
+            var request = CreateRequest();
+            request.SystemPrompt = "You are working only with billing-related data.";
+
+            var toolUsageMetadataBlock =
+                "<<<APTIX_SERVER_TOOL_USAGE_METADATA_BEGIN>>>\n...tool usage here...\n<<<APTIX_SERVER_TOOL_USAGE_METADATA_END>>>";
+
+            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, toolUsageMetadataBlock);
+
+            Assert.That(dto.Input.Count, Is.GreaterThanOrEqualTo(2));
+
+            var systemMessage = dto.Input[0];
+            Assert.That(systemMessage.Role, Is.EqualTo("system"));
+
+            // No conversation-level system prompts; we should see just SystemPrompt + tool usage metadata
+            Assert.That(systemMessage.Content.Count, Is.EqualTo(2));
+            Assert.That(systemMessage.Content[0].Text, Is.EqualTo("You are working only with billing-related data."));
+            Assert.That(systemMessage.Content[1].Text, Is.EqualTo(toolUsageMetadataBlock));
+        }
+
+        [Test]
+        public void Build_ContinuationRequest_IncludesSystemMessage_AndSetsPreviousResponseId()
         {
             var convCtx = CreateConversationContext();
             var request = CreateRequest(previousResponseId: "resp_123");
-            request.SystemPrompt = "This should be ignored on continuation.";
+            request.SystemPrompt = "Continuation-specific override.";
 
             var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty);
 
             Assert.That(dto.PreviousResponseId, Is.EqualTo("resp_123"));
 
-            Assert.That(dto.Input.Count, Is.EqualTo(1));
-            var onlyMessage = dto.Input[0];
-            Assert.That(onlyMessage.Role, Is.EqualTo("user"));
+            // We now expect a system message + a user message on continuation as well
+            Assert.That(dto.Input.Count, Is.EqualTo(2));
+
+            var systemMessage = dto.Input[0];
+            Assert.That(systemMessage.Role, Is.EqualTo("system"));
+            Assert.That(systemMessage.Content.Count, Is.EqualTo(2));
+            Assert.That(systemMessage.Content[0].Text, Is.EqualTo("You are the Aptix Reasoner."));
+            Assert.That(systemMessage.Content[1].Text, Is.EqualTo("Continuation-specific override."));
+
+            var userMessage = dto.Input[1];
+            Assert.That(userMessage.Role, Is.EqualTo("user"));
         }
 
         [Test]
@@ -191,7 +224,7 @@ namespace LagoVista.AI.Tests
         }
 
         [Test]
-        public void Build_ContinuationRequest_DoesNotSendToolsEvenIfPresent()
+        public void Build_ContinuationRequest_StillSendsTools_WhenPresent()
         {
             var convCtx = CreateConversationContext();
 
@@ -203,7 +236,12 @@ namespace LagoVista.AI.Tests
 
             var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty);
 
-            Assert.That(dto.Tools, Is.Null);
+            Assert.That(dto.PreviousResponseId, Is.EqualTo("resp_123"));
+            Assert.That(dto.Tools, Is.Not.Null);
+            Assert.That(dto.Tools.Count, Is.EqualTo(1));
+
+            var tool = dto.Tools[0];
+            Assert.That(tool.Value<string>("name"), Is.EqualTo("ddr_document"));
         }
 
         [Test]
@@ -230,43 +268,40 @@ namespace LagoVista.AI.Tests
                 toolsJson: null
             );
 
-            // This matches the shape of AgentToolCall that AgentReasoner serializes.
-            request.ToolResultsJson = @"
-[
-  {
-    ""CallId"": ""call_123"",
-    ""Name"": ""testing_ping_pong"",
-    ""ArgumentsJson"": ""{\\""message\\"":\\""hello\\"",\\""count\\"":0}"",
-    ""IsServerTool"": true,
-    ""WasExecuted"": true,
-    ""ResultJson"": ""{\\""Reply\\"":\\""pong: hello\\"",\\""Count\\"":1}"",
-    ""ErrorMessage"": null
-  }
-]";
+            var toolCalls = new[]
+         {
+        new
+        {
+            CallId = "call_123",
+            Name = "testing_ping_pong",
+            ArgumentsJson = "{\"message\":\"hello\",\"count\":0}",
+            IsServerTool = true,
+            WasExecuted = true,
+            ResultJson = "{\"Reply\":\"pong: hello\",\"Count\":1}",
+            ErrorMessage = (string)null
+        }
+    };
+
+            request.ToolResultsJson = Newtonsoft.Json.JsonConvert.SerializeObject(toolCalls);
+
 
             var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty);
 
             // Still a continuation.
             Assert.That(dto.PreviousResponseId, Is.EqualTo("resp_123"));
 
-            // Currently the implementation does NOT append a [TOOL_RESULTS] block yet.
-            // We just assert that the continuation user message is present and shaped
-            // like a normal instruction-only continuation, and that tools are not resent.
-            Assert.That(dto.Input.Count, Is.EqualTo(1));
+            // Expect system + user message now
+            Assert.That(dto.Input.Count, Is.EqualTo(2));
 
-            var userMessage = dto.Input[0];
+            var userMessage = dto.Input[1];
             Assert.That(userMessage.Role, Is.EqualTo("user"));
-            Assert.That(userMessage.Content.Count, Is.EqualTo(1));
+            Assert.That(userMessage.Content.Count, Is.EqualTo(2));
 
-            var content = userMessage.Content[0];
-            Assert.That(content.Type, Is.EqualTo("input_text"));
+            var instructionContent = userMessage.Content[0];
+            var toolResultsContent = userMessage.Content[1];
 
-            var text = content.Text;
-            Assert.That(text, Does.Contain("[INSTRUCTION]"));
-            Assert.That(text, Does.Contain("Do something useful."));
-
-            // On continuation we still do NOT send tools again.
-            Assert.That(dto.Tools, Is.Null);
+            Assert.That(toolResultsContent.Text, Does.Contain("[TOOL_RESULTS]"));
+            Assert.That(toolResultsContent.Text, Does.Contain("testing_ping_pong"));
         }
 
         [Test]
@@ -290,7 +325,7 @@ namespace LagoVista.AI.Tests
         }
 
         [Test]
-        public void Build_ContinuationRequest_IgnoresToolUsageMetadataBlock()
+        public void Build_ContinuationRequest_IncludesToolUsageMetadataBlock()
         {
             var convCtx = CreateConversationContext();
             var request = CreateRequest(previousResponseId: "resp_456");
@@ -299,12 +334,18 @@ namespace LagoVista.AI.Tests
 
             var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, toolUsageMetadataBlock);
 
-            // Continuation: we should still only have a user message, no system message,
-            // even though a non-empty toolUsageMetadataBlock was provided.
             Assert.That(dto.PreviousResponseId, Is.EqualTo("resp_456"));
-            Assert.That(dto.Input.Count, Is.EqualTo(1));
 
-            var userMessage = dto.Input[0];
+            // Continuation: we still have system + user message,
+            // and the toolUsageMetadataBlock should be present on the system message.
+            Assert.That(dto.Input.Count, Is.EqualTo(2));
+
+            var systemMessage = dto.Input[0];
+            Assert.That(systemMessage.Role, Is.EqualTo("system"));
+            Assert.That(systemMessage.Content.Count, Is.GreaterThanOrEqualTo(2));
+            Assert.That(systemMessage.Content[systemMessage.Content.Count - 1].Text, Is.EqualTo(toolUsageMetadataBlock));
+
+            var userMessage = dto.Input[1];
             Assert.That(userMessage.Role, Is.EqualTo("user"));
         }
 
@@ -341,7 +382,5 @@ namespace LagoVista.AI.Tests
 
             Assert.That(dto.Stream, Is.False);
         }
-
-
     }
 }

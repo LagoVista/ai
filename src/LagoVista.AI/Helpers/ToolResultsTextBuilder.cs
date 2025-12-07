@@ -1,44 +1,29 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace LagoVista.AI.Helpers
 {
-    /// <summary>
-    /// Helper to format server-side tool execution results into a
-    /// plain-text block suitable for inclusion in an input_text
-    /// content item for the /responses API.
-    ///
-    /// This isolates our current "contract" with the model for how
-    /// tool results are represented in text, so if we ever need to
-    /// change it (e.g., OpenAI adds first-class tool_result support),
-    /// we can do so in one place.
-    /// </summary>
     public static class ToolResultsTextBuilder
     {
         /// <summary>
-        /// Builds a human- and LLM-friendly [TOOL_RESULTS] block from the
-        /// serialized AgentToolCall collection.
-        ///
-        /// Expected JSON shape (array of objects) is the serialized form of
-        /// AgentToolCall, e.g.:
-        ///
+        /// Build a [TOOL_RESULTS] text block from the serialized tool results JSON.
+        /// The input is expected to be a JSON array of AgentToolCall-like objects:
         /// [
         ///   {
-        ///     "CallId": "call_123",
-        ///     "Name": "testing_ping_pong",
-        ///     "ArgumentsJson": "{\"message\":\"hello\",\"count\":0}",
+        ///     "CallId": "...",
+        ///     "Name": "...",
+        ///     "ArgumentsJson": "{...}",
         ///     "IsServerTool": true,
         ///     "WasExecuted": true,
-        ///     "ResultJson": "{\"reply\":\"pong: hello\",\"count\":1}",
+        ///     "ResultJson": "{...}",
         ///     "ErrorMessage": null
-        ///   }
+        ///   },
+        ///   ...
         /// ]
-        ///
-        /// If the payload can't be parsed or contains no usable entries,
-        /// this returns null so callers can simply skip adding the block.
         /// </summary>
+        /// <param name="toolResultsJson">JSON array of tool result objects.</param>
+        /// <returns>A formatted [TOOL_RESULTS] block, or null/empty if nothing usable is found.</returns>
         public static string BuildFromToolResultsJson(string toolResultsJson)
         {
             if (string.IsNullOrWhiteSpace(toolResultsJson))
@@ -53,12 +38,11 @@ namespace LagoVista.AI.Helpers
             }
             catch (JsonException)
             {
-                // If shape changes or is malformed, we want tests to catch it,
-                // but at runtime we simply skip adding the block to avoid 400s.
+                // If the JSON is malformed, don't poison the prompt – just skip it.
                 return null;
             }
 
-            if (resultsArray.Count == 0)
+            if (resultsArray == null || resultsArray.Count == 0)
             {
                 return null;
             }
@@ -66,9 +50,6 @@ namespace LagoVista.AI.Helpers
             var sb = new StringBuilder();
 
             sb.AppendLine("[TOOL_RESULTS]");
-            sb.AppendLine("The following server-side tools were executed in the previous step.");
-            sb.AppendLine("Use these results as ground truth and avoid calling the same tools again");
-            sb.AppendLine("for the same purpose unless explicitly instructed.");
             sb.AppendLine();
 
             foreach (var token in resultsArray)
@@ -79,67 +60,52 @@ namespace LagoVista.AI.Helpers
                     continue;
                 }
 
-                var callId = obj.Value<string>("CallId") ?? obj.Value<string>("call_id");
-                var name = obj.Value<string>("Name") ?? obj.Value<string>("name");
-                var isServerTool = obj.Value<bool?>("IsServerTool") ?? false;
-                var wasExecuted = obj.Value<bool?>("WasExecuted") ?? false;
-                var argumentsJson = obj.Value<string>("ArgumentsJson");
-                var resultJson = obj.Value<string>("ResultJson");
+                var callId = obj.Value<string>("CallId") ?? "(missing)";
+                var name = obj.Value<string>("Name") ?? "(missing)";
+                var isServerTool = obj.Value<bool?>("IsServerTool");
+                var wasExecuted = obj.Value<bool?>("WasExecuted");
                 var errorMessage = obj.Value<string>("ErrorMessage");
 
-                if (string.IsNullOrWhiteSpace(callId) && string.IsNullOrWhiteSpace(name))
+                var argumentsJson = obj.Value<string>("ArgumentsJson");
+                var resultJson = obj.Value<string>("ResultJson");
+
+                sb.AppendLine(string.Format("- CallId: {0}", callId));
+                sb.AppendLine(string.Format("  Name: {0}", name));
+
+                if (isServerTool.HasValue)
                 {
-                    // Not enough info to be useful; skip this entry.
-                    continue;
+                    sb.AppendLine(string.Format("  IsServerTool: {0}", isServerTool.Value.ToString().ToLowerInvariant()));
                 }
 
-                // Status classification
-                var hasError = !string.IsNullOrWhiteSpace(errorMessage);
-                var status = hasError
-                    ? "error"
-                    : (wasExecuted ? "success" : "not_executed");
-
-                sb.AppendLine("ToolCall:");
-                if (!string.IsNullOrWhiteSpace(callId))
+                if (wasExecuted.HasValue)
                 {
-                    sb.AppendLine("- call_id: " + callId);
+                    sb.AppendLine(string.Format("  WasExecuted: {0}", wasExecuted.Value.ToString().ToLowerInvariant()));
                 }
 
-                if (!string.IsNullOrWhiteSpace(name))
+                if (!string.IsNullOrWhiteSpace(argumentsJson))
                 {
-                    sb.AppendLine("- tool_name: " + name);
+                    sb.AppendLine("  ArgumentsJson:");
+                    sb.AppendLine("    " + argumentsJson);
                 }
 
-                sb.AppendLine("- is_server_tool: " + isServerTool);
-                sb.AppendLine("- was_executed: " + wasExecuted);
-                sb.AppendLine("- status: " + status);
-
-                if (hasError)
+                if (!string.IsNullOrWhiteSpace(resultJson))
                 {
-                    sb.AppendLine("- error_message: " + errorMessage);
+                    sb.AppendLine("  ResultJson:");
+                    sb.AppendLine("    " + resultJson);
                 }
 
-                // Arguments as pretty JSON block (or null)
-                sb.AppendLine("- arguments_json:");
-                sb.AppendLine("```json");
-                sb.AppendLine(string.IsNullOrWhiteSpace(argumentsJson) ? "null" : argumentsJson);
-                sb.AppendLine("```");
+                if (!string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    sb.AppendLine("  ErrorMessage:");
+                    sb.AppendLine("    " + errorMessage);
+                }
 
-                // Result as pretty JSON block (or null)
-                sb.AppendLine("- result_json:");
-                sb.AppendLine("```json");
-                sb.AppendLine(string.IsNullOrWhiteSpace(resultJson) ? "null" : resultJson);
-                sb.AppendLine("```");
                 sb.AppendLine();
             }
 
-            // If we didn't emit any ToolCall blocks, return null.
-            if (sb.ToString().IndexOf("ToolCall:", StringComparison.Ordinal) < 0)
-            {
-                return null;
-            }
+            var text = sb.ToString().TrimEnd();
 
-            return sb.ToString();
+            return string.IsNullOrWhiteSpace(text) ? null : text;
         }
     }
 }

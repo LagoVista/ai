@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using LagoVista.AI.Models;
 using LagoVista.Core.AI.Models;
+using System.Text;
 
 namespace LagoVista.AI.Helpers
 {
@@ -30,11 +31,11 @@ namespace LagoVista.AI.Helpers
         /// <param name="stream">Whether to stream the response via SSE.</param>
         /// <returns>ResponsesApiRequest representing the body for the /responses call.</returns>
         public static ResponsesApiRequest Build(
-            ConversationContext conversationContext,
-            AgentExecuteRequest request,
-            string ragContextBlock,
-            string toolUsageMetadataBlock,
-            bool? stream = null)
+                ConversationContext conversationContext,
+                AgentExecuteRequest request,
+                string ragContextBlock,
+                string toolUsageMetadataBlock,
+                bool? stream = null)
         {
             if (conversationContext == null) throw new ArgumentNullException(nameof(conversationContext));
             if (request == null) throw new ArgumentNullException(nameof(request));
@@ -54,30 +55,38 @@ namespace LagoVista.AI.Helpers
             }
 
             // ---------------------------------------------------------------------
-            // (1) INPUT MESSAGES
+            // (1) SYSTEM MESSAGE — ALWAYS INCLUDED
             // ---------------------------------------------------------------------
 
-            // Initial turn: include system / boot prompt + optional per-request SystemPrompt + tool usage metadata
-            if (!isContinuation)
-            {
-                foreach(var systemPrompt in conversationContext.SystemPrompts)
-                {
+            var hasAnySystemContent =
+                (conversationContext.SystemPrompts != null && conversationContext.SystemPrompts.Count > 0)
+                || !string.IsNullOrWhiteSpace(request.SystemPrompt)
+                || !string.IsNullOrWhiteSpace(toolUsageMetadataBlock);
 
-                
+            if (hasAnySystemContent)
+            {
                 var systemMessage = new ResponsesMessage
                 {
                     Role = "system",
-                    Content = new List<ResponsesMessageContent>
-                    {
-                        new ResponsesMessageContent
-                        {
-                            Text = systemPrompt ?? string.Empty
-                        }
-                    }
+                    Content = new List<ResponsesMessageContent>()
                 };
 
+                // Boot / conversation-level prompts
+                if (conversationContext.SystemPrompts != null)
+                {
+                    foreach (var systemPrompt in conversationContext.SystemPrompts)
+                    {
+                        if (!string.IsNullOrWhiteSpace(systemPrompt))
+                        {
+                            systemMessage.Content.Add(new ResponsesMessageContent
+                            {
+                                Text = systemPrompt
+                            });
+                        }
+                    }
+                }
+
                 // Optional per-request SystemPrompt
-                // Allows an agent client to provide additional boot instructions for the LLM.
                 if (!string.IsNullOrWhiteSpace(request.SystemPrompt))
                 {
                     systemMessage.Content.Add(new ResponsesMessageContent
@@ -86,7 +95,7 @@ namespace LagoVista.AI.Helpers
                     });
                 }
 
-                // Include the LLM-facing usage metadata block (one big block for all tools)
+                // Optional tool usage metadata for all tools
                 if (!string.IsNullOrWhiteSpace(toolUsageMetadataBlock))
                 {
                     systemMessage.Content.Add(new ResponsesMessageContent
@@ -96,7 +105,6 @@ namespace LagoVista.AI.Helpers
                 }
 
                 dto.Input.Add(systemMessage);
-                }
             }
 
             // ---------------------------------------------------------------------
@@ -117,7 +125,6 @@ namespace LagoVista.AI.Helpers
                 Text = instructionBlock
             });
 
-            // Optional RAG context block
             if (!string.IsNullOrWhiteSpace(ragContextBlock))
             {
                 userMessage.Content.Add(new ResponsesMessageContent
@@ -126,7 +133,6 @@ namespace LagoVista.AI.Helpers
                 });
             }
 
-            // Optional TOOL_RESULTS block
             if (!string.IsNullOrWhiteSpace(request.ToolResultsJson))
             {
                 var toolResultsText = ToolResultsTextBuilder.BuildFromToolResultsJson(request.ToolResultsJson);
@@ -142,10 +148,10 @@ namespace LagoVista.AI.Helpers
             dto.Input.Add(userMessage);
 
             // ---------------------------------------------------------------------
-            // (3) TOOLS (initial turn only)
+            // (3) TOOLS — INCLUDED ON EVERY TURN WHEN PRESENT
             // ---------------------------------------------------------------------
 
-            if (!string.IsNullOrWhiteSpace(request.ToolsJson) && !isContinuation)
+            if (!string.IsNullOrWhiteSpace(request.ToolsJson))
             {
                 try
                 {
