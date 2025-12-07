@@ -1,7 +1,5 @@
-﻿using LagoVista.Core.AI.Models;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
+using LagoVista.Core.AI.Models;
 
 namespace LagoVista.AI.Interfaces
 {
@@ -10,7 +8,22 @@ namespace LagoVista.AI.Interfaces
         /// <summary>
         /// Returns JSON-serializable tool definitions (OpenAI-style) for
         /// all server tools applicable to this request/agent.
+        /// 
+        /// Current default implementation returns all registered server tools.
         /// </summary>
         IReadOnlyList<object> GetToolSchemas(AgentExecuteRequest request);
+
+        /// <summary>
+        /// Returns JSON-serializable tool definitions for the given set of
+        /// server tool names. Tool names that are not registered are ignored.
+        /// </summary>
+        IReadOnlyList<object> GetToolSchemas(IEnumerable<string> toolNames);
+
+        /// <summary>
+        /// Returns a single JSON-serializable tool definition for the given
+        /// server tool name, or null if the tool is not registered or the
+        /// schema cannot be resolved.
+        /// </summary>
+        object GetToolSchema(string toolName);
     }
 }
