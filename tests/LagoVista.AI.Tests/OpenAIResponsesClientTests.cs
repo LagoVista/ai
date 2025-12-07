@@ -101,8 +101,8 @@ namespace LagoVista.AI.Tests
         {
             private readonly HttpClient _httpClient;
 
-            public TestOpenAIResponsesClient(IOpenAISettings settings, IAdminLogger logger, INotificationPublisher publisher, HttpClient httpClient)
-                : base(settings, logger, new FakeMetaDataProvider(), publisher)
+            public TestOpenAIResponsesClient(IOpenAISettings settings, IAdminLogger logger, INotificationPublisher publisher, IAgentModeCatalogService catalogService, HttpClient httpClient)
+                : base(settings, logger, new FakeMetaDataProvider(), publisher, catalogService)
             {
                 _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             }
@@ -165,11 +165,14 @@ namespace LagoVista.AI.Tests
 
             var logger = new Mock<IAdminLogger>();
             var publisher = new Mock<INotificationPublisher>();
-
+            var catalogService = new Mock<IAgentModeCatalogService>();
             var handler = new FakeSseHandler();
             var httpClient = new HttpClient(handler);
 
-            var client = new TestOpenAIResponsesClient(settings.Object, logger.Object, publisher.Object, httpClient);
+            catalogService.Setup(cs => cs.BuildSystemPrompt(It.IsAny<string>())).Returns("YOU ARE IN A GREAT MODE!");
+
+
+            var client = new TestOpenAIResponsesClient(settings.Object, logger.Object, publisher.Object, catalogService.Object, httpClient);
 
             var agentContext = CreateAgentContext();
             var conversationContext = CreateConversationContext();
@@ -224,9 +227,12 @@ namespace LagoVista.AI.Tests
 
             var logger = new Mock<IAdminLogger>();
             var publisher = new Mock<INotificationPublisher>();
+            var catalogService = new Mock<IAgentModeCatalogService>();
+            catalogService.Setup(cs => cs.BuildSystemPrompt(It.IsAny<string>())).Returns("YOU ARE IN A GREAT MODE!");
+
 
             var httpClient = new HttpClient(handler);
-            var client = new TestOpenAIResponsesClient(settings.Object, logger.Object, publisher.Object, httpClient);
+            var client = new TestOpenAIResponsesClient(settings.Object, logger.Object, publisher.Object, catalogService.Object, httpClient);
 
             var agentContext = CreateAgentContext();
             var conversationContext = CreateConversationContext();
@@ -255,6 +261,9 @@ namespace LagoVista.AI.Tests
 
             var logger = new Mock<IAdminLogger>();
             var publisher = new Mock<INotificationPublisher>();
+            var catalogService = new Mock<IAgentModeCatalogService>();
+            catalogService.Setup(cs => cs.BuildSystemPrompt(It.IsAny<string>())).Returns("YOU ARE IN A GREAT MODE!");
+
 
             var httpCallCount = 0;
             var handler = new DelegatingHandlerStub((request, token) =>
@@ -268,7 +277,7 @@ namespace LagoVista.AI.Tests
             });
 
             var httpClient = new HttpClient(handler);
-            var client = new TestOpenAIResponsesClient(settings.Object, logger.Object, publisher.Object, httpClient);
+            var client = new TestOpenAIResponsesClient(settings.Object, logger.Object, publisher.Object, catalogService.Object, httpClient);
 
             var agentContext = CreateAgentContext();
             var conversationContext = CreateConversationContext();
@@ -290,6 +299,9 @@ namespace LagoVista.AI.Tests
 
             var logger = new Mock<IAdminLogger>();
             var publisher = new Mock<INotificationPublisher>();
+            var catalogService = new Mock<IAgentModeCatalogService>();
+            catalogService.Setup(cs => cs.BuildSystemPrompt(It.IsAny<string>())).Returns("YOU ARE IN A GREAT MODE!");
+
 
             var httpCallCount = 0;
             var handler = new DelegatingHandlerStub((request, token) =>
@@ -303,7 +315,7 @@ namespace LagoVista.AI.Tests
             });
 
             var httpClient = new HttpClient(handler);
-            var client = new TestOpenAIResponsesClient(settings.Object, logger.Object, publisher.Object, httpClient);
+            var client = new TestOpenAIResponsesClient(settings.Object, logger.Object, publisher.Object, catalogService.Object, httpClient);
 
             var agentContext = CreateAgentContext();
             var conversationContext = CreateConversationContext();
@@ -324,6 +336,9 @@ namespace LagoVista.AI.Tests
 
             var logger = new Mock<IAdminLogger>();
             var publisher = new Mock<INotificationPublisher>();
+            var catalogService = new Mock<IAgentModeCatalogService>();
+            catalogService.Setup(cs => cs.BuildSystemPrompt(It.IsAny<string>())).Returns("YOU ARE IN A GREAT MODE!");
+
 
             var httpCallCount = 0;
             var handler = new DelegatingHandlerStub((request, token) =>
@@ -337,7 +352,7 @@ namespace LagoVista.AI.Tests
             });
 
             var httpClient = new HttpClient(handler);
-            var client = new TestOpenAIResponsesClient(settings.Object, logger.Object, publisher.Object, httpClient);
+            var client = new TestOpenAIResponsesClient(settings.Object, logger.Object, publisher.Object, catalogService.Object, httpClient);
 
             var agentContext = CreateAgentContext();
             agentContext.LlmApiKey = null;
@@ -345,7 +360,7 @@ namespace LagoVista.AI.Tests
             var conversationContext = CreateConversationContext();
             var executeRequest = CreateExecuteRequest();
 
-            var result = await client.GetAnswerAsync(agentContext, conversationContext, executeRequest, string.Empty, "session-key", CancellationToken.None);
+            var result = await client.GetAnswerAsync(agentContext, conversationContext, executeRequest, string.Empty,  "session-key", CancellationToken.None);
 
             Assert.That(result.Successful, Is.False);
             Assert.That(result.ErrorMessage, Does.Contain("LlmApiKey is not configured"));
@@ -360,11 +375,14 @@ namespace LagoVista.AI.Tests
 
             var logger = new Mock<IAdminLogger>();
             var publisher = new Mock<INotificationPublisher>();
+            var catalogService = new Mock<IAgentModeCatalogService>();
+            catalogService.Setup(cs => cs.BuildSystemPrompt(It.IsAny<string>())).Returns("YOU ARE IN A GREAT MODE!");
+
 
             var handler = new FakeSseNoCompletedHandler();
             var httpClient = new HttpClient(handler);
 
-            var client = new TestOpenAIResponsesClient(settings.Object, logger.Object, publisher.Object, httpClient);
+            var client = new TestOpenAIResponsesClient(settings.Object, logger.Object, publisher.Object, catalogService.Object, httpClient);
 
             var agentContext = CreateAgentContext();
             var conversationContext = CreateConversationContext();
@@ -389,6 +407,8 @@ namespace LagoVista.AI.Tests
 
             var logger = new Mock<IAdminLogger>();
             var publisher = new Mock<INotificationPublisher>();
+            var catalogService = new Mock<IAgentModeCatalogService>();
+            catalogService.Setup(cs => cs.BuildSystemPrompt(It.IsAny<string>())).Returns("YOU ARE IN A GREAT MODE!");  
 
             var handler = new DelegatingHandlerStub((request, token) =>
             {
@@ -396,7 +416,7 @@ namespace LagoVista.AI.Tests
             });
 
             var httpClient = new HttpClient(handler);
-            var client = new TestOpenAIResponsesClient(settings.Object, logger.Object, publisher.Object, httpClient);
+            var client = new TestOpenAIResponsesClient(settings.Object, logger.Object, publisher.Object, catalogService.Object, httpClient);
 
             var agentContext = CreateAgentContext();
             var conversationContext = CreateConversationContext();

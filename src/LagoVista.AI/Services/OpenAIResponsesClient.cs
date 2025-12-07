@@ -33,13 +33,17 @@ namespace LagoVista.AI.Services
         private readonly IAdminLogger _adminLogger;
         private readonly IServerToolUsageMetadataProvider _metaUsageProvider;
         private readonly INotificationPublisher _notificationPublisher;
+        private readonly IAgentModeCatalogService _agentModeCatalogService;
 
-        public OpenAIResponsesClient(IOpenAISettings openAiSettings, IAdminLogger adminLogger,IServerToolUsageMetadataProvider usageProvider, INotificationPublisher notificationPublisher)
+        public OpenAIResponsesClient(IOpenAISettings openAiSettings, IAdminLogger adminLogger,IServerToolUsageMetadataProvider usageProvider, 
+            INotificationPublisher notificationPublisher, IAgentModeCatalogService agentModeCatalogService)
         {
             _openAiSettings = openAiSettings ?? throw new ArgumentNullException(nameof(openAiSettings));
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
             _notificationPublisher = notificationPublisher ?? throw new ArgumentNullException(nameof(notificationPublisher));
             _metaUsageProvider = usageProvider ?? throw new ArgumentNullException(nameof(usageProvider));
+            _agentModeCatalogService = agentModeCatalogService ?? throw new ArgumentNullException(nameof(agentModeCatalogService));
+
         }
 
         public async Task<InvokeResult<AgentExecuteResponse>> GetAnswerAsync(
@@ -71,6 +75,8 @@ namespace LagoVista.AI.Services
             }
 
             var toolUsageBlock = _metaUsageProvider.GetToolUsageMetadata(executeRequest.Mode);
+
+            conversationContext.SystemPrompts.Add(_agentModeCatalogService.BuildSystemPrompt(executeRequest.Mode));
 
             var requestObject = ResponsesRequestBuilder.Build(conversationContext, executeRequest, ragContextBlock, toolUsageBlock, true);
 
