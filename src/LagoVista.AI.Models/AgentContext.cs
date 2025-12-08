@@ -157,7 +157,6 @@ namespace LagoVista.AI.Models
             {
                 nameof(Name),
                 nameof(ModelName),
-                nameof(System),
                 nameof(Temperature),
             };
         }

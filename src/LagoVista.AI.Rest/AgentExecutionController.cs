@@ -1,9 +1,11 @@
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
 using LagoVista.Core.AI.Models;
+using LagoVista.Core.Exceptions;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.IoT.Web.Common.Controllers;
@@ -36,18 +38,41 @@ namespace LagoVista.AI.Rest
         [HttpPost("/api/ai/agent/execute")]
         public async Task<InvokeResult<AgentExecuteResponse>> ExecuteAsync([FromBody] AgentExecuteRequest request)
         {
-            Console.WriteLine($">>>> Received AgentExecuteRequest: {request.ResponseContinuationId}\r\n{JsonConvert.SerializeObject(request)}\r\n");
+            var requestJson = JsonConvert.SerializeObject(request);
+            var sw = Stopwatch.StartNew();
+            Console.WriteLine($">>>> Received AgentExecuteRequest: {request.ResponseContinuationId}, size {(requestJson.Length / 1024.0).ToString("0.00")}kb \r\n{requestJson}\r\n");
 
             var cancellationToken = HttpContext?.RequestAborted ?? CancellationToken.None;
 
-            var result = await _agentRequestHandler.HandleAsync(request, OrgEntityHeader, UserEntityHeader, cancellationToken);
+            try
+            {
+                var result = await _agentRequestHandler.HandleAsync(request, OrgEntityHeader, UserEntityHeader, cancellationToken);
 
-            if(result.Successful)
-                Console.WriteLine($">>>> Received AgentExecuteRequest: {request.ResponseContinuationId} => {result.Result.ResponseContinuationId}\r\n====\r\n{JsonConvert.SerializeObject(result.Result)}\r\n");
-            else
-                Console.WriteLine($">>>> Received AgentExecuteRequest: {request.ResponseContinuationId} => FAILED: {result.Errors[0].Message}\r\n====\r\n");
 
-            return result;
+
+                if (result.Successful)
+                {
+                    var responseJSON = JsonConvert.SerializeObject(result.Result);
+                    Console.WriteLine($">>>> Handeed AgentExecuteRequest: {request.ResponseContinuationId} => {result.Result.ResponseContinuationId} in {sw.Elapsed.TotalSeconds.ToString("0.00")} seconds, response size:  {(responseJSON.Length / 1024.0).ToString("0.00")}kb\r\n====\r\n{responseJSON}\r\n");
+
+                }
+                else
+                    Console.WriteLine($">>>> Handeed AgentExecuteRequest: {request.ResponseContinuationId} => FAILED: {result.Errors[0].Message}\r\n====\r\n");
+
+                return result;
+            }
+            catch(ValidationException val)
+            {
+                return InvokeResult<AgentExecuteResponse>.FromErrors(val.Errors.ToArray());
+            }
+            catch(RecordNotFoundException ex)
+            {
+                return InvokeResult<AgentExecuteResponse>.FromError(ex.Message);
+            }
+            catch(Exception ex)
+            {
+                return InvokeResult<AgentExecuteResponse>.FromException("[AgentExecutionController_AgentExecutionController]", ex);
+            }
         }
 
         [HttpGet("/api/ai/agent/ping")]

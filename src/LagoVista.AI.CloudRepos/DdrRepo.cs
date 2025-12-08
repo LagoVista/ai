@@ -16,10 +16,11 @@ namespace LagoVista.AI.CloudRepos
     public class DdrRepo : DocumentDBRepoBase<DetailedDesignReview>, IDdrRepo
     {
         private readonly bool _shouldConsolidateCollections;
-
+        private readonly IAdminLogger _logger;
         public DdrRepo(IMLRepoSettings settings, IAdminLogger logger) :
             base(settings.MLDocDbStorage.Uri, settings.MLDocDbStorage.AccessKey, settings.MLDocDbStorage.ResourceName, logger)
         {
+            _logger = logger;
             _shouldConsolidateCollections = settings.ShouldConsolidateCollections;
         }
 
@@ -38,9 +39,12 @@ namespace LagoVista.AI.CloudRepos
 
         public async Task<DetailedDesignReview> GetDdrByTlaIdentiferAsync(string tlaIdentifier, EntityHeader org)
         {
-            var catalog = await QueryAsync(qry => qry.OwnerOrganization.Id == org.Id && qry.Tla == tlaIdentifier);
-            if(!catalog.Any())
+            var catalog = await QueryAsync(qry => qry.OwnerOrganization.Id == org.Id && qry.DdrIdentifier == tlaIdentifier);
+            if (!catalog.Any())
+            {
+                _logger.AddError("[DdrRepo_GetDdrByTlaIdentiferAsync]", $"Could not find DDR by TLA {tlaIdentifier} org: {org.Id}.");
                 throw new RecordNotFoundException(nameof(DetailedDesignReview), tlaIdentifier);
+            }
 
             return catalog.Single();
         }

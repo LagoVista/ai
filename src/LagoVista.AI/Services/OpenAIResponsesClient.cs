@@ -36,7 +36,7 @@ namespace LagoVista.AI.Services
         private readonly IAgentModeCatalogService _agentModeCatalogService;
 
         // NEW: toggle whether we use SSE streaming or a simple JSON response.
-        public bool UseStreaming { get; set; } = true;
+        public bool UseStreaming { get; set; } = false;
 
         public OpenAIResponsesClient(
             IOpenAISettings openAiSettings,
@@ -226,8 +226,8 @@ namespace LagoVista.AI.Services
             // Preserve raw JSON for diagnostics.
             agentResponse.Result.RawResponseJson = json;
 
-            _adminLogger.Trace(
-                $"[OpenAIResponsesClient_ReadNonStreamingResponseAsync_Finalize] - Built Agent response {agentResponse.Result.ResponseContinuationId}.");
+            _adminLogger.Trace($"[OpenAIResponseClient_ReadStreamingResponseAsync] Agent Response. JSON\r\n====<<<\r\n{json}\r\n====<<< in {sw.Elapsed.TotalSeconds} seconds");
+
 
             return agentResponse;
         }
@@ -313,7 +313,7 @@ namespace LagoVista.AI.Services
                     }
                 }
 
-                _adminLogger.Trace($"[OpenAIResponseClient_ReadStreamingResponseAsync] Agent Response in {sw.Elapsed.TotalSeconds} seconds. JSON\r\n====\r\n{completedEventJson}\r\n====");
+                _adminLogger.Trace($"[OpenAIResponseClient_ReadStreamingResponseAsync] Agent Response. JSON\r\n====<<<\r\n{completedEventJson}\r\n====<<< in {sw.Elapsed.TotalSeconds} seconds");
 
                 // If we never got any text or a completed event, treat as null/empty
                 if (string.IsNullOrWhiteSpace(completedEventJson))

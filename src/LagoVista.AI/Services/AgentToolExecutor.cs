@@ -124,6 +124,8 @@ namespace LagoVista.AI.Services
                 _logger.AddError(
                     "[AgentToolExecutor_ExecuteServerToolAsync__Cancelled]",
                     call.ErrorMessage);
+
+                return InvokeResult<AgentToolCall>.FromError($"[AgentToolExecutor_ExecuteServerToolAsync__Cancelled] {call.ErrorMessage}");
             }
             catch (Exception ex)
             {
@@ -131,6 +133,9 @@ namespace LagoVista.AI.Services
                 call.ErrorMessage = $"Tool '{call.Name}' threw an exception: {ex.Message}";
 
                 _logger.AddException("[AgentToolExecutor_ExecuteServerToolAsync__Exception]", ex);
+
+
+                return InvokeResult<AgentToolCall>.FromError($"[AgentToolExecutor_ExecuteServerToolAsync__Cancelled] {call.ErrorMessage}");
             }
 
             return InvokeResult<AgentToolCall>.Create(call);

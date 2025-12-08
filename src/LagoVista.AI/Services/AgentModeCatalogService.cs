@@ -20,7 +20,7 @@ namespace LagoVista.AI.Services
 
         public AgentModeCatalogService()
         {
-            ValidateModes(_modes);
+            ValidateModes(GetModes());
         }
 
         private static void ValidateModes(IReadOnlyList<AgentMode> modes)
@@ -99,7 +99,7 @@ namespace LagoVista.AI.Services
             return true;
         }
 
-        private string[] AppendCommonTools(string[] tools)
+        private static string[] AppendCommonTools(string[] tools)
         {
             tools = tools.Append(ModeChangeTool.ToolName).ToArray();
             tools = tools.Append(AgentListModesTool.ToolName).ToArray();
@@ -114,18 +114,16 @@ namespace LagoVista.AI.Services
                 throw new InvalidOperationException(
                     "AgentModeCatalogService.GetMode was called with an empty or null mode key.");
 
-            var mode = _modes.FirstOrDefault(m =>
+            var mode = GetModes().FirstOrDefault(m =>
                 string.Equals(m.Key, modeKey, StringComparison.OrdinalIgnoreCase));
 
             if (mode == null)
             {
-                var valid = string.Join(", ", _modes.Select(m => m.Key));
+                var valid = string.Join(", ", GetModes().Select(m => m.Key));
                 throw new InvalidOperationException(
                     $"AgentModeCatalogService.GetMode was called with unknown mode key '{modeKey}'. " +
                     $"Valid mode keys are: {valid}.");
             }
-
-            mode.AssociatedToolIds = AppendCommonTools(mode.AssociatedToolIds);
 
             return mode;
         }
@@ -133,122 +131,136 @@ namespace LagoVista.AI.Services
         public List<string> GetToolsForMode(string modeKey)
         {
             var mode = GetMode(modeKey); // already does strict validation
-            mode.AssociatedToolIds = AppendCommonTools(mode.AssociatedToolIds);
-
             // Defensive copy
             return new List<string>(mode.AssociatedToolIds ?? Array.Empty<string>());
         }
 
-        private static readonly IReadOnlyList<AgentMode> _modes = new List<AgentMode>
+        private IReadOnlyList<AgentMode> GetModes()
         {
-        new AgentMode
-        {
-            // ORIGINAL: 3F8E4F37-7F7A-4C18-9C7F-6A8B9F945C11
-            Id = "3F8E4F377F7A4C189C7F6A8B9F945C11",
-            Key = "general",
-            DisplayName = "General",
-            Description = "General-purpose assistance for everyday Q&A, explanation, and lightweight help.",
-            WhenToUse = "Use this mode for everyday Q&A, explanation, and lightweight assistance.",
-            IsDefault = true,
-            Status = "active",
-            Version = "v1",
+            var modes = new List<AgentMode>
+                {
+                new AgentMode
+                {
+                    // ORIGINAL: 3F8E4F37-7F7A-4C18-9C7F-6A8B9F945C11
+                    Id = "3F8E4F377F7A4C189C7F6A8B9F945C11",
+                    Key = "general",
+                    DisplayName = "General",
+                    Description = "General-purpose assistance for everyday Q&A, explanation, and lightweight help.",
+                    WhenToUse = "Use this mode for everyday Q&A, explanation, and lightweight assistance.",
+                    IsDefault = true,
+                    Status = "active",
+                    Version = "v1",
 
-            WelcomeMessage = "You are now in General mode. Use this mode for broad questions and lightweight assistance.",
-            ModeInstructions = new[] { "Provide clear, concise answers.", "Do not assume the user is in a structured Aptix workflow unless they say so.", "If the user appears to be asking for DDR or workflow work, consider recommending a mode switch." },
-            BehaviorHints = new[] { "preferConciseResponses" },
-            HumanRoleHints = new[] { "The human is asking general questions or exploring ideas." },
-            ExampleUtterances = new[] { "Can you explain how this works?", "Help me reason through this problem.", "What are the pros and cons of this approach?" },
+                    WelcomeMessage = "You are now in General mode. Use this mode for broad questions and lightweight assistance.",
+                    ModeInstructions = new[] { "Provide clear, concise answers.", "Do not assume the user is in a structured Aptix workflow unless they say so.", "If the user appears to be asking for DDR or workflow work, consider recommending a mode switch." },
+                    BehaviorHints = new[] { "preferConciseResponses" },
+                    HumanRoleHints = new[] { "The human is asking general questions or exploring ideas." },
+                    ExampleUtterances = new[] { "Can you explain how this works?", "Help me reason through this problem.", "What are the pros and cons of this approach?" },
 
-            AssociatedToolIds = new[] {HelloWorldTool.ToolName, HelloWorldClientTool.ToolName, AddAgentModeTool.ToolName, UpdateAgentModeTool.ToolName},
-            ToolGroupHints = new[] { "general" },
-            RagScopeHints = new[] { "boost:docs_general" },
+                    AssociatedToolIds = new[] {HelloWorldTool.ToolName, HelloWorldClientTool.ToolName, AddAgentModeTool.ToolName, UpdateAgentModeTool.ToolName},
+                    ToolGroupHints = new[] { "general" },
+                    RagScopeHints = new[] { "boost:docs_general" },
 
-            StrongSignals = new[] { "general question", "explain this", "help me understand" },
-            WeakSignals = new string[] {}
-        },
-
-        new AgentMode
-        {
-            // ORIGINAL: A9E1F9C1-5A0C-4F8D-9AF5-1F3E8B2A6D22
-            Id = "A9E1F9C15A0C4F8D9AF51F3E8B2A6D22",
-            Key = "ddr_authoring",
-            DisplayName = "DDR Authoring",
-            Description = "Structured creation, refinement, and validation of Aptix DDR specifications following SYS-001.",
-            WhenToUse = "Use this mode when the user wants to create, refine, or validate Aptix DDR specifications following SYS-001.",
-            IsDefault = false,
-            Status = "active",
-            Version = "v1",
-
-            WelcomeMessage = "You are now in DDR Authoring mode. We will work with SYS-001 to create or refine DDRs.",
-            ModeInstructions = new[] { "Follow SYS-001 when creating or updating DDRs.", "Drive the user through the DDR workflow step-by-step instead of dumping a full document at once.", "Ask for explicit confirmation before changing DDR status or marking a DDR as approved." },
-            BehaviorHints = new[] { "preferStructuredOutput", "avoidDestructiveTools" },
-            HumanRoleHints = new[] { "The human is authoring or editing a DDR.", "The human may paste existing DDR text for refinement." },
-            ExampleUtterances = new[] { "Help me draft a new DDR for this tool.", "Refine this DDR section to be more concise.", "Update this DDR to reflect the new workflow rules." },
-
-            AssociatedToolIds = new[] {  GetTlaCatalogAgentTool.ToolName, AddTlaAgentTool.ToolName, ListDdrsAgentTool.ToolName, GetDdrAgentTool.ToolName, CreateDdrAgentTool.ToolName, SetGoalAgentTool.ToolName, SetDdrStatusAgentTool.ToolName, ListChaptersAgentTool.ToolName, ApproveChapterAgentTool.ToolName, ApproveDdrAgentTool.ToolName, ApproveGoalAgentTool.ToolName,  MoveDdrTlaAgentTool.ToolName, UpdateDdrMetadataAgentTool.ToolName, ReorderChaptersAgentTool.ToolName,UpdateChapterSummaryAgentTool.ToolName, UpdateChapterDetailsAgentTool.ToolName  },
-            ToolGroupHints = new[] { "ddr" },
-            RagScopeHints = new[] { "boost:ddr_specs" },
-
-            StrongSignals = new[] { "create a ddr", "refine this ddr", "work on a spec" },
-            WeakSignals = new[] { "improve this document", "rewrite this section" }
-        },
+                    StrongSignals = new[] { "general question", "explain this", "help me understand" },
+                    WeakSignals = new string[] {}
+                },
 
                 new AgentMode
-        {
-            // ORIGINAL: A9E1F9C1-5A0C-4F8D-9AF5-1F3E8B2A6D22
-            Id = "D11C9951BA6E4C679DD722996784884C",
-            Key = "ddr_import",
-            DisplayName = "DDR Importing",
-            Description = "A process that let's the user upload DDR's to be imported into more formal storage.",
-            WhenToUse = "Use this mode when the user wants to import a DDR.",
-            IsDefault = false,
-            Status = "active",
-            Version = "v1",
+                {
+                    // ORIGINAL: A9E1F9C1-5A0C-4F8D-9AF5-1F3E8B2A6D22
+                    Id = "A9E1F9C15A0C4F8D9AF51F3E8B2A6D22",
+                    Key = "ddr_authoring",
+                    DisplayName = "DDR Authoring",
+                    Description = "Structured creation, refinement, and validation of Aptix DDR specifications following SYS-001.",
+                    WhenToUse = "Use this mode when the user wants to create, refine, or validate Aptix DDR specifications following SYS-001.",
+                    IsDefault = false,
+                    Status = "active",
+                    Version = "v1",
 
-            WelcomeMessage = "You are now in DDR Import mode. Please paste your DDR into the chat window and press send.",
-            ModeInstructions = new[] { "Follow the prompt as supplied." },
-            BehaviorHints = new[] { "preferStructuredOutput", "avoidDestructiveTools" },
-            HumanRoleHints = new[] { "The human is importing a DDR.", "The human may paste existing DDR text for refinement." },
-            ExampleUtterances = new[] { "I need to import a DDR.", "Please import a DDr." },
+                    WelcomeMessage = "You are now in DDR Authoring mode. We will work with SYS-001 to create or refine DDRs.",
+                    ModeInstructions = new[] { "Follow SYS-001 when creating or updating DDRs.", "Drive the user through the DDR workflow step-by-step instead of dumping a full document at once.", "Ask for explicit confirmation before changing DDR status or marking a DDR as approved." },
+                    BehaviorHints = new[] { "preferStructuredOutput", "avoidDestructiveTools" },
+                    HumanRoleHints = new[] { "The human is authoring or editing a DDR.", "The human may paste existing DDR text for refinement." },
+                    ExampleUtterances = new[] { "Help me draft a new DDR for this tool.", "Refine this DDR section to be more concise.", "Update this DDR to reflect the new workflow rules." },
 
-            AssociatedToolIds = new[] {  ModeChangeTool.ToolName, AgentListModesTool.ToolName, RequestUserApprovalAgentTool.ToolName, GetTlaCatalogAgentTool.ToolName, AddTlaAgentTool.ToolName, ListDdrsAgentTool.ToolName, GetDdrAgentTool.ToolName, CreateDdrAgentTool.ToolName, SetGoalAgentTool.ToolName, SetDdrStatusAgentTool.ToolName, ListChaptersAgentTool.ToolName, ApproveChapterAgentTool.ToolName, ApproveDdrAgentTool.ToolName, ApproveGoalAgentTool.ToolName,  MoveDdrTlaAgentTool.ToolName, UpdateDdrMetadataAgentTool.ToolName, ReorderChaptersAgentTool.ToolName,UpdateChapterSummaryAgentTool.ToolName, UpdateChapterDetailsAgentTool.ToolName  },
-            ToolGroupHints = new[] { "ddr" },
-            RagScopeHints = new[] { "boost:ddr_specs" },
+                    AssociatedToolIds = new[] {  GetTlaCatalogAgentTool.ToolName, AddTlaAgentTool.ToolName, ListDdrsAgentTool.ToolName, GetDdrAgentTool.ToolName, CreateDdrAgentTool.ToolName, SetGoalAgentTool.ToolName,
+                        AddChaptersAgentTool.ToolName, AddChapterAgentTool.ToolName,
+                        SetDdrStatusAgentTool.ToolName, ListChaptersAgentTool.ToolName, ApproveChapterAgentTool.ToolName, ApproveDdrAgentTool.ToolName, ApproveGoalAgentTool.ToolName,  MoveDdrTlaAgentTool.ToolName, UpdateDdrMetadataAgentTool.ToolName,
+                        ReorderChaptersAgentTool.ToolName,UpdateChapterSummaryAgentTool.ToolName, UpdateChapterDetailsAgentTool.ToolName  },
+                    ToolGroupHints = new[] { "ddr" },
+                    RagScopeHints = new[] { "boost:ddr_specs" },
 
-            StrongSignals = new[] { "import a ddr" },
-            WeakSignals = new[] { "import a document", "create a document" }
-        },
+                    StrongSignals = new[] { "create a ddr", "refine this ddr", "work on a spec" },
+                    WeakSignals = new[] { "improve this document", "rewrite this section" }
+                },
 
-        new AgentMode
-        {
-            // ORIGINAL: 0FB81E6A-8337-444B-A00A-0CE28E3A1F78
-            Id = "0FB81E6A8337444BA00A0CE28E3A1F78",
-            Key = "workflow_authoring",
-            DisplayName = "Workflow Authoring",
-            Description = "Creation, refinement, and validation of Aptix agent workflows using the Workflow Registry Tool (TUL-006).",
-            WhenToUse = "Use this mode when defining, editing, or validating Aptix workflows using TUL-006.",
-            IsDefault = false,
-            Status = "active",
-            Version = "v1",
+                        new AgentMode
+                {
+                    // ORIGINAL: A9E1F9C1-5A0C-4F8D-9AF5-1F3E8B2A6D22
+                    Id = "D11C9951BA6E4C679DD722996784884C",
+                    Key = "ddr_import",
+                    DisplayName = "DDR Importing",
+                    Description = "A process that let's the user upload DDR's to be imported into more formal storage.",
+                    WhenToUse = "Use this mode when the user wants to import a DDR.",
+                    IsDefault = false,
+                    Status = "active",
+                    Version = "v1",
 
-            WelcomeMessage = "You are now in Workflow Authoring mode. We will work with TUL-006 to define or refine workflows.",
-            ModeInstructions = new[] { "Follow TUL-006 when creating or updating workflows.", "Use structured JSON for workflow fields.", "Ask for user confirmation before modifying or publishing workflows." },
-            BehaviorHints = new[] { "preferStructuredOutput", "avoidDestructiveTools" },
-            HumanRoleHints = new[] { "The human is defining or refining an Aptix workflow." },
-            ExampleUtterances = new[] { "Create a new workflow.", "Update this workflow's steps.", "Show me the manifest for workflow X." },
+                    WelcomeMessage = "You are now in DDR Import mode. Please paste your DDR into the chat window and press send.",
+                    ModeInstructions = new[] { "Follow the prompt as supplied." },
+                    BehaviorHints = new[] { "preferStructuredOutput", "avoidDestructiveTools" },
+                    HumanRoleHints = new[] { "The human is importing a DDR.", "The human may paste existing DDR text for refinement." },
+                    ExampleUtterances = new[] { "I need to import a DDR.", "Please import a DDr." },
 
-            AssociatedToolIds = new[] { ModeChangeTool.ToolName, AgentListModesTool.ToolName, RequestUserApprovalAgentTool.ToolName, CreateWorkflowTool.ToolName, GetWorkflowManifestTool.ToolName, UpdateWorkflowTool.ToolName, ListWorkflowsTool.ToolName, DeleteWorkflowTool.ToolName },
-            ToolGroupHints = new[] { "workflow" },
-            RagScopeHints = new[] { "boost:workflow_specs" },
+                    AssociatedToolIds = new[] {  ModeChangeTool.ToolName, AgentListModesTool.ToolName, RequestUserApprovalAgentTool.ToolName, GetTlaCatalogAgentTool.ToolName, AddTlaAgentTool.ToolName,
+                      AddChaptersAgentTool.ToolName, AddChapterAgentTool.ToolName,
+                        ListDdrsAgentTool.ToolName, GetDdrAgentTool.ToolName, CreateDdrAgentTool.ToolName, SetGoalAgentTool.ToolName, SetDdrStatusAgentTool.ToolName, ListChaptersAgentTool.ToolName, ApproveChapterAgentTool.ToolName, 
+                        ApproveDdrAgentTool.ToolName, ApproveGoalAgentTool.ToolName,  MoveDdrTlaAgentTool.ToolName, UpdateDdrMetadataAgentTool.ToolName, ReorderChaptersAgentTool.ToolName,UpdateChapterSummaryAgentTool.ToolName, UpdateChapterDetailsAgentTool.ToolName  },
+                    ToolGroupHints = new[] { "ddr" },
+                    RagScopeHints = new[] { "boost:ddr_specs" },
 
-            StrongSignals = new[] { "create a workflow", "edit workflow", "workflow instructions" },
-            WeakSignals = new[] { "improve this process", "show workflow details" }
+                    StrongSignals = new[] { "import a ddr" },
+                    WeakSignals = new[] { "import a document", "create a document" }
+                },
+
+                new AgentMode
+                {
+                    // ORIGINAL: 0FB81E6A-8337-444B-A00A-0CE28E3A1F78
+                    Id = "0FB81E6A8337444BA00A0CE28E3A1F78",
+                    Key = "workflow_authoring",
+                    DisplayName = "Workflow Authoring",
+                    Description = "Creation, refinement, and validation of Aptix agent workflows using the Workflow Registry Tool (TUL-006).",
+                    WhenToUse = "Use this mode when defining, editing, or validating Aptix workflows using TUL-006.",
+                    IsDefault = false,
+                    Status = "active",
+                    Version = "v1",
+
+                    WelcomeMessage = "You are now in Workflow Authoring mode. We will work with TUL-006 to define or refine workflows.",
+                    ModeInstructions = new[] { "Follow TUL-006 when creating or updating workflows.", "Use structured JSON for workflow fields.", "Ask for user confirmation before modifying or publishing workflows." },
+                    BehaviorHints = new[] { "preferStructuredOutput", "avoidDestructiveTools" },
+                    HumanRoleHints = new[] { "The human is defining or refining an Aptix workflow." },
+                    ExampleUtterances = new[] { "Create a new workflow.", "Update this workflow's steps.", "Show me the manifest for workflow X." },
+
+                    AssociatedToolIds = new[] { ModeChangeTool.ToolName, AgentListModesTool.ToolName, RequestUserApprovalAgentTool.ToolName, CreateWorkflowTool.ToolName, GetWorkflowManifestTool.ToolName, UpdateWorkflowTool.ToolName, ListWorkflowsTool.ToolName, DeleteWorkflowTool.ToolName },
+                    ToolGroupHints = new[] { "workflow" },
+                    RagScopeHints = new[] { "boost:workflow_specs" },
+
+                    StrongSignals = new[] { "create a workflow", "edit workflow", "workflow instructions" },
+                    WeakSignals = new[] { "improve this process", "show workflow details" }
+                }
+            };
+
+            foreach(var mode in modes)
+            {
+                mode.AssociatedToolIds = AppendCommonTools(mode.AssociatedToolIds);
+            }
+
+            return modes;
         }
-    };
 
         public string GetWelcomeMessage(string modeKey)
         {
-            var mode = _modes.SingleOrDefault(m =>
+            var mode = GetModes().SingleOrDefault(m =>
                 string.Equals(m.Key, modeKey, StringComparison.OrdinalIgnoreCase));
 
             if(mode == null)
@@ -258,15 +270,15 @@ namespace LagoVista.AI.Services
         }
 
         public Task<IReadOnlyList<AgentModeSummary>> GetAllModesAsync(CancellationToken cancellationToken)
-            => Task.FromResult(_modes.Select(m => m.CreateSummary()).ToList().AsReadOnly() as IReadOnlyList<AgentModeSummary>);
+            => Task.FromResult(GetModes().Select(m => m.CreateSummary()).ToList().AsReadOnly() as IReadOnlyList<AgentModeSummary>);
 
         public string BuildSystemPrompt(string currentModeKey)
         {
             // Resolve current mode; fall back to default if unknown or empty.
-            var current = _modes.FirstOrDefault(m =>
+            var current = GetModes().FirstOrDefault(m =>
                 !string.IsNullOrWhiteSpace(currentModeKey) &&
                 string.Equals(m.Key, currentModeKey, StringComparison.OrdinalIgnoreCase))
-                ?? _modes.First(m => m.IsDefault);
+                ?? GetModes().First(m => m.IsDefault);
 
             var sb = new StringBuilder();
 
@@ -274,7 +286,7 @@ namespace LagoVista.AI.Services
             sb.AppendLine();
             sb.AppendLine("Available Modes:");
 
-            foreach (var mode in _modes)
+            foreach (var mode in GetModes())
             {
                 sb.Append("- ")
                   .Append(mode.Key)

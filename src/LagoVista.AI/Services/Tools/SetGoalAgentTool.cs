@@ -119,6 +119,7 @@ namespace LagoVista.AI.Services.Tools
             }
             catch (Exception ex)
             {
+                Console.WriteLine(ex.Message);
                 _adminLogger.AddException(baseTag, ex);
                 return InvokeResult<string>.FromException(baseTag, ex);
             }

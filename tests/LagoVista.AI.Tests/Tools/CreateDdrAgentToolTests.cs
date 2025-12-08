@@ -28,8 +28,8 @@ namespace LagoVista.AI.AgentTools.Tests
 
             _context = new AgentToolExecutionContext
             {
-                Org = EntityHeader.Create("org-id", "Org"),
-                User = EntityHeader.Create("user-id", "User")
+                Org = EntityHeader.Create("B5C801B0F79C48939A887A98F26850DD", "Org"),
+                User = EntityHeader.Create("C5C801B0F79C48939A887A98F26850DC", "User")
             };
         }
 
@@ -68,7 +68,7 @@ namespace LagoVista.AI.AgentTools.Tests
             var result = await tool.ExecuteAsync(args.ToString(), _context, CancellationToken.None);
 
             Assert.That(result.Successful, Is.False);
-            Assert.That(result.ErrorMessage, Is.EqualTo("Unknown TLA 'XXX'."));
+            Assert.That(result.ErrorMessage, Is.EqualTo("Unknown TLA 'XXX', available TLAs are []."));
         }
 
         [Test]
@@ -94,7 +94,7 @@ namespace LagoVista.AI.AgentTools.Tests
 
             var result = await tool.ExecuteAsync(args.ToString(), _context, CancellationToken.None);
 
-            Assert.That(result.Successful, Is.True);
+            Assert.That(result.Successful, Is.True, result.ErrorMessage);
             Assert.That(result.Result, Does.Contain("SYS-001"));
         }
 

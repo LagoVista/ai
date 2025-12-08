@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
@@ -9,6 +10,7 @@ using LagoVista.Core;
 using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
+using Microsoft.AspNetCore.Http.Features;
 using Newtonsoft.Json.Linq;
 
 namespace LagoVista.AI.Services.Tools
@@ -27,7 +29,7 @@ namespace LagoVista.AI.Services.Tools
         }
 
         public const string ToolUsageMetadata =
-    "Creates a new Detailed Design Review (DDR) with the next available numeric index for the specified TLA. Used only when beginning a new DDR document.";
+    "Creates a new Detailed Design Review (DDR) with the next available numeric index for the specified TLA. When creating this DDR from an imported document it is OK to use the existing index, we don't have to pull from TLA catalog.  Used only when beginning a new DDR document.";
 
         public override string Name => ToolName;
 
@@ -52,6 +54,11 @@ namespace LagoVista.AI.Services.Tools
                         {
                             type = "string",
                             description = "Three-letter acronym (TLA) such as 'SYS', 'AGN', 'TUL'. Must already exist in the TLA catalog."
+                        },
+                        index = new
+                        {
+                            type = "string",
+                            description = "The numeric portion of the identifier, it is found after TLA- and is optional, if it is there, we should use it and not generate a new one."
                         },
                         title = new
                         {
@@ -81,6 +88,7 @@ namespace LagoVista.AI.Services.Tools
             var tla = payload.Value<string>("tla")?.Trim();
             var title = payload.Value<string>("title")?.Trim();
             var summary = payload.Value<string>("summary")?.Trim();
+            var strIndex = payload.Value<string>("index")?.Trim();
 
             if (string.IsNullOrWhiteSpace(tla))
             {
@@ -101,38 +109,57 @@ namespace LagoVista.AI.Services.Tools
 
             try
             {
+                var tlaIndex = -1;
                 var catalog = await _ddrManager.GetTlaCatalogAsync(context.Org, context.User) ?? new List<DdrTla>();
                 if (!catalog.Any(t => string.Equals(t.Tla, tla, StringComparison.OrdinalIgnoreCase)))
                 {
-                    return FromError($"Unknown TLA '{tla}'.");
+                    return FromError($"Unknown TLA '{tla}', available TLAs are [{String.Join(',', catalog.Select(d => d.Tla))}].");
                 }
 
-                var indexResult = await _ddrManager.AllocateTlaIndex(tla, context.Org, context.User);
-                if (!indexResult.Successful)
+                if (String.IsNullOrEmpty(strIndex) || !int.TryParse(strIndex, out tlaIndex))
                 {
-                    _adminLogger.LogInvokeResult(baseTag, indexResult);
-                    return InvokeResult<string>.FromInvokeResult(indexResult.ToInvokeResult());
+                    var indexResult = await _ddrManager.AllocateTlaIndex(tla, context.Org, context.User);
+                    if (!indexResult.Successful)
+                    {
+                        _adminLogger.LogInvokeResult(baseTag, indexResult);
+                        return InvokeResult<string>.FromInvokeResult(indexResult.ToInvokeResult());
+                    }
+
+                    tlaIndex = indexResult.Result;
                 }
 
-                var index = indexResult.Result;
-                var identifier = $"{tla}-{index:D3}";
+                var identifier = $"{tla}-{tlaIndex:D3}";
                 var now = DateTime.UtcNow.ToJSONString();
 
                 var ddr = new DetailedDesignReview
                 {
                     Tla = tla,
-                    Index = index,
+                    Index = tlaIndex,
                     Name = title,
+                    DdrIdentifier = identifier,
+                    Key = identifier.Replace("-","").ToLower(),
                     Description = summary,
                     Status = "Draft",
                     StatusTimestamp = now,
                     Goal = null,
+                    CreationDate = now,
+                    LastUpdatedDate = now,
+                    CreatedBy = context.User,
+                    LastUpdatedBy = context.User,
+                    OwnerOrganization = context.Org,
                     GoalApprovedBy = null,
                     GoalApprovedTimestamp = null,
                     ApprovedBy = null,
                     ApprovedTimestamp = null,
                     Chapters = new List<DdrChapter>()
                 };
+
+
+                var result = Validator.Validate(ddr);
+                if(!result.Successful)
+                { 
+                    return InvokeResult<string>.FromInvokeResult(result.ToInvokeResult());
+                }
 
                 var addResult = await _ddrManager.AddDdrAsync(ddr, context.Org, context.User);
                 if (!addResult.Successful)
