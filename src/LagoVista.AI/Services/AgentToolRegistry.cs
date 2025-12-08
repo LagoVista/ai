@@ -14,8 +14,14 @@ namespace LagoVista.AI.Services
         private readonly Dictionary<string, Type> _toolsByName;
         private readonly IAdminLogger _logger;
 
+        private readonly List<string> _allToolIds = new List<string>();
+
+        
+        public static AgentToolRegistry Instance { get; private set; }
+
         public AgentToolRegistry(IAdminLogger logger)
         {
+            AgentToolRegistry.Instance = this;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _toolsByName = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
         }
@@ -142,6 +148,8 @@ namespace LagoVista.AI.Services
             //
             _toolsByName.Add(toolName, toolType);
 
+            _allToolIds.Add(toolName);
+
             _logger.Trace(
                 $"[AgentToolRegistry_RegisterTool] Registered tool '{toolName}' -> '{toolType.FullName}'.");
         }
@@ -175,6 +183,11 @@ namespace LagoVista.AI.Services
         {
             // Return a read-only wrapper to avoid external mutation.
             return new ReadOnlyDictionary<string, Type>(_toolsByName);
+        }
+
+        public IEnumerable<string> GetAllToolIds()
+        {
+            return _allToolIds;
         }
     }
 }

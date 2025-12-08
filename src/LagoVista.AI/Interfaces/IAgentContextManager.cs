@@ -18,5 +18,7 @@ namespace LagoVista.AI
         Task<Models.AgentContext> GetAgentContextWithSecretsAsync(string id, EntityHeader org, EntityHeader user);
         Task<InvokeResult> DeleteAgentContextAsync(string id, EntityHeader org, EntityHeader user);
         Task<ListResponse<AgentContextSummary>> GetAgentContextsForOrgAsync(EntityHeader org, EntityHeader user, ListRequest listRequest);
+    
+        Task<InvokeResult> AddAgentModeAsync(string agentContextId, AgentMode agentMode, EntityHeader org, EntityHeader user);
     }
 }

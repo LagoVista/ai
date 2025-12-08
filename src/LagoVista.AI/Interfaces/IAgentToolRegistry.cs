@@ -19,5 +19,7 @@ namespace LagoVista.AI.Interfaces
         /// for all registered tools.
         /// </summary>
         IReadOnlyDictionary<string, Type> GetRegisteredTools();
+
+        IEnumerable<string> GetAllToolIds();
     }
 }

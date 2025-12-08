@@ -135,5 +135,15 @@ namespace LagoVista.AI.Managers
             await _repo.UpdateAgentContextAsync(db);
             return InvokeResult.Success;
         }
+
+        public async Task<InvokeResult> AddAgentModeAsync(string agentContextId, AgentMode agentMode, EntityHeader org, EntityHeader user)
+        {
+            var ctx = await this.GetAgentContextAsync(agentContextId, org, user);
+            ctx.AgentModes.Add(agentMode);
+
+            await UpdateAgentContextAsync(ctx, org, user);
+
+            return InvokeResult.Success;
+        }
     }
 }

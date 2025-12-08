@@ -99,6 +99,15 @@ namespace LagoVista.AI.Services
             return true;
         }
 
+        private string[] AppendCommonTools(string[] tools)
+        {
+            tools = tools.Append(ModeChangeTool.ToolName).ToArray();
+            tools = tools.Append(AgentListModesTool.ToolName).ToArray();
+            tools = tools.Append(ListWorkflowsTool.ToolName).ToArray();
+
+            return tools;
+        }
+
         public AgentMode GetMode(string modeKey)
         {
             if (string.IsNullOrWhiteSpace(modeKey))
@@ -116,9 +125,7 @@ namespace LagoVista.AI.Services
                     $"Valid mode keys are: {valid}.");
             }
 
-            mode.AssociatedToolIds.Append(ModeChangeTool.ToolName);
-            mode.AssociatedToolIds.Append(AgentListModesTool.ToolName);
-            mode.AssociatedToolIds.Append(ListWorkflowsTool.ToolName);
+            mode.AssociatedToolIds = AppendCommonTools(mode.AssociatedToolIds);
 
             return mode;
         }
@@ -126,6 +133,7 @@ namespace LagoVista.AI.Services
         public List<string> GetToolsForMode(string modeKey)
         {
             var mode = GetMode(modeKey); // already does strict validation
+            mode.AssociatedToolIds = AppendCommonTools(mode.AssociatedToolIds);
 
             // Defensive copy
             return new List<string>(mode.AssociatedToolIds ?? Array.Empty<string>());
@@ -151,7 +159,7 @@ namespace LagoVista.AI.Services
             HumanRoleHints = new[] { "The human is asking general questions or exploring ideas." },
             ExampleUtterances = new[] { "Can you explain how this works?", "Help me reason through this problem.", "What are the pros and cons of this approach?" },
 
-            AssociatedToolIds = new[] {HelloWorldTool.ToolName, HelloWorldClientTool.ToolName},
+            AssociatedToolIds = new[] {HelloWorldTool.ToolName, HelloWorldClientTool.ToolName, AddAgentModeTool.ToolName, UpdateAgentModeTool.ToolName},
             ToolGroupHints = new[] { "general" },
             RagScopeHints = new[] { "boost:docs_general" },
 

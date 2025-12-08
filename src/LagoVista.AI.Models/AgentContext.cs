@@ -64,6 +64,8 @@ namespace LagoVista.AI.Models
             ResourceType: typeof(AIResources))]
         public List<ConversationContext> ConversationContexts { get; set; } = new List<ConversationContext>();
 
+        public List<AgentMode> AgentModes { get; set; } = new List<AgentMode>();
+
         ISummaryData ISummaryFactory.CreateSummary()
         {
             return this.CreateSummary();

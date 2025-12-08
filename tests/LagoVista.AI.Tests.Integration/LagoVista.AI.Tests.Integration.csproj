@@ -17,7 +17,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="LagoVista.Core.TestBase" Version="3.0.3126.1039" />
+    <PackageReference Include="LagoVista.Core.TestBase" Version="3.0.3127.0954" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.22.1" />
   </ItemGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'net461' ">

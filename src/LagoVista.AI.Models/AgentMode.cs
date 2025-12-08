@@ -130,6 +130,9 @@ namespace LagoVista.AI.Models
                 Description = this.Description ?? this.WhenToUse,
                 SystemPromptSummary = this.WhenToUse,
                 IsDefault = this.IsDefault,
+                Status = this.Status,
+                Version = this.Version,
+                WhenToUse = this.WhenToUse,
                 HumanRoleHints = this.HumanRoleHints ?? Array.Empty<string>(),
                 ExampleUtterances = this.ExampleUtterances ?? Array.Empty<string>()
             };
@@ -146,9 +149,14 @@ namespace LagoVista.AI.Models
         public string Key { get; set; }
         public string DisplayName { get; set; }
         public string Description { get; set; }
+        public string Status { get; set; }
+        public string WhenToUse { get; set; }
+        public string Version { get; set; }
         public string SystemPromptSummary { get; set; }
         public bool IsDefault { get; set; }
         public string[] HumanRoleHints { get; set; }
         public string[] ExampleUtterances { get; set; }
+    
+    
     }
 }
