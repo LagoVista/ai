@@ -41,7 +41,7 @@ namespace LagoVista.AI.Helpers
             if (conversationContext == null) throw new ArgumentNullException(nameof(conversationContext));
             if (request == null) throw new ArgumentNullException(nameof(request));
 
-            var isContinuation = !string.IsNullOrWhiteSpace(request.ResponseContinuationId);
+            var isContinuation = !string.IsNullOrWhiteSpace(request.ResponseContinuationId) && String.IsNullOrEmpty(request.ToolResultsJson);
 
             var dto = new ResponsesApiRequest
             {

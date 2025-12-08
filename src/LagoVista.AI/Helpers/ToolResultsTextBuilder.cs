@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -28,16 +29,20 @@ namespace LagoVista.AI.Helpers
         {
             if (string.IsNullOrWhiteSpace(toolResultsJson))
             {
+                Console.WriteLine("[ToolResultsTextBuilder__BuildFromToolResultsJson] - Empty String, aborting");
                 return null;
             }
 
             JArray resultsArray;
             try
             {
+
+                Console.WriteLine($"[ToolResultsTextBuilder__BuildFromToolResultsJson] - Parsing JSON - {toolResultsJson}");
                 resultsArray = JArray.Parse(toolResultsJson);
             }
-            catch (JsonException)
+            catch (JsonException ex)
             {
+                Console.WriteLine($"[ToolResultsTextBuilder__BuildFromToolResultsJson] - Malformed JSON - {ex.Message}");
                 // If the JSON is malformed, don't poison the prompt – just skip it.
                 return null;
             }
@@ -60,14 +65,14 @@ namespace LagoVista.AI.Helpers
                     continue;
                 }
 
-                var callId = obj.Value<string>("CallId") ?? "(missing)";
-                var name = obj.Value<string>("Name") ?? "(missing)";
+                var callId = obj.Value<string>("CallId") ?? obj.Value<string>("callId") ?? "(missing)";
+                var name = obj.Value<string>("Name") ?? obj.Value<string>("name") ?? "(missing)";
                 var isServerTool = obj.Value<bool?>("IsServerTool");
                 var wasExecuted = obj.Value<bool?>("WasExecuted");
                 var errorMessage = obj.Value<string>("ErrorMessage");
 
-                var argumentsJson = obj.Value<string>("ArgumentsJson");
-                var resultJson = obj.Value<string>("ResultJson");
+                var argumentsJson = obj.Value<string>("ArgumentsJson") ?? obj.Value<string>("argumentsJson");
+                var resultJson = obj.Value<string>("ResultJson") ?? obj.Value<string>("resultJson");
 
                 sb.AppendLine(string.Format("- CallId: {0}", callId));
                 sb.AppendLine(string.Format("  Name: {0}", name));
