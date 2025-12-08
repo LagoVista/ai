@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Cosmos;
+using Newtonsoft.Json;
 
 namespace LagoVista.AI.Rest
 {
@@ -35,7 +36,7 @@ namespace LagoVista.AI.Rest
         [HttpPost("/api/ai/agent/execute")]
         public async Task<InvokeResult<AgentExecuteResponse>> ExecuteAsync([FromBody] AgentExecuteRequest request)
         {
-            Console.WriteLine($">>>> Received AgentExecuteRequest: {request.ResponseContinuationId}");
+            Console.WriteLine($">>>> Received AgentExecuteRequest: {request.ResponseContinuationId}\r\n{JsonConvert.SerializeObject(request)}\r\n");
 
             var cancellationToken = HttpContext?.RequestAborted ?? CancellationToken.None;
 
