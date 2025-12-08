@@ -144,7 +144,6 @@ namespace LagoVista.AI.Services
                         return InvokeResult<AgentExecuteResponse>.FromError($"{errorMessage}; {reasonSuffix}");
                     }
 
-                    // NEW: choose streaming vs non-streaming response handling.
                     InvokeResult<AgentExecuteResponse> agentResponse;
                     if (UseStreaming)
                     {

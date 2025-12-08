@@ -43,7 +43,7 @@ namespace LagoVista.AI.Rest
             var result = await _agentRequestHandler.HandleAsync(request, OrgEntityHeader, UserEntityHeader, cancellationToken);
 
             if(result.Successful)
-                Console.WriteLine($">>>> Received AgentExecuteRequest: {request.ResponseContinuationId} => {result.Result.ResponseContinuationId}\r\n====\r\n");
+                Console.WriteLine($">>>> Received AgentExecuteRequest: {request.ResponseContinuationId} => {result.Result.ResponseContinuationId}\r\n====\r\n{JsonConvert.SerializeObject(result.Result)}\r\n");
             else
                 Console.WriteLine($">>>> Received AgentExecuteRequest: {request.ResponseContinuationId} => FAILED: {result.Errors[0].Message}\r\n====\r\n");
 
