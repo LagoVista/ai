@@ -14,17 +14,16 @@ namespace LagoVista.AI.Services.Tools
     /// Minimal example tool that generates a greeting message.
     /// Serves as the canonical reference implementation for Aptix tools.
     /// </summary>
-    public sealed class HelloWorldTool : IAgentTool
+    public sealed class HelloClientWorldTool : IAgentTool
     {
         /* --------------------------------------------------------------
          * REQUIRED CONSTANTS (Contract §3.3)
          * -------------------------------------------------------------- */
 
-        public const string ToolName = "agent_hello_world";
+        public const string ToolName = "agent_hello_client_world";
 
         public const string ToolUsageMetadata =
-            "Generates a personalized greeting message. Use when the user " +
-            "asks to be greeted, welcomed, or acknowledged.";
+            "Will get a name from the client so the agent can say hello";
 
         /* --------------------------------------------------------------
          * DI CONSTRUCTOR (Contract §3.1)
@@ -32,7 +31,7 @@ namespace LagoVista.AI.Services.Tools
 
         private readonly IAdminLogger _logger;
 
-        public HelloWorldTool(IAdminLogger logger)
+        public HelloClientWorldTool(IAdminLogger logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
@@ -43,7 +42,7 @@ namespace LagoVista.AI.Services.Tools
 
         public string Name => ToolName;
 
-        public bool IsToolFullyExecutedOnServer => true;
+        public bool IsToolFullyExecutedOnServer => false;
 
         /* --------------------------------------------------------------
          * INPUT/OUTPUT CONTRACT (Contract §4)
@@ -70,43 +69,20 @@ namespace LagoVista.AI.Services.Tools
             AgentToolExecutionContext context,
             CancellationToken cancellationToken = default)
         {
-            if (string.IsNullOrWhiteSpace(argumentsJson))
+            // This is a client-side tool. On the server we never actually
+            // obtain approval; instead we surface a normalized failure
+            // that maps to the spec's UserApprovalUnavailable error.
+            var envelope = new JObject
             {
-                return Task.FromResult(
-                    InvokeResult<string>.FromError(
-                        "HelloWorldTool requires a non-empty arguments object."));
-            }
-
-            try
-            {
-                var args = JsonConvert.DeserializeObject<HelloWorldArgs>(argumentsJson)
-                           ?? new HelloWorldArgs();
-
-                if (string.IsNullOrWhiteSpace(args.Name))
+                ["ok"] = false,
+                ["error"] = new JObject
                 {
-                    return Task.FromResult(
-                        InvokeResult<string>.FromError(
-                            "HelloWorldTool requires a non-empty 'name' string."));
+                    ["code"] = "HelloClientNotUnavailable",
+                    ["message"] = "agent_hello_client_world is a client-side tool and must be executed by the hosting client."
                 }
+            };
 
-                var reply = new HelloWorldResult
-                {
-                    Message = $"Hello, {args.Name}!",
-                    ConversationId = context?.Request?.ConversationId,
-                    SessionId = context?.SessionId
-                };
-
-                var json = JsonConvert.SerializeObject(reply);
-                return Task.FromResult(InvokeResult<string>.Create(json));
-            }
-            catch (Exception ex)
-            {
-                _logger.AddException("[HelloWorldTool_ExecuteAsync__Exception]", ex);
-
-                return Task.FromResult(
-                    InvokeResult<string>.FromError(
-                        "HelloWorldTool failed to process arguments."));
-            }
+            return Task.FromResult(InvokeResult<string>.Create(envelope.ToString()));
         }
 
         /* --------------------------------------------------------------

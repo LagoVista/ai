@@ -116,6 +116,12 @@ namespace LagoVista.AI.Services
                     $"Valid mode keys are: {valid}.");
             }
 
+            mode.AssociatedToolIds.Append(ModeChangeTool.ToolName);
+            mode.AssociatedToolIds.Append(AgentListModesTool.ToolName);
+            mode.AssociatedToolIds.Append(ListWorkflowsTool.ToolName);
+            mode.AssociatedToolIds.Append(HelloWorldTool.ToolName);
+            mode.AssociatedToolIds.Append(HelloClientWorldTool.ToolName);
+
             return mode;
         }
 
@@ -127,7 +133,7 @@ namespace LagoVista.AI.Services
             return new List<string>(mode.AssociatedToolIds ?? Array.Empty<string>());
         }
 
-        private static readonly IReadOnlyList<AgentMode> _modes = new List<AgentMode>
+        private static readonly List<AgentMode> _modes = new List<AgentMode>
         {
         new AgentMode
         {
@@ -147,7 +153,7 @@ namespace LagoVista.AI.Services
             HumanRoleHints = new[] { "The human is asking general questions or exploring ideas." },
             ExampleUtterances = new[] { "Can you explain how this works?", "Help me reason through this problem.", "What are the pros and cons of this approach?" },
 
-            AssociatedToolIds = new[] { ModeChangeTool.ToolName, AgentListModesTool.ToolName, ListWorkflowsTool.ToolName },
+            AssociatedToolIds = Array.Empty<string>(),
             ToolGroupHints = new[] { "general" },
             RagScopeHints = new[] { "boost:docs_general" },
 
@@ -173,7 +179,7 @@ namespace LagoVista.AI.Services
             HumanRoleHints = new[] { "The human is authoring or editing a DDR.", "The human may paste existing DDR text for refinement." },
             ExampleUtterances = new[] { "Help me draft a new DDR for this tool.", "Refine this DDR section to be more concise.", "Update this DDR to reflect the new workflow rules." },
 
-            AssociatedToolIds = new[] {  ModeChangeTool.ToolName, AgentListModesTool.ToolName, RequestUserApprovalAgentTool.ToolName, GetTlaCatalogAgentTool.ToolName, AddTlaAgentTool.ToolName, ListDdrsAgentTool.ToolName, GetDdrAgentTool.ToolName, CreateDdrAgentTool.ToolName, SetGoalAgentTool.ToolName, SetDdrStatusAgentTool.ToolName, ListChaptersAgentTool.ToolName, ApproveChapterAgentTool.ToolName, ApproveDdrAgentTool.ToolName, ApproveGoalAgentTool.ToolName,  MoveDdrTlaAgentTool.ToolName, UpdateDdrMetadataAgentTool.ToolName, ReorderChaptersAgentTool.ToolName,UpdateChapterSummaryAgentTool.ToolName, UpdateChapterDetailsAgentTool.ToolName  },
+            AssociatedToolIds = new[] { GetTlaCatalogAgentTool.ToolName, AddTlaAgentTool.ToolName, ListDdrsAgentTool.ToolName, GetDdrAgentTool.ToolName, CreateDdrAgentTool.ToolName, SetGoalAgentTool.ToolName, SetDdrStatusAgentTool.ToolName, ListChaptersAgentTool.ToolName, ApproveChapterAgentTool.ToolName, ApproveDdrAgentTool.ToolName, ApproveGoalAgentTool.ToolName,  MoveDdrTlaAgentTool.ToolName, UpdateDdrMetadataAgentTool.ToolName, ReorderChaptersAgentTool.ToolName,UpdateChapterSummaryAgentTool.ToolName, UpdateChapterDetailsAgentTool.ToolName  },
             ToolGroupHints = new[] { "ddr" },
             RagScopeHints = new[] { "boost:ddr_specs" },
 
@@ -199,7 +205,7 @@ namespace LagoVista.AI.Services
             HumanRoleHints = new[] { "The human is defining or refining an Aptix workflow." },
             ExampleUtterances = new[] { "Create a new workflow.", "Update this workflow's steps.", "Show me the manifest for workflow X." },
 
-            AssociatedToolIds = new[] { ModeChangeTool.ToolName, AgentListModesTool.ToolName, RequestUserApprovalAgentTool.ToolName, CreateWorkflowTool.ToolName, GetWorkflowManifestTool.ToolName, UpdateWorkflowTool.ToolName, ListWorkflowsTool.ToolName, DeleteWorkflowTool.ToolName },
+            AssociatedToolIds = new[] {  CreateWorkflowTool.ToolName, GetWorkflowManifestTool.ToolName, UpdateWorkflowTool.ToolName, ListWorkflowsTool.ToolName, DeleteWorkflowTool.ToolName },
             ToolGroupHints = new[] { "workflow" },
             RagScopeHints = new[] { "boost:workflow_specs" },
 
