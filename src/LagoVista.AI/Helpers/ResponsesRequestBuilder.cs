@@ -126,6 +126,32 @@ namespace LagoVista.AI.Helpers
                 Text = instructionBlock
             });
 
+
+            // ---------------------------------------------------------------------
+            // ACTIVE FILES (Attach editor contents for reasoning)
+            // ---------------------------------------------------------------------
+            if (request.ActiveFiles != null && request.ActiveFiles.Any())
+            {
+                var sb = new StringBuilder();
+                sb.AppendLine("[ACTIVE FILES]");
+
+                foreach (var file in request.ActiveFiles)
+                {
+                    sb.AppendLine($"--- BEGIN ACTIVE FILE ---");
+                    sb.AppendLine($"Path: {file.Path}");
+                    sb.AppendLine($"Language: {file.Language}");
+                    sb.AppendLine();
+                    sb.AppendLine(file.Contents ?? string.Empty);
+                    sb.AppendLine($"--- END ACTIVE FILE ---");
+                    sb.AppendLine();
+                }
+
+                userMessage.Content.Add(new ResponsesMessageContent
+                {
+                    Text = sb.ToString()
+                });
+            }
+
             if (!string.IsNullOrWhiteSpace(ragContextBlock))
             {
                 userMessage.Content.Add(new ResponsesMessageContent

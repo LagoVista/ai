@@ -247,6 +247,30 @@ namespace LagoVista.AI.Services
 
                     StrongSignals = new[] { "create a workflow", "edit workflow", "workflow instructions" },
                     WeakSignals = new[] { "improve this process", "show workflow details" }
+                },
+                new AgentMode
+                {
+                    Id = "0FB81E6A83884444300A0CE28E3A1F34",
+                    Key = "file_maintenance",
+                    DisplayName = "File Maintenance",
+                    Description = "Creation, read, update, patch and delete files.",
+                    WhenToUse = "Use this mode when needing to get files between the server and the agent client.",
+                    IsDefault = false,
+                    Status = "active",
+                    Version = "v1",
+
+                    WelcomeMessage = "You are now in File Maintance Mode.",
+                    ModeInstructions = new[] { "This mode can be used to create new files, update existing ones, get a file from the remote client and delete files on the local file system.." },
+                    BehaviorHints = new[] { "preferStructuredOutput", "avoidDestructiveTools" },
+                    HumanRoleHints = new[] { "The human is wanting to send or receive files." },
+                    ExampleUtterances = new[] { "Create a file.", "Update a file.", "Delete a File." },
+
+                    AssociatedToolIds = new[] { WorkspaceCreateFileTool.ToolName, WorkspaceWritePatchTool.ToolName },
+                    ToolGroupHints = new[] { "filemanagement" },
+                    RagScopeHints = new[] { "boost:workflow_specs" },
+
+                    StrongSignals = new[] { "create a file", "update document" },
+                    WeakSignals = new[] { "work with a ddr", "review a spec" }
                 }
             };
 
