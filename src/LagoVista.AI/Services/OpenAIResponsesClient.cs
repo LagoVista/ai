@@ -36,7 +36,7 @@ namespace LagoVista.AI.Services
         private readonly IAgentModeCatalogService _agentModeCatalogService;
 
         // NEW: toggle whether we use SSE streaming or a simple JSON response.
-        public bool UseStreaming { get; set; } = false;
+        public bool UseStreaming { get; set; } = true;
 
         public OpenAIResponsesClient(
             IOpenAISettings openAiSettings,

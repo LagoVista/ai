@@ -335,15 +335,19 @@ namespace LagoVista.AI.Tests.Services
                 {
                     new ActiveFile
                     {
-                        Path = "/path/one.cs",
+                        AbsolutePath = "d:/path/one.cs",
+                        RelativePath = "./path/onme.cs",
+                        Sha256Hash = "SHAAA---FF",
                         Contents = "// file one",
                         Language = "csharp"
                     },
                     new ActiveFile
                     {
-                        Path = "/path/two.ts",
-                        Contents = "// file two",
-                        Language = "typescript"
+                        AbsolutePath = "d:/path/one.cs",
+                        RelativePath = "./path/onme.cs",
+                        Sha256Hash = "SHAAA---FF",
+                        Contents = "// file one",
+                        Language = "csharp"
                     }
                 },
                 RagScopeFilter = new RagScopeFilter()
@@ -366,8 +370,11 @@ namespace LagoVista.AI.Tests.Services
                 {
                     new ActiveFile
                     {
-                        Path = "/path/followup.cs",
-                        Contents = "// follow up",
+
+                        AbsolutePath = "d:/path/one.cs",
+                        RelativePath = "./path/onme.cs",
+                        Sha256Hash = "SHAAA---FF",
+                        Contents = "// file one",
                         Language = "csharp"
                     }
                 },

@@ -6,6 +6,7 @@ using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
 using LagoVista.Core.AI.Models;
 using LagoVista.Core.Exceptions;
+using LagoVista.Core.Models.UIMetaData;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.IoT.Web.Common.Controllers;
@@ -22,11 +23,13 @@ namespace LagoVista.AI.Rest
     public class AgentExecutionController : LagoVistaBaseController
     {
         private readonly IAgentRequestHandler _agentRequestHandler;
+        private readonly IAgentSessionManager _sessionManager;
 
-        public AgentExecutionController(IAgentRequestHandler agentRequestHandler, UserManager<AppUser> userManager, IAdminLogger logger)
+        public AgentExecutionController(IAgentRequestHandler agentRequestHandler, IAgentSessionManager sessionManager, UserManager<AppUser> userManager, IAdminLogger logger)
             : base(userManager, logger)
         {
             _agentRequestHandler = agentRequestHandler;
+            _sessionManager = sessionManager;
         }
 
         /// <summary>
@@ -73,6 +76,18 @@ namespace LagoVista.AI.Rest
             {
                 return InvokeResult<AgentExecuteResponse>.FromException("[AgentExecutionController_AgentExecutionController]", ex);
             }
+        }
+
+        [HttpPost("/api/ai/agent/sessions")]
+        public  Task<ListResponse<AgentSessionSummary>> GetSessions()
+        {
+            return _sessionManager.GetAgentSessionsAsync(GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
+        }
+
+        [HttpGet("/api/ai/agent/session/{id}")]
+        public Task<AgentSession> GetSession(string id)
+        {
+            return _sessionManager.GetAgentSessionAsync(id, OrgEntityHeader, UserEntityHeader);
         }
 
         [HttpGet("/api/ai/agent/ping")]
