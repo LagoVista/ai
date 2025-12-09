@@ -5,6 +5,7 @@
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Managers;
 using LagoVista.AI.Services;
+using LagoVista.AI.Services.Hashing;
 using LagoVista.AI.Services.Tools;
 using LagoVista.Core.AI.Interfaces;
 using LagoVista.Core.Interfaces;
@@ -119,6 +120,11 @@ namespace LagoVista.AI
             services.AddSingleton<IServerToolSchemaProvider, DefaultServerToolSchemaProvider>();
             services.AddSingleton<IAgentSessionNamingService, OpenAISessionNamingService>();
             services.AddSingleton<IServerToolUsageMetadataProvider, DefaultServerToolUsageMetadataProvider>();
+            services.AddSingleton<IContentHashService, DefaultContentHashService>();
+            services.AddSingleton<IWorkspaceWritePatchOrchestrator, WorkspaceWritePatchOrchestrator>();
+            services.AddSingleton<IWorkspacePatchStore, InMemoryWorkspacePatchStore>();
+            services.AddSingleton<IWorkspaceWritePatchValidator, WorkspaceWritePatchValidator>();
+            services.AddSingleton<IWorkspacePatchBatchFactory, WorkspacePatchBatchFactory>();
 
         }
     }

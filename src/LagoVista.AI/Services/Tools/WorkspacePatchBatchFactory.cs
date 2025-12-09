@@ -207,6 +207,20 @@ namespace LagoVista.AI.Services.Tools
         Task<InvokeResult<WorkspacePatchBatch>> SaveAsync(WorkspacePatchBatch batch, CancellationToken cancellationToken = default);
     }
 
+    public sealed class InMemoryWorkspacePatchStore : IWorkspacePatchStore
+    {
+        private readonly Dictionary<string, WorkspacePatchBatch> _batches = new Dictionary<string, WorkspacePatchBatch>();
+
+        public Task<InvokeResult<WorkspacePatchBatch>> SaveAsync(
+            WorkspacePatchBatch batch,
+            CancellationToken cancellationToken = default)
+        {
+            _batches[batch.BatchId] = batch;
+            return Task.FromResult(InvokeResult<WorkspacePatchBatch>.Create(batch));
+        }
+    }
+
+
     #endregion
 
     #region Response DTOs

@@ -265,7 +265,7 @@ namespace LagoVista.AI.Services
                     HumanRoleHints = new[] { "The human is wanting to send or receive files." },
                     ExampleUtterances = new[] { "Create a file.", "Update a file.", "Delete a File." },
 
-                    AssociatedToolIds = new[] { WorkspaceCreateFileTool.ToolName, WorkspaceWritePatchTool.ToolName },
+                    AssociatedToolIds = new[] { WorkspaceCreateFileTool.ToolName, WorkspaceWritePatchTool.ToolName, CodeHashNormalizedTool.ToolName },
                     ToolGroupHints = new[] { "filemanagement" },
                     RagScopeHints = new[] { "boost:workflow_specs" },
 

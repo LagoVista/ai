@@ -138,7 +138,10 @@ namespace LagoVista.AI.Helpers
                 foreach (var file in request.ActiveFiles)
                 {
                     sb.AppendLine($"--- BEGIN ACTIVE FILE ---");
-                    sb.AppendLine($"Path: {file.Path}");
+                    sb.AppendLine($"Absolute Path: {file.AbsolutePath}");
+                    sb.AppendLine($"Relative Path: {file.RelativePath}");
+                    sb.AppendLine($"File Name: {file.FileName}");
+                    sb.AppendLine($"SHA256 Hash: {file.Sha256Hash}");
                     sb.AppendLine($"Language: {file.Language}");
                     sb.AppendLine();
                     sb.AppendLine(file.Contents ?? string.Empty);
