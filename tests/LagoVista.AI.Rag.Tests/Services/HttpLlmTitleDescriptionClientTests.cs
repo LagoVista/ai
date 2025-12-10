@@ -1,9 +1,11 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using LagoVista.AI.Interfaces;
 using LagoVista.AI.Rag.Interfaces;
 using LagoVista.AI.Rag.Models;
 using LagoVista.AI.Rag.Services;
+using LagoVista.AI.Services;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Moq;

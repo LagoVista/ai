@@ -2,7 +2,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.Core.Validation;
 
-namespace LagoVista.AI.Rag.Interfaces
+namespace LagoVista.AI.Interfaces
 {
     /// <summary>
     /// Generic service for calling an LLM with a system prompt and a single text payload,
@@ -57,5 +57,21 @@ namespace LagoVista.AI.Rag.Interfaces
             string systemPrompt,
             string inputText,
             CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Non-generic convenience overload for simple string scenarios.
+        /// Conceptually equivalent to ExecuteAsync&lt;string&gt;.
+        /// </summary>
+        /// <param name="openAiSettings">Settings for OpenAI.</param>
+        /// <param name="systemPrompt">Instructions describing how the model should behave.</param>
+        /// <param name="inputText">Single text payload to operate on.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>InvokeResult containing the resulting string on success, or errors on failure.</returns>
+        Task<InvokeResult<string>> ExecuteAsync(
+            IOpenAISettings openAiSettings,
+            string systemPrompt,
+            string inputText,
+            CancellationToken cancellationToken = default);
+
     }
 }

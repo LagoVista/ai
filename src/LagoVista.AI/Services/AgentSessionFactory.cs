@@ -47,7 +47,7 @@ namespace LagoVista.AI.Services
             };
 
             session.Key = session.Id.ToLower();
-            session.Name =await  _namingService.GenerateNameAsync(agentContext, request.Instruction, default);
+            session.Name = await _namingService.GenerateNameAsync(agentContext, request.Instruction, default);
 
             return session;
         }

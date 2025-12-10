@@ -16,8 +16,6 @@ using LagoVista.AI.Rag.Models;
 using LagoVista.AI.Services;
 using LagoVista.Core.Interfaces;
 using LagoVista.Core.IOC;
-using LagoVista.Core.PlatformSupport;
-using static LagoVista.AI.Startup;
 using System.Net.Http;
 using LagoVista.AI.Rag.Interfaces;
 using LagoVista.AI.Rag.Services;
@@ -26,19 +24,9 @@ namespace LagoVista.AI.Rag
 {
     public static class Startup
     {
-        public class NuvIoTHttpClientFactory : IHttpClientFactory
-        {
-            public HttpClient CreateClient(string name)
-            {
-                return new HttpClient();
-            }
-        }
-
-
         public static void Init()
         {
-
-            SLWIOC.RegisterSingleton<IHttpClientFactory>(new NuvIoTHttpClientFactory());
+            SLWIOC.RegisterSingleton<IHttpClientFactory>(new LagoVistaClientFactory());
             SLWIOC.RegisterSingleton<IQdrantClient, QdrantClient>();
             SLWIOC.RegisterSingleton<IIndexIdServices, IndexIdServices>();
             SLWIOC.RegisterSingleton<IIngestionConfigProvider, JsonIngestionConfigProvider>();

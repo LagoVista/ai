@@ -9,6 +9,7 @@ using LagoVista.AI.Services.Hashing;
 using LagoVista.AI.Services.Tools;
 using LagoVista.Core.AI.Interfaces;
 using LagoVista.Core.Interfaces;
+using LagoVista.Core.IOC;
 using LagoVista.IoT.Logging.Loggers;
 using Logzio.DotNet.Core.WebClient;
 using System;
@@ -16,6 +17,14 @@ using System.Net.Http;
 
 namespace LagoVista.AI
 {
+    public class LagoVistaClientFactory : IHttpClientFactory
+    {
+        public HttpClient CreateClient(string name)
+        {
+            return new HttpClient();
+        }
+    }
+
     public static class Startup
     {
         public static void ConfigureServices(IServiceCollection services, IAdminLogger adminLogger)
@@ -90,6 +99,7 @@ namespace LagoVista.AI
 
             services.AddTransient<IDdrManager, DdrManager>();
             services.AddTransient<IWorkflowDefinitionManager, WorkflowDefinitionManager>();
+            services.AddSingleton<IHttpClientFactory>(new LagoVistaClientFactory());
 
             services.AddSingleton<IAgentToolRegistry>(toolRegistry);
             services.AddTransient<IModelCategoryManager, ModelCategoryManager>();
@@ -124,7 +134,8 @@ namespace LagoVista.AI
             services.AddSingleton<IWorkspacePatchStore, InMemoryWorkspacePatchStore>();
             services.AddSingleton<IWorkspaceWritePatchValidator, WorkspaceWritePatchValidator>();
             services.AddSingleton<IWorkspacePatchBatchFactory, WorkspacePatchBatchFactory>();
-
+            services.AddSingleton<IStructuredTextLlmService, HttpStructuredTextLlmService>();
+            services.AddSingleton<ITextLlmService, HttpTextLlmService>();
         }
     }
 }

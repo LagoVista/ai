@@ -35,7 +35,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
         /// <summary>
         /// Builds a DomainDescriptionRag from the provided file context and symbol text.
         /// </summary>
-        public async Task<InvokeResult<IRagDescription>> BuildAsync(
+        public Task<InvokeResult<IRagDescription>> BuildAsync(
             IndexFileContext fileContext,
             string symbolText,
             IDomainCatalogService domainCatalogService,
@@ -46,7 +46,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
 
             if (string.IsNullOrWhiteSpace(symbolText))
             {
-                return InvokeResult<IRagDescription>.FromError("DomainDescriptionBuilder requires non-empty document text.");
+                return Task.FromResult(InvokeResult<IRagDescription>.FromError("DomainDescriptionBuilder requires non-empty document text."));
             }
 
             try
@@ -55,7 +55,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
 
                 if (string.IsNullOrWhiteSpace(parsed.DomainName))
                 {
-                    return InvokeResult<IRagDescription>.FromError("Unable to determine domain name from document.");
+                    return Task.FromResult(InvokeResult<IRagDescription>.FromError("Unable to determine domain name from document."));
                 }
 
                 var domainKey = DomainDescriptionSectionKeyHelper.NormalizeDomainName(parsed.DomainName);
@@ -72,12 +72,12 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 // Populate common indexing metadata from the file context.
                 description.SetCommonProperties(fileContext);
 
-                return InvokeResult<IRagDescription>.Create(description);
+                return Task.FromResult(InvokeResult<IRagDescription>.Create(description));
             }
             catch (Exception ex)
             {
                 _logger.AddException("DomainDescriptionBuilder_BuildAsync", ex);
-                return InvokeResult<IRagDescription>.FromException("DomainDescriptionBuilder.BuildAsync failed.", ex);
+                return Task.FromResult(InvokeResult<IRagDescription>.FromException("DomainDescriptionBuilder.BuildAsync failed.", ex));
             }
         }
 

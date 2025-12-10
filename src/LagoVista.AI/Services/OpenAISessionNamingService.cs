@@ -16,14 +16,12 @@ namespace LagoVista.AI.Services
     /// </summary>
     public class OpenAISessionNamingService : IAgentSessionNamingService
     {
-        private readonly ILLMClient _llmClient;
+        private readonly ITextLlmService _textService;
         private readonly IAdminLogger _adminLogger;
 
-        public OpenAISessionNamingService(
-            ILLMClient llmClient,
-            IAdminLogger adminLogger)
+        public OpenAISessionNamingService(ITextLlmService structuredTextLlmService, IAdminLogger adminLogger)
         {
-            _llmClient = llmClient ?? throw new ArgumentNullException(nameof(llmClient));
+            _textService = structuredTextLlmService ?? throw new ArgumentNullException(nameof(structuredTextLlmService));
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
         }
 
@@ -57,26 +55,18 @@ namespace LagoVista.AI.Services
                 .AppendLine("- Capture the essence of the instruction.")
                 .ToString();
 
-            var result = await _llmClient.GetAnswerAsync(
-                agentContext,
-                conversationCtx,
-                new AgentExecuteRequest()
-                {
-                    Instruction = instruction,
-                },
-                "",
-                systemPrompt);
+            var settings = new OpenAISettings(agentContext.LlmApiKey);
+
+            var result = await _textService.ExecuteAsync(settings, systemPrompt, instruction);
 
             if (!result.Successful || result.Result == null)
             {
-                _adminLogger.AddError(
-                    "[OpenAISessionNamingService_GenerateNameAsync]",
-                    "LLM call failed for naming.");
+                _adminLogger.AddError("[OpenAISessionNamingService_GenerateNameAsync]",$"LLM call failed for naming - {result.ErrorMessage}");
 
                 return TruncateFallback(instruction);
             }
 
-            var text = result.Result.Text?.Trim();
+            var text = result.Result.Trim();
             if (string.IsNullOrWhiteSpace(text))
             {
                 return TruncateFallback(instruction);
@@ -88,6 +78,8 @@ namespace LagoVista.AI.Services
             {
                 cleaned = cleaned.Substring(0, 60).Trim();
             }
+
+            _adminLogger.AddError("[OpenAISessionNamingService_GenerateNameAsync]", $"Renamed session {instruction} - {result.Result}");
 
             return string.IsNullOrWhiteSpace(cleaned)
                 ? TruncateFallback(instruction)
@@ -113,5 +105,19 @@ namespace LagoVista.AI.Services
             var cleaned = RemovePunctuation(instruction).Trim();
             return cleaned.Length > 60 ? cleaned.Substring(0, 60).Trim() : cleaned;
         }
+    }
+
+
+    internal class OpenAISettings : IOpenAISettings
+    {
+        public OpenAISettings(string apiKey, string url = "https://api.openai.com")
+        {
+            OpenAIUrl = url;
+            OpenAIApiKey = apiKey;
+        }
+
+        public string OpenAIUrl { get; }
+
+        public string OpenAIApiKey { get; }
     }
 }

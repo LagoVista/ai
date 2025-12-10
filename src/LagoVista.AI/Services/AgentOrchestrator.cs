@@ -80,13 +80,19 @@ namespace LagoVista.AI.Services
                 return InvokeResult<AgentExecuteResponse>.FromError(msg, "AGENT_ORCH_MISSING_INSTRUCTION");
             }
 
-            var context = await _contextManager.GetAgentContextAsync(request.AgentContext.Id, org, user);
+            var context = await _contextManager.GetAgentContextWithSecretsAsync(request.AgentContext.Id, org, user);
+
+            Console.WriteLine("WE GOT OUR CONTEXT!");
 
             var session = await _sessionFactory.CreateSession(request, context, OperationKinds.Code, org, user);
             var turn = _sessionFactory.CreateTurnForNewSession(session, request, org, user);
 
+            Console.WriteLine("WE GOT OUR CONTEXT! - 3");
+
             await _sessionManager.AddAgentSessionAsync(session, org, user);
             await _sessionManager.AddAgentSessionTurnAsync(session.Id, turn, org, user);
+
+            Console.WriteLine("WE GOT OUR CONTEXT! - 4");
 
             await PublishSessionStartedAsync(session, org, user);
             await PublishTurnCreatedAsync(session, turn, org, user);

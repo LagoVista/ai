@@ -9,13 +9,12 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
-using LagoVista.AI.Rag.Interfaces;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace LagoVista.AI.Rag.Services
+namespace LagoVista.AI.Services
 {
     /// <summary>
     /// HTTP implementation of IStructuredTextLlmService that calls the OpenAI-style
@@ -28,7 +27,7 @@ namespace LagoVista.AI.Rag.Services
     public class HttpStructuredTextLlmService : IStructuredTextLlmService
     {
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly IOpenAISettings _settings;
+        private IOpenAISettings _settings;
         private readonly IAdminLogger _logger;
 
         /// <summary>
@@ -37,6 +36,14 @@ namespace LagoVista.AI.Rag.Services
         public const string DefaultModel = "gpt-5.1";
 
         private const string HttpClientName = nameof(HttpStructuredTextLlmService);
+
+        public HttpStructuredTextLlmService(
+                IHttpClientFactory httpClientFactory,
+                IAdminLogger logger)
+        {
+            _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
 
         public HttpStructuredTextLlmService(
             IHttpClientFactory httpClientFactory,
@@ -64,15 +71,31 @@ namespace LagoVista.AI.Rag.Services
             return ExecuteAsync<string>(systemPrompt, inputText, null, null, null, cancellationToken);
         }
 
-        public async Task<InvokeResult<TResult>> ExecuteAsync<TResult>(
+        public Task<InvokeResult<string>> ExecuteAsync(IOpenAISettings openAiSettings,
             string systemPrompt,
             string inputText,
-            string model,
-            string operationName,
-            string correlationId,
+            CancellationToken cancellationToken = default)
+        {
+            _settings = openAiSettings;
+            return ExecuteAsync<string>(systemPrompt, inputText, null, null, null, cancellationToken);
+        }
+
+        public async Task<InvokeResult<TResult>> ExecuteAsync<TResult>( string systemPrompt, string inputText, string model, string operationName, string correlationId,
             CancellationToken cancellationToken = default)
         {
             var result = new InvokeResult<TResult>();
+
+            if(_settings == null)
+            {
+                result.AddUserError("OpenAI settings have not been provided, either provide in the constructor or overload that accepts IOpenAISettings parameter.");
+                return result;
+            }
+
+            if(String.IsNullOrEmpty(_settings.OpenAIApiKey))
+            {
+                result.AddUserError("OpenAI settings do not have an API Key.");
+                return result;
+            }
 
             if (string.IsNullOrWhiteSpace(systemPrompt))
             {
@@ -116,13 +139,16 @@ namespace LagoVista.AI.Rag.Services
             var requestBody = BuildRequestBody(systemPrompt, inputText, effectiveModel, schema, typeof(TResult));
             var json = JsonConvert.SerializeObject(requestBody);
 
+
+            _logger.Trace($"[{nameof(HttpStructuredTextLlmService)}__{nameof(HttpStructuredTextLlmService.ExecuteAsync)})__Send]\r\n===>>\r\n{json}\r\n===>>\r\n");
+
             using var httpRequest = new HttpRequestMessage(HttpMethod.Post, "/v1/responses")
             {
                 Content = new StringContent(json, Encoding.UTF8, "application/json")
             };
 
             var traceMsg = new StringBuilder();
-            traceMsg.Append("[HttpStructuredTextLlmService.ExecuteAsync] Sending structured-output request.");
+            traceMsg.Append($"[{nameof(HttpStructuredTextLlmService)}__{nameof(HttpStructuredTextLlmService.ExecuteAsync)})] Sending structured-output request.");
 
             if (!string.IsNullOrWhiteSpace(operationName))
             {
@@ -143,26 +169,27 @@ namespace LagoVista.AI.Rag.Services
             {
                 httpResponse = await client.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false);
                 responseContent = await httpResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
+                _logger.Trace($"[{nameof(HttpStructuredTextLlmService)}__{nameof(HttpStructuredTextLlmService.ExecuteAsync)})_Recv]\r\n<<===\r\n{json}\r\n<<===\r\n");
             }
             catch (Exception ex)
             {
                 _logger.AddException(
-                    nameof(HttpStructuredTextLlmService),
+                    $"[{nameof(HttpStructuredTextLlmService)}__{nameof(HttpStructuredTextLlmService.ExecuteAsync)})]",
                     ex,
                     new KeyValuePair<string, string>("Phase", "HTTP_REQUEST"));
 
-                result.AddUserError("Error while calling LLM provider.");
+                result.AddUserError($"Exception calling LLM  {ex.Message}.");
                 return result;
             }
 
             if (!httpResponse.IsSuccessStatusCode)
             {
                 _logger.AddError(
-                    nameof(HttpStructuredTextLlmService),
+                    $"[{nameof(HttpStructuredTextLlmService)}__{nameof(HttpStructuredTextLlmService.ExecuteAsync)})]",
                     $"Non-success status code from LLM provider: {(int)httpResponse.StatusCode} {httpResponse.ReasonPhrase}",
                     new KeyValuePair<string, string>("ResponseBody", responseContent));
 
-                result.AddUserError("LLM provider returned a non-success status code.");
+                result.AddUserError($"LLM provider returned a non-success status code - {responseContent}");
                 return result;
             }
 
@@ -183,7 +210,7 @@ namespace LagoVista.AI.Rag.Services
             catch (Exception ex)
             {
                 _logger.AddException(
-                    nameof(HttpStructuredTextLlmService),
+                    $"[{nameof(HttpStructuredTextLlmService)}__{nameof(HttpStructuredTextLlmService.ExecuteAsync)})]",
                     ex,
                     new KeyValuePair<string, string>("RawResponse", responseContent));
 
@@ -197,12 +224,8 @@ namespace LagoVista.AI.Rag.Services
         /// message (system prompt) and user message (input text), plus a json_schema
         /// derived from TResult.
         /// </summary>
-        private static object BuildRequestBody(
-            string systemPrompt,
-            string inputText,
-            string model,
-            JObject schema,
-            Type resultType)
+        private static object BuildRequestBody(string systemPrompt, string inputText, string model,
+                                                JObject schema, Type resultType)
         {
             var schemaName = $"structured_result_{resultType.Name}";
 
