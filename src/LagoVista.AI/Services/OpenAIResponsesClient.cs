@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -11,6 +13,7 @@ using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
 using LagoVista.Core;
 using LagoVista.Core.AI.Models;
+using LagoVista.Core.Exceptions;
 using LagoVista.Core.Interfaces;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
@@ -33,7 +36,6 @@ namespace LagoVista.AI.Services
         private readonly IServerToolUsageMetadataProvider _metaUsageProvider;
         private readonly INotificationPublisher _notificationPublisher;
         private readonly IServerToolSchemaProvider _toolSchemaProvider;
-        private readonly IAgentModeCatalogService _agentModeCatalogService;
 
         // NEW: toggle whether we use SSE streaming or a simple JSON response.
         public bool UseStreaming { get; set; } = true;
@@ -43,24 +45,18 @@ namespace LagoVista.AI.Services
             IAdminLogger adminLogger,
             IServerToolUsageMetadataProvider usageProvider,
             INotificationPublisher notificationPublisher,
-            IServerToolSchemaProvider toolSchemaProvider,
-            IAgentModeCatalogService agentModeCatalogService)
+            IServerToolSchemaProvider toolSchemaProvider)
         {
             _openAiSettings = openAiSettings ?? throw new ArgumentNullException(nameof(openAiSettings));
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
             _notificationPublisher = notificationPublisher ?? throw new ArgumentNullException(nameof(notificationPublisher));
             _metaUsageProvider = usageProvider ?? throw new ArgumentNullException(nameof(usageProvider));
-            _agentModeCatalogService = agentModeCatalogService ?? throw new ArgumentNullException(nameof(agentModeCatalogService));
             _toolSchemaProvider = toolSchemaProvider ?? throw new ArgumentNullException(nameof(toolSchemaProvider));
         }
 
-        public async Task<InvokeResult<AgentExecuteResponse>> GetAnswerAsync(
-            AgentContext agentContext,
-            ConversationContext conversationContext,
-            AgentExecuteRequest executeRequest,
-            string ragContextBlock,
-            string sessionId,
-            CancellationToken cancellationToken = default)
+        public async Task<InvokeResult<AgentExecuteResponse>> GetAnswerAsync(AgentContext agentContext,
+            ConversationContext conversationContext, AgentExecuteRequest executeRequest, string ragContextBlock,
+            string sessionId, CancellationToken cancellationToken = default)
         {
             if (agentContext == null) throw new ArgumentNullException(nameof(agentContext));
             if (conversationContext == null) throw new ArgumentNullException(nameof(conversationContext));
@@ -82,19 +78,19 @@ namespace LagoVista.AI.Services
                 return InvokeResult<AgentExecuteResponse>.FromError("LlmApiKey is not configured on AgentContext.");
             }
 
-            var toolUsageBlock = _metaUsageProvider.GetToolUsageMetadata(executeRequest.Mode);
+            var mode = agentContext.AgentModes.SingleOrDefault(m => m.Key == executeRequest.Mode);
+            if (mode == null)
+                throw new RecordNotFoundException(nameof(AgentMode), executeRequest.Mode);
 
-            executeRequest.ToolsJson = JsonConvert.SerializeObject(_toolSchemaProvider.GetToolSchemas(executeRequest));
+            var toolUsageBlock = _metaUsageProvider.GetToolUsageMetadata(mode.AssociatedToolIds);
 
-            conversationContext.SystemPrompts.Add(_agentModeCatalogService.BuildSystemPrompt(executeRequest.Mode));
+            executeRequest.ToolsJson = JsonConvert.SerializeObject(_toolSchemaProvider.GetToolSchemas(mode.AssociatedToolIds));
+
+            conversationContext.SystemPrompts.Add(agentContext.BuildSystemPrompt(executeRequest.Mode));
 
             // CHANGED: last parameter now uses UseStreaming instead of hard-coded true
-            var requestObject = ResponsesRequestBuilder.Build(
-                conversationContext,
-                executeRequest,
-                ragContextBlock,
-                toolUsageBlock,
-                UseStreaming);
+            var requestObject = ResponsesRequestBuilder.Build(conversationContext, executeRequest,
+                        ragContextBlock, toolUsageBlock, UseStreaming);
 
             var requestJson = JsonConvert.SerializeObject(requestObject);
             _adminLogger.Trace($"[OpenAIResponsesClient__GetAnswerAsync] Call LLM with JSON\r\n=====\r\n{requestJson}\r\n====");
@@ -133,13 +129,7 @@ namespace LagoVista.AI.Services
 
                         var reasonSuffix = error != null ? $"Reason: {error}" : $"Raw: {errorBody}";
 
-                        await PublishLlmEventAsync(
-                            sessionId,
-                            "LLMFailed",
-                            "failed",
-                            $"{errorMessage} - {reasonSuffix}",
-                            null,
-                            cancellationToken);
+                        await PublishLlmEventAsync(sessionId, "LLMFailed", "failed", $"{errorMessage} - {reasonSuffix}", null, cancellationToken);
 
                         return InvokeResult<AgentExecuteResponse>.FromError($"{errorMessage}; {reasonSuffix}");
                     }

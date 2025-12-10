@@ -36,20 +36,17 @@ namespace LagoVista.AI.Services
         private readonly IAdminLogger _adminLogger;
         private readonly IAgentReasoner _reasoner;
         private readonly IRagContextBuilder _ragContextBuilder;
-        private readonly IAgentModeCatalogService _modeCatalogService;
 
         public AgentExecutionService(
             IAgentContextManager agentContextManager,
             IAgentReasoner agentReasoner,
             IRagContextBuilder ragContextBuilder,
-            IAgentModeCatalogService modeCatalogService,
             IAdminLogger adminLogger)
         {
             _agentContextManager = agentContextManager ?? throw new ArgumentNullException(nameof(agentContextManager));
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
             _reasoner = agentReasoner ?? throw new ArgumentNullException(nameof(agentReasoner));
             _ragContextBuilder = ragContextBuilder ?? throw new ArgumentNullException(nameof(ragContextBuilder));
-            _modeCatalogService = modeCatalogService ?? throw new ArgumentNullException(nameof(modeCatalogService));
         }
 
         public async Task<InvokeResult<AgentExecuteResponse>> ExecuteAsync(
@@ -122,25 +119,16 @@ namespace LagoVista.AI.Services
                 cancellationToken);
         }
 
-        private async Task<InvokeResult<AgentExecuteResponse>> ExecuteWithRagAndReasonerAsync(
-       AgentExecuteRequest request,
-       string modeKey,
-       EntityHeader org,
-       EntityHeader user,
-       string correlationId,
-       CancellationToken cancellationToken)
+        private async Task<InvokeResult<AgentExecuteResponse>> ExecuteWithRagAndReasonerAsync(AgentExecuteRequest request, string modeKey, EntityHeader org, 
+            EntityHeader user, string correlationId, CancellationToken cancellationToken)
         {
             _adminLogger.Trace(
                 $"[AgentExecutionService_ExecuteAsync__LoadAgentContext] Loading AgentContext. " +
                 $"correlationId={correlationId}, agentContextId={request.AgentContext.Id}");
 
-            var agentContext = await _agentContextManager.GetAgentContextWithSecretsAsync(
-                request.AgentContext.Id,
-                org,
-                user);
+            var agentContext = await _agentContextManager.GetAgentContextWithSecretsAsync(request.AgentContext.Id, org, user);
 
-            _adminLogger.Trace(
-                $"[AgentExecutionService_ExecuteAsync__SelectConversationContext] Resolving ConversationContext. " +
+            _adminLogger.Trace( $"[AgentExecutionService_ExecuteAsync__SelectConversationContext] Resolving ConversationContext. " +
                 $"correlationId={correlationId}");
 
             var conversationContextId = string.Empty;
@@ -156,25 +144,20 @@ namespace LagoVista.AI.Services
             if (string.IsNullOrWhiteSpace(conversationContextId))
             {
                 const string msg = "Unable to resolve ConversationContext for the request.";
-                _adminLogger.AddError(
-                    "[AgentExecutionService_ExecuteAsync__MissingConversationContext]",
-                    $"{msg} correlationId={correlationId}");
+                _adminLogger.AddError("[AgentExecutionService_ExecuteAsync__MissingConversationContext]", $"{msg} correlationId={correlationId}");
 
                 return InvokeResult<AgentExecuteResponse>.FromError(msg, "AGENT_EXEC_MISSING_CONVERSATION_CONTEXT");
             }
 
             var conversationContext = agentContext.ConversationContexts.Single(ctx => ctx.Id == conversationContextId);
 
-            _adminLogger.Trace(
-                $"[AgentExecutionService_ExecuteAsync__ConversationId] Resolving ConversationId. " +
+            _adminLogger.Trace($"[AgentExecutionService_ExecuteAsync__ConversationId] Resolving ConversationId. " +
                 $"correlationId={correlationId}, requestConversationId={request.ConversationId}");
 
-            var conversationId = string.IsNullOrWhiteSpace(request.ConversationId)
-                ? Guid.NewGuid().ToId()
-                : request.ConversationId;
+            var conversationId = string.IsNullOrWhiteSpace(request.ConversationId) ? Guid.NewGuid().ToId() : request.ConversationId;
 
             // Mode catalog system prompt (AGN-013)
-            var modeCatalogSystemPrompt = _modeCatalogService.BuildSystemPrompt(modeKey);
+            var modeCatalogSystemPrompt = agentContext.BuildSystemPrompt(modeKey);
             if (!string.IsNullOrEmpty(modeCatalogSystemPrompt))
             {
                 if (conversationContext.SystemPrompts == null)
@@ -185,8 +168,7 @@ namespace LagoVista.AI.Services
                 conversationContext.SystemPrompts.Add(modeCatalogSystemPrompt);
             }
 
-            _adminLogger.Trace(
-                $"[AgentExecutionService_ExecuteAsync__RAG] Invoking RAG pipeline. " +
+            _adminLogger.Trace( $"[AgentExecutionService_ExecuteAsync__RAG] Invoking RAG pipeline. " +
                 $"correlationId={correlationId}, conversationId={conversationId}, " +
                 $"repo={request.Repo}, language={request.Language ?? "csharp"}");
 

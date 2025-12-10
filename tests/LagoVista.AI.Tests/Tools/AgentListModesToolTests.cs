@@ -29,36 +29,30 @@ namespace LagoVista.AI.Tests.Tools
         [Test]
         public async Task ExecuteAsync_WithCatalogData_ReturnsModes()
         {
-            var catalogMock = new Mock<IAgentModeCatalogService>();
             var loggerMock = new Mock<IAdminLogger>();
-
-            catalogMock
-                .Setup(c => c.GetAllModesAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new List<AgentModeSummary>
-                {
-                    new AgentModeSummary
-                    {
-                        Id = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                        Key = "general",
-                        DisplayName = "General Assistance",
-                        Description = "Default conversational mode.",
-                        SystemPromptSummary = "You are a helpful general-purpose assistant.",
-                        IsDefault = true,
-                        HumanRoleHints = new[] { "Any" },
-                        ExampleUtterances = new[] { "What can you do?", "Explain DDRs." }
-                    }
-                });
-
-            var tool = new AgentListModesTool(catalogMock.Object, loggerMock.Object);
+            var tool = new AgentListModesTool(loggerMock.Object);
 
             var context = new AgentToolExecutionContext
             {
+                AgentContext = new AgentContext()
+                {
+                    AgentModes = new List<AgentMode>()
+                    {
+                        new AgentMode()
+                        {
+                             Id = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                             Key = "general",
+                             DisplayName = "General Assistance"
+
+                        }
+                    }
+                },
                 Request = new AgentExecuteRequest()
             };
 
             var result = await tool.ExecuteAsync("{}", context, CancellationToken.None);
 
-            Assert.That(result.Successful, Is.True);
+            Assert.That(result.Successful, Is.True, result.ErrorMessage);
             Assert.That(result.Result, Is.Not.Null.And.Not.Empty);
 
             var parsed = JObject.Parse(result.Result);
@@ -78,14 +72,10 @@ namespace LagoVista.AI.Tests.Tools
         [Test]
         public async Task ExecuteAsync_CatalogThrows_ReturnsError()
         {
-            var catalogMock = new Mock<IAgentModeCatalogService>();
             var loggerMock = new Mock<IAdminLogger>();
 
-            catalogMock
-                .Setup(c => c.GetAllModesAsync(It.IsAny<CancellationToken>()))
-                .ThrowsAsync(new InvalidOperationException("Catalog failure."));
-
-            var tool = new AgentListModesTool(catalogMock.Object, loggerMock.Object);
+          
+            var tool = new AgentListModesTool(loggerMock.Object);
 
             var context = new AgentToolExecutionContext
             {

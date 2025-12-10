@@ -5,12 +5,17 @@
 using LagoVista.AI.Models.Resources;
 using LagoVista.Core;
 using LagoVista.Core.Attributes;
+using LagoVista.Core.Exceptions;
 using LagoVista.Core.Interfaces;
 using LagoVista.Core.Models;
 using LagoVista.Core.Models.UIMetaData;
+using LagoVista.Core.PlatformSupport;
 using LagoVista.Core.Validation;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Text;
 
 namespace LagoVista.AI.Models
 {
@@ -65,6 +70,38 @@ namespace LagoVista.AI.Models
         public List<ConversationContext> ConversationContexts { get; set; } = new List<ConversationContext>();
 
         public List<AgentMode> AgentModes { get; set; } = new List<AgentMode>();
+
+        public string BuildSystemPrompt(string currentModeKey)
+        {
+            var current = AgentModes.SingleOrDefault(mode => mode.Key == currentModeKey);
+
+            if(current == null)
+            {
+                throw new RecordNotFoundException(nameof(AgentMode), currentModeKey);
+            }
+
+            var sb = new StringBuilder();
+
+            sb.AppendLine($"Current Mode: {current.Key}");
+            sb.AppendLine();
+            sb.AppendLine("Available Modes:");
+
+            foreach (var mode in AgentModes)
+            {
+                sb.Append("- ")
+                  .Append(mode.Key)
+                  .Append(": ")
+                  .AppendLine(mode.WhenToUse ?? mode.Description ?? string.Empty);
+            }
+
+            sb.AppendLine();
+            sb.AppendLine("Mode Switching:");
+            sb.AppendLine("- If the user’s request clearly matches another mode’s \"when to use\" description, you may recommend switching.");
+            sb.AppendLine("- If the user expresses interest in switching, follow the instructions in the agent_change_mode tool.");
+            sb.AppendLine("- If you need more detail about modes, call the agent_list_modes tool.");
+
+            return sb.ToString();
+        }
 
         ISummaryData ISummaryFactory.CreateSummary()
         {

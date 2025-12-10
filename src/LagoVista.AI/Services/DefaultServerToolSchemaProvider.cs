@@ -12,32 +12,13 @@ namespace LagoVista.AI.Services
     {
         private readonly IAgentToolRegistry _toolRegistry;
         private readonly IAdminLogger _logger;
-        private readonly IAgentModeCatalogService _catalogService;
 
-        public DefaultServerToolSchemaProvider(IAgentToolRegistry toolRegistry, IAgentModeCatalogService cataogService, IAdminLogger logger)
+        public DefaultServerToolSchemaProvider(IAgentToolRegistry toolRegistry, IAdminLogger logger)
         {
             _toolRegistry = toolRegistry ?? throw new ArgumentNullException(nameof(toolRegistry));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _catalogService = cataogService ?? throw new ArgumentNullException(nameof(cataogService));
         }
 
-        /// <summary>
-        /// Returns schemas for all registered server tools that are applicable
-        /// to this request/agent. The current default implementation does not
-        /// filter by mode or other request properties and simply returns all
-        /// registered tools.
-        /// </summary>
-        public IReadOnlyList<object> GetToolSchemas(AgentExecuteRequest request)
-        {
-            if (request == null)
-            {
-                throw new ArgumentNullException(nameof(request));
-            }
-
-            var tools = _catalogService.GetToolsForMode(request.Mode);
-            var registered = _toolRegistry.GetRegisteredTools();
-            return GetToolSchemas(tools);
-        }
 
         /// <summary>
         /// Returns schemas for the specified set of tool names. Unrecognized

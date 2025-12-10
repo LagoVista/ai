@@ -177,6 +177,9 @@ namespace LagoVista.AI.Models
         public List<string> Warnings { get; set; } = new List<string>();
 
         public List<string> Errors { get; set; } = new List<string>();
+        public int PromptTokens { get; set; }
+        public int CompletionTokens { get; set; }
+        public int TotalTokens { get; set; }
     }
 
     public class AgentSessionChunkRef

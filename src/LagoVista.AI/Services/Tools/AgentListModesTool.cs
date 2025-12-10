@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
@@ -16,7 +17,6 @@ namespace LagoVista.AI.Services.Tools
     /// </summary>
     public sealed class AgentListModesTool : IAgentTool
     {
-        private readonly IAgentModeCatalogService _catalog;
         private readonly IAdminLogger _logger;
 
         public const string ToolName = "agent_list_modes";
@@ -27,9 +27,8 @@ namespace LagoVista.AI.Services.Tools
             "or when you need to present mode options before proposing a mode change. " +
             "Do not call it on every request or as a substitute for the mode-change tool.";
 
-        public AgentListModesTool(IAgentModeCatalogService catalog, IAdminLogger logger)
+        public AgentListModesTool(IAdminLogger logger)
         {
-            _catalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -75,10 +74,7 @@ namespace LagoVista.AI.Services.Tools
             public List<ModeDescriptor> Modes { get; set; }
         }
 
-        public async Task<InvokeResult<string>> ExecuteAsync(
-            string argumentsJson,
-            AgentToolExecutionContext context,
-            CancellationToken cancellationToken = default)
+        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentToolExecutionContext context, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -87,21 +83,13 @@ namespace LagoVista.AI.Services.Tools
                     : JsonConvert.DeserializeObject<ListModesArgs>(argumentsJson) ?? new ListModesArgs();
 
                 var includeExamples = args.IncludeExamples.GetValueOrDefault(false);
-
-                var catalogModes = await _catalog.GetAllModesAsync(cancellationToken);
-                if (catalogModes == null)
-                {
-                    const string nullMsg = "Mode catalog returned null.";
-                    _logger.AddError("[AgentListModesTool_ExecuteAsync__NullCatalog]", nullMsg);
-                    return InvokeResult<string>.FromError(nullMsg);
-                }
-
+                
                 var result = new ListModesResult
                 {
                     Modes = new List<ModeDescriptor>()
                 };
 
-                foreach (var mode in catalogModes)
+                foreach (var mode in context.AgentContext.AgentModes.Select(md=>md.CreateSummary()))
                 {
                     if (mode == null)
                     {
@@ -126,12 +114,12 @@ namespace LagoVista.AI.Services.Tools
                 }
 
                 var json = JsonConvert.SerializeObject(result);
-                return InvokeResult<string>.Create(json);
+                return Task.FromResult(InvokeResult<string>.Create(json));
             }
             catch (Exception ex)
             {
                 _logger.AddException("[AgentListModesTool_ExecuteAsync__Exception]", ex);
-                return InvokeResult<string>.FromError("AgentListModesTool failed to list modes.");
+                return Task.FromResult(InvokeResult<string>.FromError("AgentListModesTool failed to list modes."));
             }
         }
 

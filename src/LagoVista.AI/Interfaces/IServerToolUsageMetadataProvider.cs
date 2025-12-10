@@ -23,6 +23,6 @@ namespace LagoVista.AI.Interfaces
         /// A single string containing delimited usage guidance for all
         /// registered tools.
         /// </returns>
-        string GetToolUsageMetadata(string modeKey);
+        string GetToolUsageMetadata(string[] toolIds);
     }
 }

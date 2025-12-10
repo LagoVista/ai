@@ -91,7 +91,6 @@ namespace LagoVista.AI
             services.AddTransient<IDdrManager, DdrManager>();
             services.AddTransient<IWorkflowDefinitionManager, WorkflowDefinitionManager>();
 
-            services.AddSingleton<IAgentModeCatalogService,AgentModeCatalogService>();
             services.AddSingleton<IAgentToolRegistry>(toolRegistry);
             services.AddTransient<IModelCategoryManager, ModelCategoryManager>();
             services.AddTransient<IModelManager, ModelManager>();

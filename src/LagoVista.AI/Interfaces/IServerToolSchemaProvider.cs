@@ -5,13 +5,6 @@ namespace LagoVista.AI.Interfaces
 {
     public interface IServerToolSchemaProvider
     {
-        /// <summary>
-        /// Returns JSON-serializable tool definitions (OpenAI-style) for
-        /// all server tools applicable to this request/agent.
-        /// 
-        /// Current default implementation returns all registered server tools.
-        /// </summary>
-        IReadOnlyList<object> GetToolSchemas(AgentExecuteRequest request);
 
         /// <summary>
         /// Returns JSON-serializable tool definitions for the given set of

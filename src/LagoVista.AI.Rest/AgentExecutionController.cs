@@ -9,6 +9,7 @@ using LagoVista.Core.Exceptions;
 using LagoVista.Core.Models.UIMetaData;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
+using LagoVista.IoT.Web.Common.Attributes;
 using LagoVista.IoT.Web.Common.Controllers;
 using LagoVista.UserAdmin.Models.Users;
 using Microsoft.AspNetCore.Authorization;
@@ -19,7 +20,8 @@ using Newtonsoft.Json;
 
 namespace LagoVista.AI.Rest
 {
-    [Authorize(AuthenticationSchemes = "APIToken")]
+    [ConfirmedUser]
+    [Authorize()]
     public class AgentExecutionController : LagoVistaBaseController
     {
         private readonly IAgentRequestHandler _agentRequestHandler;

@@ -22,7 +22,6 @@ namespace LagoVista.AI.Tests.Services
         private Mock<ILLMClient> _llmClient;
         private Mock<IAgentToolExecutor> _toolExecutor;
         private Mock<IAdminLogger> _logger;
-        private Mock<IAgentModeCatalogService> _agentModeCatalogService;
         private AgentReasoner _sut;
 
         [SetUp]
@@ -31,23 +30,44 @@ namespace LagoVista.AI.Tests.Services
             _llmClient = new Mock<ILLMClient>();
             _toolExecutor = new Mock<IAgentToolExecutor>();
             _logger = new Mock<IAdminLogger>();
-            _agentModeCatalogService = new Mock<IAgentModeCatalogService>();
 
             _sut = new AgentReasoner(
                 _llmClient.Object,
                 _toolExecutor.Object,
-                _logger.Object,
-                _agentModeCatalogService.Object);
+                _logger.Object);
         }
 
         #region Helpers
 
-        private static AgentContext CreateAgentContext() =>
-            new AgentContext
+        private static AgentContext CreateAgentContext()
+        {
+            return new AgentContext
             {
                 Id = "agent-1",
-                Name = "Test Agent"
+                Name = "Test Agent",
+                AgentModes = new List<AgentMode>
+                {
+                    new AgentMode
+                    {
+                        Key = "ddr_authoring",
+                        DisplayName = "DDR Authoring",
+                        WelcomeMessage = "Welcome to DDR Authoring mode!"
+                    },
+                    new AgentMode
+                    {
+                        Key = "workflow_authoring",
+                        DisplayName = "Workflow Authoring",
+                        WelcomeMessage = "Welcome to Workflow Authoring mode!"
+                    },
+                    new AgentMode
+                    {
+                        Key = "general",
+                        DisplayName = "General",
+                        WelcomeMessage = null
+                    }
+                }
             };
+        }
 
         private static ConversationContext CreateConversationContext() =>
             new ConversationContext
@@ -118,7 +138,8 @@ namespace LagoVista.AI.Tests.Services
 
             Assert.That(result.Successful, Is.True);
             Assert.That(result.Result, Is.Not.Null);
-            Assert.That(result.Result.Mode, Is.EqualTo("general"), "Response.Mode should default to request.Mode when missing.");
+            Assert.That(result.Result.Mode, Is.EqualTo("general"),
+                "Response.Mode should default to request.Mode when missing.");
         }
 
         [Test]
@@ -187,11 +208,6 @@ namespace LagoVista.AI.Tests.Services
                     It.IsAny<AgentToolExecutionContext>(),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(InvokeResult<AgentToolCall>.Create(updatedCall));
-
-            // Catalog welcome message for the new mode.
-            _agentModeCatalogService
-                .Setup(c => c.GetWelcomeMessage("ddr_authoring"))
-                .Returns("Welcome to DDR Authoring mode!");
 
             var result = await _sut.ExecuteAsync(
                 agentContext,
@@ -309,15 +325,6 @@ namespace LagoVista.AI.Tests.Services
                 .ReturnsAsync(InvokeResult<AgentToolCall>.Create(firstUpdatedCall))
                 .ReturnsAsync(InvokeResult<AgentToolCall>.Create(secondUpdatedCall));
 
-            // Welcome messages for both modes; last one should "win".
-            _agentModeCatalogService
-                .Setup(c => c.GetWelcomeMessage("ddr_authoring"))
-                .Returns("Welcome to DDR Authoring mode!");
-
-            _agentModeCatalogService
-                .Setup(c => c.GetWelcomeMessage("workflow_authoring"))
-                .Returns("Welcome to Workflow Authoring mode!");
-
             var result = await _sut.ExecuteAsync(
                 agentContext,
                 conversationContext,
@@ -360,13 +367,13 @@ namespace LagoVista.AI.Tests.Services
             var firstResponse = new AgentExecuteResponse
             {
                 ToolCalls = new List<AgentToolCall>
-        {
-            new AgentToolCall
-            {
-                CallId = "call-1",
-                Name = "testing_ping_pong"
-            }
-        },
+                {
+                    new AgentToolCall
+                    {
+                        CallId = "call-1",
+                        Name = "testing_ping_pong"
+                    }
+                },
                 Text = "calling ping tool"
             };
 
@@ -420,7 +427,7 @@ namespace LagoVista.AI.Tests.Services
             Assert.That(result.Successful, Is.True);
             Assert.That(result.Result.Text, Is.EqualTo("final answer after server tool"));
 
-            // No client handoff: the final response should have no ToolCalls.
+            // No client handoff: the final response should have no pending ToolCalls.
             Assert.That(result.Result.ToolCalls, Is.Null.Or.Empty);
         }
 
@@ -437,13 +444,13 @@ namespace LagoVista.AI.Tests.Services
             var firstResponse = new AgentExecuteResponse
             {
                 ToolCalls = new List<AgentToolCall>
-        {
-            new AgentToolCall
-            {
-                CallId = "call-1",
-                Name = "apply_file_bundle"
-            }
-        },
+                {
+                    new AgentToolCall
+                    {
+                        CallId = "call-1",
+                        Name = "apply_file_bundle"
+                    }
+                },
                 Text = "calling apply_file_bundle"
             };
 

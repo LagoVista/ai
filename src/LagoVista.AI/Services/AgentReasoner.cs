@@ -36,21 +36,18 @@ namespace LagoVista.AI.Services
         private readonly ILLMClient _llmClient;
         private readonly IAgentToolExecutor _toolExecutor;
         private readonly IAdminLogger _logger;
-        private readonly IAgentModeCatalogService _agentModeCatalogService;
-
+        
         // Safety cap to avoid runaway tool-trigger loops.
         private const int MaxReasoningIterations = 4;
 
         public AgentReasoner(
             ILLMClient llmClient,
             IAgentToolExecutor toolExecutor,
-            IAdminLogger logger,
-            IAgentModeCatalogService agentModeCatalogService)
+            IAdminLogger logger)
         {
             _llmClient = llmClient ?? throw new ArgumentNullException(nameof(llmClient));
             _toolExecutor = toolExecutor ?? throw new ArgumentNullException(nameof(toolExecutor));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _agentModeCatalogService = agentModeCatalogService ?? throw new ArgumentNullException(nameof(agentModeCatalogService));
         }
 
         public async Task<InvokeResult<AgentExecuteResponse>> ExecuteAsync(
@@ -257,7 +254,9 @@ namespace LagoVista.AI.Services
                     // Fetch and store the mode-specific welcome message.
                     try
                     {
-                        var welcome = _agentModeCatalogService.GetWelcomeMessage(newModeFromTool);
+                        var mode = agentContext.AgentModes.Single(m => m.Key == newModeFromTool);
+
+                        var welcome = mode.WelcomeMessage;
                         if (!string.IsNullOrWhiteSpace(welcome))
                         {
                             // Last welcome wins if multiple changes occur.
