@@ -83,7 +83,7 @@ namespace LagoVista.AI.Rest
         [HttpPost("/api/ai/agent/sessions")]
         public  Task<ListResponse<AgentSessionSummary>> GetSessions()
         {
-            return _sessionManager.GetAgentSessionsAsync(GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
+            return _sessionManager.GetAgentSessionsForUserAsync(UserEntityHeader.Id, GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
         }
 
         [HttpGet("/api/ai/agent/session/{id}")]

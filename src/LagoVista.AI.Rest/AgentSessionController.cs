@@ -8,6 +8,7 @@ using LagoVista.IoT.Web.Common.Controllers;
 using LagoVista.UserAdmin.Models.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Threading.Tasks;
 
 namespace LagoVista.AI.Rest
@@ -28,9 +29,8 @@ namespace LagoVista.AI.Rest
         [HttpGet("/api/ai/agent/sessions")]
         public Task<ListResponse<AgentSessionSummary>> GetAgentSessions()
         {
-            return _mgr.GetAgentSessionsAsync(GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
+            return _mgr.GetAgentSessionsForUserAsync(UserEntityHeader.Id, GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
         }
-
 
         [HttpGet("/api/ai/agent/session/{id}")]
         public async Task<InvokeResult<AgentSession>> GetAgentSession(string id)

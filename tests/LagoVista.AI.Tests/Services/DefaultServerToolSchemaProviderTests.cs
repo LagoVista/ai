@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
@@ -57,7 +58,7 @@ namespace LagoVista.AI.Tests.Services
             var toolList = new[] { "tool1" };
 
             // Act
-            var schemas = _sut.GetToolSchemas(toolList);
+            var schemas = _sut.GetToolSchemas(toolList.ToList());
 
             // Assert
             Assert.That(schemas, Is.Not.Null);
@@ -74,7 +75,7 @@ namespace LagoVista.AI.Tests.Services
             var toolList = new[] { SchemaReturningTool.ToolName };
 
             // Act
-            var schemas = _sut.GetToolSchemas(toolList);
+            var schemas = _sut.GetToolSchemas(toolList.ToList());
 
             // Assert
             Assert.That(schemas, Is.Not.Null);
@@ -99,7 +100,7 @@ namespace LagoVista.AI.Tests.Services
             };
 
             // Act
-            var schemas = _sut.GetToolSchemas(toolList);
+            var schemas = _sut.GetToolSchemas(toolList.ToList());
 
             // Assert
             Assert.That(schemas, Is.Not.Null);

@@ -24,7 +24,7 @@ namespace LagoVista.AI.Services
         /// Returns schemas for the specified set of tool names. Unrecognized
         /// tool names are ignored.
         /// </summary>
-        public IReadOnlyList<object> GetToolSchemas(IEnumerable<string> toolNames)
+        public IReadOnlyList<object> GetToolSchemas(List<string> toolNames)
         {
             var schemas = new List<object>();
 

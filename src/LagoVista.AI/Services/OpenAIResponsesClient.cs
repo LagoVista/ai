@@ -84,7 +84,7 @@ namespace LagoVista.AI.Services
 
             var toolUsageBlock = _metaUsageProvider.GetToolUsageMetadata(mode.AssociatedToolIds);
 
-            executeRequest.ToolsJson = JsonConvert.SerializeObject(_toolSchemaProvider.GetToolSchemas(mode.AssociatedToolIds));
+            executeRequest.ToolsJson = JsonConvert.SerializeObject(_toolSchemaProvider.GetToolSchemas(mode.AssociatedToolIds.ToList()));
 
             conversationContext.SystemPrompts.Add(agentContext.BuildSystemPrompt(executeRequest.Mode));
 

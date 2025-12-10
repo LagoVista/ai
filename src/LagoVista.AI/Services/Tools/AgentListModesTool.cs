@@ -25,7 +25,8 @@ namespace LagoVista.AI.Services.Tools
             "Use this tool to list the available agent modes and their high-level descriptions. " +
             "Call it when the user asks what modes are supported, wants help choosing a mode, " +
             "or when you need to present mode options before proposing a mode change. " +
-            "Do not call it on every request or as a substitute for the mode-change tool.";
+            "Do not call it on every request or as a substitute for the mode-change tool." +
+            "When building the results you should return a list that includes the Display Name and the Key in parentheses as well as the description.";
 
         public AgentListModesTool(IAdminLogger logger)
         {

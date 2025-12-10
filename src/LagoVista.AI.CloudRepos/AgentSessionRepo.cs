@@ -4,6 +4,7 @@ using LagoVista.CloudStorage.DocumentDB;
 using LagoVista.Core.Models.UIMetaData;
 using LagoVista.IoT.Logging.Loggers;
 using System;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace LagoVista.AI.CloudRepos
