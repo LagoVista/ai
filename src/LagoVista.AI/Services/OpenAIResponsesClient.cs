@@ -363,8 +363,6 @@ namespace LagoVista.AI.Services
             }
         }
 
-        private int _idx = 1;
-
         private async Task ProcessSseEventAsync(
             string eventName,
             string sessionId,
