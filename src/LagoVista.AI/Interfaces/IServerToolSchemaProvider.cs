@@ -10,7 +10,7 @@ namespace LagoVista.AI.Interfaces
         /// Returns JSON-serializable tool definitions for the given set of
         /// server tool names. Tool names that are not registered are ignored.
         /// </summary>
-        IReadOnlyList<object> GetToolSchemas(IEnumerable<string> toolNames);
+        IReadOnlyList<object> GetToolSchemas(List<string> toolNames);
 
         /// <summary>
         /// Returns a single JSON-serializable tool definition for the given
