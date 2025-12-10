@@ -396,7 +396,7 @@ namespace LagoVista.AI.Tests
 
             var result = await client.GetAnswerAsync(agentContext, conversationContext, executeRequest, string.Empty, "session-fallback", CancellationToken.None);
 
-            Assert.That(result.Successful, Is.True);
+            Assert.That(result.Successful, Is.True, result.ErrorMessage);
             Assert.That(result.Result, Is.Not.Null);
 
             var response = result.Result;
@@ -459,7 +459,7 @@ namespace LagoVista.AI.Tests
             catalogService.Setup(cs => cs.BuildSystemPrompt(It.IsAny<string>()))
                 .Returns("YOU ARE IN A GREAT MODE!");
 
-            // Non-streaming JSON body – matches the shape the parser already knows
+            // Non-streaming JSON body ï¿½ matches the shape the parser already knows
             var handler = new DelegatingHandlerStub((request, token) =>
             {
                 var json =
