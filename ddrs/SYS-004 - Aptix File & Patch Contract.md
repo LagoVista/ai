@@ -222,25 +222,51 @@ If JSON cannot be safely constructed:
 
 ---
 
-## 7. JSON Formatting (Pretty Multiline Requirement)
+## 7. JSON Formatting and Content Serialization Rules
+
+Agents MUST adhere to the following formatting rules when emitting Aptix File Bundles or Patch Bundles.
+
+### 7.1 Pretty-Printed JSON Structure
+
+All emitted JSON MUST:
+
+1. Be **pretty-printed**, with one field per line.
+2. Use consistent indentation throughout the object.
+3. Place `{` and `}` on their own lines.
+4. Avoid single-line JSON objects entirely.
+5. Match the general formatting style used in this DDR.
+
+### 7.2 JSON String Encoding Requirements
 
 Agents MUST:
 
-1. Emit JSON with one field per line.
-2. Use consistent indentation.
-3. Put opening `{` and closing `}` on their own lines.
-4. Never emit single-line JSON.
-5. Match the style of examples in this DDR.
-6. Convert all newline characters to \n
-7. Escape all double quotes (\")
-8. Escape all backslashes (\\)
-9. Escape any other characters required by JSON string encoding
+1. Convert all newline characters within JSON string values to the escaped form `\n`.
+2. Escape all double quotes as `\"`.
+3. Escape all backslashes as `\\`.
+4. Escape tabs as `\t`.
+5. Escape any additional characters required by JSON string literal rules.
+6. Avoid unescaped control characters (0x00–0x1F) under all circumstances.
 
+### 7.3 Content Field Serialization
 
-If formatting cannot be guaranteed, agents MUST NOT emit JSON in that response and must instead reply in natural language.
+Because file contents are transported inside JSON, agents MUST:
 
-Agents MUST NOT include raw multiline text inside the "content" field.
-Even though the JSON bundle itself is multiline, every "content" field MUST always be a valid single-line JSON string literal when serialized.
+1. Encode every `"content"` field as **one single JSON string literal**.
+2. Ensure `"content"` contains **no raw newlines**—all newlines MUST be represented as `\n`.
+3. Serialize content **after** constructing a normal multiline string internally.
+4. Emit only the escaped one-line JSON string in `"content"`.
+
+Agents MUST NOT:
+
+- Emit raw multiline content in the `"content"` field.
+- Emit arrays of lines or alternative encodings.
+- Hand-escape text manually; correct escaping MUST come from JSON serialization.
+
+### 7.4 Error Handling
+
+If the agent cannot guarantee safe JSON formatting or escaping, it MUST NOT emit JSON.  
+Instead, it MUST respond in natural language and request clarification or constraints.
+
 ---
 
 ## 8. Guarded Code Blocks & Syntax Highlighting
