@@ -99,7 +99,7 @@ namespace LagoVista.AI.Services
                 CreatedByUser = user,
                 CreationDate = now,
                 StatusTimeStamp = now,
-                Mode = "ask",
+                Mode = "general",
                 InstructionSummary = BuildInstructionSummary(request.Instruction)
             };
 

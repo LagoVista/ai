@@ -80,16 +80,17 @@ namespace LagoVista.AI.Rest
             }
         }
 
-        [HttpPost("/api/ai/agent/sessions")]
-        public  Task<ListResponse<AgentSessionSummary>> GetSessions()
+        [HttpGet("/api/ai/agent/sessions")]
+        public Task<ListResponse<AgentSessionSummary>> GetAgentSessions()
         {
             return _sessionManager.GetAgentSessionsForUserAsync(UserEntityHeader.Id, GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
         }
 
+
         [HttpGet("/api/ai/agent/session/{id}")]
-        public Task<AgentSession> GetSession(string id)
+        public async Task<InvokeResult<AgentSession>> GetSession(string id)
         {
-            return _sessionManager.GetAgentSessionAsync(id, OrgEntityHeader, UserEntityHeader);
+            return InvokeResult<AgentSession>.Create(await  _sessionManager.GetAgentSessionAsync(id, OrgEntityHeader, UserEntityHeader));
         }
 
         [HttpGet("/api/ai/agent/ping")]
