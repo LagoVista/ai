@@ -36,8 +36,8 @@ namespace LagoVista.AI.Services
         private readonly IServerToolUsageMetadataProvider _metaUsageProvider;
         private readonly INotificationPublisher _notificationPublisher;
         private readonly IServerToolSchemaProvider _toolSchemaProvider;
+        private readonly IAgentStreamingContext _agentStreamingContext;
 
-        // NEW: toggle whether we use SSE streaming or a simple JSON response.
         public bool UseStreaming { get; set; } = true;
 
         public OpenAIResponsesClient(
@@ -45,13 +45,15 @@ namespace LagoVista.AI.Services
             IAdminLogger adminLogger,
             IServerToolUsageMetadataProvider usageProvider,
             INotificationPublisher notificationPublisher,
-            IServerToolSchemaProvider toolSchemaProvider)
+            IServerToolSchemaProvider toolSchemaProvider,
+            IAgentStreamingContext agentStreamingContext)
         {
             _openAiSettings = openAiSettings ?? throw new ArgumentNullException(nameof(openAiSettings));
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
             _notificationPublisher = notificationPublisher ?? throw new ArgumentNullException(nameof(notificationPublisher));
             _metaUsageProvider = usageProvider ?? throw new ArgumentNullException(nameof(usageProvider));
             _toolSchemaProvider = toolSchemaProvider ?? throw new ArgumentNullException(nameof(toolSchemaProvider));
+            _agentStreamingContext = agentStreamingContext ?? throw new ArgumentNullException(nameof(agentStreamingContext));
         }
 
         public async Task<InvokeResult<AgentExecuteResponse>> GetAnswerAsync(AgentContext agentContext,
@@ -105,8 +107,12 @@ namespace LagoVista.AI.Services
                         Content = new StringContent(requestJson, Encoding.UTF8, "application/json")
                     };
 
+                    await _agentStreamingContext.AddPartialAsync("Contacting my brain...", cancellationToken);
+
                     var sw = Stopwatch.StartNew();
                     var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+
+                    await _agentStreamingContext.AddPartialAsync("Contactd my brain, sorting things out...", cancellationToken);
 
                     if (!response.IsSuccessStatusCode)
                     {
@@ -145,6 +151,8 @@ namespace LagoVista.AI.Services
                         agentResponse = await ReadNonStreamingResponseAsync(
                             response, executeRequest, sw, cancellationToken);
                     }
+
+                    await _agentStreamingContext.AddPartialAsync("OK - I have things sorted out, let's figure out what's next...", cancellationToken);
 
 
                     if (!agentResponse.Successful)
@@ -248,7 +256,6 @@ namespace LagoVista.AI.Services
 
                 // This will hold the *final* response.completed payload
                 string completedEventJson = null;
-
                 while (!reader.EndOfStream)
                 {
                     if (cancellationToken.IsCancellationRequested)
@@ -266,15 +273,11 @@ namespace LagoVista.AI.Services
                     // Blank line => end of one SSE event
                     if (string.IsNullOrWhiteSpace(line))
                     {
-                        Console.Write($".");
-
                         if (dataBuilder.Length > 0)
                         {
                             var dataJson = dataBuilder.ToString();
                             rawEventLogBuilder.AppendLine(dataJson);
 
-                            // Capture the completed event payload so we can reconstruct
-                            // the full /responses object for AgentExecuteResponseResponseParser.
                             if (string.Equals(currentEvent, "response.completed", StringComparison.OrdinalIgnoreCase))
                             {
                                 completedEventJson = dataJson;
@@ -295,6 +298,9 @@ namespace LagoVista.AI.Services
                         continue;
                     }
 
+                    // You can still log the raw SSE line if useful
+                    Console.Write(line);
+
                     if (line.StartsWith("event:", StringComparison.OrdinalIgnoreCase))
                     {
                         currentEvent = line.Substring("event:".Length).Trim();
@@ -312,6 +318,7 @@ namespace LagoVista.AI.Services
                         dataBuilder.AppendLine(dataPart);
                     }
                 }
+
 
                 _adminLogger.Trace($"[OpenAIResponseClient_ReadStreamingResponseAsync] Agent Response. JSON\r\n====<<<\r\n{completedEventJson}\r\n====<<< in {sw.Elapsed.TotalSeconds} seconds");
 
@@ -381,7 +388,10 @@ namespace LagoVista.AI.Services
             Action<string> setResponseId,
             CancellationToken cancellationToken)
         {
-            if (string.IsNullOrWhiteSpace(dataJson)) return;
+            if (string.IsNullOrWhiteSpace(dataJson))
+            {
+                return;
+            }
 
             try
             {
@@ -390,8 +400,10 @@ namespace LagoVista.AI.Services
                 // Handle delta text
                 if (!string.IsNullOrEmpty(result.DeltaText))
                 {
+                    // Append to the full response buffer
                     fullTextBuilder.Append(result.DeltaText);
 
+                    // Existing diagnostics/event pipeline
                     await PublishLlmEventAsync(
                         sessionId,
                         "LLMDelta",
@@ -399,9 +411,12 @@ namespace LagoVista.AI.Services
                         result.DeltaText,
                         null,
                         cancellationToken);
+
+                    // NEW: stream a clean partial chunk to the client
+                    await _agentStreamingContext.AddPartialAsync(result.DeltaText, cancellationToken);
                 }
 
-                // Handle response id from response.completed
+                // Handle response id from response.completed (or similar)
                 if (!string.IsNullOrWhiteSpace(result.ResponseId))
                 {
                     setResponseId(result.ResponseId);

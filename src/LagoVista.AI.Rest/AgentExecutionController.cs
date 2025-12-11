@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
@@ -18,6 +19,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Cosmos;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace LagoVista.AI.Rest
 {
@@ -42,18 +44,62 @@ namespace LagoVista.AI.Rest
         /// and dispatched to the orchestrator.
         /// </summary>
         [HttpPost("/api/ai/agent/execute")]
-        public async Task<InvokeResult<AgentExecuteResponse>> ExecuteAsync([FromBody] AgentExecuteRequest request)
+        public async Task<IActionResult> ExecuteAsync([FromBody] AgentExecuteRequest request, [FromServices] IAgentStreamingContext streamingContext)
         {
             var requestJson = JsonConvert.SerializeObject(request);
             var sw = Stopwatch.StartNew();
             Console.WriteLine($">>>> Received AgentExecuteRequest: {request.ResponseContinuationId}, size {(requestJson.Length / 1024.0).ToString("0.00")}kb \r\n{requestJson}\r\n");
 
+
             var cancellationToken = HttpContext?.RequestAborted ?? CancellationToken.None;
+
 
             try
             {
+
+                if (request.Streaming)
+            {
+                    Response.StatusCode = 200;
+                    Response.ContentType = "application/x-ndjson";
+                    Response.Headers.CacheControl = "no-cache";
+                    Response.Headers["X-Accel-Buffering"] = "no";
+
+                    streamingContext.Current = async ev =>
+                    {
+                        var json = JsonConvert.SerializeObject(
+                            ev,
+                            Formatting.None,
+                            new JsonSerializerSettings
+                            {
+                                ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                                NullValueHandling = NullValueHandling.Ignore
+                            });
+
+                        await Response.WriteAsync(json, cancellationToken);
+                        await Response.WriteAsync("\n", cancellationToken);
+                        await Response.Body.FlushAsync(cancellationToken);
+                    };
+
+
+
+
+
                 var result = await _agentRequestHandler.HandleAsync(request, OrgEntityHeader, UserEntityHeader, cancellationToken);
 
+                    if (streamingContext.Current != null)
+                    {
+                        await streamingContext.Current(new AgentStreamEvent
+                        {
+                            Kind = "final",
+                            Final = result,
+                            Index = 99999
+                        });
+                    } 
+
+                    return new EmptyResult();
+            }
+            else {
+                var result = await _agentRequestHandler.HandleAsync(request, OrgEntityHeader, UserEntityHeader, cancellationToken);
                 if (result.Successful)
                 {
                     var responseJSON = JsonConvert.SerializeObject(result.Result);
@@ -63,24 +109,25 @@ namespace LagoVista.AI.Rest
                 else
                     Console.WriteLine($">>>> Handeed AgentExecuteRequest: {request.ResponseContinuationId} => FAILED: {result.Errors[0].Message}\r\n====\r\n");
 
-                return result;
+                    return new JsonResult(result);
+                }           
             }
             catch(OperationCanceledException)
             {
                 Response.StatusCode = 409;
-                return InvokeResult<AgentExecuteResponse>.FromError("Request Cancelled");
+                return new JsonResult(InvokeResult<AgentExecuteResponse>.FromError("Request Cancelled"));
             }
             catch(ValidationException val)
             {
-                return InvokeResult<AgentExecuteResponse>.FromErrors(val.Errors.ToArray());
+                return new JsonResult(InvokeResult<AgentExecuteResponse>.FromErrors(val.Errors.ToArray()));
             }
             catch(RecordNotFoundException ex)
             {
-                return InvokeResult<AgentExecuteResponse>.FromError(ex.Message);
+                return new JsonResult(InvokeResult<AgentExecuteResponse>.FromError(ex.Message));
             }
             catch(Exception ex)
             {
-                return InvokeResult<AgentExecuteResponse>.FromException("[AgentExecutionController_AgentExecutionController]", ex);
+                return new JsonResult(InvokeResult<AgentExecuteResponse>.FromException("[AgentExecutionController_AgentExecutionController]", ex));
             }
         }
 

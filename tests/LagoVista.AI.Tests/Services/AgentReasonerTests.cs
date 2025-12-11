@@ -34,7 +34,8 @@ namespace LagoVista.AI.Tests.Services
             _sut = new AgentReasoner(
                 _llmClient.Object,
                 _toolExecutor.Object,
-                _logger.Object);
+                _logger.Object, 
+                new Mock<IAgentStreamingContext>().Object);
         }
 
         #region Helpers

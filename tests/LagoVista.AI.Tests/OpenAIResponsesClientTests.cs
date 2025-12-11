@@ -102,7 +102,7 @@ namespace LagoVista.AI.Tests
             private readonly HttpClient _httpClient;
 
             public TestOpenAIResponsesClient(IOpenAISettings settings, IAdminLogger logger, INotificationPublisher publisher, IServerToolSchemaProvider schemaProvider, HttpClient httpClient)
-                : base(settings, logger, new FakeMetaDataProvider(), publisher, schemaProvider)
+                : base(settings, logger, new FakeMetaDataProvider(), publisher, schemaProvider, new Mock<IAgentStreamingContext>().Object)
             {
                 _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             }

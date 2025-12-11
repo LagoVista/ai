@@ -102,6 +102,7 @@ namespace LagoVista.AI
             services.AddSingleton<IHttpClientFactory>(new LagoVistaClientFactory());
 
             services.AddSingleton<IAgentToolRegistry>(toolRegistry);
+          
             services.AddTransient<IModelCategoryManager, ModelCategoryManager>();
             services.AddTransient<IModelManager, ModelManager>();
             services.AddTransient<IHubManager, HubManager>();
@@ -110,32 +111,34 @@ namespace LagoVista.AI
             services.AddTransient<ISampleManager, SampleManager>();
             services.AddTransient<ILabelManager, LabelManager>();
             services.AddTransient<IExperimentResultManager, ExperimentResultManager>();
-            services.AddTransient<ITextQueryManager, OpenAIManager>();
-            services.AddTransient<IImageGeneratorManager, OpenAIManager>();
-            services.AddTransient<IQdrantClient, QdrantClient>();
-            services.AddSingleton<IEmbedder, OpenAIEmbedder>();
-            services.AddSingleton<IAgentContextManager, AgentContextManager>();
-            services.AddSingleton<IAgentSessionManager, AgentSessionManager>();
-            services.AddSingleton<IAgentExecutionService, AgentExecutionService>();
-            services.AddSingleton<ILLMClient, OpenAIResponsesClient>();
-            services.AddTransient<IAiConversationManager, AiConversationManager>();
-            services.AddSingleton<IAgentOrchestrator, AgentOrchestrator>();
-            services.AddSingleton<IAgentSessionFactory, AgentSessionFactory>();
-            services.AddSingleton<IRagContextBuilder, QdrantRagContextBuilder>();
-            services.AddSingleton<IAgentTurnExecutor, AgentTurnExecutor>();
-            services.AddSingleton<IAgentRequestHandler, AgentRequestHandler>();
-            services.AddSingleton<IAgentReasoner, AgentReasoner>();
-            services.AddSingleton<IAgentToolExecutor, AgentToolExecutor>();
-            services.AddSingleton<IServerToolSchemaProvider, DefaultServerToolSchemaProvider>();
-            services.AddSingleton<IAgentSessionNamingService, OpenAISessionNamingService>();
-            services.AddSingleton<IServerToolUsageMetadataProvider, DefaultServerToolUsageMetadataProvider>();
-            services.AddSingleton<IContentHashService, DefaultContentHashService>();
-            services.AddSingleton<IWorkspaceWritePatchOrchestrator, WorkspaceWritePatchOrchestrator>();
-            services.AddSingleton<IWorkspacePatchStore, InMemoryWorkspacePatchStore>();
-            services.AddSingleton<IWorkspaceWritePatchValidator, WorkspaceWritePatchValidator>();
-            services.AddSingleton<IWorkspacePatchBatchFactory, WorkspacePatchBatchFactory>();
-            services.AddSingleton<IStructuredTextLlmService, HttpStructuredTextLlmService>();
-            services.AddSingleton<ITextLlmService, HttpTextLlmService>();
+            
+            services.AddScoped<ITextQueryManager, OpenAIManager>();
+            services.AddScoped<IImageGeneratorManager, OpenAIManager>();
+            services.AddScoped<IQdrantClient, QdrantClient>();
+            services.AddScoped<IEmbedder, OpenAIEmbedder>();
+            services.AddScoped<IAgentContextManager, AgentContextManager>();
+            services.AddScoped<IAgentSessionManager, AgentSessionManager>();
+            services.AddScoped<IAgentExecutionService, AgentExecutionService>();
+            services.AddScoped<ILLMClient, OpenAIResponsesClient>();
+            services.AddScoped<IAiConversationManager, AiConversationManager>();
+            services.AddScoped<IAgentOrchestrator, AgentOrchestrator>();
+            services.AddScoped<IAgentSessionFactory, AgentSessionFactory>();
+            services.AddScoped<IRagContextBuilder, QdrantRagContextBuilder>();
+            services.AddScoped<IAgentTurnExecutor, AgentTurnExecutor>();
+            services.AddScoped<IAgentRequestHandler, AgentRequestHandler>();
+            services.AddScoped<IAgentReasoner, AgentReasoner>();
+            services.AddScoped<IAgentToolExecutor, AgentToolExecutor>();
+            services.AddScoped<IServerToolSchemaProvider, DefaultServerToolSchemaProvider>();
+            services.AddScoped<IAgentSessionNamingService, OpenAISessionNamingService>();
+            services.AddScoped<IServerToolUsageMetadataProvider, DefaultServerToolUsageMetadataProvider>();
+            services.AddScoped<IContentHashService, DefaultContentHashService>();
+            services.AddScoped<IWorkspaceWritePatchOrchestrator, WorkspaceWritePatchOrchestrator>();
+            services.AddScoped<IWorkspacePatchStore, InMemoryWorkspacePatchStore>();
+            services.AddScoped<IWorkspaceWritePatchValidator, WorkspaceWritePatchValidator>();
+            services.AddScoped<IWorkspacePatchBatchFactory, WorkspacePatchBatchFactory>();
+            services.AddScoped<IStructuredTextLlmService, HttpStructuredTextLlmService>();
+            services.AddScoped<ITextLlmService, HttpTextLlmService>();
+            services.AddScoped<IAgentStreamingContext, AgentStreamingContext>();
         }
     }
 }

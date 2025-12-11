@@ -11,6 +11,7 @@ using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json;
 using LagoVista.AI.Services.Tools;
+using System.Diagnostics;
 
 namespace LagoVista.AI.Services
 {
@@ -36,18 +37,21 @@ namespace LagoVista.AI.Services
         private readonly ILLMClient _llmClient;
         private readonly IAgentToolExecutor _toolExecutor;
         private readonly IAdminLogger _logger;
-        
+        private readonly IAgentStreamingContext _agentStreamingContext;
+
         // Safety cap to avoid runaway tool-trigger loops.
         private const int MaxReasoningIterations = 4;
 
         public AgentReasoner(
             ILLMClient llmClient,
             IAgentToolExecutor toolExecutor,
-            IAdminLogger logger)
+            IAdminLogger logger,
+            IAgentStreamingContext agentStreamingContext)
         {
             _llmClient = llmClient ?? throw new ArgumentNullException(nameof(llmClient));
             _toolExecutor = toolExecutor ?? throw new ArgumentNullException(nameof(toolExecutor));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _agentStreamingContext = agentStreamingContext ?? throw new ArgumentNullException(nameof(agentStreamingContext));
         }
 
         public async Task<InvokeResult<AgentExecuteResponse>> ExecuteAsync(
@@ -157,12 +161,16 @@ namespace LagoVista.AI.Services
 
                 foreach (var toolCall in lastResponse.ToolCalls)
                 {
+                    await _agentStreamingContext.AddPartialAsync($"Work-horse callling tool {toolCall.Name}...",cancellationToken);
+                    var sw = Stopwatch.StartNew();
+
                     // Let the executor decide if this is a server tool or not.
                     var updatedCallResponse = await _toolExecutor.ExecuteServerToolAsync(
                         toolCall,
                         toolContext,
                         cancellationToken);
 
+                    await _agentStreamingContext.AddPartialAsync($"Work-horse called tool {toolCall.Name} in {sw.Elapsed.TotalMilliseconds.ToString("0.0")}ms...", cancellationToken);
 
                     if (cancellationToken.IsCancellationRequested)
                     {
