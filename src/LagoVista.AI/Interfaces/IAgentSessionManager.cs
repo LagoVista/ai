@@ -34,5 +34,7 @@ namespace LagoVista.AI.Interfaces
             EntityHeader org, EntityHeader user);
 
         Task<InvokeResult> SetSessionModeAsync(string sessionId, string mode, string reason, EntityHeader org, EntityHeader user);
+    
+        Task<InvokeResult> AbortTurnAsync(string sessionId, string turnId, EntityHeader org, EntityHeader user);
     }
 }

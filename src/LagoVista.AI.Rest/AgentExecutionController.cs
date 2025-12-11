@@ -13,6 +13,7 @@ using LagoVista.IoT.Web.Common.Attributes;
 using LagoVista.IoT.Web.Common.Controllers;
 using LagoVista.UserAdmin.Models.Users;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Cosmos;
@@ -53,8 +54,6 @@ namespace LagoVista.AI.Rest
             {
                 var result = await _agentRequestHandler.HandleAsync(request, OrgEntityHeader, UserEntityHeader, cancellationToken);
 
-
-
                 if (result.Successful)
                 {
                     var responseJSON = JsonConvert.SerializeObject(result.Result);
@@ -65,6 +64,11 @@ namespace LagoVista.AI.Rest
                     Console.WriteLine($">>>> Handeed AgentExecuteRequest: {request.ResponseContinuationId} => FAILED: {result.Errors[0].Message}\r\n====\r\n");
 
                 return result;
+            }
+            catch(OperationCanceledException)
+            {
+                Response.StatusCode = 409;
+                return InvokeResult<AgentExecuteResponse>.FromError("Request Cancelled");
             }
             catch(ValidationException val)
             {

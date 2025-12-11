@@ -99,6 +99,26 @@ namespace LagoVista.AI.Managers
             await _repo.UpdateSessionAsyunc(session);
         }
 
+        public async Task<InvokeResult> AbortTurnAsync(string sessionId, string turnId, EntityHeader org, EntityHeader user)
+        {
+            var session = await _repo.GetAgentSessionAsync(sessionId);
+            await AuthorizeAsync(session, AuthorizeResult.AuthorizeActions.Update, user, org);
+            var turn = session.Turns.SingleOrDefault(t => t.Id == turnId);
+            
+            // If we didn't even create the turn yet, we were very early on in the request, it's OK to just let it fall out
+            if (turn == null)
+                return InvokeResult.Success;
+
+            turn.Status = EntityHeader<AgentSessionTurnStatuses>.Create(AgentSessionTurnStatuses.Aborted);
+            turn.StatusTimeStamp = DateTime.UtcNow.ToJSONString();
+
+            ValidationCheck(session, Actions.Update);
+            await _repo.UpdateSessionAsyunc(session);
+
+            return InvokeResult.Success;
+        }
+
+
         public async Task<AgentSession> GetAgentSessionAsync(string agentSessionId, EntityHeader org, EntityHeader user)
         {
             var session = await _repo.GetAgentSessionAsync(agentSessionId);

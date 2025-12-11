@@ -82,17 +82,16 @@ namespace LagoVista.AI.Services
 
             var context = await _contextManager.GetAgentContextWithSecretsAsync(request.AgentContext.Id, org, user);
 
-            Console.WriteLine("WE GOT OUR CONTEXT!");
-
             var session = await _sessionFactory.CreateSession(request, context, OperationKinds.Code, org, user);
             var turn = _sessionFactory.CreateTurnForNewSession(session, request, org, user);
-
-            Console.WriteLine("WE GOT OUR CONTEXT! - 3");
+           
+            if(cancellationToken.IsCancellationRequested)
+            {
+                return InvokeResult<AgentExecuteResponse>.Abort();
+            }
 
             await _sessionManager.AddAgentSessionAsync(session, org, user);
             await _sessionManager.AddAgentSessionTurnAsync(session.Id, turn, org, user);
-
-            Console.WriteLine("WE GOT OUR CONTEXT! - 4");
 
             await PublishSessionStartedAsync(session, org, user);
             await PublishTurnCreatedAsync(session, turn, org, user);
@@ -121,6 +120,12 @@ namespace LagoVista.AI.Services
             await _sessionManager.SetRequestBlobUriAsync(session.Id, turn.Id, requestBlobResult.Result.ToString(), org, user);
    
             var execResult = await _turnExecutor.ExecuteNewSessionTurnAsync(context, session, turn, request, org, user, cancellationToken);
+            if(execResult.Aborted)
+            {
+                await _sessionManager.AbortTurnAsync(session.Id, turn.Id, org, user);
+                return execResult;
+            }
+
             if(!execResult.Successful)
             {
                 return execResult;
@@ -244,6 +249,12 @@ namespace LagoVista.AI.Services
             }
 
             var execResult = await _turnExecutor.ExecuteFollowupTurnAsync(context, session, turn, request, org, user, cancellationToken);
+
+            if (execResult.Aborted)
+            {
+                await _sessionManager.AbortTurnAsync(session.Id, turn.Id, org, user);
+                return execResult;
+            }
 
             stopwatch.Stop();
 

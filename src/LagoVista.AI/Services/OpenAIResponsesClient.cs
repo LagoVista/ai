@@ -146,8 +146,15 @@ namespace LagoVista.AI.Services
                             response, executeRequest, sw, cancellationToken);
                     }
 
+
                     if (!agentResponse.Successful)
                         return agentResponse;
+
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        return InvokeResult<AgentExecuteResponse>.Abort();
+                    }
+
 
                     await PublishLlmEventAsync(sessionId, "LLMCompleted", "completed", "Model response received.", null, cancellationToken);
 
@@ -244,7 +251,10 @@ namespace LagoVista.AI.Services
 
                 while (!reader.EndOfStream)
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        return InvokeResult<AgentExecuteResponse>.Abort();
+                    }
 
                     var line = await reader.ReadLineAsync();
                     if (line == null)

@@ -76,6 +76,11 @@ namespace LagoVista.AI.Services
                     $"[AgentReasoner_ExecuteAsync] Iteration {iteration + 1} starting. " +
                     $"sessionId={sessionId}, mode={request.Mode}, conversationId={request.ConversationId}");
 
+                if(cancellationToken.IsCancellationRequested)
+                {
+                    return InvokeResult<AgentExecuteResponse>.Abort();
+                }
+
                 var llmResult = await _llmClient.GetAnswerAsync(
                     agentContext,
                     conversationContext,
@@ -158,11 +163,19 @@ namespace LagoVista.AI.Services
                         toolContext,
                         cancellationToken);
 
+
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        return InvokeResult<AgentExecuteResponse>.Abort();
+                    }
+
                     if (!updatedCallResponse.Successful)
                     {
                         return InvokeResult<AgentExecuteResponse>.FromInvokeResult(
                             updatedCallResponse.ToInvokeResult());
                     }
+
+
 
                     var updatedCall = updatedCallResponse.Result;
 
