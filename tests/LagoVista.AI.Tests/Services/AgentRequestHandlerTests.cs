@@ -20,6 +20,7 @@ namespace LagoVista.AI.Tests.Services
     {
         private Mock<IAgentOrchestrator> _orchestrator;
         private Mock<IAdminLogger> _adminLogger;
+        private Mock<IAgentStreamingContext> _streamingContext;
         private AgentRequestHandler _sut;
 
         [SetUp]
@@ -27,9 +28,10 @@ namespace LagoVista.AI.Tests.Services
         {
             _orchestrator = new Mock<IAgentOrchestrator>();
             _adminLogger = new Mock<IAdminLogger>();
-            
+            _streamingContext = new Mock<IAgentStreamingContext>();
 
-            _sut = new AgentRequestHandler(_orchestrator.Object, _adminLogger.Object);
+
+            _sut = new AgentRequestHandler(_orchestrator.Object, _adminLogger.Object, _streamingContext.Object);
         }
 
         #region Ctor Guards
@@ -38,14 +40,14 @@ namespace LagoVista.AI.Tests.Services
         public void Ctor_NullOrchestrator_Throws()
         {
             Assert.Throws<ArgumentNullException>(
-                () => new AgentRequestHandler(null, _adminLogger.Object));
+                () => new AgentRequestHandler(null, _adminLogger.Object, _streamingContext.Object));
         }
 
         [Test]
         public void Ctor_NullAdminLogger_Throws()
         {
             Assert.Throws<ArgumentNullException>(
-                () => new AgentRequestHandler(_orchestrator.Object, null));
+                () => new AgentRequestHandler(_orchestrator.Object, null, _streamingContext.Object));
         }
 
         #endregion

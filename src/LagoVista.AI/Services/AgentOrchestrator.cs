@@ -38,8 +38,11 @@ namespace LagoVista.AI.Services
         private readonly IAdminLogger _adminLogger;
         private readonly IAgentContextManager _contextManager;
         private readonly IAgentTurnTranscriptStore _transcriptStore;
+        private readonly IAgentStreamingContext _agentStreamingContext;
 
-        public AgentOrchestrator(IAgentSessionManager sessionManager, IAgentContextManager agentContextManager, IAgentTurnTranscriptStore agentTranscriptStore, IAgentSessionFactory sessionFactory, IAgentTurnExecutor turnExecutor, INotificationPublisher notificationPublisher, IAdminLogger adminLogger)
+
+        public AgentOrchestrator(IAgentSessionManager sessionManager, IAgentContextManager agentContextManager, IAgentTurnTranscriptStore agentTranscriptStore,
+            IAgentSessionFactory sessionFactory, IAgentTurnExecutor turnExecutor, INotificationPublisher notificationPublisher, IAdminLogger adminLogger, IAgentStreamingContext agentStreamingContext)
         {
             _sessionManager = sessionManager ?? throw new ArgumentNullException(nameof(sessionManager));
             _sessionFactory = sessionFactory ?? throw new ArgumentNullException(nameof(sessionFactory));
@@ -48,6 +51,7 @@ namespace LagoVista.AI.Services
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
             _contextManager = agentContextManager ?? throw new ArgumentNullException(nameof(agentContextManager));
             _transcriptStore = agentTranscriptStore ?? throw new ArgumentNullException(nameof(agentTranscriptStore));
+            _agentStreamingContext = agentStreamingContext ?? throw new ArgumentNullException(nameof(agentStreamingContext));
         }
 
         public async Task<InvokeResult<AgentExecuteResponse>> BeginNewSessionAsync(AgentExecuteRequest request, EntityHeader org, EntityHeader user, CancellationToken cancellationToken = default)
@@ -118,7 +122,9 @@ namespace LagoVista.AI.Services
                 return InvokeResult<AgentExecuteResponse>.FromInvokeResult(requestBlobResult.ToInvokeResult());
             }
             await _sessionManager.SetRequestBlobUriAsync(session.Id, turn.Id, requestBlobResult.Result.ToString(), org, user);
-   
+
+            await _agentStreamingContext.AddPartialAsync("You are all connected, let's get started!");
+
             var execResult = await _turnExecutor.ExecuteNewSessionTurnAsync(context, session, turn, request, org, user, cancellationToken);
             if(execResult.Aborted)
             {

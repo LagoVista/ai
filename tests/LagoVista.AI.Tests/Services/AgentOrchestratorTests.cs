@@ -27,6 +27,7 @@ namespace LagoVista.AI.Tests.Services
         private Mock<IAdminLogger> _adminLogger;
         private Mock<IAgentContextManager> _contextManager;
         private Mock<IAgentTurnTranscriptStore> _transcriptStore;
+        private Mock<IAgentStreamingContext> _streamingContext;
 
         private AgentOrchestrator _sut;
 
@@ -40,6 +41,7 @@ namespace LagoVista.AI.Tests.Services
             _adminLogger = new Mock<IAdminLogger>();
             _contextManager = new Mock<IAgentContextManager>();
             _transcriptStore = new Mock<IAgentTurnTranscriptStore>();
+            _streamingContext = new Mock<IAgentStreamingContext>();
 
             _notificationPublisher
                 .Setup(p => p.PublishAsync(
@@ -57,7 +59,8 @@ namespace LagoVista.AI.Tests.Services
                 _sessionFactory.Object,
                 _turnExecutor.Object,
                 _notificationPublisher.Object,
-                _adminLogger.Object);
+                _adminLogger.Object,
+                _streamingContext.Object);
         }
 
         #region Ctor Guards
@@ -73,7 +76,8 @@ namespace LagoVista.AI.Tests.Services
                     _sessionFactory.Object,
                     _turnExecutor.Object,
                     _notificationPublisher.Object,
-                    _adminLogger.Object));
+                    _adminLogger.Object,
+                    _streamingContext.Object));
         }
 
         [Test]
@@ -87,7 +91,8 @@ namespace LagoVista.AI.Tests.Services
                     _sessionFactory.Object,
                     _turnExecutor.Object,
                     _notificationPublisher.Object,
-                    _adminLogger.Object));
+                    _adminLogger.Object,
+                    _streamingContext.Object));
         }
 
         [Test]
@@ -101,7 +106,8 @@ namespace LagoVista.AI.Tests.Services
                     _sessionFactory.Object,
                     _turnExecutor.Object,
                     _notificationPublisher.Object,
-                    _adminLogger.Object));
+                    _adminLogger.Object,
+                    _streamingContext.Object));
         }
 
         [Test]
@@ -115,7 +121,8 @@ namespace LagoVista.AI.Tests.Services
                     null,
                     _turnExecutor.Object,
                     _notificationPublisher.Object,
-                    _adminLogger.Object));
+                    _adminLogger.Object,
+                    _streamingContext.Object));
         }
 
         [Test]
@@ -129,7 +136,8 @@ namespace LagoVista.AI.Tests.Services
                     _sessionFactory.Object,
                     null,
                     _notificationPublisher.Object,
-                    _adminLogger.Object));
+                    _adminLogger.Object,
+                    _streamingContext.Object));
         }
 
         [Test]
@@ -143,7 +151,8 @@ namespace LagoVista.AI.Tests.Services
                     _sessionFactory.Object,
                     _turnExecutor.Object,
                     null,
-                    _adminLogger.Object));
+                    _adminLogger.Object,
+                    _streamingContext.Object));
         }
 
         [Test]
@@ -157,7 +166,9 @@ namespace LagoVista.AI.Tests.Services
                     _sessionFactory.Object,
                     _turnExecutor.Object,
                     _notificationPublisher.Object,
-                    null));
+                    null,
+                    _streamingContext.Object));
+
         }
 
         #endregion

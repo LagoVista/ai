@@ -26,11 +26,13 @@ namespace LagoVista.AI.Services
     {
         private readonly IAgentOrchestrator _orchestrator;
         private readonly IAdminLogger _adminLogger;
+        private readonly IAgentStreamingContext _agentStreamingContext;
 
-        public AgentRequestHandler(IAgentOrchestrator orchestrator, IAdminLogger adminLogger)
+        public AgentRequestHandler(IAgentOrchestrator orchestrator, IAdminLogger adminLogger, IAgentStreamingContext agentStreamingContext)
         {
             _orchestrator = orchestrator ?? throw new ArgumentNullException(nameof(orchestrator));
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
+            _agentStreamingContext = agentStreamingContext ?? throw new ArgumentNullException(nameof(agentStreamingContext));
         }
 
         public async Task<InvokeResult<AgentExecuteResponse>> HandleAsync(AgentExecuteRequest request, EntityHeader org, EntityHeader user, CancellationToken cancellationToken = default)
@@ -67,6 +69,8 @@ namespace LagoVista.AI.Services
 
         private async Task<InvokeResult<AgentExecuteResponse>> HandleNewSessionAsync(AgentExecuteRequest request, EntityHeader org, EntityHeader user, string correlationId, CancellationToken cancellationToken)
         {
+            await _agentStreamingContext.AddPartialAsync("Welcome to Aptix, Finding the next available agent...please wait!");
+
             _adminLogger.Trace("[AgentRequestHandler_HandleNewSessionAsync] Normalizing new session request. " + $"correlationId={correlationId}, org={org?.Id}, user={user?.Id}");
 
             if (request.AgentContext == null || EntityHeader.IsNullOrEmpty(request.AgentContext))
@@ -82,6 +86,9 @@ namespace LagoVista.AI.Services
 
         private async Task<InvokeResult<AgentExecuteResponse>> HandleFollowupTurnAsync(AgentExecuteRequest request, EntityHeader org, EntityHeader user, string correlationId, CancellationToken cancellationToken)
         {
+
+            await _agentStreamingContext.AddPartialAsync("Welcome Back to Aptix, Let's Keep Talking...");
+
             _adminLogger.Trace("[AgentRequestHandler_HandleFollowupTurnAsync] Normalizing follow-up turn request. " + $"correlationId={correlationId}, org={org?.Id}, user={user?.Id}, conversationId={request.ConversationId}");
 
             if (string.IsNullOrWhiteSpace(request.ConversationId))

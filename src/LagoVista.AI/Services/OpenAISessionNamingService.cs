@@ -18,11 +18,14 @@ namespace LagoVista.AI.Services
     {
         private readonly ITextLlmService _textService;
         private readonly IAdminLogger _adminLogger;
+        private readonly IAgentStreamingContext _agentStreamingContext;
 
-        public OpenAISessionNamingService(ITextLlmService structuredTextLlmService, IAdminLogger adminLogger)
+
+        public OpenAISessionNamingService(ITextLlmService structuredTextLlmService, IAdminLogger adminLogger,IAgentStreamingContext agentStreamingContext)
         {
             _textService = structuredTextLlmService ?? throw new ArgumentNullException(nameof(structuredTextLlmService));
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
+            _agentStreamingContext = agentStreamingContext ?? throw new ArgumentNullException(nameof(agentStreamingContext));
         }
 
         public async Task<string> GenerateNameAsync(
@@ -57,6 +60,8 @@ namespace LagoVista.AI.Services
 
             var settings = new OpenAISettings(agentContext.LlmApiKey);
 
+            await _agentStreamingContext.AddPartialAsync("Getting a good name for this session...");
+
             var result = await _textService.ExecuteAsync(settings, systemPrompt, instruction);
 
             if (!result.Successful || result.Result == null)
@@ -80,6 +85,8 @@ namespace LagoVista.AI.Services
             }
 
             _adminLogger.AddError("[OpenAISessionNamingService_GenerateNameAsync]", $"Renamed session {instruction} - {result.Result}");
+
+            await _agentStreamingContext.AddPartialAsync($"Let's call it {result.Result}...");
 
             return string.IsNullOrWhiteSpace(cleaned)
                 ? TruncateFallback(instruction)
