@@ -11,6 +11,7 @@ namespace LagoVista.AI.Interfaces
         Func<AgentStreamEvent, Task> Current { get; set; }
 
         Task AddPartialAsync(string deltaText, CancellationToken token = default);
+        Task AddWorkflowAsync(string workflow, CancellationToken token = default);
     }
 
 }

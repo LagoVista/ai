@@ -123,7 +123,7 @@ namespace LagoVista.AI.Services
             }
             await _sessionManager.SetRequestBlobUriAsync(session.Id, turn.Id, requestBlobResult.Result.ToString(), org, user);
 
-            await _agentStreamingContext.AddPartialAsync("You are all connected, let's get started!");
+            await _agentStreamingContext.AddWorkflowAsync("You are all connected, let's get started!");
 
             var execResult = await _turnExecutor.ExecuteNewSessionTurnAsync(context, session, turn, request, org, user, cancellationToken);
             if(execResult.Aborted)

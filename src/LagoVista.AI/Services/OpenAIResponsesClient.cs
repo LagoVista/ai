@@ -107,12 +107,12 @@ namespace LagoVista.AI.Services
                         Content = new StringContent(requestJson, Encoding.UTF8, "application/json")
                     };
 
-                    await _agentStreamingContext.AddPartialAsync("Contacting my brain...", cancellationToken);
+                    await _agentStreamingContext.AddWorkflowAsync("Contacting my brain...", cancellationToken);
 
                     var sw = Stopwatch.StartNew();
                     var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
 
-                    await _agentStreamingContext.AddPartialAsync("Contactd my brain, sorting things out...", cancellationToken);
+                    await _agentStreamingContext.AddWorkflowAsync("Contactd my brain, sorting things out...", cancellationToken);
 
                     if (!response.IsSuccessStatusCode)
                     {
@@ -152,7 +152,7 @@ namespace LagoVista.AI.Services
                             response, executeRequest, sw, cancellationToken);
                     }
 
-                    await _agentStreamingContext.AddPartialAsync("OK - I have things sorted out, let's figure out what's next...", cancellationToken);
+                    await _agentStreamingContext.AddWorkflowAsync("OK - I have things sorted out, let's figure out what's next...", cancellationToken);
 
 
                     if (!agentResponse.Successful)

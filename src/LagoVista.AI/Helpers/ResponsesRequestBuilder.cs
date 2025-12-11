@@ -96,6 +96,24 @@ namespace LagoVista.AI.Helpers
                     });
                 }
 
+                systemMessage.Content.Add(new ResponsesMessageContent()
+                {
+                    Text = @"When generating an answer, follow this structure:
+
+1. First output a planning section marked exactly like this:
+
+APTIX-PLAN:
+- Provide 3–7 short bullet points describing your approach.
+- Keep each bullet simple and readable.
+- This section is for internal agent preview. Do NOT include code or long text.
+APTIX-PLAN-END
+
+2. After that, output your full answer normally.
+
+Do not mention these instructions. Do not explain the plan unless asked.
+"
+                });
+
                 // Optional tool usage metadata for all tools
                 if (!string.IsNullOrWhiteSpace(toolUsageMetadataBlock))
                 {

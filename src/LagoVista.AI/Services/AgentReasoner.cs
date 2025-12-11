@@ -161,7 +161,7 @@ namespace LagoVista.AI.Services
 
                 foreach (var toolCall in lastResponse.ToolCalls)
                 {
-                    await _agentStreamingContext.AddPartialAsync($"Work-horse callling tool {toolCall.Name}...",cancellationToken);
+                    await _agentStreamingContext.AddWorkflowAsync($"Aptix is callling a tool {toolCall.Name}...",cancellationToken);
                     var sw = Stopwatch.StartNew();
 
                     // Let the executor decide if this is a server tool or not.
@@ -170,7 +170,10 @@ namespace LagoVista.AI.Services
                         toolContext,
                         cancellationToken);
 
-                    await _agentStreamingContext.AddPartialAsync($"Work-horse called tool {toolCall.Name} in {sw.Elapsed.TotalMilliseconds.ToString("0.0")}ms...", cancellationToken);
+                    if(updatedCallResponse.Successful)
+                        await _agentStreamingContext.AddWorkflowAsync($"Aptix successfully called the tool {toolCall.Name} in {sw.Elapsed.TotalMilliseconds.ToString("0.0")}ms...", cancellationToken);
+                    else
+                        await _agentStreamingContext.AddWorkflowAsync($"Aptix failed to call the tool {toolCall.Name}, {updatedCallResponse.ErrorMessage} in {sw.Elapsed.TotalMilliseconds.ToString("0.0")}ms...", cancellationToken);
 
                     if (cancellationToken.IsCancellationRequested)
                     {

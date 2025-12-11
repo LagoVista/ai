@@ -69,7 +69,7 @@ namespace LagoVista.AI.Services
 
         private async Task<InvokeResult<AgentExecuteResponse>> HandleNewSessionAsync(AgentExecuteRequest request, EntityHeader org, EntityHeader user, string correlationId, CancellationToken cancellationToken)
         {
-            await _agentStreamingContext.AddPartialAsync("Welcome to Aptix, Finding the next available agent...please wait!");
+            await _agentStreamingContext.AddWorkflowAsync("Welcome to Aptix, Finding the next available agent...please wait!");
 
             _adminLogger.Trace("[AgentRequestHandler_HandleNewSessionAsync] Normalizing new session request. " + $"correlationId={correlationId}, org={org?.Id}, user={user?.Id}");
 
@@ -87,7 +87,7 @@ namespace LagoVista.AI.Services
         private async Task<InvokeResult<AgentExecuteResponse>> HandleFollowupTurnAsync(AgentExecuteRequest request, EntityHeader org, EntityHeader user, string correlationId, CancellationToken cancellationToken)
         {
 
-            await _agentStreamingContext.AddPartialAsync("Welcome Back to Aptix, Let's Keep Talking...");
+            await _agentStreamingContext.AddWorkflowAsync("Welcome Back to Aptix, Let's Keep Talking...");
 
             _adminLogger.Trace("[AgentRequestHandler_HandleFollowupTurnAsync] Normalizing follow-up turn request. " + $"correlationId={correlationId}, org={org?.Id}, user={user?.Id}, conversationId={request.ConversationId}");
 

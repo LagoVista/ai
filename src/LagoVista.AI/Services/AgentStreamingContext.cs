@@ -29,5 +29,22 @@ namespace LagoVista.AI.Services
             return Current(streamEvent);
         }
 
+        public Task AddWorkflowAsync(string workflow, CancellationToken token = default)
+        {
+            if (Current == null)
+            {
+                return Task.CompletedTask;
+            }
+
+            var streamEvent = new AgentStreamEvent
+            {
+                Kind = "partial",
+                DeltaText = $"APTIX: {workflow}\n",
+                Index = this.Index++
+            };
+
+            // The callback itself (in the controller) will honor cancellation
+            return Current(streamEvent);
+        }
     }
 }
