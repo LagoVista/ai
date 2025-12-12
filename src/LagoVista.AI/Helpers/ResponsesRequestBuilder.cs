@@ -143,6 +143,26 @@ Do not mention these instructions. Do not explain the plan unless asked.
             {
                 Text = instructionBlock
             });
+            // ---------------------------------------------------------------------
+            // IMAGE ATTACHMENTS (from client-side chat composer)
+            // ---------------------------------------------------------------------
+            if (request.ImageAttachments != null && request.ImageAttachments.Any())
+            {
+                foreach (var img in request.ImageAttachments)
+                {
+                    if (img == null) continue;
+                    if (string.IsNullOrWhiteSpace(img.DataBase64)) continue;
+                    if (string.IsNullOrWhiteSpace(img.MimeType)) continue;
+
+                    var dataUrl = $"data:{img.MimeType};base64,{img.DataBase64}";
+
+                    userMessage.Content.Add(new ResponsesMessageContent
+                    {
+                        Type = "input_image",
+                        ImageUrl = dataUrl
+                    });
+                }
+            }
 
 
             // ---------------------------------------------------------------------
@@ -233,6 +253,7 @@ Do not mention these instructions. Do not explain the plan unless asked.
                     Name = request.ToolChoiceName
                 };
             }
+
 
             return dto;
         }

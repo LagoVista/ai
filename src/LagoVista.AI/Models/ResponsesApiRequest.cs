@@ -67,6 +67,20 @@ namespace LagoVista.AI.Models
         /// </summary>
         [JsonProperty("text", NullValueHandling = NullValueHandling.Ignore)]
         public string Text { get; set; }
+
+        // NOTE: plain string, not nested object
+        [JsonProperty("image_url", NullValueHandling = NullValueHandling.Ignore)]
+        public string ImageUrl { get; set; }
+        
+        [JsonProperty("mime_type", NullValueHandling = NullValueHandling.Ignore)]
+        public string MimeType { get; set; }
+    }
+
+
+    public class ResponsesImageUrl
+    {
+        [JsonProperty("url")]
+        public string Url { get; set; }
     }
 
     public class ResponsesToolChoice
