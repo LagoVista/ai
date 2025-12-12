@@ -200,5 +200,62 @@ namespace LagoVista.AI.Managers
             await _repo.UpdateSessionAsyunc(session);
             return InvokeResult.Success;
         }
+
+        public async Task<InvokeResult<AgentSessionSummary>> SetSessionNameAsync(string sessionid, string name, EntityHeader org, EntityHeader user)
+        {
+            var session = await GetAgentSessionAsync(sessionid, org, user);
+            session.Name = name;
+            session.LastUpdatedDate = DateTime.UtcNow.ToJSONString();
+            session.LastUpdatedBy = user;
+            await _repo.UpdateSessionAsyunc(session);
+
+            return InvokeResult<AgentSessionSummary>.Create(session.CreateSummary());
+        }
+
+        public async Task<InvokeResult<AgentSessionSummary>> ArchiveSessionAsync(string sessionid, EntityHeader org, EntityHeader user)
+        {
+            var session = await GetAgentSessionAsync(sessionid, org, user);
+            session.Archived = true;
+            session.LastUpdatedDate = DateTime.UtcNow.ToJSONString();
+            session.LastUpdatedBy = user;
+            await _repo.UpdateSessionAsyunc(session);
+
+            return InvokeResult<AgentSessionSummary>.Create(session.CreateSummary());
+        }
+
+        public async Task<InvokeResult<AgentSessionSummary>> ShareSessionAsync(string sessionid, EntityHeader org, EntityHeader user)
+        {
+            var session = await GetAgentSessionAsync(sessionid, org, user);
+            session.Shared = true;
+            session.LastUpdatedDate = DateTime.UtcNow.ToJSONString();
+            session.LastUpdatedBy = user;
+            await _repo.UpdateSessionAsyunc(session);
+
+            return InvokeResult<AgentSessionSummary>.Create(session.CreateSummary());
+        }
+
+
+        public async Task<InvokeResult<AgentSessionSummary>> DeleteSessionAsync(string sessionid, EntityHeader org, EntityHeader user)
+        {
+            var session = await GetAgentSessionAsync(sessionid, org, user);
+            session.IsDeleted = true;
+            session.LastUpdatedDate = DateTime.UtcNow.ToJSONString();
+            session.DeletionDate = session.LastUpdatedDate;
+            session.LastUpdatedBy = user;
+            await _repo.UpdateSessionAsyunc(session);
+
+            return InvokeResult<AgentSessionSummary>.Create(session.CreateSummary());
+        }
+
+        public async Task<InvokeResult<AgentSessionSummary>> CompleteSessionAsync(string sessionId, EntityHeader org, EntityHeader user)
+        {
+            var session = await GetAgentSessionAsync(sessionId, org, user);
+            session.Completed = true;
+            session.LastUpdatedDate = DateTime.UtcNow.ToJSONString();
+            session.LastUpdatedBy = user;
+            await _repo.UpdateSessionAsyunc(session);
+
+            return InvokeResult<AgentSessionSummary>.Create(session.CreateSummary());
+        }
     }
 }
