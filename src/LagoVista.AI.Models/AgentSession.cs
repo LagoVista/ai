@@ -72,6 +72,13 @@ namespace LagoVista.AI.Models
 
         public List<ModeHistory> ModeHistory { get; set; } = new List<ModeHistory>();
 
+        public bool Completed { get; set; }
+
+        public bool Shared { get; set; }
+
+        public bool Archived { get; set; }
+
+
         public AgentSessionSummary CreateSummary()
         {
             var summary = new AgentSessionSummary();
@@ -85,6 +92,9 @@ namespace LagoVista.AI.Models
             summary.Mode = Mode;
             summary.ModeSetTimestamp = ModeSetTimestamp;
             summary.ModeReason = ModeReason;
+            summary.Shared = Shared;
+            summary.Completed = Completed;
+            summary.Archived = Archived;
 
             var lastTurn = Turns.LastOrDefault();
             if (lastTurn != null)
@@ -118,8 +128,6 @@ namespace LagoVista.AI.Models
         public const string AgentSessionTurnStatuses_Completed = "completed";
         public const string AgentSessionTurnStatuses_Failed = "failed";
         public const string AgentSessionTurnStatuses_Aborted = "aborted";
-
-        
 
         public string Id { get; set; } = Guid.NewGuid().ToId();
 
@@ -232,5 +240,9 @@ namespace LagoVista.AI.Models
         public string Mode { get; set; }
         public string ModeSetTimestamp { get; set; }
         public string ModeReason { get; set; }
+
+        public bool Shared { get; set; }
+        public bool Completed { get; set; }
+        public bool Archived { get; set; }
     }
 }

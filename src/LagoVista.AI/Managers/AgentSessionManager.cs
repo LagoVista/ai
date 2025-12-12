@@ -111,6 +111,7 @@ namespace LagoVista.AI.Managers
 
             turn.Status = EntityHeader<AgentSessionTurnStatuses>.Create(AgentSessionTurnStatuses.Aborted);
             turn.StatusTimeStamp = DateTime.UtcNow.ToJSONString();
+            session.LastUpdatedDate = turn.StatusTimeStamp;
 
             ValidationCheck(session, Actions.Update);
             await _repo.UpdateSessionAsyunc(session);
@@ -172,7 +173,7 @@ namespace LagoVista.AI.Managers
             turn.OpenAIRequestBlobUrl = requestBlobUri;
             turn.Status = EntityHeader<AgentSessionTurnStatuses>.Create(AgentSessionTurnStatuses.Pending);
             turn.StatusTimeStamp = DateTime.UtcNow.ToJSONString();
-
+            session.LastUpdatedDate = turn.StatusTimeStamp;
             await _repo.UpdateSessionAsyunc(session);
         }
 
