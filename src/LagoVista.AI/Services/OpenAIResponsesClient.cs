@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using LagoVista.AI.Helpers;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
+using LagoVista.AI.Services.Tools;
 using LagoVista.Core;
 using LagoVista.Core.AI.Models;
 using LagoVista.Core.Exceptions;
@@ -84,9 +85,12 @@ namespace LagoVista.AI.Services
             if (mode == null)
                 throw new RecordNotFoundException(nameof(AgentMode), executeRequest.Mode);
 
-            var toolUsageBlock = _metaUsageProvider.GetToolUsageMetadata(mode.AssociatedToolIds);
+            var tools = mode.AssociatedToolIds.ToList();
+            tools.Add(ModeChangeTool.ToolName);
+            tools.Add(AgentListModesTool.ToolName);
 
-            executeRequest.ToolsJson = JsonConvert.SerializeObject(_toolSchemaProvider.GetToolSchemas(mode.AssociatedToolIds.ToList()));
+            var toolUsageBlock = _metaUsageProvider.GetToolUsageMetadata(tools.ToArray());
+            executeRequest.ToolsJson = JsonConvert.SerializeObject(_toolSchemaProvider.GetToolSchemas(tools));
 
             conversationContext.SystemPrompts.Add(agentContext.BuildSystemPrompt(executeRequest.Mode));
 
