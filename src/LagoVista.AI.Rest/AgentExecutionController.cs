@@ -144,6 +144,36 @@ namespace LagoVista.AI.Rest
             return InvokeResult<AgentSession>.Create(await  _sessionManager.GetAgentSessionAsync(id, OrgEntityHeader, UserEntityHeader));
         }
 
+        [HttpDelete("/api/ai/agent/session/{id}")]
+        public  Task<InvokeResult<AgentSessionSummary>> DeleteSession(string id)
+        {
+            return _sessionManager.DeleteSessionAsync(id, OrgEntityHeader, UserEntityHeader);
+        }
+
+        [HttpGet("/api/ai/agent/session/{id}/archive")]
+        public Task<InvokeResult<AgentSessionSummary>> ArchiveSession(string id)
+        {
+            return _sessionManager.ArchiveSessionAsync(id, OrgEntityHeader, UserEntityHeader);
+        }
+
+        [HttpGet("/api/ai/agent/session/{id}/complete")]
+        public Task<InvokeResult<AgentSessionSummary>> CopmpleteSession(string id)
+        {
+            return _sessionManager.CompleteSessionAsync(id, OrgEntityHeader, UserEntityHeader);
+        }
+
+        [HttpGet("/api/ai/agent/session/{id}/rename")]
+        public Task<InvokeResult<AgentSessionSummary>> NameSession(string id, string name)
+        {
+            return _sessionManager.SetSessionNameAsync(id, name, OrgEntityHeader, UserEntityHeader);
+        }
+
+        [HttpGet("/api/ai/agent/session/{id}/share")]
+        public Task<InvokeResult<AgentSessionSummary>> ShareSession(string id)
+        {
+            return _sessionManager.ShareSessionAsync(id, OrgEntityHeader, UserEntityHeader);
+        }
+
         [HttpGet("/api/ai/agent/ping")]
         public IActionResult Ping()
         {
