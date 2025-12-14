@@ -63,14 +63,14 @@ namespace LagoVista.AI.Services
             if (EntityHeader.IsNullOrEmpty(request.AgentContext))
             {
                 var organization = await _orgManager.GetOrganizationAsync(org.Id, org, user);
-                if(EntityHeader.IsNullOrEmpty(organization.DefaultVectorDatabase))
+                if(EntityHeader.IsNullOrEmpty(organization.DefaultAgentContext))
                 {
                     const string msg = "AgentContext is required.";
                     _adminLogger.AddError("[AgentRequestHandler_HandleAsync__ValidateRequest]", msg);
                     return InvokeResult<AgentExecuteResponse>.FromError(msg, "AGENT_REQ_MISSING_AGENT_CONTEXT");
                 }
 
-                request.AgentContext = organization.DefaultVectorDatabase;
+                request.AgentContext = organization.DefaultAgentContext;
             }
 
             var isNewSession = string.IsNullOrWhiteSpace(request.ConversationId);

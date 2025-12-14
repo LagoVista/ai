@@ -141,13 +141,18 @@ namespace LagoVista.AI.Services
                 conversationContextId = agentContext.DefaultConversationContext.Id;
             }
 
-            if (string.IsNullOrWhiteSpace(conversationContextId))
+            if (string.IsNullOrWhiteSpace(conversationContextId) && agentContext.ConversationContexts.Any())
             {
+                conversationContextId = agentContext.ConversationContexts.First().Id;
+            }
+
+            if (string.IsNullOrWhiteSpace(conversationContextId))
+            { 
                 const string msg = "Unable to resolve ConversationContext for the request.";
                 _adminLogger.AddError("[AgentExecutionService_ExecuteAsync__MissingConversationContext]", $"{msg} correlationId={correlationId}");
 
                 return InvokeResult<AgentExecuteResponse>.FromError(msg, "AGENT_EXEC_MISSING_CONVERSATION_CONTEXT");
-        }
+            }
 
             var conversationContext = agentContext.ConversationContexts.Single(ctx => ctx.Id == conversationContextId);
 
