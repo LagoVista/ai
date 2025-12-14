@@ -257,5 +257,30 @@ namespace LagoVista.AI.Managers
 
             return InvokeResult<AgentSessionSummary>.Create(session.CreateSummary());
         }
+
+        public async Task<InvokeResult<AgentSession>> BranchSessionAsync(string sessionId, string turnId, EntityHeader org, EntityHeader user)
+        {
+            var session = await GetAgentSessionAsync(sessionId, org, user);
+
+            var branchedTurn = session.Turns.SingleOrDefault(t => t.Id == turnId);
+            if(branchedTurn == null)
+            {
+                throw new RecordNotFoundException(nameof(AgentSessionTurn), turnId);
+            }
+
+            var lastTurnIndex = session.Turns.IndexOf(branchedTurn);
+            for(int idx = session.Turns.Count; idx > lastTurnIndex; idx--)
+                session.Turns.RemoveAt(idx - 1);
+
+            session.Id = Guid.NewGuid().ToId();
+            session.Name = $"Branch - {session.Name}";
+            session.LastUpdatedBy = user;
+            session.LastUpdatedDate = DateTime.UtcNow.ToJSONString();
+            session.Mode = branchedTurn.Mode;
+
+            await AddAgentSessionAsync(session, org, user);
+
+            return InvokeResult<AgentSession>.Create(session);
+        }
     }
 }

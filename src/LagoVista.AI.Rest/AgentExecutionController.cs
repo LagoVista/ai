@@ -131,6 +131,12 @@ namespace LagoVista.AI.Rest
             }
         }
 
+        [HttpGet("/api/ai/agent/session/{sessionid}/branch/{turnid}")]
+        public Task<InvokeResult<AgentSession>> GetAgentSessions(string sessionid, string turnid)
+        {
+            return _sessionManager.BranchSessionAsync(sessionid, turnid, OrgEntityHeader, UserEntityHeader);
+        }
+
         [HttpGet("/api/ai/agent/sessions")]
         public Task<ListResponse<AgentSessionSummary>> GetAgentSessions()
         {
