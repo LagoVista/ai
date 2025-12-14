@@ -9,6 +9,7 @@ using LagoVista.Core.AI.Models;
 using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
+using LagoVista.UserAdmin.Interfaces.Managers;
 using Moq;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
@@ -21,6 +22,7 @@ namespace LagoVista.AI.Tests.Services
         private Mock<IAgentOrchestrator> _orchestrator;
         private Mock<IAdminLogger> _adminLogger;
         private Mock<IAgentStreamingContext> _streamingContext;
+        private Mock<IOrganizationManager> _orgManager;
         private AgentRequestHandler _sut;
 
         [SetUp]
@@ -29,9 +31,9 @@ namespace LagoVista.AI.Tests.Services
             _orchestrator = new Mock<IAgentOrchestrator>();
             _adminLogger = new Mock<IAdminLogger>();
             _streamingContext = new Mock<IAgentStreamingContext>();
+            _orgManager = new Mock<IOrganizationManager>();
 
-
-            _sut = new AgentRequestHandler(_orchestrator.Object, _adminLogger.Object, _streamingContext.Object);
+            _sut = new AgentRequestHandler(_orchestrator.Object, _adminLogger.Object, _orgManager.Object, _streamingContext.Object);
         }
 
         #region Ctor Guards
@@ -40,14 +42,14 @@ namespace LagoVista.AI.Tests.Services
         public void Ctor_NullOrchestrator_Throws()
         {
             Assert.Throws<ArgumentNullException>(
-                () => new AgentRequestHandler(null, _adminLogger.Object, _streamingContext.Object));
+                () => new AgentRequestHandler(null, _adminLogger.Object, _orgManager.Object, _streamingContext.Object));
         }
 
         [Test]
         public void Ctor_NullAdminLogger_Throws()
         {
             Assert.Throws<ArgumentNullException>(
-                () => new AgentRequestHandler(_orchestrator.Object, null, _streamingContext.Object));
+                () => new AgentRequestHandler(_orchestrator.Object, null, _orgManager.Object, _streamingContext.Object));
         }
 
         #endregion

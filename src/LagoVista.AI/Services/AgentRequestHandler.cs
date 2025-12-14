@@ -8,6 +8,7 @@ using LagoVista.Core.AI.Models;
 using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
+using LagoVista.UserAdmin.Interfaces.Managers;
 
 namespace LagoVista.AI.Services
 {
@@ -27,12 +28,14 @@ namespace LagoVista.AI.Services
         private readonly IAgentOrchestrator _orchestrator;
         private readonly IAdminLogger _adminLogger;
         private readonly IAgentStreamingContext _agentStreamingContext;
+        private readonly IOrganizationManager _orgManager;
 
-        public AgentRequestHandler(IAgentOrchestrator orchestrator, IAdminLogger adminLogger, IAgentStreamingContext agentStreamingContext)
+        public AgentRequestHandler(IAgentOrchestrator orchestrator, IAdminLogger adminLogger, IOrganizationManager orgManager, IAgentStreamingContext agentStreamingContext)
         {
             _orchestrator = orchestrator ?? throw new ArgumentNullException(nameof(orchestrator));
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
             _agentStreamingContext = agentStreamingContext ?? throw new ArgumentNullException(nameof(agentStreamingContext));
+            _orgManager = orgManager ?? throw new ArgumentNullException(nameof(orgManager));
         }
 
         public async Task<InvokeResult<AgentExecuteResponse>> HandleAsync(AgentExecuteRequest request, EntityHeader org, EntityHeader user, CancellationToken cancellationToken = default)
@@ -55,6 +58,19 @@ namespace LagoVista.AI.Services
                 _adminLogger.AddError("[AgentRequestHandler_HandleAsync__ValidateRequest]", msg);
 
                 return InvokeResult<AgentExecuteResponse>.FromError(msg, "AGENT_REQ_MISSING_INSTRUCTION");
+            }
+
+            if (EntityHeader.IsNullOrEmpty(request.AgentContext))
+            {
+                var organization = await _orgManager.GetOrganizationAsync(org.Id, org, user);
+                if(EntityHeader.IsNullOrEmpty(organization.DefaultVectorDatabase))
+                {
+                    const string msg = "AgentContext is required.";
+                    _adminLogger.AddError("[AgentRequestHandler_HandleAsync__ValidateRequest]", msg);
+                    return InvokeResult<AgentExecuteResponse>.FromError(msg, "AGENT_REQ_MISSING_AGENT_CONTEXT");
+                }
+
+                request.AgentContext = organization.DefaultVectorDatabase;
             }
 
             var isNewSession = string.IsNullOrWhiteSpace(request.ConversationId);

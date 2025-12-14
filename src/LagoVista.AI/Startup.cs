@@ -27,9 +27,18 @@ namespace LagoVista.AI
 
     public static class Startup
     {
+        private static IAgentToolRegistry _agentToolRegistry;
+
+        public static void RegisterTool<T>() where T : IAgentTool
+        {
+            _agentToolRegistry.RegisterTool<T>();
+        } 
+
         public static void ConfigureServices(IServiceCollection services, IAdminLogger adminLogger)
         {
             var toolRegistry = new AgentToolRegistry(adminLogger);
+
+            _agentToolRegistry = toolRegistry;
 
             adminLogger.Trace("[AgentToolRegistry_RegisterTool] - Start Register Server Tools - vvvv");
 
