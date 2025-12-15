@@ -40,7 +40,25 @@ namespace LagoVista.AI.Models
         Domain
     }
 
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.AgentSession_Title, AIResources.Names.AgentSession_Help, AIResources.Names.AgentSession_Description,  EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIDomain),
+    public enum AgentSessionMemoryNoteImportance
+    {
+        Low,
+        Normal,
+        High,
+        Critical
+    }
+
+    public enum AgentSessionMemoryNoteKinds
+    {
+        Invariant,
+        Decision,
+        Constraint,
+        Fact,
+        Todo,
+        Gotcha
+    }
+
+    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.AgentSession_Title, AIResources.Names.AgentSession_Help, AIResources.Names.AgentSession_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIDomain),
         Icon: "icon-ae-creativity", ListUIUrl: "/mlworkbench/aptixsessions", EditUIUrl: "/mlworkbench/aptixsession/{id}", GetListUrl: "/api/ai/agent/sessions", GetUrl: "/api/ai/agent/session/{id}")]
     public class AgentSession : EntityBase, ISummaryFactory, IValidateable
     {
@@ -48,7 +66,6 @@ namespace LagoVista.AI.Models
         public const string OperationKind_Image = "image";
         public const string OperationKind_Text = "text";
         public const string OperationKind_Domain = "domain";
-
 
         public EntityHeader AgentContext { get; set; }
 
@@ -70,14 +87,20 @@ namespace LagoVista.AI.Models
 
         public List<AgentSessionTurn> Turns { get; set; } = new List<AgentSessionTurn>();
 
+        public List<AgentSessionCheckpoint> Checkpoints { get; set; } = new List<AgentSessionCheckpoint>();
+
         public List<ModeHistory> ModeHistory { get; set; } = new List<ModeHistory>();
+
+        /// <summary>
+        /// Durable, user-approved session memory notes (invariants, decisions, constraints, etc.) that can be paged in later.
+        /// </summary>
+        public List<AgentSessionMemoryNote> MemoryNotes { get; set; } = new List<AgentSessionMemoryNote>();
 
         public bool Completed { get; set; }
 
         public bool Shared { get; set; }
 
         public bool Archived { get; set; }
-
 
         public AgentSessionSummary CreateSummary()
         {
@@ -112,6 +135,44 @@ namespace LagoVista.AI.Models
         }
     }
 
+    public class AgentSessionMemoryNote
+    {
+        public string Id { get; set; } = Guid.NewGuid().ToId();
+
+        /// <summary>
+        /// Stable, short identifier displayed to the user and referenced later (e.g., MEM-0042).
+        /// </summary>
+        public string MemoryId { get; set; }
+
+        public string Title { get; set; }
+
+        /// <summary>
+        /// 1-2 line summary that acts as the "marker" in the conversation.
+        /// </summary>
+        public string Summary { get; set; }
+
+        /// <summary>
+        /// Optional longer detail; can include snippets.
+        /// </summary>
+        public string Details { get; set; }
+
+        public EntityHeader<AgentSessionMemoryNoteImportance> Importance { get; set; } =
+            EntityHeader<AgentSessionMemoryNoteImportance>.Create(AgentSessionMemoryNoteImportance.Normal);
+
+        public EntityHeader<AgentSessionMemoryNoteKinds> Kind { get; set; } =
+            EntityHeader<AgentSessionMemoryNoteKinds>.Create(AgentSessionMemoryNoteKinds.Decision);
+
+        public List<string> Tags { get; set; } = new List<string>();
+
+        public string CreationDate { get; set; }
+
+        public EntityHeader CreatedByUser { get; set; }
+
+        public string TurnSourceId { get; set; }
+
+        public string ConversationId { get; set; }
+    }
+
     public class ModeHistory
     {
         public string PreviousMode { get; set; }
@@ -122,7 +183,6 @@ namespace LagoVista.AI.Models
 
     public class AgentSessionTurn : IValidateable
     {
-
         public const string AgentSessionTurnStatuses_New = "new";
         public const string AgentSessionTurnStatuses_Pending = "pending";
         public const string AgentSessionTurnStatuses_Completed = "completed";
@@ -130,6 +190,7 @@ namespace LagoVista.AI.Models
         public const string AgentSessionTurnStatuses_Aborted = "aborted";
 
         public string Id { get; set; } = Guid.NewGuid().ToId();
+
 
         public int SequenceNumber { get; set; }
 
@@ -217,6 +278,51 @@ namespace LagoVista.AI.Models
 
         public bool WasTooLargeToSend { get; set; }
     }
+
+    public class AgentSessionCheckpoint
+    {
+        /// <summary>
+        /// Internal persistence id.
+        /// </summary>
+        public string Id { get; set; } = Guid.NewGuid().ToId();
+
+        /// <summary>
+        /// Short, stable, user-facing identifier (e.g. CP-0007).
+        /// </summary>
+        public string CheckpointId { get; set; }
+
+        /// <summary>
+        /// User-provided name for the checkpoint.
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
+        /// Optional notes describing why this checkpoint was created.
+        /// </summary>
+        public string Notes { get; set; }
+
+        /// <summary>
+        /// Turn source id captured at checkpoint time.
+        /// Used as a fallback if TurnId is unavailable.
+        /// </summary>
+        public string TurnSourceId { get; set; }
+
+        /// <summary>
+        /// Conversation id at time of capture (diagnostics / traceability).
+        /// </summary>
+        public string ConversationId { get; set; }
+
+        /// <summary>
+        /// UTC timestamp when the checkpoint was created.
+        /// </summary>
+        public string CreationDate { get; set; }
+
+        /// <summary>
+        /// User who created the checkpoint.
+        /// </summary>
+        public EntityHeader CreatedByUser { get; set; }
+    }
+
 
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.AgentSessions_Title, AIResources.Names.AgentSession_Help, AIResources.Names.AgentSession_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIDomain),
         Icon: "icon-ae-creativity", ListUIUrl: "/mlworkbench/aptixsessions", EditUIUrl: "/mlworkbench/aptixsession/{id}", GetListUrl: "/api/ai/agent/sessions", GetUrl: "/api/ai/agent/session/{id}")]

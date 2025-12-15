@@ -88,6 +88,13 @@ namespace LagoVista.AI.Services
             var tools = mode.AssociatedToolIds.ToList();
             tools.Add(ModeChangeTool.ToolName);
             tools.Add(AgentListModesTool.ToolName);
+            tools.Add(SessionCheckpointListTool.ToolName);
+            tools.Add(SessionCheckpointRestoreTool.ToolName);
+            tools.Add(SessionCheckpointSetTool.ToolName);
+            tools.Add(SessionMemoryListTool.ToolName);
+            tools.Add(SessionMemoryRecallTool.ToolName);
+            tools.Add(SessionMemoryStoreTool.ToolName);
+            tools.Add(FetchWebPageTool.ToolName);
 
             var toolUsageBlock = _metaUsageProvider.GetToolUsageMetadata(tools.ToArray());
             executeRequest.ToolsJson = JsonConvert.SerializeObject(_toolSchemaProvider.GetToolSchemas(tools));

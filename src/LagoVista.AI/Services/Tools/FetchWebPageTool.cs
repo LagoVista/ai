@@ -141,7 +141,7 @@ namespace LagoVista.AI.Services.Tools
         {
             if (resp.Content == null) return Array.Empty<byte>();
 
-            using var stream = await resp.Content.ReadAsStreamAsync(ct);
+            using var stream = await resp.Content.ReadAsStreamAsync();
             using var ms = new System.IO.MemoryStream();
             var buffer = new byte[8192];
             var total = 0;
@@ -203,7 +203,7 @@ namespace LagoVista.AI.Services.Tools
             if (uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase)) throw new InvokeValidationException("agent_fetch_webpage blocks localhost.");
 
             IPAddress[] addresses;
-            try { addresses = await Dns.GetHostAddressesAsync(uri.Host, ct); }
+            try { addresses = await Dns.GetHostAddressesAsync(uri.Host); }
             catch { throw new InvokeValidationException("agent_fetch_webpage could not resolve host."); }
 
             if (addresses.Any(IsPrivateOrLocal)) throw new InvokeValidationException("agent_fetch_webpage blocks private or local network destinations.");

@@ -149,7 +149,7 @@ namespace LagoVista.AI.Services
 
             var session = await _sessionFactory.CreateSession(request, context, OperationKinds.Code, org, user);
             var turn = _sessionFactory.CreateTurnForNewSession(session, request, org, user);
-           
+            request.CurrentTurnId = turn.Id;
             if(cancellationToken.IsCancellationRequested)
             {
                 return InvokeResult<AgentExecuteResponse>.Abort();
@@ -291,7 +291,7 @@ namespace LagoVista.AI.Services
             }
 
             var turn = _sessionFactory.CreateTurnForExistingSession(session, request, org, user);
-
+            request.CurrentTurnId = turn.Id;
             turn.SequenceNumber = previousTurn.SequenceNumber + 1;
             turn.ConversationId = string.IsNullOrWhiteSpace(previousTurn.ConversationId) ? Guid.NewGuid().ToId() : previousTurn.ConversationId;
             turn.PreviousOpenAIResponseId = previousTurn.OpenAIResponseId;

@@ -50,6 +50,8 @@ namespace LagoVista.AI
             toolRegistry.RegisterTool<DelayTool>();
             toolRegistry.RegisterTool<FailureInjectionTool>();
 
+            toolRegistry.RegisterTool<FetchWebPageTool>();
+
             toolRegistry.RegisterTool<AgentListModesTool>();
             toolRegistry.RegisterTool<ModeChangeTool>();
             toolRegistry.RegisterTool<RequestUserApprovalAgentTool>();
@@ -83,6 +85,16 @@ namespace LagoVista.AI
             // --- Goal Tools ---
             toolRegistry.RegisterTool<SetGoalAgentTool>();
             toolRegistry.RegisterTool<ApproveGoalAgentTool>();
+
+            // -- Checkpoint Tools --
+            toolRegistry.RegisterTool<SessionCheckpointListTool>();
+            toolRegistry.RegisterTool<SessionCheckpointRestoreTool>();
+            toolRegistry.RegisterTool<SessionCheckpointSetTool>();
+
+            // -- Session Memory Tools
+            toolRegistry.RegisterTool<SessionMemoryListTool>();
+            toolRegistry.RegisterTool<SessionMemoryRecallTool>();
+            toolRegistry.RegisterTool<SessionMemoryStoreTool>();
 
             // --- Chapter Tools ---
             toolRegistry.RegisterTool<AddChapterAgentTool>();

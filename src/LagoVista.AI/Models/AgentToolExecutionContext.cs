@@ -10,6 +10,7 @@ namespace LagoVista.AI.Models
         public ConversationContext ConversationContext { get; set; }
         public AgentExecuteRequest Request { get; set; }
         public string SessionId { get; set; }
+        public string CurrentTurnId { get; set; }
         public EntityHeader Org { get; set; }
         public EntityHeader User { get; set; }
     }

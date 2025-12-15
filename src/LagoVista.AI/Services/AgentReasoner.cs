@@ -152,6 +152,7 @@ namespace LagoVista.AI.Services
                     ConversationContext = conversationContext,
                     Request = request,
                     SessionId = sessionId,
+                    CurrentTurnId = request.CurrentTurnId,
                     Org = org,
                     User = user
                 };

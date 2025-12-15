@@ -287,5 +287,230 @@ namespace LagoVista.AI.Managers
 
             return InvokeResult<AgentSession>.Create(session);
         }
+
+        public async Task<InvokeResult<AgentSessionMemoryNote>> AddSessionMemoryNoteAsync(string sessionId, AgentSessionMemoryNote note, EntityHeader org, EntityHeader user)
+        {
+            var session = await GetAgentSessionAsync(sessionId, org, user);
+            session.LastUpdatedBy = user;
+            session.LastUpdatedDate = note.CreationDate;
+            session.MemoryNotes.Add(note);
+
+            await _repo.UpdateSessionAsyunc(session); 
+
+            return InvokeResult<AgentSessionMemoryNote>.Create(note);
+        }
+
+ 
+
+        public async Task<ListResponse<AgentSessionMemoryNote>> ListSessionMemoryNotesAsync(string sessionId, string tag, string kind, string importanceMin, int limit, EntityHeader org, EntityHeader user)
+        {
+            var session = await GetAgentSessionAsync(sessionId, org, user);
+            if (session == null) return ListResponse<AgentSessionMemoryNote>.Create(new List<AgentSessionMemoryNote>());
+
+            var notes = session.MemoryNotes ?? new List<AgentSessionMemoryNote>();
+
+            IEnumerable<AgentSessionMemoryNote> query = notes;
+
+            if (!string.IsNullOrWhiteSpace(tag))
+            {
+                var t = tag.Trim();
+                query = query.Where(n => n.Tags != null && n.Tags.Any(x => string.Equals(x, t, StringComparison.OrdinalIgnoreCase)));
+            }
+
+            var kindFilter = ParseMemoryKind(kind);
+            if (kindFilter.HasValue) query = query.Where(n => n.Kind != null && n.Kind.Value == kindFilter.Value);
+
+            var minImportance = ParseMemoryImportance(importanceMin);
+            if (minImportance.HasValue) query = query.Where(n => n.Importance != null && n.Importance.Value >= minImportance.Value);
+
+            query = query.OrderByDescending(n => SafeIsoToDateTime(n.CreationDate)).ThenByDescending(n => n.MemoryId);
+
+            if (limit <= 0) limit = 50;
+
+            return ListResponse<AgentSessionMemoryNote>.Create(query.Take(limit).ToList());
+        }
+
+        public async Task<InvokeResult<List<AgentSessionMemoryNote>>> RecallSessionMemoryNotesAsync(string sessionId, List<string> memoryIds, string tag, string kind, bool includeDetails, EntityHeader org, EntityHeader user)
+        {
+            var session = await GetAgentSessionAsync(sessionId, org, user);
+            if (session == null) return InvokeResult<List<AgentSessionMemoryNote>>.Create(new List<AgentSessionMemoryNote>());
+
+            var notes = session.MemoryNotes ?? new List<AgentSessionMemoryNote>();
+
+            IEnumerable<AgentSessionMemoryNote> query = notes;
+
+            var ids = (memoryIds ?? new List<string>()).Where(id => !string.IsNullOrWhiteSpace(id)).Select(id => id.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            if (ids.Count > 0) query = query.Where(n => !string.IsNullOrWhiteSpace(n.MemoryId) && ids.Contains(n.MemoryId, StringComparer.OrdinalIgnoreCase));
+
+            if (!string.IsNullOrWhiteSpace(tag))
+            {
+                var t = tag.Trim();
+                query = query.Where(n => n.Tags != null && n.Tags.Any(x => string.Equals(x, t, StringComparison.OrdinalIgnoreCase)));
+            }
+
+            var kindFilter = ParseMemoryKind(kind);
+            if (kindFilter.HasValue) query = query.Where(n => n.Kind != null && n.Kind.Value == kindFilter.Value);
+
+            var results = query.OrderByDescending(n => SafeIsoToDateTime(n.CreationDate)).ThenByDescending(n => n.MemoryId).ToList();
+
+            if (!includeDetails)
+            {
+                results = results.Select(n => new AgentSessionMemoryNote
+                {
+                    Id = n.Id,
+                    MemoryId = n.MemoryId,
+                    Title = n.Title,
+                    Summary = n.Summary,
+                    Details = null,
+                    Importance = n.Importance,
+                    Kind = n.Kind,
+                    Tags = n.Tags == null ? new List<string>() : new List<string>(n.Tags),
+                    CreationDate = n.CreationDate,
+                    CreatedByUser = n.CreatedByUser,
+                    TurnSourceId = n.TurnSourceId,
+                    ConversationId = n.ConversationId
+                }).ToList();
+            }
+
+            return InvokeResult<List<AgentSessionMemoryNote>>.Create(results);
+        }
+
+        public async Task<InvokeResult<AgentSessionCheckpoint>> AddSessionCheckpointAsync(string sessionId, AgentSessionCheckpoint checkpoint, EntityHeader org, EntityHeader user)
+        {
+            if (string.IsNullOrWhiteSpace(sessionId)) return InvokeResult<AgentSessionCheckpoint>.FromError("AddSessionCheckpointAsync requires sessionId.");
+            if (checkpoint == null) return InvokeResult<AgentSessionCheckpoint>.FromError("AddSessionCheckpointAsync requires a checkpoint.");
+            if (string.IsNullOrWhiteSpace(checkpoint.Name)) return InvokeResult<AgentSessionCheckpoint>.FromError("Checkpoint requires Name.");
+            if (string.IsNullOrWhiteSpace(checkpoint.TurnSourceId)) return InvokeResult<AgentSessionCheckpoint>.FromError("Checkpoint requires a TurnSourceId.");
+
+            var session = await GetAgentSessionAsync(sessionId, org, user);
+            if (session == null) return InvokeResult<AgentSessionCheckpoint>.FromError("Session not found.");
+
+            session.Checkpoints ??= new List<AgentSessionCheckpoint>();
+
+            checkpoint.Name = checkpoint.Name.Trim();
+            checkpoint.CheckpointId = string.IsNullOrWhiteSpace(checkpoint.CheckpointId) ? NextCheckpointId(session.Checkpoints) : checkpoint.CheckpointId.Trim();
+            checkpoint.CreationDate = string.IsNullOrWhiteSpace(checkpoint.CreationDate) ? DateTime.UtcNow.ToString("o") : checkpoint.CreationDate;
+            checkpoint.CreatedByUser ??= user;
+            checkpoint.ConversationId ??= session.Turns?.LastOrDefault()?.ConversationId;
+
+            session.Checkpoints.Add(checkpoint);
+
+            await SaveAgentSessionAsync(session, org, user);
+
+            return InvokeResult<AgentSessionCheckpoint>.Create(checkpoint);
+        }
+
+        public async Task<ListResponse<AgentSessionCheckpoint>> ListSessionCheckpointsAsync(string sessionId, int limit, EntityHeader org, EntityHeader user)
+        {
+            var session = await GetAgentSessionAsync(sessionId, org, user);
+            if (session == null) return ListResponse<AgentSessionCheckpoint>.Create(new List<AgentSessionCheckpoint>());
+
+            var cps = session.Checkpoints ?? new List<AgentSessionCheckpoint>();
+
+            if (limit <= 0) limit = 100;
+
+            var ordered = cps.OrderByDescending(c => SafeIsoToDateTime(c.CreationDate)).ThenByDescending(c => c.CheckpointId).Take(limit).ToList();
+            return ListResponse<AgentSessionCheckpoint>.Create(ordered);
+        }
+
+        public async Task<InvokeResult<AgentSession>> RestoreSessionCheckpointAsync(string sessionId, string checkpointId, EntityHeader org, EntityHeader user)
+        {
+            if (string.IsNullOrWhiteSpace(sessionId)) return InvokeResult<AgentSession>.FromError("RestoreSessionCheckpointAsync requires sessionId.");
+            if (string.IsNullOrWhiteSpace(checkpointId)) return InvokeResult<AgentSession>.FromError("RestoreSessionCheckpointAsync requires checkpointId.");
+
+            var session = await GetAgentSessionAsync(sessionId, org, user);
+            if (session == null) return InvokeResult<AgentSession>.FromError("Session not found.");
+
+            var cps = session.Checkpoints ?? new List<AgentSessionCheckpoint>();
+            var cp = cps.FirstOrDefault(c => string.Equals(c.CheckpointId, checkpointId.Trim(), StringComparison.OrdinalIgnoreCase));
+            if (cp == null) return InvokeResult<AgentSession>.FromError($"Checkpoint '{checkpointId}' not found.");
+
+            var turnId = cp.TurnSourceId;
+
+            if (string.IsNullOrWhiteSpace(turnId) && session.Turns != null && !String.IsNullOrEmpty(cp.TurnSourceId))
+            {
+                var turn = session.Turns.FirstOrDefault(t => t.Id == cp.TurnSourceId);
+                turnId = turn?.Id;
+            }
+
+            if (string.IsNullOrWhiteSpace(turnId)) return InvokeResult<AgentSession>.FromError("Checkpoint could not be resolved to a turn.");
+
+            return await BranchSessionAsync(sessionId, turnId, org, user);
+        }
+
+        private static AgentSessionMemoryNoteKinds? ParseMemoryKind(string kind)
+        {
+            if (string.IsNullOrWhiteSpace(kind)) return null;
+
+            switch (kind.Trim().ToLowerInvariant())
+            {
+                case "invariant":
+                    return AgentSessionMemoryNoteKinds.Invariant;
+                case "decision":
+                    return AgentSessionMemoryNoteKinds.Decision;
+                case "constraint":
+                    return AgentSessionMemoryNoteKinds.Constraint;
+                case "fact":
+                    return AgentSessionMemoryNoteKinds.Fact;
+                case "todo":
+                    return AgentSessionMemoryNoteKinds.Todo;
+                case "gotcha":
+                    return AgentSessionMemoryNoteKinds.Gotcha;
+                default:
+                    return null;
+            }
+        }
+
+        private static AgentSessionMemoryNoteImportance? ParseMemoryImportance(string importanceMin)
+        {
+            if (string.IsNullOrWhiteSpace(importanceMin)) return null;
+
+            switch (importanceMin.Trim().ToLowerInvariant())
+            {
+                case "low":
+                    return AgentSessionMemoryNoteImportance.Low;
+                case "normal":
+                    return AgentSessionMemoryNoteImportance.Normal;
+                case "high":
+                    return AgentSessionMemoryNoteImportance.High;
+                case "critical":
+                    return AgentSessionMemoryNoteImportance.Critical;
+                default:
+                    return null;
+            }
+        }
+
+        private static DateTime SafeIsoToDateTime(string iso)
+        {
+            if (string.IsNullOrWhiteSpace(iso)) return DateTime.MinValue;
+            if (DateTime.TryParse(iso, null, System.Globalization.DateTimeStyles.RoundtripKind, out var dt)) return dt;
+            return DateTime.MinValue;
+        }
+
+        private static string NextCheckpointId(List<AgentSessionCheckpoint> existing)
+        {
+            var next = 1;
+
+            foreach (var cp in existing ?? new List<AgentSessionCheckpoint>())
+            {
+                if (cp == null || string.IsNullOrWhiteSpace(cp.CheckpointId)) continue;
+
+                var s = cp.CheckpointId.Trim();
+                if (!s.StartsWith("CP-", StringComparison.OrdinalIgnoreCase)) continue;
+
+                var numPart = s.Substring(3);
+                if (int.TryParse(numPart, out var n) && n >= next) next = n + 1;
+            }
+
+            return $"CP-{next:0000}";
+        }
+
+        /// <summary>
+        /// Replace this with your actual persistence call (repo update / document update / etc.).
+        /// </summary>
+        private Task SaveAgentSessionAsync(AgentSession session, EntityHeader org, EntityHeader user)
+        {
+            throw new NotImplementedException("Wire SaveAgentSessionAsync to your existing session persistence mechanism.");
+        }
     }
 }
