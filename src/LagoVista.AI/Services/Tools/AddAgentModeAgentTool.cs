@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using LagoVista.Core.Validation;
 using System.Linq;
+using LagoVista.Core;
 
 namespace LagoVista.AI.Services.Tools
 {
@@ -167,7 +168,7 @@ namespace LagoVista.AI.Services.Tools
             // Server owns Id – ignore any Id sent from the LLM.
             var mode = new AgentMode
             {
-                Id = Guid.NewGuid().ToString("N"), // hyphens removed
+                Id = Guid.NewGuid().ToId(), // hyphens removed
                 Key = args.Value<string>("key")!,
                 DisplayName = args.Value<string>("display_name")!,
                 Description = args.Value<string>("description")!,

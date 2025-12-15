@@ -17,12 +17,11 @@ namespace LagoVista.AI.Services.Tools
         public const string ToolName = "agent_change_mode";
 
         public const string ToolUsageMetadata =
-            "Use this tool to change the current agent session mode, but only after the user " +
-            "has explicitly agreed to switch. First, propose a specific target mode and ask " +
-            "whether the user wants to (1) stay in the current mode, (2) switch this session " +
-            "to that mode, or (3) switch and start a new session. " +
-            "Call this tool only for options (2) or (3): use branch=false for switching the " +
-            "current session, and branch=true when the user wants to switch and start a new session.";
+            @"Use this tool to change the current agent session mode, if it was explicilty stated
+             you can chnage modes immediately wihtout confirmation, however if the user wants
+             to do something better supported by a different mode you should ask them first.
+             after switching to the new mode, you should display the Welcome Message assocaited
+             with the new mode.";
 
         private readonly IAgentSessionManager _sessionManager;
         private readonly IAdminLogger _logger;

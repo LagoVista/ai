@@ -84,10 +84,10 @@ namespace LagoVista.AI.Models
             var summary = new AgentSessionSummary();
             summary.Populate(this);
             summary.DiscussionsTotal = Turns.Count;
-            summary.AgentContextId = AgentContext.Id;
-            summary.AgentContextName = AgentContext.Text;
-            summary.ConversationContextName = ConversationContext.Text;
-            summary.ConversationContextId = ConversationContext.Id;
+            summary.AgentContextId = AgentContext?.Id;
+            summary.AgentContextName = AgentContext?.Text;
+            summary.ConversationContextName = ConversationContext?.Text;
+            summary.ConversationContextId = ConversationContext?.Id;
             summary.TurnCount = Turns.Count;
             summary.Mode = Mode;
             summary.ModeSetTimestamp = ModeSetTimestamp;

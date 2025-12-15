@@ -53,7 +53,9 @@ namespace LagoVista.AI.Managers
             await _repo.UpdateSessionAsyunc(session);
         }
 
-        public async Task CompleteAgentSessionTurnAsync(string agentSessionId, string turnId, string answerSummary, string answerBlobUrl, string openAiResponseId, double executionMs, List<string> warnings, EntityHeader org, EntityHeader user)
+        public async Task CompleteAgentSessionTurnAsync(string agentSessionId, string turnId, string answerSummary, string answerBlobUrl, string openAiResponseId,
+            int promptTokens, int completionTokens, int totalTokens,
+            double executionMs, List<string> warnings, EntityHeader org, EntityHeader user)
         {
             var session = await _repo.GetAgentSessionAsync(agentSessionId);
             var turn = session.Turns.SingleOrDefault(t => t.Id == turnId);
@@ -67,6 +69,9 @@ namespace LagoVista.AI.Managers
             turn.StatusTimeStamp = DateTime.UtcNow.ToJSONString();
             turn.OpenAIResponseReceivedDate = turn.StatusTimeStamp;
             turn.OpenAIResponseId = openAiResponseId;
+            turn.TotalTokens = totalTokens;
+            turn.PromptTokens = promptTokens;
+            turn.CompletionTokens = completionTokens;
             turn.OpenAIChainExpiresDate = DateTime.UtcNow.AddDays(30).ToJSONString();
             turn.OpenAIResponseBlobUrl = answerBlobUrl;
             turn.Warnings.AddRange(warnings);

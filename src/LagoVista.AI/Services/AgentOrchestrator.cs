@@ -156,7 +156,9 @@ namespace LagoVista.AI.Services
 
             var response = execResult.Result;
 
-            await _sessionManager.CompleteAgentSessionTurnAsync(session.Id, turn.Id, response.Text, response.FullResponseUrl, response.ResponseContinuationId, stopwatch.Elapsed.TotalMilliseconds, response.Warnings, org, user);
+            await _sessionManager.CompleteAgentSessionTurnAsync(session.Id, turn.Id, response.Text, response.FullResponseUrl, response.ResponseContinuationId, 
+                response.Usage.PromptTokens, response.Usage.CompletionTokens, response.Usage.TotalTokens,
+                stopwatch.Elapsed.TotalMilliseconds, response.Warnings, org, user);
 
             await PublishTurnCompletedAsync(session, turn, stopwatch.ElapsedMilliseconds, org, user);
 
@@ -277,7 +279,9 @@ namespace LagoVista.AI.Services
 
             var response = execResult.Result;
 
-            await _sessionManager.CompleteAgentSessionTurnAsync(session.Id, turn.Id, response.Text, response.FullResponseUrl, response.ResponseContinuationId, stopwatch.Elapsed.TotalMilliseconds, response.Warnings, org, user);
+            await _sessionManager.CompleteAgentSessionTurnAsync(session.Id, turn.Id, response.Text, response.FullResponseUrl, response.ResponseContinuationId,
+                  response.Usage.PromptTokens, response.Usage.CompletionTokens, response.Usage.TotalTokens,
+                  stopwatch.Elapsed.TotalMilliseconds, response.Warnings, org, user);
 
             await PublishTurnCompletedAsync(session, turn, stopwatch.ElapsedMilliseconds, org, user);
 

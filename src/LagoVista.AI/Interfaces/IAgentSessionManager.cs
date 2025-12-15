@@ -15,7 +15,9 @@ namespace LagoVista.AI.Interfaces
 
         Task SetRequestBlobUriAsync(string agentSessionid, string turnId, string requestBlobUri, EntityHeader org, EntityHeader user);
 
-        Task CompleteAgentSessionTurnAsync(string agentSessionId, string turnId, string answerSummary, string answerBlobUrl, string openAiResponseId, double executionMs, List<string> warnings, EntityHeader org, EntityHeader user);
+        Task CompleteAgentSessionTurnAsync(string agentSessionId, string turnId, string answerSummary, string answerBlobUrl, string openAiResponseId,
+            int promptTokens, int completionTokens, int totalTokens,
+            double executionMs, List<string> warnings, EntityHeader org, EntityHeader user);
 
         Task FailAgentSessionTurnAsync(string agentSessionId, string turnId, string openAiResponseId, double executionMs,
             List<string> errors, List<string> warnings, EntityHeader org, EntityHeader user);
