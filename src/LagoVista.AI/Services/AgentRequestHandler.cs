@@ -65,7 +65,7 @@ namespace LagoVista.AI.Services
                 var organization = await _orgManager.GetOrganizationAsync(org.Id, org, user);
                 if(EntityHeader.IsNullOrEmpty(organization.DefaultAgentContext))
                 {
-                    const string msg = "AgentContext is required.";
+                    const string msg = "AgentContext is required, this can either come from the request or be set as a default in the Owner settings";
                     _adminLogger.AddError("[AgentRequestHandler_HandleAsync__ValidateRequest]", msg);
                     return InvokeResult<AgentExecuteResponse>.FromError(msg, "AGENT_REQ_MISSING_AGENT_CONTEXT");
                 }
@@ -85,7 +85,7 @@ namespace LagoVista.AI.Services
 
         private async Task<InvokeResult<AgentExecuteResponse>> HandleNewSessionAsync(AgentExecuteRequest request, EntityHeader org, EntityHeader user, string correlationId, CancellationToken cancellationToken)
         {
-            await _agentStreamingContext.AddWorkflowAsync("Welcome to Aptix, Finding the next available agent...please wait!");
+            await _agentStreamingContext.AddWorkflowAsync("Welcome to Aptix, Finding the next available agent...please wait...");
 
             _adminLogger.Trace("[AgentRequestHandler_HandleNewSessionAsync] Normalizing new session request. " + $"correlationId={correlationId}, org={org?.Id}, user={user?.Id}");
 
@@ -103,7 +103,7 @@ namespace LagoVista.AI.Services
         private async Task<InvokeResult<AgentExecuteResponse>> HandleFollowupTurnAsync(AgentExecuteRequest request, EntityHeader org, EntityHeader user, string correlationId, CancellationToken cancellationToken)
         {
 
-            await _agentStreamingContext.AddWorkflowAsync("Welcome Back to Aptix, Let's Keep Talking...");
+            await _agentStreamingContext.AddWorkflowAsync("Welcome Back to Aptix, let's get started...");
 
             _adminLogger.Trace("[AgentRequestHandler_HandleFollowupTurnAsync] Normalizing follow-up turn request. " + $"correlationId={correlationId}, org={org?.Id}, user={user?.Id}, conversationId={request.ConversationId}");
 

@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Azure.Cosmos.Serialization.HybridRow;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
@@ -29,12 +30,14 @@ namespace LagoVista.AI.Rest
     {
         private readonly IAgentRequestHandler _agentRequestHandler;
         private readonly IAgentSessionManager _sessionManager;
+        private readonly IAdminLogger _adminLogger;
 
         public AgentExecutionController(IAgentRequestHandler agentRequestHandler, IAgentSessionManager sessionManager, UserManager<AppUser> userManager, IAdminLogger logger)
             : base(userManager, logger)
         {
             _agentRequestHandler = agentRequestHandler;
             _sessionManager = sessionManager;
+            _adminLogger = logger;
         }
 
         /// <summary>
@@ -50,84 +53,116 @@ namespace LagoVista.AI.Rest
             var sw = Stopwatch.StartNew();
             Console.WriteLine($">>>> Received AgentExecuteRequest: {request.ResponseContinuationId}, size {(requestJson.Length / 1024.0).ToString("0.00")}kb \r\n{requestJson}\r\n");
 
-
             var cancellationToken = HttpContext?.RequestAborted ?? CancellationToken.None;
-
 
             try
             {
 
                 if (request.Streaming)
-            {
-                    Response.StatusCode = 200;
-                    Response.ContentType = "application/x-ndjson";
-                    Response.Headers.CacheControl = "no-cache";
-                    Response.Headers["X-Accel-Buffering"] = "no";
-
-                    streamingContext.Current = async ev =>
-                    {
-                        var json = JsonConvert.SerializeObject(
-                            ev,
-                            Formatting.None,
-                            new JsonSerializerSettings
-                            {
-                                ContractResolver = new CamelCasePropertyNamesContractResolver(),
-                                NullValueHandling = NullValueHandling.Ignore
-                            });
-
-                        await Response.WriteAsync(json, cancellationToken);
-                        await Response.WriteAsync("\n", cancellationToken);
-                        await Response.Body.FlushAsync(cancellationToken);
-                    };
-
-
-
-
-
-                var result = await _agentRequestHandler.HandleAsync(request, OrgEntityHeader, UserEntityHeader, cancellationToken);
-
-                    if (streamingContext.Current != null)
-                    {
-                        await streamingContext.Current(new AgentStreamEvent
-                        {
-                            Kind = "final",
-                            Final = result,
-                            Index = 99999
-                        });
-                    } 
-
-                    return new EmptyResult();
-            }
-            else {
-                var result = await _agentRequestHandler.HandleAsync(request, OrgEntityHeader, UserEntityHeader, cancellationToken);
-                if (result.Successful)
                 {
-                    var responseJSON = JsonConvert.SerializeObject(result.Result);
-                    Console.WriteLine($">>>> Handeed AgentExecuteRequest: {request.ResponseContinuationId} => {result.Result.ResponseContinuationId} in {sw.Elapsed.TotalSeconds.ToString("0.00")} seconds, response size:  {(responseJSON.Length / 1024.0).ToString("0.00")}kb\r\n====\r\n{responseJSON}\r\n");
+                        Response.StatusCode = 200;
+                        Response.ContentType = "application/x-ndjson";
+                        Response.Headers.CacheControl = "no-cache";
+                        Response.Headers["X-Accel-Buffering"] = "no";
+                        await Response.Body.FlushAsync();
+                        streamingContext.Current = async ev =>
+                        {
+                            var json = JsonConvert.SerializeObject(
+                                ev,
+                                Formatting.None,
+                                new JsonSerializerSettings
+                                {
+                                    ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                                    NullValueHandling = NullValueHandling.Ignore
+                                });
 
+                            await Response.WriteAsync(json, cancellationToken);
+                            await Response.WriteAsync("\n", cancellationToken);
+                            await Response.Body.FlushAsync(cancellationToken);
+                        };
+
+                        var result = await _agentRequestHandler.HandleAsync(request, OrgEntityHeader, UserEntityHeader, cancellationToken);
+                        if (streamingContext.Current != null)
+                        {
+                            await streamingContext.Current(new AgentStreamEvent
+                            {
+                                Kind = "final",
+                                Final = result,
+                                Index = 99999
+                            });
+                        } 
+
+                        return new EmptyResult();
                 }
-                else
-                    Console.WriteLine($">>>> Handeed AgentExecuteRequest: {request.ResponseContinuationId} => FAILED: {result.Errors[0].Message}\r\n====\r\n");
+                else {
+                    var result = await _agentRequestHandler.HandleAsync(request, OrgEntityHeader, UserEntityHeader, cancellationToken);
+                    if (result.Successful)
+                    {
+                        var responseJSON = JsonConvert.SerializeObject(result.Result);
+                        Console.WriteLine($">>>> Handeed AgentExecuteRequest: {request.ResponseContinuationId} => {result.Result.ResponseContinuationId} in {sw.Elapsed.TotalSeconds.ToString("0.00")} seconds, response size:  {(responseJSON.Length / 1024.0).ToString("0.00")}kb\r\n====\r\n{responseJSON}\r\n");
 
-                    return new JsonResult(result);
-                }           
+                    }
+                    else
+                        Console.WriteLine($">>>> Handeed AgentExecuteRequest: {request.ResponseContinuationId} => FAILED: {result.Errors[0].Message}\r\n====\r\n");
+
+                        return new JsonResult(result);
+                    }           
             }
             catch(OperationCanceledException)
             {
-                Response.StatusCode = 409;
-                return new JsonResult(InvokeResult<AgentExecuteResponse>.FromError("Request Cancelled"));
+                if (streamingContext.Current != null)
+                {
+                    await streamingContext.Current(new AgentStreamEvent
+                    {
+                        Kind = "final",
+                        Final = InvokeResult<AgentExecuteResponse>.FromError("Request Cancelled"),
+                        Index = 99999
+                    });
+                }
+
+                return new EmptyResult();
             }
             catch(ValidationException val)
             {
-                return new JsonResult(InvokeResult<AgentExecuteResponse>.FromErrors(val.Errors.ToArray()));
+                if (streamingContext.Current != null)
+                {
+                    await streamingContext.Current(new AgentStreamEvent
+                    {
+                        Kind = "final",
+                        Final = InvokeResult<AgentExecuteResponse>.FromErrors(val.Errors.ToArray()),
+                        Index = 99999
+                    });
+                }
+
+                return new EmptyResult();
             }
             catch(RecordNotFoundException ex)
             {
-                return new JsonResult(InvokeResult<AgentExecuteResponse>.FromError(ex.Message));
+                if (streamingContext.Current != null)
+                {
+                    await streamingContext.Current(new AgentStreamEvent
+                    {
+                        Kind = "final",
+                        Final = InvokeResult<AgentExecuteResponse>.FromError(ex.Message),
+                        Index = 99999
+                    });
+                }
+
+                return new EmptyResult();
             }
             catch(Exception ex)
             {
-                return new JsonResult(InvokeResult<AgentExecuteResponse>.FromException("[AgentExecutionController_AgentExecutionController]", ex));
+                if (streamingContext.Current != null)
+                {
+                    await streamingContext.Current(new AgentStreamEvent
+                    {
+                        Kind = "final",
+                        Final = InvokeResult<AgentExecuteResponse>.FromException("[AgentExecutionController_AgentExecutionController]", ex),
+                        Index = 99999
+                    });
+                }
+
+                return new EmptyResult();
             }
         }
 

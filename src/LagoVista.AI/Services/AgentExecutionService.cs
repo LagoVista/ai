@@ -127,7 +127,6 @@ namespace LagoVista.AI.Services
                 $"correlationId={correlationId}, agentContextId={request.AgentContext.Id}");
 
             var agentContext = await _agentContextManager.GetAgentContextWithSecretsAsync(request.AgentContext.Id, org, user);
-
             _adminLogger.Trace( $"[AgentExecutionService_ExecuteAsync__SelectConversationContext] Resolving ConversationContext. " +
                 $"correlationId={correlationId}");
 

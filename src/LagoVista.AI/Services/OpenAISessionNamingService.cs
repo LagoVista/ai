@@ -60,7 +60,7 @@ namespace LagoVista.AI.Services
 
             var settings = new OpenAISettings(agentContext.LlmApiKey);
 
-            await _agentStreamingContext.AddWorkflowAsync("Getting a good name for this session...");
+            await _agentStreamingContext.AddWorkflowAsync("...naming session...");
 
             var result = await _textService.ExecuteAsync(settings, systemPrompt, instruction);
 
@@ -86,7 +86,7 @@ namespace LagoVista.AI.Services
 
             _adminLogger.AddError("[OpenAISessionNamingService_GenerateNameAsync]", $"Renamed session {instruction} - {result.Result}");
 
-            await _agentStreamingContext.AddWorkflowAsync($"Let's call it {result.Result}...");
+            await _agentStreamingContext.AddWorkflowAsync($"...let's call it {result.Result}...");
 
             return string.IsNullOrWhiteSpace(cleaned)
                 ? TruncateFallback(instruction)

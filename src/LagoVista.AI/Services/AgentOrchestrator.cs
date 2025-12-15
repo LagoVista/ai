@@ -54,6 +54,63 @@ namespace LagoVista.AI.Services
             _agentStreamingContext = agentStreamingContext ?? throw new ArgumentNullException(nameof(agentStreamingContext));
         }
 
+        private async Task AddGeneralMode(AgentContext context, EntityHeader org, EntityHeader user)
+        {
+
+            var mode = new AgentMode()
+            {
+                Id = Guid.NewGuid().ToId(),
+                Key = "general",
+                DisplayName = "General Mode",
+                Description = "General-purpose assistance for everyday Q&A, explanation, and lightweight help.",
+                WhenToUse = "Use this mode for everyday Q&A, explanation, and lightweight assistance.",
+                WelcomeMessage = "You are now in General mode. Use this mode for broad questions and lightweight assistance",
+                ModeInstructions = new string[]
+                {
+                    "You are operating in General mode. Provide helpful and accurate responses to a wide range of user queries.",
+                    "Focus on clarity and conciseness in your answers.",
+                    "If you don't know the answer, admit it rather than making something up."
+                },
+                BehaviorHints = new string[]
+                {
+                    "preferConversationalTone",
+                },
+                HumanRoleHints = new string[]
+                {
+                    "The human is seeking general information and assistance."
+                },
+                AssociatedToolIds = new string[]
+                { "agent_hello_world", "agent_hello_world_client", "add_agent_mode", "update_agent_mode" },
+                ToolGroupHints = new string[]
+                {
+                    "general_tools",
+                    "workspace"
+                },
+                RagScopeHints = new string[0],
+                StrongSignals = new string[]
+                {
+
+                },
+                WeakSignals = new string[]
+                {
+                },
+                ExampleUtterances = new string[]
+                {
+                       "Review this PR diff and suggest improvements.",
+                        "Does this function handle edge cases?",
+                "Propose a minimal patch to fix naming and add a comment.",
+                "Flag any security issues in this handler."
+                },
+                Status = "active",
+                Version = "v1",
+                IsDefault = true
+
+            };
+
+            context.AgentModes.Add(mode);
+            await _contextManager.UpdateAgentContextAsync(context, org, user);
+        }
+
         public async Task<InvokeResult<AgentExecuteResponse>> BeginNewSessionAsync(AgentExecuteRequest request, EntityHeader org, EntityHeader user, CancellationToken cancellationToken = default)
         {
             var correlationId = Guid.NewGuid().ToId();
@@ -85,6 +142,10 @@ namespace LagoVista.AI.Services
             }
 
             var context = await _contextManager.GetAgentContextWithSecretsAsync(request.AgentContext.Id, org, user);
+            if(!context.AgentModes.Any(mode =>mode.Key == "general"))
+            {
+                await AddGeneralMode(context, org, user);
+            }
 
             var session = await _sessionFactory.CreateSession(request, context, OperationKinds.Code, org, user);
             var turn = _sessionFactory.CreateTurnForNewSession(session, request, org, user);
@@ -123,7 +184,7 @@ namespace LagoVista.AI.Services
             }
             await _sessionManager.SetRequestBlobUriAsync(session.Id, turn.Id, requestBlobResult.Result.ToString(), org, user);
 
-            await _agentStreamingContext.AddWorkflowAsync("You are all connected, let's get started!");
+            await _agentStreamingContext.AddWorkflowAsync("...connected, let's get started...");
 
             var execResult = await _turnExecutor.ExecuteNewSessionTurnAsync(context, session, turn, request, org, user, cancellationToken);
             if(execResult.Aborted)
@@ -224,6 +285,10 @@ namespace LagoVista.AI.Services
             }
 
             var context = await _contextManager.GetAgentContextAsync(session.AgentContext.Id, org, user);
+            if (!context.AgentModes.Any(mode => mode.Key == "general"))
+            {
+                await AddGeneralMode(context, org, user);
+            }
 
             var turn = _sessionFactory.CreateTurnForExistingSession(session, request, org, user);
 
