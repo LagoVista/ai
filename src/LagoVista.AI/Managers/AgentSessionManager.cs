@@ -395,7 +395,7 @@ namespace LagoVista.AI.Managers
 
             session.Checkpoints.Add(checkpoint);
 
-            await SaveAgentSessionAsync(session, org, user);
+            await _repo.UpdateSessionAsyunc(session);
 
             return InvokeResult<AgentSessionCheckpoint>.Create(checkpoint);
         }
@@ -505,12 +505,5 @@ namespace LagoVista.AI.Managers
             return $"CP-{next:0000}";
         }
 
-        /// <summary>
-        /// Replace this with your actual persistence call (repo update / document update / etc.).
-        /// </summary>
-        private Task SaveAgentSessionAsync(AgentSession session, EntityHeader org, EntityHeader user)
-        {
-            throw new NotImplementedException("Wire SaveAgentSessionAsync to your existing session persistence mechanism.");
-        }
     }
 }

@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
+using LagoVista.Core;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json;
@@ -37,7 +38,6 @@ namespace LagoVista.AI.Services.Tools
         {
             public string Name { get; set; }
             public string Notes { get; set; }
-            public string TurnId { get; set; }
         }
 
         private sealed class Result
@@ -53,15 +53,18 @@ namespace LagoVista.AI.Services.Tools
 
         public async Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentToolExecutionContext context, CancellationToken cancellationToken = default)
         {
-            if (string.IsNullOrWhiteSpace(argumentsJson)) return InvokeResult<string>.FromError("session_checkpoint_set requires a non-empty arguments object.");
+            if (string.IsNullOrWhiteSpace(argumentsJson)) argumentsJson = "{}";
             if (context == null) return InvokeResult<string>.FromError("session_checkpoint_set requires a valid execution context.");
             if (string.IsNullOrWhiteSpace(context.SessionId)) return InvokeResult<string>.FromError("session_checkpoint_set requires a sessionId in the execution context.");
+            if (string.IsNullOrWhiteSpace(context?.CurrentTurnId)) return InvokeResult<string>.FromError("session_checkpoint_set requires a current turn id in the execution context.");
 
             try
             {
                 var args = JsonConvert.DeserializeObject<Args>(argumentsJson) ?? new Args();
-                if (string.IsNullOrWhiteSpace(args.Name)) return InvokeResult<string>.FromError("session_checkpoint_set requires 'name'.");
+                if (string.IsNullOrWhiteSpace(args.Name)) 
+                    args.Name = $"Checkpoint at {DateTime.UtcNow.ToJSONString()}";
 
+              
                 var checkpoint = new AgentSessionCheckpoint
                 {
                     Name = args.Name.Trim(),
@@ -83,7 +86,7 @@ namespace LagoVista.AI.Services.Tools
                     Name = stored?.Name,
                     Notes = stored?.Notes,
                     TurnSourceId = stored?.TurnSourceId,
-                    CreationDate = stored?.CreationDate ?? checkpoint.CreationDate,
+                    CreationDate = DateTime.UtcNow.ToJSONString(),
                     ConversationId = context?.Request?.ConversationId,
                     SessionId = context?.SessionId
                 };
@@ -93,7 +96,7 @@ namespace LagoVista.AI.Services.Tools
             catch (Exception ex)
             {
                 _logger.AddException("[SessionCheckpointSetTool_ExecuteAsync__Exception]", ex);
-                return InvokeResult<string>.FromError("session_checkpoint_set failed to process arguments.");
+                return InvokeResult<string>.FromError($"session_checkpoint_set failed to process arguments - {ex.Message}.");
             }
         }
 
@@ -110,8 +113,7 @@ namespace LagoVista.AI.Services.Tools
                     properties = new
                     {
                         name = new { type = "string", description = "Checkpoint label (e.g., 'Parser baseline')." },
-                        notes = new { type = "string", description = "Optional notes about the checkpoint." },
-                        turnId = new { type = "string", description = "Optional explicit turn id to associate (if known)." }
+                        notes = new { type = "string", description = "Optional notes about the checkpoint." },                     
                     },
                     required = new[] { "name" }
                 }
