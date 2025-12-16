@@ -96,6 +96,25 @@ namespace LagoVista.AI.Models
         /// </summary>
         public List<AgentSessionMemoryNote> MemoryNotes { get; set; } = new List<AgentSessionMemoryNote>();
 
+        /// <summary>
+        /// Durable lineage of restore / branch operations performed against this session.
+        /// Stored on the branched session so the user can view restore history later.
+        /// </summary>
+        public List<AgentSessionRestoreReport> RestoreReports { get; set; } = new List<AgentSessionRestoreReport>();
+
+        /// <summary>
+        /// Minimal lineage fields for quick navigation. These are also reflected in RestoreReports.
+        /// </summary>
+        public string SourceSessionId { get; set; }
+
+        public string SourceCheckpointId { get; set; }
+
+        public string SourceTurnSourceId { get; set; }
+
+        public string RestoreOperationId { get; set; }
+
+        public string RestoredOnUtc { get; set; }
+
         public bool Completed { get; set; }
 
         public bool Shared { get; set; }

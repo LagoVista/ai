@@ -9,6 +9,7 @@ using LagoVista.Core.Models;
 using LagoVista.Core.Models.UIMetaData;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
+using Newtonsoft.Json;
 using RingCentral;
 using System;
 using System.Collections.Generic;
@@ -64,6 +65,11 @@ namespace LagoVista.AI.Managers
                 throw new RecordNotFoundException(nameof(AgentSessionTurn), turnId);
             }
 
+            if (turn.Status.Value == AgentSessionTurnStatuses.Completed)
+            {
+                throw new Exception("Cannot complete a turn that has already been completed.");
+            }
+
             turn.AgentAnswerSummary = answerSummary;
             turn.Status = EntityHeader<AgentSessionTurnStatuses>.Create( AgentSessionTurnStatuses.Completed);
             turn.StatusTimeStamp = DateTime.UtcNow.ToJSONString();
@@ -93,6 +99,11 @@ namespace LagoVista.AI.Managers
                 throw new RecordNotFoundException(nameof(AgentSessionTurn), turnId);
             }
 
+            if (turn.Status.Value == AgentSessionTurnStatuses.Completed)
+            {
+                throw new Exception("Cannot fail a turn that has already been completed.");
+            }
+
             turn.Status = EntityHeader<AgentSessionTurnStatuses>.Create(AgentSessionTurnStatuses.Failed);
             turn.StatusTimeStamp = DateTime.UtcNow.ToJSONString();
             turn.OpenAIResponseReceivedDate = turn.StatusTimeStamp;
@@ -109,7 +120,21 @@ namespace LagoVista.AI.Managers
             var session = await _repo.GetAgentSessionAsync(sessionId);
             await AuthorizeAsync(session, AuthorizeResult.AuthorizeActions.Update, user, org);
             var turn = session.Turns.SingleOrDefault(t => t.Id == turnId);
-            
+            if (turn == null)
+            {
+                throw new RecordNotFoundException(nameof(AgentSessionTurn), turnId);
+            }
+
+            if (turn.Status.Value == AgentSessionTurnStatuses.Completed)
+            {
+                throw new Exception("Cannot abort a turn that has already been completed.");
+            }
+
+            if (turn.Status.Value == AgentSessionTurnStatuses.Failed)
+            {
+                throw new Exception("Cannot abort a turn that has already failed.");
+            }
+
             // If we didn't even create the turn yet, we were very early on in the request, it's OK to just let it fall out
             if (turn == null)
                 return InvokeResult.Success;
@@ -265,28 +290,38 @@ namespace LagoVista.AI.Managers
 
         public async Task<InvokeResult<AgentSession>> BranchSessionAsync(string sessionId, string turnId, EntityHeader org, EntityHeader user)
         {
-            var session = await GetAgentSessionAsync(sessionId, org, user);
+            var sourceSession = await GetAgentSessionAsync(sessionId, org, user);
 
-            var branchedTurn = session.Turns.SingleOrDefault(t => t.Id == turnId);
-            if(branchedTurn == null)
-            {
-                throw new RecordNotFoundException(nameof(AgentSessionTurn), turnId);
-            }
+            var clonedSession = JsonConvert.DeserializeObject<AgentSession>(JsonConvert.SerializeObject(sourceSession));
+            if (clonedSession == null) throw new InvalidOperationException("Failed to clone session.");
 
-            var lastTurnIndex = session.Turns.IndexOf(branchedTurn);
-            for(int idx = session.Turns.Count; idx > lastTurnIndex; idx--)
-                session.Turns.RemoveAt(idx - 1);
+            var branchedTurn = clonedSession.Turns.SingleOrDefault(t => t.Id == turnId);
+            if (branchedTurn == null) throw new RecordNotFoundException(nameof(AgentSessionTurn), turnId);
 
-            session.Id = Guid.NewGuid().ToId();
-            session.Name = $"Branch - {session.Name}";
-            session.LastUpdatedBy = user;
-            session.LastUpdatedDate = DateTime.UtcNow.ToJSONString();
-            session.Mode = branchedTurn.Mode;
+            var lastTurnIndex = clonedSession.Turns.IndexOf(branchedTurn);
 
-            await AddAgentSessionAsync(session, org, user);
+            // Remove turns AFTER the anchor turn, on the CLONE.
+            for (var idx = clonedSession.Turns.Count - 1; idx > lastTurnIndex; idx--)
+                clonedSession.Turns.RemoveAt(idx);
 
-            return InvokeResult<AgentSession>.Create(session);
+            clonedSession.Id = Guid.NewGuid().ToId();
+            clonedSession.Name = $"Branch - {sourceSession.Name}";
+            clonedSession.LastUpdatedBy = user;
+            clonedSession.LastUpdatedDate = DateTime.UtcNow.ToJSONString();
+            clonedSession.Mode = branchedTurn.Mode;
+
+            clonedSession.SourceSessionId = null;
+            clonedSession.SourceCheckpointId = null;
+            clonedSession.SourceTurnSourceId = null;
+            clonedSession.RestoreOperationId = null;
+            clonedSession.RestoredOnUtc = null;
+            
+            await AddAgentSessionAsync(clonedSession, org, user);
+
+            return InvokeResult<AgentSession>.Create(clonedSession);
         }
+
+
 
         public async Task<InvokeResult<AgentSessionMemoryNote>> AddSessionMemoryNoteAsync(string sessionId, AgentSessionMemoryNote note, EntityHeader org, EntityHeader user)
         {
@@ -418,25 +453,89 @@ namespace LagoVista.AI.Managers
             if (string.IsNullOrWhiteSpace(sessionId)) return InvokeResult<AgentSession>.FromError("RestoreSessionCheckpointAsync requires sessionId.");
             if (string.IsNullOrWhiteSpace(checkpointId)) return InvokeResult<AgentSession>.FromError("RestoreSessionCheckpointAsync requires checkpointId.");
 
-            var session = await GetAgentSessionAsync(sessionId, org, user);
-            if (session == null) return InvokeResult<AgentSession>.FromError("Session not found.");
+            var sourceSession = await GetAgentSessionAsync(sessionId, org, user);
+            if (sourceSession == null) return InvokeResult<AgentSession>.FromError("Session not found.");
 
-            var cps = session.Checkpoints ?? new List<AgentSessionCheckpoint>();
+            var cps = sourceSession.Checkpoints ?? new List<AgentSessionCheckpoint>();
             var cp = cps.FirstOrDefault(c => string.Equals(c.CheckpointId, checkpointId.Trim(), StringComparison.OrdinalIgnoreCase));
             if (cp == null) return InvokeResult<AgentSession>.FromError($"Checkpoint '{checkpointId}' not found.");
 
-            var turnId = cp.TurnSourceId;
+            var anchorTurnId = cp.TurnSourceId;
 
-            if (string.IsNullOrWhiteSpace(turnId) && session.Turns != null && !String.IsNullOrEmpty(cp.TurnSourceId))
+            if (string.IsNullOrWhiteSpace(anchorTurnId) && sourceSession.Turns != null && !string.IsNullOrEmpty(cp.TurnSourceId))
             {
-                var turn = session.Turns.FirstOrDefault(t => t.Id == cp.TurnSourceId);
-                turnId = turn?.Id;
+                var turn = sourceSession.Turns.FirstOrDefault(t => t.Id == cp.TurnSourceId);
+                anchorTurnId = turn?.Id;
             }
 
-            if (string.IsNullOrWhiteSpace(turnId)) return InvokeResult<AgentSession>.FromError("Checkpoint could not be resolved to a turn.");
+            if (string.IsNullOrWhiteSpace(anchorTurnId)) return InvokeResult<AgentSession>.FromError("Checkpoint could not be resolved to a turn.");
 
-            return await BranchSessionAsync(sessionId, turnId, org, user);
+            var startedUtc = DateTime.UtcNow.ToJSONString();
+
+            var branch = await BranchSessionAsync(sessionId, anchorTurnId, org, user);
+            if (!branch.Successful) return InvokeResult<AgentSession>.FromInvokeResult(branch.ToInvokeResult());
+
+            var branchedSession = branch.Result;
+            if (branchedSession == null || string.IsNullOrWhiteSpace(branchedSession.Id)) return InvokeResult<AgentSession>.FromError("Restore produced an invalid branched session.");
+
+            branchedSession.RestoreReports ??= new List<AgentSessionRestoreReport>();
+
+            string NextRestoreOperationId(List<AgentSessionRestoreReport> existing)
+            {
+                var next = 1;
+
+                foreach (var r in existing ?? new List<AgentSessionRestoreReport>())
+                {
+                    if (r == null || string.IsNullOrWhiteSpace(r.RestoreOperationId)) continue;
+
+                    var s = r.RestoreOperationId.Trim();
+                    if (!s.StartsWith("RST-", StringComparison.OrdinalIgnoreCase)) continue;
+
+                    var numPart = s.Substring(4);
+                    if (int.TryParse(numPart, out var n) && n >= next) next = n + 1;
+                }
+
+                return $"RST-{next:000000}";
+            }
+
+            var opId = NextRestoreOperationId(branchedSession.RestoreReports);
+            var completedUtc = DateTime.UtcNow.ToString("o");
+
+            branchedSession.SourceSessionId = sourceSession.Id;
+            branchedSession.SourceCheckpointId = cp.CheckpointId;
+            branchedSession.SourceTurnSourceId = anchorTurnId;
+            branchedSession.RestoreOperationId = opId;
+            branchedSession.RestoredOnUtc = completedUtc;
+            branchedSession.LastUpdatedBy = user;
+            branchedSession.LastUpdatedDate = completedUtc;
+
+            var report = new AgentSessionRestoreReport
+            {
+                RestoreOperationId = opId,
+                StartedUtc = startedUtc,
+                CompletedUtc = completedUtc,
+                SourceSessionId = sourceSession.Id,
+                SourceCheckpointId = cp.CheckpointId,
+                SourceTurnSourceId = anchorTurnId,
+                BranchedSessionId = branchedSession.Id,
+                TurnsCopiedCount = branchedSession.Turns?.Count ?? 0,
+                MemoryNotesCopiedCount = branchedSession.MemoryNotes?.Count ?? 0,
+                CheckpointsCopiedCount = branchedSession.Checkpoints?.Count ?? 0,
+                ActiveFileRefsCopiedCount = (branchedSession.Turns ?? new List<AgentSessionTurn>()).Sum(t => t.ActiveFileRefs?.Count ?? 0),
+                ChunkRefsCopiedCount = (branchedSession.Turns ?? new List<AgentSessionTurn>()).Sum(t => t.ChunkRefs?.Count ?? 0),
+                CreatedByUser = user,
+                ConversationId = branchedSession.Turns?.LastOrDefault()?.ConversationId,
+                Summary = $"Restored {cp.CheckpointId} from session {sourceSession.Id} to new session {branchedSession.Id}.",
+                Details = $"Restore checkpoint '{cp.CheckpointId}' (turn '{anchorTurnId}'). Created branched session '{branchedSession.Id}' with {branchedSession.Turns?.Count ?? 0} turns and {branchedSession.MemoryNotes?.Count ?? 0} memory notes."
+            };
+
+            branchedSession.RestoreReports.Add(report);
+
+            await _repo.UpdateSessionAsyunc(branchedSession);
+
+            return InvokeResult<AgentSession>.Create(branchedSession);
         }
+
 
         private static AgentSessionMemoryNoteKinds? ParseMemoryKind(string kind)
         {
