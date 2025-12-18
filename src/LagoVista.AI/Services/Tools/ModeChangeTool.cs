@@ -111,18 +111,12 @@ namespace LagoVista.AI.Services.Tools
                         "ModeChangeTool requires a non-empty 'reason' string explaining why the mode change is needed.");
                 }
 
-
-                Console.WriteLine($"----1\r\n{argumentsJson}\r\n---");
-
                 var setSessionModeResult = await _sessionManager.SetSessionModeAsync(
                     context.SessionId,
                     args.Mode,
                     args.Reason,
                     context.Org,
                     context.User);
-
-                Console.WriteLine($"----2\r\n{argumentsJson}\r\n---");
-
 
                 if (!setSessionModeResult.Successful)
                 {
@@ -136,6 +130,8 @@ namespace LagoVista.AI.Services.Tools
                     Branch = args.Branch.Value,
                     Reason = args.Reason
                 };
+
+                _logger.Trace($"[ModeChangeTool_ExecuteAsync] - Changed mode via tool from {context.Request.Mode} to {args.Mode}"); 
 
                 var json = JsonConvert.SerializeObject(result);
                 return InvokeResult<string>.Create(json);

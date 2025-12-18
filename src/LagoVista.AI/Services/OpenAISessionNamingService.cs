@@ -84,7 +84,7 @@ namespace LagoVista.AI.Services
                 cleaned = cleaned.Substring(0, 60).Trim();
             }
 
-            _adminLogger.AddError("[OpenAISessionNamingService_GenerateNameAsync]", $"Renamed session {instruction} - {result.Result}");
+            _adminLogger.Trace("[OpenAISessionNamingService_GenerateNameAsync] - Renamed session {instruction} - {result.Result}");
 
             await _agentStreamingContext.AddWorkflowAsync($"...let's call it {result.Result}...");
 

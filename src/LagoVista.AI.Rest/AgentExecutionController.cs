@@ -84,6 +84,8 @@ namespace LagoVista.AI.Rest
                         var result = await _agentRequestHandler.HandleAsync(request, OrgEntityHeader, UserEntityHeader, cancellationToken);
                         if (streamingContext.Current != null)
                         {
+
+                            result.Result.RawResponseJson = null;
                             await streamingContext.Current(new AgentStreamEvent
                             {
                                 Kind = "final",
@@ -98,6 +100,7 @@ namespace LagoVista.AI.Rest
                     var result = await _agentRequestHandler.HandleAsync(request, OrgEntityHeader, UserEntityHeader, cancellationToken);
                     if (result.Successful)
                     {
+                        result.Result.RawResponseJson = null;
                         var responseJSON = JsonConvert.SerializeObject(result.Result);
                         Console.WriteLine($">>>> Handeed AgentExecuteRequest: {request.ResponseContinuationId} => {result.Result.ResponseContinuationId} in {sw.Elapsed.TotalSeconds.ToString("0.00")} seconds, response size:  {(responseJSON.Length / 1024.0).ToString("0.00")}kb\r\n====\r\n{responseJSON}\r\n");
 

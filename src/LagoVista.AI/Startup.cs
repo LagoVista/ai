@@ -110,6 +110,9 @@ namespace LagoVista.AI
             toolRegistry.RegisterTool<SetDdrStatusAgentTool>();
             toolRegistry.RegisterTool<ApproveDdrAgentTool>();
 
+            toolRegistry.RegisterTool<IndexDdrTool>();
+            toolRegistry.RegisterTool<ImportDdrTool>();
+
             // --- DDR Retrieval ---
             toolRegistry.RegisterTool<GetDdrAgentTool>();
             toolRegistry.RegisterTool<ListDdrsAgentTool>();
