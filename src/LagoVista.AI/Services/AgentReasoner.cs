@@ -38,6 +38,7 @@ namespace LagoVista.AI.Services
         private readonly IAgentToolExecutor _toolExecutor;
         private readonly IAdminLogger _logger;
         private readonly IAgentStreamingContext _agentStreamingContext;
+        private readonly IModeEntryBootstrapService _modeEntryBootstrapService;
 
         // Safety cap to avoid runaway tool-trigger loops.
         private const int MaxReasoningIterations = 4;
@@ -46,12 +47,14 @@ namespace LagoVista.AI.Services
             ILLMClient llmClient,
             IAgentToolExecutor toolExecutor,
             IAdminLogger logger,
-            IAgentStreamingContext agentStreamingContext)
+            IAgentStreamingContext agentStreamingContext,
+            IModeEntryBootstrapService modeEntryBootstrapService)
         {
             _llmClient = llmClient ?? throw new ArgumentNullException(nameof(llmClient));
             _toolExecutor = toolExecutor ?? throw new ArgumentNullException(nameof(toolExecutor));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _agentStreamingContext = agentStreamingContext ?? throw new ArgumentNullException(nameof(agentStreamingContext));
+            _modeEntryBootstrapService = modeEntryBootstrapService ?? throw new ArgumentNullException(nameof(modeEntryBootstrapService));
         }
 
         public async Task<InvokeResult<AgentExecuteResponse>> ExecuteAsync(
@@ -249,6 +252,21 @@ namespace LagoVista.AI.Services
                             successfulModeChangeCount++;
                             modeChangeDetected = true;
                             newModeFromTool = modeResult.Mode;
+                            var bootStrapRequest = new ModeEntryBootstrapRequest()
+                            {
+                             
+
+                                //Mode = newModeFromTool,
+                                ModeKey = newModeFromTool,
+                                ToolContext = toolContext
+
+                            };
+
+                            var bootStrapResult = await _modeEntryBootstrapService.ExecuteAsync(bootStrapRequest, cancellationToken);
+                            if(!bootStrapResult.Successful)
+                            {
+                                return InvokeResult<AgentExecuteResponse>.FromInvokeResult(bootStrapResult.ToInvokeResult());
+                            }
                         }
                     }
                     catch (Exception ex)

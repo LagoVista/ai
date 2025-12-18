@@ -111,6 +111,11 @@ namespace LagoVista.AI.Models
         public string Status { get; set; }
 
         /// <summary>
+        /// Tools to be ran when entering this mode.
+        /// </summary>
+        public BootStrapTool[] BootStrapTool { get; set; } = Array.Empty<BootStrapTool>();
+
+        /// <summary>
         /// Simple version string, e.g. "v1", "v1.1".
         /// </summary>
         public string Version { get; set; }
@@ -137,6 +142,12 @@ namespace LagoVista.AI.Models
                 ExampleUtterances = this.ExampleUtterances ?? Array.Empty<string>()
             };
         }
+    }
+
+    public class BootStrapTool
+    {
+        public string ToolName { get; set; }
+        public string[] Arguments { get; set; }
     }
 
 

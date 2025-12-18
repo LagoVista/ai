@@ -17,7 +17,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="LagoVista.IoT.Logging" Version="3.0.3134.1059" />
+    <PackageReference Include="LagoVista.IoT.Logging" Version="3.0.3137.1337" />
   </ItemGroup>
 
 

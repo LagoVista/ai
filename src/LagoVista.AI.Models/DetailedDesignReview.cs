@@ -43,6 +43,8 @@ namespace LagoVista.AI.Models
 
         public string BaselineResponseId { get; set; }
 
+        public string FullDDRMarkDown { get; set; }
+
         public List<DdrContentDiscoveryArtifact> ContentDiscoveryArtifacts { get; set; } = new List<DdrContentDiscoveryArtifact>();
         
         public DetailedDesignReviewSummary CreateSummary()

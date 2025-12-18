@@ -160,6 +160,7 @@ namespace LagoVista.AI
             services.AddScoped<IStructuredTextLlmService, HttpStructuredTextLlmService>();
             services.AddScoped<ITextLlmService, HttpTextLlmService>();
             services.AddScoped<IAgentStreamingContext, AgentStreamingContext>();
+            services.AddScoped<IModeEntryBootstrapService, ModeEntryBootstrapService>();
         }
     }
 }

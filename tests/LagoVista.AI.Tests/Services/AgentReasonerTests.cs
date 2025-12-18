@@ -23,6 +23,7 @@ namespace LagoVista.AI.Tests.Services
         private Mock<IAgentToolExecutor> _toolExecutor;
         private Mock<IAdminLogger> _logger;
         private AgentReasoner _sut;
+        private Mock<IModeEntryBootstrapService> _bsExecutor;
 
         [SetUp]
         public void SetUp()
@@ -30,12 +31,13 @@ namespace LagoVista.AI.Tests.Services
             _llmClient = new Mock<ILLMClient>();
             _toolExecutor = new Mock<IAgentToolExecutor>();
             _logger = new Mock<IAdminLogger>();
-
+            _bsExecutor = new Mock<IModeEntryBootstrapService>();
             _sut = new AgentReasoner(
                 _llmClient.Object,
                 _toolExecutor.Object,
                 _logger.Object, 
-                new Mock<IAgentStreamingContext>().Object);
+                new Mock<IAgentStreamingContext>().Object,
+                _bsExecutor.Object);
         }
 
         #region Helpers
