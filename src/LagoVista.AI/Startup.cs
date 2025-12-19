@@ -187,6 +187,7 @@ namespace LagoVista.AI
             services.AddSingleton<IResourceExtractor, ResxResourceExtractor>();
             services.AddSingleton<IResxLabelScanner, ResxLabelScanner>();
 
+            services.AddSingleton<IModelMetadataSource, RoslynModelMetadataSource>();
 
             services.AddSingleton<IHttpClientFactory>(new LagoVistaClientFactory());
             services.AddSingleton<IQdrantClient, QdrantClient>();
@@ -213,11 +214,10 @@ namespace LagoVista.AI
 
             services.AddSingleton<ITitleDescriptionRefinementCatalogStore, JsonTitleDescriptionRefinementCatalogStore>();
             services.AddSingleton<IDomainMetadataSource, RoslynDomainMetadataSource>();
-            services.AddSingleton<IModelMetadataSource, RoslynModelMetadataSource>();
             services.AddSingleton<ITitleDescriptionLlmClient, HttpLlmTitleDescriptionClient>();
             services.AddSingleton<ITitleDescriptionReviewService, TitleDescriptionReviewService>();
 
-            SLWIOC.RegisterSingleton<ITitleDescriptionRefinementOrchestrator, TitleDescriptionRefinementOrchestrator>();
+            services.AddSingleton<ITitleDescriptionRefinementOrchestrator, TitleDescriptionRefinementOrchestrator>();
         }
     }
 }
