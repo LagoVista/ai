@@ -76,10 +76,10 @@ namespace LagoVista.AI.Managers
             return ddr;
         }
 
-        public async Task<DetailedDesignReview> GetDdrByTlaIdentiferAsync(string tlaIdentifier, EntityHeader org, EntityHeader user)
+        public async Task<DetailedDesignReview> GetDdrByTlaIdentiferAsync(string tlaIdentifier, EntityHeader org, EntityHeader user, bool throwOnNotFound = true)
         {
-            var ddr = await _ddrRepo.GetDdrByTlaIdentiferAsync(tlaIdentifier, org);
-            if(ddr == null)
+            var ddr = await _ddrRepo.GetDdrByTlaIdentiferAsync(tlaIdentifier, org, throwOnNotFound);
+            if(ddr != null)
                 await AuthorizeAsync(ddr, AuthorizeResult.AuthorizeActions.Create, user, org);
             
             return ddr;

@@ -10,7 +10,7 @@ namespace LagoVista.AI.Interfaces
         Task AddDdrAsync(DetailedDesignReview ddr);
         Task<DetailedDesignReview> GetDdrByIdAsync(string ddrId);
         Task UpdateDdrAsync(DetailedDesignReview ddr);
-        Task<DetailedDesignReview> GetDdrByTlaIdentiferAsync(string tlaIdentifier, EntityHeader org);
+        Task<DetailedDesignReview> GetDdrByTlaIdentiferAsync(string tlaIdentifier, EntityHeader org, bool throwOnNotFOund = true);
 
         Task<ListResponse<DetailedDesignReviewSummary>> GetDdrsAsync(EntityHeader org, ListRequest listRequest);
         Task<ListResponse<DetailedDesignReviewSummary>> GetDdrsByTlaAsync(string tla, EntityHeader org, ListRequest listRequest);

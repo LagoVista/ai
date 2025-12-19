@@ -27,7 +27,7 @@ namespace LagoVista.AI
         /// <param name="org"></param>
         /// <param name="uesr"></param>
         /// <returns></returns>
-        Task<DetailedDesignReview> GetDdrByTlaIdentiferAsync(string tlaIdentifier, EntityHeader org, EntityHeader user);
+        Task<DetailedDesignReview> GetDdrByTlaIdentiferAsync(string tlaIdentifier, EntityHeader org, EntityHeader user, bool throwOnNotFound = true);
 
         Task<ListResponse<DetailedDesignReviewSummary>> GetDdrsAsync(EntityHeader org, EntityHeader user, ListRequest listRequest);
         Task<ListResponse<DetailedDesignReviewSummary>> GetDdrsByTlaAsync(string tla, int revisionId, EntityHeader org, EntityHeader user, ListRequest listRequest);

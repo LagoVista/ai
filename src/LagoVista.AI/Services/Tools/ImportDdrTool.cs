@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
 using LagoVista.Core;
+using LagoVista.Core.Exceptions;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json;
@@ -38,6 +39,7 @@ namespace LagoVista.AI.Services.Tools
             "If the TLA-index already exists, the tool must reject and report which DDR currently exists. " +
             "If the parsed identifier does not match the parsed TLA-index, return an error. " +
             "Chapters are not imported in the first cut. " +
+            "If you can not identify a clear summary, please create one or two sentances summarizing the DDR content be examining the content in the markdown. " +
             "Any unparseable fields are returned as null/unknown and should be confirmed with the user.";
 
         public ImportDdrTool(IDdrManager ddrManager, IAdminLogger logger)
@@ -182,6 +184,10 @@ namespace LagoVista.AI.Services.Tools
                         SessionId = context?.SessionId
                     };
 
+                    var existingDdr = await _ddrManager.GetDdrByTlaIdentiferAsync(parsed.Identifier, context.Org, context.User, false);
+                    if(existingDdr != null)
+                        return InvokeResult<string>.FromError($"import_ddr - Failed DDR {parsed.Identifier} already exists as {existingDdr.Name}");
+                   
                     return InvokeResult<string>.Create(JsonConvert.SerializeObject(preview));
                 }
 
@@ -209,6 +215,7 @@ namespace LagoVista.AI.Services.Tools
                 {
                     DdrIdentifier = parsed.Identifier,
                     CreatedBy = context.User,
+                    Key = parsed.Identifier.ToLower().Replace("-", String.Empty),
                     LastUpdatedBy = context.User,
                     CreationDate = timeStamp,   
                     LastUpdatedDate = timeStamp,
@@ -216,6 +223,7 @@ namespace LagoVista.AI.Services.Tools
                     Tla = parsed.Tla,
                     Index = parsed.Index.Value,
                     Name = parsed.Title,
+                    Summary = parsed.Summary,
                     Status = parsed.Status,
                     StatusTimestamp  = timeStamp,
                     FullDDRMarkDown = args.Markdown                    
@@ -231,6 +239,11 @@ namespace LagoVista.AI.Services.Tools
                 if(!addResult.Successful)
                     return InvokeResult<string>.FromError($"import_ddr failed to create DDR: {addResult.ErrorMessage}"); 
                 return InvokeResult<string>.Create(JsonConvert.SerializeObject(result));
+            }
+            catch(ValidationException vex)
+            {
+                _logger.AddException("[ImportDdrTool_ExecuteAsync__ValidationException]", vex);
+                return InvokeResult<string>.FromError($"import_ddr failed validation problem(s): {String.Join(",", vex.Errors.Select(err=>err))}");
             }
             catch (Exception ex)
             {

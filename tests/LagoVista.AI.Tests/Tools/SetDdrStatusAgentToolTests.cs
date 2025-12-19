@@ -84,7 +84,7 @@ namespace LagoVista.AI.AgentTools.Tests
         [Test]
         public async Task SetStatus_DdrNotFound_ReturnsError()
         {
-            _ddrManager.Setup(m => m.GetDdrByTlaIdentiferAsync("SYS-001", _context.Org, _context.User))
+            _ddrManager.Setup(m => m.GetDdrByTlaIdentiferAsync("SYS-001", _context.Org, _context.User, true))
                 .ReturnsAsync((DetailedDesignReview)null);
 
             var tool = new SetDdrStatusAgentTool(_ddrManager.Object, _logger.Object);
@@ -112,7 +112,7 @@ namespace LagoVista.AI.AgentTools.Tests
                 StatusTimestamp = null
             };
 
-            _ddrManager.Setup(m => m.GetDdrByTlaIdentiferAsync("SYS-001", _context.Org, _context.User))
+            _ddrManager.Setup(m => m.GetDdrByTlaIdentiferAsync("SYS-001", _context.Org, _context.User, true))
                 .ReturnsAsync(ddr);
 
             _ddrManager.Setup(m => m.UpdateDdrAsync(ddr, _context.Org, _context.User))

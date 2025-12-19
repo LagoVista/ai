@@ -75,7 +75,7 @@ namespace LagoVista.AI.AgentTools.Tests
                 Description = "Old Summary"
             };
 
-            _ddrManager.Setup(m => m.GetDdrByTlaIdentiferAsync("SYS-001", _context.Org, _context.User))
+            _ddrManager.Setup(m => m.GetDdrByTlaIdentiferAsync("SYS-001", _context.Org, _context.User, true))
                 .ReturnsAsync(ddr);
 
             _ddrManager.Setup(m => m.UpdateDdrAsync(ddr, _context.Org, _context.User))

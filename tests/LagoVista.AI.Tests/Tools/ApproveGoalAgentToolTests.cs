@@ -48,7 +48,7 @@ namespace LagoVista.AI.AgentTools.Tests
         [Test]
         public async Task ApproveGoal_NotFound_ReturnsError()
         {
-            _ddrManager.Setup(m => m.GetDdrByTlaIdentiferAsync("SYS-001", _context.Org, _context.User))
+            _ddrManager.Setup(m => m.GetDdrByTlaIdentiferAsync("SYS-001", _context.Org, _context.User, true))
                 .ReturnsAsync((DetailedDesignReview)null);
 
             var tool = new ApproveGoalAgentTool(_ddrManager.Object, _logger.Object);
@@ -74,7 +74,7 @@ namespace LagoVista.AI.AgentTools.Tests
                 Goal = string.Empty
             };
 
-            _ddrManager.Setup(m => m.GetDdrByTlaIdentiferAsync("SYS-001", _context.Org, _context.User))
+            _ddrManager.Setup(m => m.GetDdrByTlaIdentiferAsync("SYS-001", _context.Org, _context.User, true))
                 .ReturnsAsync(ddr);
 
             var tool = new ApproveGoalAgentTool(_ddrManager.Object, _logger.Object);
@@ -102,7 +102,7 @@ namespace LagoVista.AI.AgentTools.Tests
                 GoalApprovedTimestamp = null
             };
 
-            _ddrManager.Setup(m => m.GetDdrByTlaIdentiferAsync("SYS-001", _context.Org, _context.User))
+            _ddrManager.Setup(m => m.GetDdrByTlaIdentiferAsync("SYS-001", _context.Org, _context.User, true))
                 .ReturnsAsync(ddr);
 
             _ddrManager.Setup(m => m.UpdateDdrAsync(ddr, _context.Org, _context.User))
@@ -136,7 +136,7 @@ namespace LagoVista.AI.AgentTools.Tests
                 GoalApprovedTimestamp = "2025-11-29T10:00:00Z"
             };
 
-            _ddrManager.Setup(m => m.GetDdrByTlaIdentiferAsync("SYS-001", _context.Org, _context.User))
+            _ddrManager.Setup(m => m.GetDdrByTlaIdentiferAsync("SYS-001", _context.Org, _context.User, true))
                 .ReturnsAsync(ddr);
 
             var tool = new ApproveGoalAgentTool(_ddrManager.Object, _logger.Object);

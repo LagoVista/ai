@@ -24,7 +24,8 @@ namespace LagoVista.AI.Services.Tools
         {
         }
         public const string ToolUsageMetadata =
-    "Retrieves the full DDR, including metadata, chapters, and approval state. Used for review, summarization, or downstream analysis.";
+    @"Retrieves the full DDR, including metadata, chapters, and approval state. Used for review, summarization, or downstream analysis.  
+      In other cases the ddr will be provided in content";
 
         public override string Name => ToolName;
 
@@ -127,6 +128,7 @@ namespace LagoVista.AI.Services.Tools
                             ["text"] = ddr.ApprovedBy.Text
                         },
                     ["approved_timestamp"] = ddr.ApprovedTimestamp,
+                    ["content"] = ddr.FullDDRMarkDown,
                     ["chapters"] = chapterArray
                 };
 

@@ -102,7 +102,7 @@ namespace LagoVista.AI.AgentTools.Tests
                 Index = 1
             };
 
-            _ddrManager.Setup(m => m.GetDdrByTlaIdentiferAsync("SYS-001", _context.Org, _context.User))
+            _ddrManager.Setup(m => m.GetDdrByTlaIdentiferAsync("SYS-001", _context.Org, _context.User, true))
                 .ReturnsAsync(ddr);
 
             var tool = new MoveDdrTlaAgentTool(_ddrManager.Object, _logger.Object);
@@ -138,7 +138,7 @@ namespace LagoVista.AI.AgentTools.Tests
                 Index = 1
             };
 
-            _ddrManager.Setup(m => m.GetDdrByTlaIdentiferAsync("SYS-001", _context.Org, _context.User))
+            _ddrManager.Setup(m => m.GetDdrByTlaIdentiferAsync("SYS-001", _context.Org, _context.User, true))
                 .ReturnsAsync(ddr);
 
             _ddrManager.Setup(m => m.AllocateTlaIndex("AGN", _context.Org, _context.User))

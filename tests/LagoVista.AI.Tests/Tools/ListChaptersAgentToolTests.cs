@@ -49,7 +49,7 @@ namespace LagoVista.AI.AgentTools.Tests
         [Test]
         public async Task ListChapters_DdrNotFound_ReturnsError()
         {
-            _ddrManager.Setup(m => m.GetDdrByTlaIdentiferAsync("SYS-001", _context.Org, _context.User))
+            _ddrManager.Setup(m => m.GetDdrByTlaIdentiferAsync("SYS-001", _context.Org, _context.User, true))
                 .ReturnsAsync((DetailedDesignReview)null);
 
             var tool = new ListChaptersAgentTool(_ddrManager.Object, _logger.Object);
@@ -75,7 +75,7 @@ namespace LagoVista.AI.AgentTools.Tests
                 Chapters = new List<DdrChapter>()
             };
 
-            _ddrManager.Setup(m => m.GetDdrByTlaIdentiferAsync("SYS-001", _context.Org, _context.User))
+            _ddrManager.Setup(m => m.GetDdrByTlaIdentiferAsync("SYS-001", _context.Org, _context.User, true))
                 .ReturnsAsync(ddr);
 
             var tool = new ListChaptersAgentTool(_ddrManager.Object, _logger.Object);
@@ -120,7 +120,7 @@ namespace LagoVista.AI.AgentTools.Tests
                 Chapters = new List<DdrChapter> { chapter1, chapter2 }
             };
 
-            _ddrManager.Setup(m => m.GetDdrByTlaIdentiferAsync("SYS-001", _context.Org, _context.User))
+            _ddrManager.Setup(m => m.GetDdrByTlaIdentiferAsync("SYS-001", _context.Org, _context.User, true))
                 .ReturnsAsync(ddr);
 
             var tool = new ListChaptersAgentTool(_ddrManager.Object, _logger.Object);

@@ -37,7 +37,7 @@ namespace LagoVista.AI.CloudRepos
             return GetDocumentAsync(ddrId);
         }
 
-        public async Task<DetailedDesignReview> GetDdrByTlaIdentiferAsync(string tlaIdentifier, EntityHeader org)
+        public async Task<DetailedDesignReview> GetDdrByTlaIdentiferAsync(string tlaIdentifier, EntityHeader org, bool throwOnNotFound = true)
         {
             var catalog = await QueryAsync(qry => qry.OwnerOrganization.Id == org.Id && qry.DdrIdentifier == tlaIdentifier);
             if (!catalog.Any())
@@ -46,7 +46,11 @@ namespace LagoVista.AI.CloudRepos
                 throw new RecordNotFoundException(nameof(DetailedDesignReview), tlaIdentifier);
             }
 
-            return catalog.Single();
+            var ddr = catalog.SingleOrDefault();
+            if (ddr == null && throwOnNotFound)
+                throw new RecordNotFoundException(typeof(DetailedDesignReview).Name, tlaIdentifier);
+
+            return ddr;
         }
 
         public Task<ListResponse<DetailedDesignReviewSummary>> GetDdrsAsync(EntityHeader org, ListRequest listRequest)

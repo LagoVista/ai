@@ -28,6 +28,10 @@ namespace LagoVista.AI.Models
 
         public string DdrIdentifier { get; set; }
 
+        public string Title { get => Name; }
+
+        public string Summary { get; set; }
+
         public string Status { get; set; }
 
         public string StatusTimestamp { get; set; }

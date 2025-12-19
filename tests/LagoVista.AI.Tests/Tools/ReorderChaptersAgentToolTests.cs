@@ -68,7 +68,7 @@ namespace LagoVista.AI.AgentTools.Tests
         [Test]
         public async Task ReorderChapters_DdrNotFound_ReturnsError()
         {
-            _ddrManager.Setup(m => m.GetDdrByTlaIdentiferAsync("SYS-001", _context.Org, _context.User))
+            _ddrManager.Setup(m => m.GetDdrByTlaIdentiferAsync("SYS-001", _context.Org, _context.User, true))
                 .ReturnsAsync((DetailedDesignReview)null);
 
             var tool = new ReorderChaptersAgentTool(_ddrManager.Object, _logger.Object);
@@ -98,7 +98,7 @@ namespace LagoVista.AI.AgentTools.Tests
                 Chapters = new List<DdrChapter> { chapter1, chapter2 }
             };
 
-            _ddrManager.Setup(m => m.GetDdrByTlaIdentiferAsync("SYS-001", _context.Org, _context.User))
+            _ddrManager.Setup(m => m.GetDdrByTlaIdentiferAsync("SYS-001", _context.Org, _context.User, true ))
                 .ReturnsAsync(ddr);
 
             var tool = new ReorderChaptersAgentTool(_ddrManager.Object, _logger.Object);
@@ -129,7 +129,7 @@ namespace LagoVista.AI.AgentTools.Tests
                 Chapters = new List<DdrChapter> { chapter1, chapter2, chapter3 }
             };
 
-            _ddrManager.Setup(m => m.GetDdrByTlaIdentiferAsync("SYS-001", _context.Org, _context.User))
+            _ddrManager.Setup(m => m.GetDdrByTlaIdentiferAsync("SYS-001", _context.Org, _context.User, true))
                 .ReturnsAsync(ddr);
 
             _ddrManager.Setup(m => m.UpdateDdrAsync(ddr, _context.Org, _context.User))

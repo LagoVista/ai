@@ -48,7 +48,7 @@ namespace LagoVista.AI.AgentTools.Tests
         [Test]
         public async Task ApproveDdr_NotFound_ReturnsError()
         {
-            _ddrManager.Setup(m => m.GetDdrByTlaIdentiferAsync("SYS-001", _context.Org, _context.User))
+            _ddrManager.Setup(m => m.GetDdrByTlaIdentiferAsync("SYS-001", _context.Org, _context.User, true))
                 .ReturnsAsync((DetailedDesignReview)null);
 
             var tool = new ApproveDdrAgentTool(_ddrManager.Object, _logger.Object);
@@ -75,7 +75,7 @@ namespace LagoVista.AI.AgentTools.Tests
                 GoalApprovedTimestamp = null
             };
 
-            _ddrManager.Setup(m => m.GetDdrByTlaIdentiferAsync("SYS-001", _context.Org, _context.User))
+            _ddrManager.Setup(m => m.GetDdrByTlaIdentiferAsync("SYS-001", _context.Org, _context.User, true))
                 .ReturnsAsync(ddr);
 
             var tool = new ApproveDdrAgentTool(_ddrManager.Object, _logger.Object);
@@ -103,7 +103,7 @@ namespace LagoVista.AI.AgentTools.Tests
                 Status = "ReadyForApproval"
             };
 
-            _ddrManager.Setup(m => m.GetDdrByTlaIdentiferAsync("SYS-001", _context.Org, _context.User))
+            _ddrManager.Setup(m => m.GetDdrByTlaIdentiferAsync("SYS-001", _context.Org, _context.User, true))
                 .ReturnsAsync(ddr);
 
             _ddrManager.Setup(m => m.UpdateDdrAsync(ddr, _context.Org, _context.User))
