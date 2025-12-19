@@ -165,7 +165,7 @@ namespace LagoVista.AI.Services
 
                 foreach (var toolCall in lastResponse.ToolCalls)
                 {
-                    await _agentStreamingContext.AddWorkflowAsync($"...calling tool {toolCall.Name}...",cancellationToken);
+                    await _agentStreamingContext.AddWorkflowAsync($"calling tool {toolCall.Name}...",cancellationToken);
                     var sw = Stopwatch.StartNew();
 
                     // Let the executor decide if this is a server tool or not.
@@ -174,10 +174,11 @@ namespace LagoVista.AI.Services
                         toolContext,
                         cancellationToken);
 
-                    if(updatedCallResponse.Successful)
-                        await _agentStreamingContext.AddWorkflowAsync($"...success calling tool {toolCall.Name} in {sw.Elapsed.TotalMilliseconds.ToString("0.0")}ms...", cancellationToken);
+                    if (updatedCallResponse.Successful)
+                        await _agentStreamingContext.AddWorkflowAsync($"success calling tool {toolCall.Name} in {sw.Elapsed.TotalMilliseconds.ToString("0.0")}ms...", cancellationToken);
                     else
-                        await _agentStreamingContext.AddWorkflowAsync($"...failed to call tool {toolCall.Name}, err: {updatedCallResponse.ErrorMessage} in {sw.Elapsed.TotalMilliseconds.ToString("0.0")}ms...", cancellationToken);
+
+                        await _agentStreamingContext.AddWorkflowAsync($"failed to call tool {toolCall.Name}, err: {updatedCallResponse.ErrorMessage} in {sw.Elapsed.TotalMilliseconds.ToString("0.0")}ms...", cancellationToken);
 
                     if (cancellationToken.IsCancellationRequested)
                     {
@@ -189,8 +190,6 @@ namespace LagoVista.AI.Services
                         return InvokeResult<AgentExecuteResponse>.FromInvokeResult(
                             updatedCallResponse.ToInvokeResult());
                     }
-
-
 
                     var updatedCall = updatedCallResponse.Result;
 

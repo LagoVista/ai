@@ -1,0 +1,28 @@
+using System.Threading;
+using System.Threading.Tasks;
+using LagoVista.AI.Rag.Chunkers.Models;
+using LagoVista.AI.Rag.Models;
+
+namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Interfaces
+{
+    /// <summary>
+    /// Contract for a single indexing pipeline that can index one file at a time.
+    /// Implementations are responsible for:
+    ///  - Chunking
+    ///  - Embedding
+    ///  - Sending vectors to the backing store (e.g., Qdrant)
+    ///  - Emitting any metadata needed for registries
+    ///
+    /// They should NOT:
+    ///  - Walk the file system
+    ///  - Plan which files to index
+    ///  - Manage local index persistence
+    /// </summary>
+    public interface IIndexingPipeline
+    {
+        /// <summary>
+        /// Index a single file identified by the context.
+        /// </summary>
+        Task IndexFileAsync(IndexFileContext context, CancellationToken token = default);
+    }
+}

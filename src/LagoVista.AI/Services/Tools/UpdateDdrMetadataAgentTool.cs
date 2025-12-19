@@ -50,6 +50,11 @@ namespace LagoVista.AI.Services.Tools
                             type = "string",
                             description = "DDR identifier in TLA-### format, for example 'SYS-001'."
                         },
+                        jsonl = new
+                        {
+                            type = "string",
+                            description = "JSONL Summary of the DDR that will be used to pass as an artifact to LLM to establish context."
+                        },
                         title = new
                         {
                             type = "string",
@@ -84,6 +89,7 @@ namespace LagoVista.AI.Services.Tools
             var title = payload.Value<string>("title")?.Trim();
             var summary = payload.Value<string>("summary")?.Trim();
             var notes = payload.Value<string>("notes")?.Trim();
+            var jsonl = payload.Value<string>("jsonl")?.Trim();
 
             if (string.IsNullOrWhiteSpace(identifier))
             {
@@ -114,12 +120,18 @@ namespace LagoVista.AI.Services.Tools
 
                 if (!string.IsNullOrWhiteSpace(summary))
                 {
+                    ddr.Summary = summary;
                     ddr.Description = summary;
                 }
 
                 if (!string.IsNullOrWhiteSpace(notes))
                 {
                     ddr.Notes = notes;
+                }
+
+                if (!string.IsNullOrWhiteSpace(notes))
+                {
+                    ddr.Jsonl = jsonl;
                 }
 
                 await _ddrManager.UpdateDdrAsync(ddr, context.Org, context.User);
@@ -132,7 +144,8 @@ namespace LagoVista.AI.Services.Tools
                         ["identifier"] = identifier,
                         ["title"] = ddr.Name,
                         ["summary"] = ddr.Description,
-                        ["notes"] = ddr.Notes
+                        ["notes"] = ddr.Notes,
+                        ["jsonl"] = ddr.Jsonl
                     }
                 };
 

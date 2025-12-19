@@ -9,7 +9,7 @@ namespace LagoVista.AI.Services
     public class AgentStreamingContext : IAgentStreamingContext
     {
         public int Index { get; set; } = 1;
-        public Func<AgentStreamEvent, Task>? Current { get; set; }
+        public Func<AgentStreamEvent, Task> Current { get; set; }
 
         public Task AddPartialAsync(string deltaText, CancellationToken token = default)
         {
@@ -40,6 +40,24 @@ namespace LagoVista.AI.Services
             {
                 Kind = "partial",
                 DeltaText = $"APTIX: {workflow}\n",
+                Index = this.Index++
+            };
+
+            // The callback itself (in the controller) will honor cancellation
+            return Current(streamEvent);
+        }
+
+        public Task AddMilestoneAsync(string workflow, CancellationToken token = default)
+        {
+            if (Current == null)
+            {
+                return Task.CompletedTask;
+            }
+
+            var streamEvent = new AgentStreamEvent
+            {
+                Kind = "partial",
+                DeltaText = $"APTIXMS: {workflow}\n",
                 Index = this.Index++
             };
 

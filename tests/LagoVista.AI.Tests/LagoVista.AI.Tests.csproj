@@ -23,7 +23,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="LagoVista.Core.TestBase" Version="3.0.3137.1337" />
+    <PackageReference Include="LagoVista.Core.TestBase" Version="3.0.3138.1147" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.22.1" />
   </ItemGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'net461' ">
@@ -37,7 +37,6 @@
     <Folder Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\LagoVista.AI.Rag\LagoVista.AI.Rag.csproj" />
     <ProjectReference Include="..\..\src\LagoVista.AI\LagoVista.AI.csproj" />
   </ItemGroup>
 </Project>

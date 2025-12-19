@@ -32,6 +32,8 @@ namespace LagoVista.AI.Models
 
         public string Summary { get; set; }
 
+        public string Jsonl { get; set; }
+
         public string Status { get; set; }
 
         public string StatusTimestamp { get; set; }
@@ -54,6 +56,8 @@ namespace LagoVista.AI.Models
         public DetailedDesignReviewSummary CreateSummary()
         {
             var summary = new DetailedDesignReviewSummary();
+            summary.Populate(this);
+            summary.Summary = Summary;
             summary.Status = Status;
             summary.StatusTimestamp = StatusTimestamp;
             summary.DdrIdentifier = DdrIdentifier;
@@ -80,11 +84,9 @@ namespace LagoVista.AI.Models
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.DDRs_Title, AIResources.Names.DDR_Help, AIResources.Names.DDR_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIDomain))]
     public class DetailedDesignReviewSummary : SummaryData
     {
-
         public string DdrIdentifier { get; set; }
-
         public string Status { get; set; }
-
+        public string Summary { get; set; }
         public string StatusTimestamp { get; set; }
 
     }

@@ -1,12 +1,10 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Rag.ContractPacks.IndexStore.Services;
 using LagoVista.AI.Rag.Models;
 using NUnit.Framework;
-using ZstdSharp.Unsafe;
 
 namespace LagoVista.AI.Rag.Tests.IndexStore
 {

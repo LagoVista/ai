@@ -68,12 +68,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="LagoVista.Core.TestBase" Version="3.0.3137.1337" />
+    <PackageReference Include="LagoVista.Core.TestBase" Version="3.0.3138.1147" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\LagoVista.AI.Models\LagoVista.AI.Models.csproj" />
-    <ProjectReference Include="..\..\src\LagoVista.AI.Rag.Chunkers\LagoVista.AI.Rag.Chunkers.csproj" />
+    <ProjectReference Include="..\..\src\LagoVista.AI\LagoVista.AI.csproj" />
   </ItemGroup>
 
 </Project>

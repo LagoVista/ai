@@ -38,6 +38,7 @@ namespace LagoVista.AI.Services.Tools
             "The tool parses identifier/TLA/index/title/status and approval metadata when possible. " +
             "If the TLA-index already exists, the tool must reject and report which DDR currently exists. " +
             "If the parsed identifier does not match the parsed TLA-index, return an error. " +
+            "When you import the DDR, you should create a compact version of it to be passed to a LLM to establish context, this should be in the jsonl argument." +
             "Chapters are not imported in the first cut. " +
             "If you can not identify a clear summary, please create one or two sentances summarizing the DDR content be examining the content in the markdown. " +
             "Any unparseable fields are returned as null/unknown and should be confirmed with the user.";
@@ -52,6 +53,8 @@ namespace LagoVista.AI.Services.Tools
         {
             public string Markdown { get; set; }
             public string Source { get; set; }
+
+            public string Jsonl { get; set; }
 
             /// <summary>
             /// If true, do not write anything; just parse and return what would be imported.
@@ -141,6 +144,12 @@ namespace LagoVista.AI.Services.Tools
                     return InvokeResult<string>.FromError("import_ddr could not parse both 'tla' and 'index' from the Markdown.");
                 }
 
+                if (string.IsNullOrWhiteSpace(args.Jsonl))
+                {
+                    return InvokeResult<string>.FromError("import_ddr did not summarize the markdown as JSONL for LLM.");
+                }
+
+
                 // Hard rule: identifier must match TLA/IDX (this should never happen)
                 if (!TryParseIdentifier(parsed.Identifier, out var identTla, out var identIdx))
                 {
@@ -223,6 +232,7 @@ namespace LagoVista.AI.Services.Tools
                     Tla = parsed.Tla,
                     Index = parsed.Index.Value,
                     Name = parsed.Title,
+                    Jsonl = args.Jsonl,
                     Summary = parsed.Summary,
                     Status = parsed.Status,
                     StatusTimestamp  = timeStamp,
@@ -434,6 +444,11 @@ namespace LagoVista.AI.Services.Tools
                         {
                             type = "string",
                             description = "Full DDR Markdown content to import."
+                        },
+                        jsonl = new
+                        {
+                            type = "string",
+                            description = "Full DDR Markdown content summaried as JSONL to be consumed by an LLM."
                         },
                         source = new
                         {

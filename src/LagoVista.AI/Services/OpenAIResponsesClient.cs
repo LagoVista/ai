@@ -16,9 +16,11 @@ using LagoVista.Core;
 using LagoVista.Core.AI.Models;
 using LagoVista.Core.Exceptions;
 using LagoVista.Core.Interfaces;
+using LagoVista.Core.Models.Drawing;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json;
+using OpenTelemetry.Trace;
 using RingCentral;
 
 namespace LagoVista.AI.Services
@@ -38,6 +40,33 @@ namespace LagoVista.AI.Services
         private readonly INotificationPublisher _notificationPublisher;
         private readonly IServerToolSchemaProvider _toolSchemaProvider;
         private readonly IAgentStreamingContext _agentStreamingContext;
+
+        public string[] connectingMessage =
+        {
+            "reaching out…",
+            "establishing a connection…",
+            "opening a line…",
+            "getting in touch…",
+            "knocking on the door…",
+            "tapping the shoulder…",
+            "checking availability…",
+            "lining things up…",
+            "syncing up…",
+            "setting up the link…",
+            "spinning up a connection…",
+            "calling it in…"
+        };
+
+        public string[] thinkingMessges = {
+            "let me mull that over…",
+            "one sec—connecting the dots…",
+            "calling in a second opinion…",
+            "asking my inner narrator…",
+            "running it through the gears…",
+            "spinning up some thoughts…" };
+
+
+
 
         public bool UseStreaming { get; set; } = true;
 
@@ -118,12 +147,13 @@ namespace LagoVista.AI.Services
                         Content = new StringContent(requestJson, Encoding.UTF8, "application/json")
                     };
 
-                    await _agentStreamingContext.AddWorkflowAsync("...contacting my brain...", cancellationToken);
+                    var rnd = new Random();
+                    await _agentStreamingContext.AddWorkflowAsync(connectingMessage[rnd.Next(0,connectingMessage.Length-1)], cancellationToken);
 
                     var sw = Stopwatch.StartNew();
                     var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
 
-                    await _agentStreamingContext.AddWorkflowAsync("...contactd my brain, sorting things out...", cancellationToken);
+                    await _agentStreamingContext.AddWorkflowAsync(thinkingMessges[rnd.Next(0, thinkingMessges.Length - 1)], cancellationToken);
 
                     if (!response.IsSuccessStatusCode)
                     {
@@ -163,7 +193,7 @@ namespace LagoVista.AI.Services
                             response, executeRequest, sw, cancellationToken);
                     }
 
-                    await _agentStreamingContext.AddWorkflowAsync("...got it give me a minute to summarize...", cancellationToken);
+                    await _agentStreamingContext.AddWorkflowAsync("got it give me a minute to summarize...", cancellationToken);
 
 
                     if (!agentResponse.Successful)

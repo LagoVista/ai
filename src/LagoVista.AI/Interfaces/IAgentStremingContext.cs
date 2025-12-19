@@ -12,6 +12,7 @@ namespace LagoVista.AI.Interfaces
 
         Task AddPartialAsync(string deltaText, CancellationToken token = default);
         Task AddWorkflowAsync(string workflow, CancellationToken token = default);
+        Task AddMilestoneAsync(string workflow, CancellationToken token = default);
     }
 
 }

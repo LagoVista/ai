@@ -75,7 +75,7 @@ namespace LagoVista.AI.Services.Tools
                     {
                         ["identifier"] = m.DdrIdentifier,
                         ["title"] = m.Name,
-                        ["summary"] = m.Description,
+                        ["summary"] = String.IsNullOrEmpty(m.Summary) ? m.Description : m.Summary,
                         ["status"] = m.Status,
                         ["status_timestamp"] = m.StatusTimestamp
                     }));
