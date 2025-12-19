@@ -2,9 +2,19 @@
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
+using LagoVista.AI.Managers;
 using LagoVista.AI.Models;
+using LagoVista.AI.Rag.Chunkers.Models;
+using LagoVista.AI.Rag.Chunkers.Services;
+using LagoVista.AI.Rag.ContractPacks.Ingestion.Interfaces;
+using LagoVista.Core;
+using LagoVista.Core.AI.Models;
+using LagoVista.Core.Interfaces;
+using LagoVista.Core.Utils.Types.Nuviot.RagIndexing;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
+using LagoVista.UserAdmin.Interfaces.Managers;
+using Microsoft.CodeAnalysis.Text;
 using Newtonsoft.Json;
 
 namespace LagoVista.AI.Services.Tools
@@ -16,6 +26,12 @@ namespace LagoVista.AI.Services.Tools
     public sealed class IndexDdrTool : IAgentTool
     {
         private readonly IAdminLogger _logger;
+        private readonly ISourceFileProcessor _processor;
+        private readonly IDdrManager _ddrManager;
+        private readonly IOrganizationManager _orgManager;
+        private readonly IQdrantClient _qdrantClient;
+        private readonly IEmbedder _embedder;
+
 
         public string Name => ToolName;
 
@@ -29,9 +45,13 @@ namespace LagoVista.AI.Services.Tools
             "Do not call this tool automatically without user consent. " +
             "Provide the DDR identifier (e.g., 'TUL-011'); the tool should index the stored canonical DDR content and return a small JSON result indicating success and any indexing details (such as document/key and chunk count) if available.";
 
-        public IndexDdrTool(IAdminLogger logger)
+        public IndexDdrTool(IEmbedder embeder, IQdrantClient qdrantClient, IOrganizationManager orgManager, IDdrManager ddrManager, IAdminLogger logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _ddrManager = ddrManager ?? throw new ArgumentNullException(nameof(ddrManager));
+            _embedder = embeder ?? throw new ArgumentNullException(nameof(embeder));
+            _qdrantClient = qdrantClient ?? throw new ArgumentNullException(nameof(qdrantClient));
+            _orgManager = orgManager ?? throw new ArgumentNullException(nameof(orgManager));
         }
 
         private sealed class IndexDdrArgs
@@ -52,15 +72,14 @@ namespace LagoVista.AI.Services.Tools
             public string SessionId { get; set; }
         }
 
-        public Task<InvokeResult<string>> ExecuteAsync(
+        public async Task<InvokeResult<string>> ExecuteAsync(
             string argumentsJson,
             AgentToolExecutionContext context,
             CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(argumentsJson))
             {
-                return Task.FromResult(
-                    InvokeResult<string>.FromError("index_ddr requires a non-empty arguments object."));
+                return InvokeResult<string>.FromError("index_ddr requires a non-empty arguments object.");
             }
 
             try
@@ -69,16 +88,64 @@ namespace LagoVista.AI.Services.Tools
 
                 if (string.IsNullOrWhiteSpace(args.Identifier))
                 {
-                    return Task.FromResult(
-                        InvokeResult<string>.FromError("index_ddr requires 'identifier'."));
+                    return InvokeResult<string>.FromError("index_ddr requires 'identifier'.");
                 }
 
-                // TODO: Wire actual RAG/vector DB indexing here.
-                // Suggested steps:
-                // 1) Load canonical DDR by identifier
-                // 2) Convert to text chunks + metadata
-                // 3) Upsert into vector store
-                // 4) Return doc id + chunk count
+                var ddr = await _ddrManager.GetDdrByTlaIdentiferAsync(args.Identifier, context.Org, context.User, false);
+                if(ddr == null)
+                    return InvokeResult<string>.FromError($"index_ddr - could not find DDR {args.Identifier} to process.");
+
+                if (String.IsNullOrEmpty(ddr.Summary))
+                    return InvokeResult<string>.FromError("index_ddr - Summary is empty, can not index.");
+
+                var ctx = new IndexFileContext() {
+                    Contents = System.Text.UTF32Encoding.UTF32.GetBytes(ddr.FullDDRMarkDown),
+                    FullPath = $"/{context.Org.Id.ToLower()}/{args.Identifier}.md",
+                    RelativePath = $"/{context.Org.Id.ToLower()}/{args.Identifier}.md",
+                    DocumentIdentity = new DocumentIdentity()
+                    {
+                         OrgId = context.Org.Id,
+                         OrgNamespace = await _orgManager.GetOrgNameSpaceAsync(context.Org.Id),
+                         DocId = ddr.Id,
+                    },
+                    GitRepoInfo = new GitRepoInfo()
+                    {
+                        RemoteUrl = "ddr-repo",
+                        BranchRef = "main",
+                    },
+                    RepoId = "ddr-repo",
+                };
+
+                var ddrDescription = DdrDescriptionBuilder.FromSource(ctx, ddr.FullDDRMarkDown);
+
+                if (!ddrDescription.Successful)
+                {
+                    return InvokeResult<string>.FromError($"index_ddr - DDR description build failed: {ddrDescription.ErrorMessage}");
+                }
+
+
+                var vector = await _embedder.EmbedAsync(ddr.Summary);
+
+                var point = new RagPoint()
+                {
+                    PointId = Guid.NewGuid().ToString(),
+                    Vector = vector.Result.Vector,
+                    Payload = new RagVectorPayload()
+                    {
+                        DocId = ddr.Id,
+                        OrgNamespace = ctx.DocumentIdentity.OrgNamespace,
+                        Repo = ctx.GitRepoInfo.RemoteUrl,
+                        RepoBranch = ctx.GitRepoInfo.BranchRef,
+                        CommitSha = "n/a",
+                        SectionKey = "DDR_Summary",
+                        EmbeddingModel = vector.Result.EmbeddingModel,
+                        BusinessDomainKey = "General",
+                        ContentTypeId = RagContentType.Spec,
+                        Subtype = "ddr",
+                        SubtypeFlavor = "Default",
+                        Language = "en-US",
+                    }
+                };
 
                 var payload = new IndexDdrResult
                 {
@@ -90,14 +157,15 @@ namespace LagoVista.AI.Services.Tools
                     SessionId = context?.SessionId
                 };
 
-                return Task.FromResult(InvokeResult<string>.Create(JsonConvert.SerializeObject(payload)));
+                await _qdrantClient.UpsertAsync(context.AgentContext.VectorDatabaseCollectionName, new[] { point }, cancellationToken);
+
+                return InvokeResult<string>.Create(JsonConvert.SerializeObject(payload));
             }
             catch (Exception ex)
             {
                 _logger.AddException("[IndexDdrTool_ExecuteAsync__Exception]", ex);
 
-                return Task.FromResult(
-                    InvokeResult<string>.FromError("index_ddr failed to process arguments."));
+                return InvokeResult<string>.FromError($"index_ddr failed to process arguments {ex.Message}");
             }
         }
 

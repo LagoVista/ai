@@ -70,16 +70,17 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         public void SetCommonProperties(IndexFileContext ctx)
         {
             DocId = ctx.DocumentIdentity.DocId;
-            Repo = ctx.GitRepoInfo.RemoteUrl;
             OrgId = ctx.DocumentIdentity.OrgId;
             OrgNamespace = ctx.DocumentIdentity.OrgNamespace;
             ProjectId = ctx.DocumentIdentity.ProjectId;
+
+            Repo = ctx.GitRepoInfo.RemoteUrl;
             Branch = ctx.GitRepoInfo.BranchRef;
-            Path = ctx.RelativePath;
             CommitSha = ctx.GitRepoInfo.CommitSha;
+
+            Path = ctx.RelativePath;
             BlobUri = ctx.BlobUri;
-            RepoId = ctx.RepoId;
-            
+            RepoId = ctx.RepoId;            
         }
 
         protected virtual InvokeResult PopulateAdditionalRagProperties(RagVectorPayload payload)

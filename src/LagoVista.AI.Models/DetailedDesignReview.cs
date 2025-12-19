@@ -1,4 +1,5 @@
 ﻿using LagoVista.AI.Models.Resources;
+using LagoVista.Core.AI.Interfaces;
 using LagoVista.Core.Attributes;
 using LagoVista.Core.Interfaces;
 using LagoVista.Core.Models;
@@ -7,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace LagoVista.AI.Models
 {
@@ -52,7 +54,7 @@ namespace LagoVista.AI.Models
         public string FullDDRMarkDown { get; set; }
 
         public List<DdrContentDiscoveryArtifact> ContentDiscoveryArtifacts { get; set; } = new List<DdrContentDiscoveryArtifact>();
-        
+
         public DetailedDesignReviewSummary CreateSummary()
         {
             var summary = new DetailedDesignReviewSummary();
