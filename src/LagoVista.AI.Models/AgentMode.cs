@@ -94,6 +94,11 @@ namespace LagoVista.AI.Models
         public string[] StrongSignals { get; set; } = Array.Empty<string>();
 
         /// <summary>
+        /// DDR's that should be loaded upon transition to the mode.
+        /// </summary>
+        public string[] PreloadDDRs { get; set; } = Array.Empty<string>();
+
+        /// <summary>
         /// Weaker hints that might lean toward this mode.
         /// </summary>
         public string[] WeakSignals { get; set; } = Array.Empty<string>();

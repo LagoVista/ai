@@ -26,7 +26,7 @@ namespace LagoVista.AI.Services.Tools
         }
 
         public const string ToolUsageMetadata =
-    "Updates the DDR’s lifecycle status (Draft, InProgress, ReadyForApproval, Approved, Rejected). Use to reflect progress or workflow transitions.";
+    "Updates the DDR’s lifecycle status (Draft, InProgress, ReadyForApproval, Approved, Rejected, Tabled). Use to reflect progress or workflow transitions.";
 
 
         public override string Name => ToolName;
@@ -93,6 +93,7 @@ namespace LagoVista.AI.Services.Tools
                 "ReadyForApproval",
                 "Approved",
                 "Rejected",
+                "Tabled",
                 "ResearchDraft"
             };
 

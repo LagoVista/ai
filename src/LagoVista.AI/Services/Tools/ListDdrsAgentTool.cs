@@ -41,7 +41,9 @@ namespace LagoVista.AI.Services.Tools
             {
                 type = "function",
                 name = ToolName,
-                description = "List all DDRs for the current organization, returning identifier, title, summary, status, and status timestamp.",
+                description = @"List all DDRs for the current organization, returning identifier, title, status, and status timestamp on the first line.  '
+                                Pleae make sure the first column is wide enough for 10 characters. You should return the status time stamp as-is, with a column label Status Date.  
+                                On the second row for each DDR you should return the summary if it's available.  If not lust leave the line off.",
                 parameters = new
                 {
                     type = "object",

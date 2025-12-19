@@ -124,6 +124,14 @@ namespace LagoVista.AI.Services.Tools
                 }
 
 
+                var ragContent = @$"
+DDR: {ddr.DdrIdentifier}
+TITLE: {ddr.Name}
+DATE: {DateTime.UtcNow.ToJSONString()}
+
+{ddr.RagSummary}";
+
+
                 var vector = await _embedder.EmbedAsync(ddr.Summary);
 
                 var point = new RagPoint()
@@ -137,6 +145,7 @@ namespace LagoVista.AI.Services.Tools
                         Repo = ctx.GitRepoInfo.RemoteUrl,
                         RepoBranch = ctx.GitRepoInfo.BranchRef,
                         CommitSha = "n/a",
+                        Title = $"{ddr.DdrIdentifier} - {ddr.Name}",
                         SectionKey = "DDR_Summary",
                         EmbeddingModel = vector.Result.EmbeddingModel,
                         BusinessDomainKey = "General",
@@ -151,8 +160,8 @@ namespace LagoVista.AI.Services.Tools
                 {
                     Success = true,
                     Identifier = args.Identifier.Trim(),
-                    VectorDocumentId = null,
-                    ChunkCount = null,
+                    VectorDocumentId = point.PointId,
+                    ChunkCount = 1,
                     ConversationId = context?.Request?.ConversationId,
                     SessionId = context?.SessionId
                 };

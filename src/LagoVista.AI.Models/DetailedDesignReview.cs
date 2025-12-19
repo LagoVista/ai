@@ -33,6 +33,7 @@ namespace LagoVista.AI.Models
         public string Title { get => Name; }
 
         public string Summary { get; set; }
+        public string RagSummary { get; set; }
 
         public string Jsonl { get; set; }
 

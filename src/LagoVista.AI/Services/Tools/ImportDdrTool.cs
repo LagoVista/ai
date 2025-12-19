@@ -40,7 +40,7 @@ namespace LagoVista.AI.Services.Tools
             "If the parsed identifier does not match the parsed TLA-index, return an error. " +
             "When you import the DDR, you should create a compact version of it to be passed to a LLM to establish context, this should be in the jsonl argument." +
             "Chapters are not imported in the first cut. " +
-            "If you can not identify a clear summary, please create one or two sentances summarizing the DDR content be examining the content in the markdown. " +
+            "If you can not extract a clear summary section, please create one or two sentances summarizing the DDR content be examining the content in the markdown. " +
             "Any unparseable fields are returned as null/unknown and should be confirmed with the user.";
 
         public ImportDdrTool(IDdrManager ddrManager, IAdminLogger logger)
@@ -56,6 +56,9 @@ namespace LagoVista.AI.Services.Tools
 
             public string Jsonl { get; set; }
 
+            public string HumanSummary { get; set; }
+
+            public string RagSummary { get; set; }
             /// <summary>
             /// If true, do not write anything; just parse and return what would be imported.
             /// This supports "confirm with user" flows for approvals and metadata.
@@ -149,6 +152,15 @@ namespace LagoVista.AI.Services.Tools
                     return InvokeResult<string>.FromError("import_ddr did not summarize the markdown as JSONL for LLM.");
                 }
 
+                if (string.IsNullOrEmpty(parsed.Summary) && string.IsNullOrEmpty(args.HumanSummary))
+                {
+                    return InvokeResult<string>.FromError("import_ddr did not create a summary a human, this should either be extracted or generated.");
+                }
+
+                if (string.IsNullOrEmpty(args.RagSummary))
+                {
+                    return InvokeResult<string>.FromError("import_ddr did not create a summary for indexing, this should either be extracted or generated.");
+                }
 
                 // Hard rule: identifier must match TLA/IDX (this should never happen)
                 if (!TryParseIdentifier(parsed.Identifier, out var identTla, out var identIdx))
@@ -233,7 +245,8 @@ namespace LagoVista.AI.Services.Tools
                     Index = parsed.Index.Value,
                     Name = parsed.Title,
                     Jsonl = args.Jsonl,
-                    Summary = parsed.Summary,
+                    Summary = parsed.Summary ?? args.HumanSummary,
+                    RagSummary = args.RagSummary,
                     Status = parsed.Status,
                     StatusTimestamp  = timeStamp,
                     FullDDRMarkDown = args.Markdown                    
@@ -449,6 +462,16 @@ namespace LagoVista.AI.Services.Tools
                         {
                             type = "string",
                             description = "Full DDR Markdown content summaried as JSONL to be consumed by an LLM."
+                        },
+                        humanSummary = new
+                        {
+                            type = "string",
+                            description = "one or two sentances that summarize the DDR content for human consumption."
+                        },
+                        ragSummary = new 
+                        {
+                            type = "string",
+                            description = "one or two sentances that summarize the DDR content that will be used to index the DDR for RAG."
                         },
                         source = new
                         {
