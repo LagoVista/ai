@@ -69,6 +69,13 @@ namespace LagoVista.AI.Managers
             return InvokeResult<int>.Create(existingTla.CurrentIndex);
         }
 
+        public async Task<InvokeResult> DeleteDdrAsync(string ddrId, EntityHeader org, EntityHeader user)
+        {
+            await _ddrRepo.DeleteDdrAsync(ddrId);
+
+            return InvokeResult.Success;
+        }
+
         public async Task<DetailedDesignReview> GetDdrByIdAsync(string ddrId, EntityHeader org, EntityHeader user)
         {
             var ddr = await _ddrRepo.GetDdrByIdAsync(ddrId);

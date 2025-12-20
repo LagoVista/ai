@@ -38,6 +38,8 @@ namespace LagoVista.AI
 
         Task<InvokeResult> UpdateTlaCatalog(DdrTla ddrTla, EntityHeader org, EntityHeader user);
 
+        Task<InvokeResult> DeleteDdrAsync(string ddrId, EntityHeader org, EntityHeader user);
+
         Task<InvokeResult<int>> AllocateTlaIndex(string tla, EntityHeader org, EntityHeader user);
 
         Task<List<DetailedDesignReview>> GetDdrs(string[] dds, EntityHeader org, EntityHeader user);

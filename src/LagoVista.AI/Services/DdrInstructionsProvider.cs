@@ -88,13 +88,15 @@ namespace LagoVista.AI.Services
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine("### AGN-018 — Mode DDR Instructions (Authoritative)");
-            sb.AppendLine("These instructions MUST be followed for this request.");
+            var headerInstructoins = @"You are operating under a strict instruction contract.
+If any instruction is ambiguous, contradictory, incomplete, or missing required constraints, you MUST stop processing immediately and explicitly report the issue.
+You MUST NOT infer intent, resolve ambiguity, or proceed on a best-guess basis.
+If no such issues are detected, you may proceed strictly according to the provided instructions.";
+
+            sb.AppendLine(headerInstructoins);
             sb.AppendLine();
 
-            sb.AppendLine($"[MODE: {mode?.Key ?? mode?.DisplayName ?? "(unknown)"}]");
-            sb.AppendLine();
-
+          
             sb.AppendLine("[DDR SET]");
             foreach (var item in ordered)
             {
@@ -119,7 +121,7 @@ namespace LagoVista.AI.Services
                 var ddr = item;
                 var label = ddr?.DdrIdentifier ?? item.Id;
 
-                var llm = ddr.Summary;
+                var llm = ddr.ModeInstructions;
                 if (string.IsNullOrWhiteSpace(llm))
                 {
                     sb.AppendLine($"\n#### {label}\n(no-llm-summary available)\n");

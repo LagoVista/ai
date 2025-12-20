@@ -33,15 +33,23 @@ namespace LagoVista.AI.Services.Tools
         public const string ToolName = "import_ddr";
 
         public const string ToolUsageMetadata =
-            "Imports a DDR from a Markdown document into the DDR store (create-only). " +
-            "Use when the user provides a DDR Markdown file and wants it imported. " +
-            "The tool parses identifier/TLA/index/title/status and approval metadata when possible. " +
-            "If the TLA-index already exists, the tool must reject and report which DDR currently exists. " +
-            "If the parsed identifier does not match the parsed TLA-index, return an error. " +
-            "When you import the DDR, you should create a compact version of it to be passed to a LLM to establish context, this should be in the jsonl argument." +
-            "Chapters are not imported in the first cut. " +
-            "If you can not extract a clear summary section, please create one or two sentances summarizing the DDR content be examining the content in the markdown. " +
-            "Any unparseable fields are returned as null/unknown and should be confirmed with the user.";
+"Imports a DDR from a Markdown document into the DDR store (create-only). " +
+"Use when the user provides a DDR Markdown file and wants it imported. " +
+"The tool parses identifier/TLA/index/title/status and approval metadata when possible. " +
+"If the TLA-index already exists, the tool must reject and report which DDR currently exists. " +
+"If the parsed identifier does not match the parsed TLA-index, return an error. " +
+"When you import the DDR, you should create a compact version of it to be passed to a LLM to establish context, this should be in the jsonl argument." +
+"Chapters are not imported in the first cut. " +
+"If you can not extract a clear summary section, please create one or two sentances summarizing the DDR content be examining the content in the markdown. " +
+"Any unparseable fields are returned as null/unknown and should be confirmed with the user. " +
+@"Summarize the approved DDR into a ModeInstruction intended for LLM execution.
+Extract only procedural rules, ordered steps, constraints, prohibitions, conditions, and approval gates.
+Rewrite all extracted content as imperative instructions using explicit normative keywords (MUST, MUST NOT, SHOULD, MAY).
+Preserve ordering and gating semantics explicitly.
+Exclude narrative explanation, rationale, historical context, examples, and non-operational commentary.
+Do not infer missing rules or invent behavior not explicitly defined in the DDR.
+
+";
 
         public ImportDdrTool(IDdrManager ddrManager, IAdminLogger logger)
         {
@@ -458,10 +466,10 @@ namespace LagoVista.AI.Services.Tools
                             type = "string",
                             description = "Full DDR Markdown content to import."
                         },
-                        jsonl = new
+                        modeInstructions = new
                         {
                             type = "string",
-                            description = "Full DDR Markdown content summaried as JSONL to be consumed by an LLM."
+                            description = "Context-specific imperative instructions that define enforceable procedural rules, constraints, and prohibitions for the active mode. These instructions must be followed exactly as provided."
                         },
                         humanSummary = new
                         {

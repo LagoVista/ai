@@ -31,6 +31,11 @@ namespace LagoVista.AI.CloudRepos
             return CreateDocumentAsync(ddr);
         }
 
+        public Task DeleteDdrAsync(string ddrId)
+        {
+            return DeleteDocumentAsync(ddrId);
+        }
+
         public Task<DetailedDesignReview> GetDdrByIdAsync(string ddrId)
         {
             return GetDocumentAsync(ddrId);
