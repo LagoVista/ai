@@ -128,11 +128,13 @@ namespace LagoVista.AI.Services
             var toolUsageBlock = _metaUsageProvider.GetToolUsageMetadata(tools.ToArray());
             executeRequest.ToolsJson = JsonConvert.SerializeObject(_toolSchemaProvider.GetToolSchemas(tools));
 
+            var modeInstructions = String.Empty;
+
             conversationContext.SystemPrompts.Add(agentContext.BuildSystemPrompt(executeRequest.Mode));
 
             // CHANGED: last parameter now uses UseStreaming instead of hard-coded true
             var requestObject = ResponsesRequestBuilder.Build(conversationContext, executeRequest,
-                        ragContextBlock, toolUsageBlock, UseStreaming);
+                        ragContextBlock, toolUsageBlock, modeInstructions, UseStreaming);
 
             var requestJson = JsonConvert.SerializeObject(requestObject);
             _adminLogger.Trace($"[OpenAIResponsesClient__GetAnswerAsync] Call LLM with JSON\r\n=====\r\n{requestJson}\r\n====");

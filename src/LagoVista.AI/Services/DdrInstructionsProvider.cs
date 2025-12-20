@@ -59,18 +59,9 @@ namespace LagoVista.AI.Services
             }
 
             // Fetch DDRs in bulk. We will re-order deterministically to match AgentMode.PreloadDDRs.
-            var ddrs = await _ddrManager.GetDdrs(preload, org, user).ConfigureAwait(false);
+            var ddrs = await _ddrManager.GetDdrs(preload, org, user);
 
-            var ordered = preload
-                .Select(id => new
-                {
-                    Id = (id ?? string.Empty).Trim(),
-                    Ddr = ddrs?.FirstOrDefault(d => string.Equals((d?.DdrIdentifier ?? string.Empty).Trim(), (id ?? string.Empty).Trim(), StringComparison.OrdinalIgnoreCase))
-                          ?? ddrs?.FirstOrDefault(d => string.Equals((d?.Id ?? string.Empty).Trim(), (id ?? string.Empty).Trim(), StringComparison.OrdinalIgnoreCase))
-                })
-                .ToList();
-
-            var instructions = BuildInstructionsText(mode, ordered);
+            var instructions = BuildInstructionsText(mode, ddrs);
             session.DdrCache[modeKey] = instructions;
         }
 
@@ -93,7 +84,7 @@ namespace LagoVista.AI.Services
 
         private static string BuildInstructionsText(
             AgentMode mode,
-            System.Collections.Generic.IEnumerable<dynamic> ordered)
+            System.Collections.Generic.IEnumerable<DetailedDesignReview> ordered)
         {
             var sb = new StringBuilder();
 
@@ -107,9 +98,9 @@ namespace LagoVista.AI.Services
             sb.AppendLine("[DDR SET]");
             foreach (var item in ordered)
             {
-                var ddr = item.Ddr;
-                var label = ddr?.DdrIdentifier ?? item.Id;
-                var title = ddr?.Title ?? ddr?.Name;
+                var ddr = item;
+                var label = ddr.DdrIdentifier ?? item.Id;
+                var title = ddr.Title ?? ddr?.Name;
                 if (!string.IsNullOrWhiteSpace(title))
                 {
                     sb.AppendLine($"- {label} — {title}");
@@ -125,10 +116,10 @@ namespace LagoVista.AI.Services
 
             foreach (var item in ordered)
             {
-                var ddr = item.Ddr;
+                var ddr = item;
                 var label = ddr?.DdrIdentifier ?? item.Id;
 
-                var llm = ddr?.LlmSummary;
+                var llm = ddr.Summary;
                 if (string.IsNullOrWhiteSpace(llm))
                 {
                     sb.AppendLine($"\n#### {label}\n(no-llm-summary available)\n");
