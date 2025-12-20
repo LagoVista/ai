@@ -71,6 +71,8 @@ namespace LagoVista.AI.Models
 
         public EntityHeader ConversationContext { get; set; }
 
+        public Dictionary<string, string> DdrCache { get; set; } = new Dictionary<string, string>();
+
         public string WorkspaceId { get; set; }
 
         public string Repo { get; set; }

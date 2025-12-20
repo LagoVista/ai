@@ -54,7 +54,7 @@ namespace LagoVista.AI.Services.Tools
             public string Markdown { get; set; }
             public string Source { get; set; }
 
-            public string Jsonl { get; set; }
+            public string LlmSummary { get; set; }
 
             public string HumanSummary { get; set; }
 
@@ -244,7 +244,7 @@ namespace LagoVista.AI.Services.Tools
                     Tla = parsed.Tla,
                     Index = parsed.Index.Value,
                     Name = parsed.Title,
-                    Jsonl = args.Jsonl,
+                    LlmSummary = args.Jsonl,
                     Summary = parsed.Summary ?? args.HumanSummary,
                     RagSummary = args.RagSummary,
                     Status = parsed.Status,

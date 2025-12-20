@@ -36,6 +36,7 @@ namespace LagoVista.AI.Helpers
                 AgentExecuteRequest request,
                 string ragContextBlock,
                 string toolUsageMetadataBlock,
+                string modeInstructions,
                 bool? stream = null)
         {
             if (conversationContext == null) throw new ArgumentNullException(nameof(conversationContext));

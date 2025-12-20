@@ -35,7 +35,7 @@ namespace LagoVista.AI.Models
         public string Summary { get; set; }
         public string RagSummary { get; set; }
 
-        public string Jsonl { get; set; }
+        public string ModeInstructions { get; set; }
 
         public string Status { get; set; }
 
