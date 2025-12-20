@@ -65,6 +65,11 @@ namespace LagoVista.AI.Services.Tools
                             type = "string",
                             description = "Optional new DDR summary/description. If omitted, the summary is not changed."
                         },
+                        modeInstructions = new
+                        {
+                            type = "string",
+                            description = "Optional new DDR mode instructions. If omitted, the mode instructions are not changed."
+                        },
                         notes = new
                         {
                             type = "string",
@@ -89,7 +94,7 @@ namespace LagoVista.AI.Services.Tools
             var title = payload.Value<string>("title")?.Trim();
             var summary = payload.Value<string>("summary")?.Trim();
             var notes = payload.Value<string>("notes")?.Trim();
-            var jsonl = payload.Value<string>("jsonl")?.Trim();
+            var modeInstructions = payload.Value<string>("modeInstructions")?.Trim();
 
             if (string.IsNullOrWhiteSpace(identifier))
             {
@@ -129,9 +134,9 @@ namespace LagoVista.AI.Services.Tools
                     ddr.Notes = notes;
                 }
 
-                if (!string.IsNullOrWhiteSpace(notes))
+                if (!string.IsNullOrWhiteSpace(modeInstructions))
                 {
-                    ddr.Jsonl = jsonl;
+                    ddr.ModeInstructions = modeInstructions;
                 }
 
                 await _ddrManager.UpdateDdrAsync(ddr, context.Org, context.User);
@@ -145,7 +150,7 @@ namespace LagoVista.AI.Services.Tools
                         ["title"] = ddr.Name,
                         ["summary"] = ddr.Description,
                         ["notes"] = ddr.Notes,
-                        ["jsonl"] = ddr.Jsonl
+                        ["jsonl"] = ddr.ModeInstructions
                     }
                 };
 

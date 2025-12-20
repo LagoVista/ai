@@ -54,7 +54,7 @@ namespace LagoVista.AI.Services.Tools
             public string Markdown { get; set; }
             public string Source { get; set; }
 
-            public string LlmSummary { get; set; }
+            public string ModeInstructions { get; set; }
 
             public string HumanSummary { get; set; }
 
@@ -147,9 +147,9 @@ namespace LagoVista.AI.Services.Tools
                     return InvokeResult<string>.FromError("import_ddr could not parse both 'tla' and 'index' from the Markdown.");
                 }
 
-                if (string.IsNullOrWhiteSpace(args.Jsonl))
+                if (string.IsNullOrWhiteSpace(args.ModeInstructions))
                 {
-                    return InvokeResult<string>.FromError("import_ddr did not summarize the markdown as JSONL for LLM.");
+                    return InvokeResult<string>.FromError("import_ddr did not create mode instructions.");
                 }
 
                 if (string.IsNullOrEmpty(parsed.Summary) && string.IsNullOrEmpty(args.HumanSummary))
@@ -244,7 +244,7 @@ namespace LagoVista.AI.Services.Tools
                     Tla = parsed.Tla,
                     Index = parsed.Index.Value,
                     Name = parsed.Title,
-                    LlmSummary = args.Jsonl,
+                    ModeInstructions = args.ModeInstructions,
                     Summary = parsed.Summary ?? args.HumanSummary,
                     RagSummary = args.RagSummary,
                     Status = parsed.Status,
