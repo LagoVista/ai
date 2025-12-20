@@ -2,6 +2,7 @@
 using LagoVista.Core.Models.UIMetaData;
 using LagoVista.Core.Models;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace LagoVista.AI.Interfaces
 {
@@ -14,5 +15,6 @@ namespace LagoVista.AI.Interfaces
 
         Task<ListResponse<DetailedDesignReviewSummary>> GetDdrsAsync(EntityHeader org, ListRequest listRequest);
         Task<ListResponse<DetailedDesignReviewSummary>> GetDdrsByTlaAsync(string tla, EntityHeader org, ListRequest listRequest);
-   }
+        Task<List<DetailedDesignReview>> GetDdrs(string[] dds, string orgId);
+    }
 }

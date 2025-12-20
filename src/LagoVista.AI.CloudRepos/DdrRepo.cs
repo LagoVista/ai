@@ -26,7 +26,6 @@ namespace LagoVista.AI.CloudRepos
 
         protected override bool ShouldConsolidateCollections => _shouldConsolidateCollections;
 
-
         public Task AddDdrAsync(DetailedDesignReview ddr)
         {
             return CreateDocumentAsync(ddr);
@@ -51,6 +50,12 @@ namespace LagoVista.AI.CloudRepos
                 throw new RecordNotFoundException(typeof(DetailedDesignReview).Name, tlaIdentifier);
 
             return ddr;
+        }
+
+        public async Task<List<DetailedDesignReview>> GetDdrs(string[] ddrs, string orgId)
+        {
+           var result = await QueryAsync(rec => ddrs.Contains(rec.DdrIdentifier), rec => rec.DdrIdentifier, ListRequest.CreateForAll());
+            return result.Model.ToList();
         }
 
         public Task<ListResponse<DetailedDesignReviewSummary>> GetDdrsAsync(EntityHeader org, ListRequest listRequest)
