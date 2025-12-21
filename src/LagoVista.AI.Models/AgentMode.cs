@@ -51,7 +51,12 @@ namespace LagoVista.AI.Models
         /// Mode-specific behavior instructions for the LLM when this
         /// mode is active (go into the Active Mode Behavior Block).
         /// </summary>
-        public string[] ModeInstructions { get; set; } = Array.Empty<string>();
+        public string[] ModeInstructionDdrs { get; set; } = Array.Empty<string>();
+
+        /// <summary>
+        /// DDR's that produce patterns, practices and standards that can be used when the LLM reasons.
+        /// </summary>
+        public string[] ReferenceDdrs { get; set; } = Array.Empty<string>();
 
         /// <summary>
         /// Optional structured hints like "preferStructuredOutput",

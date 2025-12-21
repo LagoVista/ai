@@ -152,7 +152,7 @@ Some content.";
                 RagIndexCard = "AGN-050 Generation Approved 2025-12-21: Routes DDR.",
 
                 // Keep this aligned with your updated implementation.
-                // If your implementation still accepts ModeInstructions as a string, pass a string.
+                // If your implementation still accepts ModeInstructionDdrs as a string, pass a string.
                 ModeInstructions = "MUST do X.\nMUST NOT do Y.",
 
                 DryRun = false,

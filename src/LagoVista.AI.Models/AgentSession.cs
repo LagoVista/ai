@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+
 namespace LagoVista.AI.Models
 {
     public enum AgentSessionTurnStatuses
@@ -79,6 +80,8 @@ namespace LagoVista.AI.Models
 
         public string Mode { get; set; } = "general";
 
+        public string CurrentBranch { get; set; } = "main";
+
         public string ModeSetTimestamp { get; set; }
 
         public string ModeReason { get; set; }
@@ -95,8 +98,14 @@ namespace LagoVista.AI.Models
 
         /// <summary>
         /// Durable, user-approved session memory notes (invariants, decisions, constraints, etc.) that can be paged in later.
+        /// (Long term memory)
         /// </summary>
         public List<AgentSessionMemoryNote> MemoryNotes { get; set; } = new List<AgentSessionMemoryNote>();
+
+        /// <summary>
+        /// List of KFRs (Short Term Memory for Session)
+        /// </summary>
+        public Dictionary<string, List<AgentSessionKfrEntry>> Kfrs { get; set; } = new Dictionary<string, List<AgentSessionKfrEntry>>();
 
         /// <summary>
         /// Durable lineage of restore / branch operations performed against this session.
@@ -342,6 +351,32 @@ namespace LagoVista.AI.Models
         /// User who created the checkpoint.
         /// </summary>
         public EntityHeader CreatedByUser { get; set; }
+    }
+
+    public enum KfrKind
+    {
+        Goal,
+        Plan,
+        ActiveContract,
+        Constraint,
+        OpenQuestion
+    }
+
+    public sealed class AgentSessionKfrEntry
+    {
+        public string KfrId { get; set; }
+
+        public KfrKind Kind { get; set; }
+
+        public string Value { get; set; }
+
+        public bool RequiresResolution { get; set; }
+
+        public bool IsActive { get; set; } = true;
+
+        public string CreationDate { get; set; } = DateTime.UtcNow.ToString("o");
+
+        public string LastUpdatedDate { get; set; } = DateTime.UtcNow.ToString("o");
     }
 
 

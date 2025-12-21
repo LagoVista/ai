@@ -52,7 +52,7 @@ namespace LagoVista.AI.Tests
             var convCtx = CreateConversationContext();
             var request = CreateRequest();
 
-            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty, string.Empty);
+            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty);
             Assert.That(dto.Input[0].Content[0].Type, Is.EqualTo("input_text"));
         }
 
@@ -62,7 +62,7 @@ namespace LagoVista.AI.Tests
             var convCtx = CreateConversationContext();
             var request = CreateRequest();
 
-            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty, string.Empty);
+            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty);
 
             Assert.That(dto.Model, Is.EqualTo("gpt-5.1"));
             Assert.That(dto.Temperature, Is.EqualTo(0.7f));
@@ -83,7 +83,7 @@ namespace LagoVista.AI.Tests
             var request = CreateRequest();
             request.SystemPrompt = "You are working only with billing-related data.";
 
-            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty, string.Empty);
+            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty);
 
             Assert.That(dto.Input.Count, Is.GreaterThanOrEqualTo(2));
 
@@ -105,7 +105,7 @@ namespace LagoVista.AI.Tests
             var toolUsageMetadataBlock =
                 "<<<APTIX_SERVER_TOOL_USAGE_METADATA_BEGIN>>>\n...tool usage here...\n<<<APTIX_SERVER_TOOL_USAGE_METADATA_END>>>";
 
-            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, toolUsageMetadataBlock, string.Empty);
+            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, toolUsageMetadataBlock);
 
             Assert.That(dto.Input.Count, Is.GreaterThanOrEqualTo(2));
 
@@ -130,7 +130,7 @@ namespace LagoVista.AI.Tests
             var toolUsageMetadataBlock =
                 "<<<APTIX_SERVER_TOOL_USAGE_METADATA_BEGIN>>>\n...tool usage here...\n<<<APTIX_SERVER_TOOL_USAGE_METADATA_END>>>";
 
-            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, toolUsageMetadataBlock, string.Empty);
+            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, toolUsageMetadataBlock);
 
             Assert.That(dto.Input.Count, Is.GreaterThanOrEqualTo(2));
 
@@ -150,7 +150,7 @@ namespace LagoVista.AI.Tests
             var request = CreateRequest(previousResponseId: "resp_123");
             request.SystemPrompt = "Continuation-specific override.";
 
-            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty, string.Empty);
+            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty);
 
             Assert.That(dto.PreviousResponseId, Is.EqualTo("resp_123"));
 
@@ -173,7 +173,7 @@ namespace LagoVista.AI.Tests
             var convCtx = CreateConversationContext();
             var request = CreateRequest(mode: "DDR_CREATION", instruction: "Create a DDR.");
 
-            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty, string.Empty);
+            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty);
 
             var userMessage = dto.Input[dto.Input.Count - 1];
             Assert.That(userMessage.Role, Is.EqualTo("user"));
@@ -192,7 +192,7 @@ namespace LagoVista.AI.Tests
             var request = CreateRequest();
             var ragContextBlock = "[CONTEXT]\n\n=== CHUNK 1 ===\nId: ctx_1";
 
-            var dto = ResponsesRequestBuilder.Build(convCtx, request, ragContextBlock, string.Empty, string.Empty);
+            var dto = ResponsesRequestBuilder.Build(convCtx, request, ragContextBlock, string.Empty);
 
             var userMessage = dto.Input[dto.Input.Count - 1];
             Assert.That(userMessage.Role, Is.EqualTo("user"));
@@ -213,7 +213,7 @@ namespace LagoVista.AI.Tests
 
             var request = CreateRequest(toolsJson: toolsJson);
 
-            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty, string.Empty);
+            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty);
 
             Assert.That(dto.Tools, Is.Not.Null);
             Assert.That(dto.Tools.Count, Is.EqualTo(1));
@@ -234,7 +234,7 @@ namespace LagoVista.AI.Tests
 
             var request = CreateRequest(previousResponseId: "resp_123", toolsJson: toolsJson);
 
-            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty, string.Empty);
+            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty);
 
             Assert.That(dto.PreviousResponseId, Is.EqualTo("resp_123"));
             Assert.That(dto.Tools, Is.Not.Null);
@@ -250,7 +250,7 @@ namespace LagoVista.AI.Tests
             var convCtx = CreateConversationContext();
             var request = CreateRequest(toolChoiceName: "ddr_document");
 
-            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty, string.Empty);
+            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty);
 
             Assert.That(dto.ToolChoice, Is.Not.Null);
             Assert.That(dto.ToolChoice.Type, Is.EqualTo("tool"));
@@ -285,7 +285,7 @@ namespace LagoVista.AI.Tests
             request.ToolResultsJson = Newtonsoft.Json.JsonConvert.SerializeObject(toolCalls);
 
 
-            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty, string.Empty);
+            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty);
 
             // Still a continuation.
             // When we return a tool result that should get routed without a response id, the call_id is used to identify the tool and populate it (I assume)
@@ -314,7 +314,7 @@ namespace LagoVista.AI.Tests
             var toolUsageMetadataBlock =
                 "<<<APTIX_SERVER_TOOL_USAGE_METADATA_BEGIN>>>\n...tool usage here...\n<<<APTIX_SERVER_TOOL_USAGE_METADATA_END>>>";
 
-            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, toolUsageMetadataBlock, string.Empty);
+            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, toolUsageMetadataBlock);
 
             Assert.That(dto.Input.Count, Is.GreaterThanOrEqualTo(2));
 
@@ -334,7 +334,7 @@ namespace LagoVista.AI.Tests
             var toolUsageMetadataBlock =
                 "<<<APTIX_SERVER_TOOL_USAGE_METADATA_BEGIN>>>\n...tool usage here...\n<<<APTIX_SERVER_TOOL_USAGE_METADATA_END>>>";
 
-            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, toolUsageMetadataBlock, string.Empty);
+            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, toolUsageMetadataBlock);
 
             Assert.That(dto.PreviousResponseId, Is.EqualTo("resp_456"));
 
@@ -358,7 +358,7 @@ namespace LagoVista.AI.Tests
             var request = CreateRequest();
 
             // Call without the optional 'stream' argument – should use the default (null)
-            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty, string.Empty);
+            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty);
 
             Assert.That(dto.Stream, Is.Null);
         }
@@ -368,8 +368,9 @@ namespace LagoVista.AI.Tests
         {
             var convCtx = CreateConversationContext();
             var request = CreateRequest();
+            request.Streaming = true;
 
-            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty, string.Empty, true);
+            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty);
 
             Assert.That(dto.Stream, Is.True);
         }
@@ -379,8 +380,9 @@ namespace LagoVista.AI.Tests
         {
             var convCtx = CreateConversationContext();
             var request = CreateRequest();
+            request.Streaming = false;
 
-            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty, string.Empty, false);
+            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty);
 
             Assert.That(dto.Stream, Is.False);
         }

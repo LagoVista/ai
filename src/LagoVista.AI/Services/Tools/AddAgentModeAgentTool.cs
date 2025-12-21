@@ -71,7 +71,13 @@ namespace LagoVista.AI.Services.Tools
                         mode_instructions = new
                         {
                             type = "array",
-                            description = "Mode-specific behavior instructions for the LLM when this mode is active.",
+                            description = "DDR's that include mode-specific behavior instructions for the LLM when this mode is active.",
+                            items = new { type = "string" }
+                        },
+                        references = new
+                        {
+                            type = "array",
+                            description = "Reference Type DDRS that should be injected when this mode becomes active.",
                             items = new { type = "string" }
                         },
                         behavior_hints = new
@@ -175,7 +181,10 @@ namespace LagoVista.AI.Services.Tools
                 WhenToUse = args.Value<string>("when_to_use")!,
                 WelcomeMessage = args.Value<string>("welcome_message"),
 
-                ModeInstructions =
+                ReferenceDdrs =
+                    args["references"]?.ToObject<string[]>() ?? Array.Empty<string>(),
+
+                ModeInstructionDdrs =
                     args["mode_instructions"]?.ToObject<string[]>() ?? Array.Empty<string>(),
                 BehaviorHints =
                     args["behavior_hints"]?.ToObject<string[]>() ?? Array.Empty<string>(),

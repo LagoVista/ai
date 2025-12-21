@@ -132,9 +132,8 @@ namespace LagoVista.AI.Services
 
             conversationContext.SystemPrompts.Add(agentContext.BuildSystemPrompt(executeRequest.Mode));
 
-            // CHANGED: last parameter now uses UseStreaming instead of hard-coded true
             var requestObject = ResponsesRequestBuilder.Build(conversationContext, executeRequest,
-                        ragContextBlock, toolUsageBlock, modeInstructions, UseStreaming);
+                        ragContextBlock, toolUsageBlock);
 
             var requestJson = JsonConvert.SerializeObject(requestObject);
             _adminLogger.Trace($"[OpenAIResponsesClient__GetAnswerAsync] Call LLM with JSON\r\n=====\r\n{requestJson}\r\n====");

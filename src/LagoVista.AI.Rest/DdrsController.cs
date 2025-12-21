@@ -36,6 +36,12 @@ namespace LagoVista.AI.Rest
             return DetailResponse<DetailedDesignReview>.Create(await  _ddrManager.GetDdrByIdAsync(id, OrgEntityHeader, UserEntityHeader));
         }
 
+        [HttpPut("/api/ddr")]
+        public async Task UpdateDdrAsync([FromBody] DetailedDesignReview ddr)
+        {
+            await _ddrManager.UpdateDdrAsync(ddr, OrgEntityHeader, UserEntityHeader);
+        }
+
 
         [HttpDelete("/api/ddr/{id}")]
         public async Task<InvokeResult> DeleteDdr(string id)

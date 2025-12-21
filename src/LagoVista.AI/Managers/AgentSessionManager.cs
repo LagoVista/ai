@@ -604,5 +604,17 @@ namespace LagoVista.AI.Managers
             return $"CP-{next:0000}";
         }
 
+        public async Task<InvokeResult> UpdateKFRsAsync(string sessionId, string mode, List<AgentSessionKfrEntry> entries, EntityHeader org, EntityHeader user)
+        {
+            var session = await GetAgentSessionAsync(sessionId, org, user);
+            if(session.Kfrs.ContainsKey(mode))
+                session.Kfrs[mode] = entries;
+            else
+                session.Kfrs.Add(mode, entries);
+
+            await _repo.UpdateSessionAsyunc(session);
+
+            return InvokeResult.Success;
+        }
     }
 }

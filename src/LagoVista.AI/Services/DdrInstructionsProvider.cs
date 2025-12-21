@@ -88,12 +88,12 @@ namespace LagoVista.AI.Services
         {
             var sb = new StringBuilder();
 
-            var headerInstructoins = @"You are operating under a strict instruction contract.
+            var headerInstructions = @"You are operating under a strict instruction contract.
 If any instruction is ambiguous, contradictory, incomplete, or missing required constraints, you MUST stop processing immediately and explicitly report the issue.
 You MUST NOT infer intent, resolve ambiguity, or proceed on a best-guess basis.
 If no such issues are detected, you may proceed strictly according to the provided instructions.";
 
-            sb.AppendLine(headerInstructoins);
+            sb.AppendLine(headerInstructions);
             sb.AppendLine();
 
           

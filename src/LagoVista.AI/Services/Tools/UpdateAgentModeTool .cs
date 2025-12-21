@@ -184,7 +184,7 @@ namespace LagoVista.AI.Services.Tools
     existing.WhenToUse = args.Value<string>("when_to_use")!;
     existing.WelcomeMessage = args.Value<string>("welcome_message");
 
-    existing.ModeInstructions =
+    existing.ModeInstructionDdrs =
         args["mode_instructions"]?.ToObject<string[]>() ?? Array.Empty<string>();
     existing.BehaviorHints =
         args["behavior_hints"]?.ToObject<string[]>() ?? Array.Empty<string>();

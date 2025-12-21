@@ -217,7 +217,7 @@ Additional rules:
             public string ReferentialSummary { get; set; }
 
             /// <summary>
-            /// Instruction-only executable ModeInstructions.
+            /// Instruction-only executable ModeInstructionDdrs.
             /// Required only when Type == 'Instruction'.
             /// Must be null for all other DDR types.
             /// </summary>
@@ -361,11 +361,11 @@ Additional rules:
                 var type = args.DdrType?.Trim();
                 var allowedTypes = new[]
                 {
-            "Instruction",
-            "Referential",
-            "Generation",
-            "Policy / Rules / Governance"
-        };
+                    "Instruction",
+                    "Referential",
+                    "Generation",
+                    "Policy / Rules / Governance"
+                };
 
                 if (string.IsNullOrWhiteSpace(type))
                 {
