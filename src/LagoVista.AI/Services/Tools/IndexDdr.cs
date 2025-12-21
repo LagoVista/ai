@@ -95,7 +95,7 @@ namespace LagoVista.AI.Services.Tools
                 if(ddr == null)
                     return InvokeResult<string>.FromError($"index_ddr - could not find DDR {args.Identifier} to process.");
 
-                if (String.IsNullOrEmpty(ddr.Summary))
+                if (String.IsNullOrEmpty(ddr.RagIndexCard))
                     return InvokeResult<string>.FromError("index_ddr - Summary is empty, can not index.");
 
                 var ctx = new IndexFileContext() {
@@ -124,15 +124,7 @@ namespace LagoVista.AI.Services.Tools
                 }
 
 
-                var ragContent = @$"
-DDR: {ddr.DdrIdentifier}
-TITLE: {ddr.Name}
-DATE: {DateTime.UtcNow.ToJSONString()}
-
-{ddr.RagSummary}";
-
-
-                var vector = await _embedder.EmbedAsync(ddr.Summary);
+                var vector = await _embedder.EmbedAsync(ddr.RagIndexCard);
 
                 var point = new RagPoint()
                 {
