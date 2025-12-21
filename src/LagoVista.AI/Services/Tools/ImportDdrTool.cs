@@ -32,23 +32,119 @@ namespace LagoVista.AI.Services.Tools
 
         public const string ToolName = "import_ddr";
 
-        public const string ToolUsageMetadata =
-"Imports a DDR from a Markdown document into the DDR store (create-only). " +
-"Use when the user provides a DDR Markdown file and wants it imported. " +
-"The tool parses identifier/TLA/index/title/status and approval metadata when possible. " +
-"If the TLA-index already exists, the tool must reject and report which DDR currently exists. " +
-"If the parsed identifier does not match the parsed TLA-index, return an error. " +
-"When you import the DDR, you should create a compact version of it to be passed to a LLM to establish context, this should be in the jsonl argument." +
-"Chapters are not imported in the first cut. " +
-"If you can not extract a clear summary section, please create one or two sentances summarizing the DDR content be examining the content in the markdown. " +
-"Any unparseable fields are returned as null/unknown and should be confirmed with the user. " +
-@"Summarize the approved DDR into a ModeInstruction intended for LLM execution.
-Extract only procedural rules, ordered steps, constraints, prohibitions, conditions, and approval gates.
-Rewrite all extracted content as imperative instructions using explicit normative keywords (MUST, MUST NOT, SHOULD, MAY).
-Preserve ordering and gating semantics explicitly.
-Exclude narrative explanation, rationale, historical context, examples, and non-operational commentary.
-Do not infer missing rules or invent behavior not explicitly defined in the DDR.
+        public const string ToolUsageMetadata = @"
+You are assisting with the ingestion of a Detailed Design Review (DDR).
 
+The provided Markdown DDR is the authoritative source of truth.
+You MUST derive all requested outputs strictly from this Markdown DDR.
+You MUST NOT invent rules, intent, scope, constraints, identifiers, types, status, or approvals that are not explicitly present in the Markdown DDR.
+
+You MUST produce exactly ONE JSON object as output.
+You MUST output only valid JSON. Do not wrap it in markdown code fences.
+Do not include commentary, rationale, or explanations.
+
+You MUST first determine the DDR identity and metadata by extracting it from the Markdown DDR.
+You MUST extract and include these fields in the output JSON:
+- ddrId
+- title
+- type
+- status
+- approvedBy
+- approvalTimestamp
+
+If any of these identity fields cannot be determined with confidence from the Markdown DDR, you MUST still include the field with a null value and set needsHumanConfirmation to true.
+
+You MUST set needsHumanConfirmation to true if:
+- Any identity field is null, or
+- Any extracted identity field is ambiguous, or
+- Any approval metadata appears missing or inconsistent with an Approved DDR.
+
+You MUST then generate derived fields conditionally based on the extracted DDR type.
+
+The DDR type MUST match exactly one of these values:
+- Instruction
+- Referential
+- Generation
+- Policy / Rules / Governance
+
+If the DDR type is not one of these exact values, you MUST set needsHumanConfirmation to true and you MUST still output the JSON object with type set to the best-extracted value.
+
+Derived field generation rules:
+
+If type == ""Instruction"":
+- You MUST include: humanSummary, condensedDdrContent, ragIndexCard, modeInstructions
+- You MUST NOT include: referentialSummary
+
+If type == ""Referential"":
+- You MUST include: humanSummary, condensedDdrContent, ragIndexCard, referentialSummary
+- You MUST NOT include: modeInstructions
+
+If type == ""Generation"":
+- You MUST include: humanSummary, condensedDdrContent, ragIndexCard
+- You MUST NOT include: modeInstructions, referentialSummary
+
+If type == ""Policy / Rules / Governance"":
+- You MUST include: humanSummary, condensedDdrContent, ragIndexCard
+- You MUST NOT include: modeInstructions, referentialSummary
+- You MUST set needsHumanConfirmation to true
+
+Field constraints:
+
+humanSummary:
+- One to two full sentences for human readers
+- Describes purpose and scope
+- Must NOT contain procedural steps
+- Must NOT introduce new rules
+
+condensedDdrContent:
+- Condensed reasoning substrate
+- Must preserve all normative meaning
+- May omit examples, historical context, and rationale
+- Must NOT introduce new rules or interpretations
+
+ragIndexCard:
+- One to two sentences for retrieval and routing only
+- MUST include verbatim: DDR ID, DDR Type, Status, Approval metadata, and a concise purpose statement
+- MUST NOT contain normative rules
+- MUST NOT contain normative keywords (MUST, MUST NOT, SHOULD, MAY)
+
+referentialSummary (Referential only):
+- Ultra-condensed awareness marker suitable for injection alongside many other referential summaries
+- Must include the DDR ID verbatim
+- Must be extremely short and token-efficient
+- Must NOT contain procedural steps
+- Must NOT contain normative keywords (MUST, MUST NOT, SHOULD, MAY)
+
+modeInstructions (Instruction only):
+- Executable procedural rules only
+- Each instruction MUST begin with exactly one normative keyword: MUST, MUST NOT, SHOULD, or MAY
+- Each instruction MUST contain exactly one normative keyword
+- Ordering and gating semantics MUST be explicit
+- Narrative explanation, rationale, and examples are forbidden
+
+You MUST output the JSON object using exactly the following top-level shape.
+You MUST NOT add any other top-level properties.
+
+{
+  ""ddrId"": string|null,
+  ""title"": string|null,
+  ""type"": string|null,
+  ""status"": string|null,
+  ""approvedBy"": string|null,
+  ""approvalTimestamp"": string|null,
+  ""needsHumanConfirmation"": boolean,
+  ""humanSummary"": string|null,
+  ""condensedDdrContent"": string|null,
+  ""ragIndexCard"": string|null,
+
+  ""referentialSummary"": string|null,
+  ""modeInstructions"": array|null
+}
+
+Additional rules:
+- For any field that is forbidden for the DDR type, you MUST set it to null.
+- modeInstructions MUST be an array of strings when present.
+- Do not include markdown, headings, or bullet formatting outside of the strings themselves.
 ";
 
         public ImportDdrTool(IDdrManager ddrManager, IAdminLogger logger)
@@ -59,26 +155,85 @@ Do not infer missing rules or invent behavior not explicitly defined in the DDR.
 
         private sealed class ImportDdrArgs
         {
+            // --- Authoritative input ---
             public string Markdown { get; set; }
             public string Source { get; set; }
 
-            public string ModeInstructions { get; set; }
+            // --- Identity & metadata (extracted by LLM or tool, confirmed by human) ---
+            public string DdrId { get; set; }
+            public string Title { get; set; }
 
+            /// <summary>
+            /// DDR type extracted from the Markdown.
+            /// Must be exactly one of:
+            /// Instruction, Referential, Generation, Policy / Rules / Governance
+            /// </summary>
+            public string Type { get; set; }
+
+            public string Status { get; set; }
+            public string ApprovedBy { get; set; }
+
+            /// <summary>
+            /// Approval timestamp as extracted from Markdown.
+            /// Preserve raw value as written.
+            /// </summary>
+            public string ApprovalTimestamp { get; set; }
+
+            /// <summary>
+            /// Indicates whether extracted identity or generated fields require
+            /// explicit human confirmation before persistence.
+            /// </summary>
+            public bool? NeedsHumanConfirmation { get; set; }
+
+            // --- Derived fields (generated by LLM, validated by tool) ---
+
+            /// <summary>
+            /// Human-facing summary (1–2 sentences).
+            /// Required for all DDR types.
+            /// </summary>
             public string HumanSummary { get; set; }
 
-            public string RagSummary { get; set; }
             /// <summary>
-            /// If true, do not write anything; just parse and return what would be imported.
-            /// This supports "confirm with user" flows for approvals and metadata.
+            /// Condensed DDR content suitable as the default LLM reasoning substrate.
+            /// Required for all DDR types.
+            /// </summary>
+            public string CondensedDdrContent { get; set; }
+
+            /// <summary>
+            /// RAG routing-only index card.
+            /// Required for all DDR types.
+            /// </summary>
+            public string RagIndexCard { get; set; }
+
+            /// <summary>
+            /// Referential-only ultra-condensed awareness marker.
+            /// Required only when Type == 'Referential'.
+            /// Must be null for all other DDR types.
+            /// </summary>
+            public string ReferentialSummary { get; set; }
+
+            /// <summary>
+            /// Instruction-only executable ModeInstructions.
+            /// Required only when Type == 'Instruction'.
+            /// Must be null for all other DDR types.
+            /// </summary>
+            public string[] ModeInstructions { get; set; }
+
+            // --- Control flags (tool-side orchestration) ---
+
+            /// <summary>
+            /// If true, do not persist anything; return extracted identity and generated
+            /// fields for human review and confirmation.
             /// </summary>
             public bool? DryRun { get; set; }
 
             /// <summary>
-            /// Optional flag to indicate the user has confirmed parsed values and wants them applied.
-            /// If not set/false, you can choose to treat as parse-only depending on your UX.
+            /// If true, indicates the human has confirmed extracted identity and generated
+            /// fields and the tool may proceed to persist.
             /// </summary>
             public bool? Confirmed { get; set; }
         }
+
 
         private sealed class ApprovalParse
         {
@@ -111,26 +266,55 @@ Do not infer missing rules or invent behavior not explicitly defined in the DDR.
             public bool Success { get; set; }
             public bool DryRun { get; set; }
 
+            // Authoritative identity derived from Markdown parsing (hard validated)
             public string Identifier { get; set; }
             public string Tla { get; set; }
             public int? Index { get; set; }
             public string Title { get; set; }
             public string Status { get; set; }
 
+            // Best-effort parse details (warnings, approval parse, etc.)
             public ImportDdrParsed Parsed { get; set; }
+
+            // LLM-extracted identity + derived fields (for review and batch workflows)
+            public ImportDdrGenerated Generated { get; set; }
 
             public string ConversationId { get; set; }
             public string SessionId { get; set; }
         }
 
+        private sealed class ImportDdrGenerated
+        {
+            // Identity as extracted by LLM (may be null/ambiguous)
+            public string DdrId { get; set; }
+            public string Title { get; set; }
+            public string Type { get; set; }
+            public string Status { get; set; }
+            public string ApprovedBy { get; set; }
+            public string ApprovalTimestamp { get; set; }
+
+            // Quarantine / review signal
+            public bool? NeedsHumanConfirmation { get; set; }
+
+            // Derived fields
+            public string HumanSummary { get; set; }
+            public string CondensedDdrContent { get; set; }
+            public string RagIndexCard { get; set; }
+            public string ReferentialSummary { get; set; }
+            public string[] ModeInstructions { get; set; }
+
+            // Optional: if you want quick operator insight during batch runs
+            public string[] ValidationWarnings { get; set; }
+        }
+
         public async Task<InvokeResult<string>> ExecuteAsync(
-            string argumentsJson,
-            AgentToolExecutionContext context,
-            CancellationToken cancellationToken = default)
+        string argumentsJson,
+        AgentToolExecutionContext context,
+        CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(argumentsJson))
             {
-                return  InvokeResult<string>.FromError("import_ddr requires a non-empty arguments object.");
+                return InvokeResult<string>.FromError("import_ddr requires a non-empty arguments object.");
             }
 
             try
@@ -139,12 +323,12 @@ Do not infer missing rules or invent behavior not explicitly defined in the DDR.
 
                 if (string.IsNullOrWhiteSpace(args.Markdown))
                 {
-                    return  InvokeResult<string>.FromError("import_ddr requires 'markdown' containing the DDR content.");
+                    return InvokeResult<string>.FromError("import_ddr requires 'markdown' containing the DDR content.");
                 }
 
                 var parsed = ParseMarkdown(args.Markdown);
 
-                // Hard validation: we need TLA + Index + Identifier to enforce mismatch rules.
+                // Hard validation: enforce identifier/TLA/index from Markdown parsing.
                 if (string.IsNullOrWhiteSpace(parsed.Identifier))
                 {
                     return InvokeResult<string>.FromError("import_ddr could not parse 'identifier' from the Markdown.");
@@ -153,21 +337,6 @@ Do not infer missing rules or invent behavior not explicitly defined in the DDR.
                 if (string.IsNullOrWhiteSpace(parsed.Tla) || !parsed.Index.HasValue)
                 {
                     return InvokeResult<string>.FromError("import_ddr could not parse both 'tla' and 'index' from the Markdown.");
-                }
-
-                if (string.IsNullOrWhiteSpace(args.ModeInstructions))
-                {
-                    return InvokeResult<string>.FromError("import_ddr did not create mode instructions.");
-                }
-
-                if (string.IsNullOrEmpty(parsed.Summary) && string.IsNullOrEmpty(args.HumanSummary))
-                {
-                    return InvokeResult<string>.FromError("import_ddr did not create a summary a human, this should either be extracted or generated.");
-                }
-
-                if (string.IsNullOrEmpty(args.RagSummary))
-                {
-                    return InvokeResult<string>.FromError("import_ddr did not create a summary for indexing, this should either be extracted or generated.");
                 }
 
                 // Hard rule: identifier must match TLA/IDX (this should never happen)
@@ -180,25 +349,108 @@ Do not infer missing rules or invent behavior not explicitly defined in the DDR.
                     identIdx != parsed.Index.Value)
                 {
                     return InvokeResult<string>.FromError(
-                            $"import_ddr identifier mismatch: Markdown indicates {parsed.Tla}-{parsed.Index:000} but identifier is '{parsed.Identifier}' (parsed as {identTla}-{identIdx:000}).");
+                        $"import_ddr identifier mismatch: Markdown indicates {parsed.Tla}-{parsed.Index:000} but identifier is '{parsed.Identifier}' (parsed as {identTla}-{identIdx:000}).");
+                }
+
+                // Validate the LLM-extracted identity when present (soft: requires confirmation).
+                // You still persist the authoritative identifier from parsed Markdown.
+                var type = args.Type?.Trim();
+                var allowedTypes = new[]
+                {
+            "Instruction",
+            "Referential",
+            "Generation",
+            "Policy / Rules / Governance"
+        };
+
+                if (string.IsNullOrWhiteSpace(type))
+                {
+                    // Tool usage instructions say: type can be null but then needsHumanConfirmation must be true.
+                    // We enforce that semantics here.
+                    if (args.NeedsHumanConfirmation != true)
+                    {
+                        return InvokeResult<string>.FromError("import_ddr type is missing but needsHumanConfirmation is not true.");
+                    }
+                }
+                else if (!allowedTypes.Contains(type, StringComparer.Ordinal))
+                {
+                    // Not an exact match => must require confirmation.
+                    if (args.NeedsHumanConfirmation != true)
+                    {
+                        return InvokeResult<string>.FromError(
+                            $"import_ddr type '{type}' is not one of the allowed values and needsHumanConfirmation is not true.");
+                    }
+                }
+
+                // Common derived fields required for all types
+                if (string.IsNullOrWhiteSpace(args.HumanSummary))
+                {
+                    return InvokeResult<string>.FromError("import_ddr did not create 'humanSummary'.");
+                }
+
+                if (string.IsNullOrWhiteSpace(args.CondensedDdrContent))
+                {
+                    return InvokeResult<string>.FromError("import_ddr did not create 'condensedDdrContent'.");
+                }
+
+                if (string.IsNullOrWhiteSpace(args.RagIndexCard))
+                {
+                    return InvokeResult<string>.FromError("import_ddr did not create 'ragIndexCard'.");
+                }
+
+                // Type-conditional fields
+                if (string.Equals(type, "Instruction", StringComparison.Ordinal))
+                {
+                    if (args.ModeInstructions == null || args.ModeInstructions.Length == 0)
+                    {
+                        return InvokeResult<string>.FromError("import_ddr did not create 'modeInstructions' for an Instruction DDR.");
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(args.ReferentialSummary))
+                    {
+                        return InvokeResult<string>.FromError("import_ddr must not include 'referentialSummary' for an Instruction DDR.");
+                    }
+                }
+                else if (string.Equals(type, "Referential", StringComparison.Ordinal))
+                {
+                    if (string.IsNullOrWhiteSpace(args.ReferentialSummary))
+                    {
+                        return InvokeResult<string>.FromError("import_ddr did not create 'referentialSummary' for a Referential DDR.");
+                    }
+
+                    if (args.ModeInstructions != null && args.ModeInstructions.Length > 0)
+                    {
+                        return InvokeResult<string>.FromError("import_ddr must not include 'modeInstructions' for a Referential DDR.");
+                    }
+                }
+                else
+                {
+                    // Generation or Policy / Rules / Governance or unknown-but-confirmation-required
+                    if (!string.IsNullOrWhiteSpace(args.ReferentialSummary))
+                    {
+                        return InvokeResult<string>.FromError("import_ddr must not include 'referentialSummary' for this DDR type.");
+                    }
+
+                    if (args.ModeInstructions != null && args.ModeInstructions.Length > 0)
+                    {
+                        return InvokeResult<string>.FromError("import_ddr must not include 'modeInstructions' for this DDR type.");
+                    }
+
+                    if (string.Equals(type, "Policy / Rules / Governance", StringComparison.Ordinal))
+                    {
+                        // Per ToolUsageInstructions: always requires confirmation.
+                        if (args.NeedsHumanConfirmation != true)
+                        {
+                            return InvokeResult<string>.FromError("import_ddr Policy / Rules / Governance DDRs must set needsHumanConfirmation=true.");
+                        }
+                    }
                 }
 
                 var dryRun = args.DryRun.GetValueOrDefault(false);
 
-                // TODO: existence check by TLA+IDX in your DDR store
-                // If exists -> reject and tell user which one currently exists.
-                //
-                // Example pseudo:
-                // var existing = await _ddrRepo.FindByTlaIndexAsync(parsed.Tla, parsed.Index.Value);
-                // if(existing != null) return FromError($"DDR {parsed.Tla}-{parsed.Index:000} already exists as {existing.Identifier} '{existing.Title}'");
-                //
-                // For now, leave as a stub with a clear TODO.
-                //
-                // IMPORTANT: In your wired implementation, do this check BEFORE writing.
-
                 if (dryRun || args.Confirmed != true)
                 {
-                    // Parse-only response to support "confirm with user" (especially approvals).
+                    // Preview response includes both parsed (authoritative) and LLM-extracted fields.
                     var preview = new ImportDdrResult
                     {
                         Success = true,
@@ -214,31 +466,22 @@ Do not infer missing rules or invent behavior not explicitly defined in the DDR.
                     };
 
                     var existingDdr = await _ddrManager.GetDdrByTlaIdentiferAsync(parsed.Identifier, context.Org, context.User, false);
-                    if(existingDdr != null)
+                    if (existingDdr != null)
+                    {
                         return InvokeResult<string>.FromError($"import_ddr - Failed DDR {parsed.Identifier} already exists as {existingDdr.Name}");
-                   
+                    }
+
                     return InvokeResult<string>.Create(JsonConvert.SerializeObject(preview));
                 }
 
-                // TODO: Create DDR in storage (create-only), set metadata (title/summary/status free-form),
-                // and apply approval values (as confirmed) to the stored DDR.
-                //
-                // For now, return a stub "success" to show the intended contract.
-                var result = new ImportDdrResult
-                {
-                    Success = true,
-                    DryRun = false,
-                    Identifier = parsed.Identifier,
-                    Tla = parsed.Tla,
-                    Index = parsed.Index,
-                    Title = parsed.Title,
-                    Status = parsed.Status,
-                    Parsed = parsed,
-                    ConversationId = context?.Request?.ConversationId,
-                    SessionId = context?.SessionId
-                };
-
+                // Confirmed path: create & persist
                 var timeStamp = DateTime.UtcNow.ToJSONString();
+
+                // Prefer parsed.Title if present, otherwise args.Title
+                var finalTitle = parsed.Title ?? args.Title;
+
+                // Prefer parsed.Status if present, otherwise args.Status
+                var finalStatus = parsed.Status ?? args.Status;
 
                 var ddr = new DetailedDesignReview
                 {
@@ -246,43 +489,89 @@ Do not infer missing rules or invent behavior not explicitly defined in the DDR.
                     CreatedBy = context.User,
                     Key = parsed.Identifier.ToLower().Replace("-", String.Empty),
                     LastUpdatedBy = context.User,
-                    CreationDate = timeStamp,   
+                    CreationDate = timeStamp,
                     LastUpdatedDate = timeStamp,
                     OwnerOrganization = context.Org,
                     Tla = parsed.Tla,
                     Index = parsed.Index.Value,
-                    Name = parsed.Title,
-                    ModeInstructions = args.ModeInstructions,
-                    Summary = parsed.Summary ?? args.HumanSummary,
-                    RagSummary = args.RagSummary,
-                    Status = parsed.Status,
-                    StatusTimestamp  = timeStamp,
-                    FullDDRMarkDown = args.Markdown                    
+                    Name = finalTitle,
+
+                    // New / revised fields (LLM-generated)
+                    Type = type, // add this property to DetailedDesignReview
+                    NeedsHumanConfirmation = args.NeedsHumanConfirmation == true, // add this property if you want to persist it
+                    HumanSummary = args.HumanSummary, // add if separate from Summary; otherwise map to Summary
+                    CondensedDdrContent = args.CondensedDdrContent, // add
+                    RagIndexCard = args.RagIndexCard, // add (replaces RagSummary)
+                    ReferentialSummary = args.ReferentialSummary, // add
+                    ModeInstructions = args.ModeInstructions == null ? null : string.Join("\n", args.ModeInstructions), // keep existing storage as string if needed
+
+                    Status = finalStatus,
+                    StatusTimestamp = timeStamp,
+                    FullDDRMarkDown = args.Markdown
                 };
 
-                if(parsed.Approval != null && parsed.Approval.ApprovalTimestamp.HasValue)
+                // Approval metadata: prefer parsed if parseable; otherwise accept args fields as raw strings if provided.
+                if (parsed.Approval != null && parsed.Approval.ApprovalTimestamp.HasValue)
                 {
                     ddr.ApprovedBy = context.User;
                     ddr.ApprovedTimestamp = parsed.Approval.ApprovalTimestampRaw;
                 }
+                else if (!string.IsNullOrWhiteSpace(args.ApprovalTimestamp) || !string.IsNullOrWhiteSpace(args.ApprovedBy))
+                {
+                    ddr.ApprovedBy = context.User;
+                    ddr.ApprovedTimestamp = args.ApprovalTimestamp;
+                }
 
                 var addResult = await _ddrManager.AddDdrAsync(ddr, context.Org, context.User);
-                if(!addResult.Successful)
-                    return InvokeResult<string>.FromError($"import_ddr failed to create DDR: {addResult.ErrorMessage}"); 
+                if (!addResult.Successful)
+                {
+                    return InvokeResult<string>.FromError($"import_ddr failed to create DDR: {addResult.ErrorMessage}");
+                }
+
+                var result = new ImportDdrResult
+                {
+                    Success = true,
+                    DryRun = false,
+                    Identifier = parsed.Identifier,
+                    Tla = parsed.Tla,
+                    Index = parsed.Index,
+                    Title = finalTitle,
+                    Status = finalStatus,
+                    Parsed = parsed,
+                    ConversationId = context?.Request?.ConversationId,
+                    SessionId = context?.SessionId
+                };
+
+                result.Generated = new ImportDdrGenerated
+                {
+                    DdrId = args.DdrId,
+                    Title = args.Title,
+                    Type = args.Type,
+                    Status = args.Status,
+                    ApprovedBy = args.ApprovedBy,
+                    ApprovalTimestamp = args.ApprovalTimestamp,
+                    NeedsHumanConfirmation = args.NeedsHumanConfirmation,
+                    HumanSummary = args.HumanSummary,
+                    CondensedDdrContent = args.CondensedDdrContent,
+                    RagIndexCard = args.RagIndexCard,
+                    ReferentialSummary = args.ReferentialSummary,
+                    ModeInstructions = args.ModeInstructions
+                };
+
                 return InvokeResult<string>.Create(JsonConvert.SerializeObject(result));
             }
-            catch(ValidationException vex)
+            catch (ValidationException vex)
             {
                 _logger.AddException("[ImportDdrTool_ExecuteAsync__ValidationException]", vex);
-                return InvokeResult<string>.FromError($"import_ddr failed validation problem(s): {String.Join(",", vex.Errors.Select(err=>err))}");
+                return InvokeResult<string>.FromError($"import_ddr failed validation problem(s): {String.Join(",", vex.Errors.Select(err => err))}");
             }
             catch (Exception ex)
             {
                 _logger.AddException("[ImportDdrTool_ExecuteAsync__Exception]", ex);
-
                 return InvokeResult<string>.FromError($"import_ddr failed to process arguments: {ex.Message}.");
             }
         }
+
 
         private static ImportDdrParsed ParseMarkdown(string markdown)
         {
@@ -455,7 +744,11 @@ Do not infer missing rules or invent behavior not explicitly defined in the DDR.
             {
                 type = "function",
                 name = ToolName,
-                description = "Imports a DDR from a Markdown document (create-only). Parses identifier/TLA/index/title/status and approval metadata when possible; returns parsed values for confirmation and can apply on confirmation.",
+                description =
+                    "Imports a DDR from a Markdown document (create-only). The DDR Markdown is authoritative. " +
+                    "The tool supports an LLM-assisted ingestion flow where identity may be extracted from Markdown and " +
+                    "derived fields are generated conditionally based on DDR type. The tool validates output and can " +
+                    "return parsed/generated values for human confirmation (dry-run) before persisting on confirmation.",
                 parameters = new
                 {
                     type = "object",
@@ -464,37 +757,108 @@ Do not infer missing rules or invent behavior not explicitly defined in the DDR.
                         markdown = new
                         {
                             type = "string",
-                            description = "Full DDR Markdown content to import."
-                        },
-                        modeInstructions = new
-                        {
-                            type = "string",
-                            description = "Context-specific imperative instructions that define enforceable procedural rules, constraints, and prohibitions for the active mode. These instructions must be followed exactly as provided."
-                        },
-                        humanSummary = new
-                        {
-                            type = "string",
-                            description = "one or two sentances that summarize the DDR content for human consumption."
-                        },
-                        ragSummary = new 
-                        {
-                            type = "string",
-                            description = "one or two sentances that summarize the DDR content that will be used to index the DDR for RAG."
+                            description = "Full authoritative DDR Markdown content to import."
                         },
                         source = new
                         {
                             type = "string",
-                            description = "Optional source label (e.g., filename/path/URL) to help with traceability."
+                            description = "Optional source label (e.g., filename/path/URL) for traceability."
                         },
                         dryRun = new
                         {
                             type = "boolean",
-                            description = "If true, do not write anything; just parse and return extracted fields for confirmation."
+                            description =
+                                "If true, do not persist anything; return extracted identity and generated derived fields for human review/confirmation."
                         },
                         confirmed = new
                         {
                             type = "boolean",
-                            description = "If true, indicates the user has confirmed parsed values and the tool may proceed to write/apply them."
+                            description =
+                                "If true, indicates the human has confirmed extracted identity and generated fields and the tool may proceed to persist."
+                        },
+
+                        // --- Batch generation output (from LLM) ---
+                        ddrId = new
+                        {
+                            type = "string",
+                            description =
+                                "DDR identifier extracted from the Markdown (e.g., 'AGN-022'). If not determinable with confidence, set to null and set needsHumanConfirmation=true."
+                        },
+                        title = new
+                        {
+                            type = "string",
+                            description =
+                                "DDR title extracted from the Markdown. If not determinable with confidence, set to null and set needsHumanConfirmation=true."
+                        },
+                        ddrType = new
+                        {
+                            type = "string",
+                            description =
+                                "DDR type extracted from the Markdown. Must be exactly one of: 'Instruction', 'Referential', 'Generation', 'Policy / Rules / Governance'. " +
+                                "If ambiguous or not an exact match, set needsHumanConfirmation=true."
+                        },
+                        status = new
+                        {
+                            type = "string",
+                            description =
+                                "DDR status extracted from the Markdown (e.g., 'Approved'). If missing or ambiguous, set to null and set needsHumanConfirmation=true."
+                        },
+                        approvedBy = new
+                        {
+                            type = "string",
+                            description =
+                                "Approval 'Approved By' extracted from the Markdown Approval Metadata section. If missing or ambiguous, set to null and set needsHumanConfirmation=true."
+                        },
+                        approvalTimestamp = new
+                        {
+                            type = "string",
+                            description =
+                                "Approval timestamp extracted from the Markdown Approval Metadata section. Preserve the raw value as written. If missing or ambiguous, set to null and set needsHumanConfirmation=true."
+                        },
+                        needsHumanConfirmation = new
+                        {
+                            type = "boolean",
+                            description =
+                                "True if any extracted identity field is null/ambiguous, approval metadata is missing/inconsistent, or the DDR type is not an exact allowed value. " +
+                                "When true, the tool must surface values for human confirmation before persisting."
+                        },
+
+                        // --- Derived fields (generated by LLM, validated by tool) ---
+                        humanSummary = new
+                        {
+                            type = "string",
+                            description =
+                                "Human-facing summary (1–2 full sentences) describing purpose and scope. Must not include procedural steps and must not introduce new rules. Required for all DDR types."
+                        },
+                        condensedDdrContent = new
+                        {
+                            type = "string",
+                            description =
+                                "Condensed DDR content suitable as the default LLM reasoning substrate after identification. Must preserve all normative meaning; may omit examples/rationale/history; must not introduce new rules or interpretations. Required for all DDR types."
+                        },
+                        ragIndexCard = new
+                        {
+                            type = "string",
+                            description =
+                                "RAG routing-only index card (1–2 sentences). Must include DDR ID, DDR Type, Status, Approval metadata, and a concise purpose statement. Must not contain normative rules or normative keywords (MUST, MUST NOT, SHOULD, MAY). Required for all DDR types."
+                        },
+                        referentialSummary = new
+                        {
+                            type = "string",
+                            description =
+                                "Referential-only ultra-condensed awareness marker intended for injection alongside many other referential summaries. Must include DDR ID, be extremely short, and must not include normative keywords or procedural steps. " +
+                                "Required only when ddrType == 'Referential'; must be null for all other types."
+                        },
+                        modeInstructions = new
+                        {
+                            type = "array",
+                            items = new
+                            {
+                                type = "string"
+                            },
+                            description =
+                                "Instruction-only executable ModeInstructions. Must be an array of strings. Each instruction must begin with exactly one normative keyword (MUST, MUST NOT, SHOULD, MAY) and contain exactly one normative keyword. " +
+                                "Must preserve ordering and gating semantics; must not include narrative explanation. Required only when ddrType == 'Instruction'; must be null for all other types."
                         }
                     },
                     required = new[] { "markdown" }
@@ -503,5 +867,6 @@ Do not infer missing rules or invent behavior not explicitly defined in the DDR.
 
             return schema;
         }
+
     }
 }

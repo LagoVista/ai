@@ -125,7 +125,7 @@ namespace LagoVista.AI.Services.Tools
 
                 if (!string.IsNullOrWhiteSpace(summary))
                 {
-                    ddr.Summary = summary;
+                    ddr.HumanSummary = summary;
                     ddr.Description = summary;
                 }
 

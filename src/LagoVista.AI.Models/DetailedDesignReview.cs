@@ -30,10 +30,15 @@ namespace LagoVista.AI.Models
 
         public string DdrIdentifier { get; set; }
 
+        public string Type { get; set; }
+
         public string Title { get => Name; }
 
-        public string Summary { get; set; }
-        public string RagSummary { get; set; }
+        public string HumanSummary { get; set; }
+        public string RagIndexCard { get; set; }
+        public string CondensedDdrContent { get; set; }
+        public bool NeedsHumanConfirmation { get; set; }
+        public string ReferentialSummary { get; set; }
 
         public string ModeInstructions { get; set; }
 
@@ -46,11 +51,6 @@ namespace LagoVista.AI.Models
         public string ApprovedTimestamp { get; set; }
         public EntityHeader ApprovedBy { get; set; }
 
-        public string ContentDiscoveryCompletedTimestamp { get; set; }
-
-        public string ContentDiscoverySummary { get; set; }
-
-        public string BaselineResponseId { get; set; }
 
         public string FullDDRMarkDown { get; set; }
 
@@ -60,7 +60,7 @@ namespace LagoVista.AI.Models
         {
             var summary = new DetailedDesignReviewSummary();
             summary.Populate(this);
-            summary.Summary = Summary;
+            summary.Summary = HumanSummary;
             summary.Status = Status;
             summary.StatusTimestamp = StatusTimestamp;
             summary.DdrIdentifier = DdrIdentifier;
@@ -84,7 +84,8 @@ namespace LagoVista.AI.Models
 
 
 
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.DDRs_Title, AIResources.Names.DDR_Help, AIResources.Names.DDR_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIDomain))]
+    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.DDRs_Title, AIResources.Names.DDR_Help, AIResources.Names.DDR_Description, 
+        EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIDomain))]
     public class DetailedDesignReviewSummary : SummaryData
     {
         public string DdrIdentifier { get; set; }
