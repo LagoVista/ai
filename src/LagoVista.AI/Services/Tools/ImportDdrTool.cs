@@ -51,6 +51,7 @@ You MUST extract and include these fields in the output JSON:
 - status
 - approvedBy
 - approvalTimestamp
+- ddrType (may not be present)
 
 If any of these identity fields cannot be determined with confidence from the Markdown DDR, you MUST still include the field with a null value and set needsHumanConfirmation to true.
 
@@ -61,13 +62,16 @@ You MUST set needsHumanConfirmation to true if:
 
 You MUST then generate derived fields conditionally based on the extracted DDR type.
 
+
 The DDR type MUST match exactly one of these values:
 - Instruction
 - Referential
 - Generation
 - Policy / Rules / Governance
 
-If the DDR type is not one of these exact values, you MUST set needsHumanConfirmation to true and you MUST still output the JSON object with type set to the best-extracted value.
+If DDR Type is not present, you may try to infer it from the content, if you are reasonably sure you can just use this.  
+
+if the DDR Type is ambigous or can't be deterined you must stop and confirm the DDR type before running the tool.
 
 Derived field generation rules:
 
@@ -128,7 +132,7 @@ You MUST NOT add any other top-level properties.
 {
   ""ddrId"": string|null,
   ""title"": string|null,
-  ""type"": string|null,
+  ""ddrType"": string|null,
   ""status"": string|null,
   ""approvedBy"": string|null,
   ""approvalTimestamp"": string|null,
@@ -168,7 +172,7 @@ Additional rules:
             /// Must be exactly one of:
             /// Instruction, Referential, Generation, Policy / Rules / Governance
             /// </summary>
-            public string Type { get; set; }
+            public string DdrType { get; set; }
 
             public string Status { get; set; }
             public string ApprovedBy { get; set; }
@@ -354,7 +358,7 @@ Additional rules:
 
                 // Validate the LLM-extracted identity when present (soft: requires confirmation).
                 // You still persist the authoritative identifier from parsed Markdown.
-                var type = args.Type?.Trim();
+                var type = args.DdrType?.Trim();
                 var allowedTypes = new[]
                 {
             "Instruction",
@@ -428,12 +432,12 @@ Additional rules:
                     // Generation or Policy / Rules / Governance or unknown-but-confirmation-required
                     if (!string.IsNullOrWhiteSpace(args.ReferentialSummary))
                     {
-                        return InvokeResult<string>.FromError("import_ddr must not include 'referentialSummary' for this DDR type.");
+                        return InvokeResult<string>.FromError($"import_ddr must not include 'referentialSummary' for this DDR type ({args.DdrType}).");
                     }
 
                     if (args.ModeInstructions != null && args.ModeInstructions.Length > 0)
                     {
-                        return InvokeResult<string>.FromError("import_ddr must not include 'modeInstructions' for this DDR type.");
+                        return InvokeResult<string>.FromError($"import_ddr must not include 'modeInstructions' for this DDR type ({args.DdrType}).");
                     }
 
                     if (string.Equals(type, "Policy / Rules / Governance", StringComparison.Ordinal))
@@ -546,7 +550,7 @@ Additional rules:
                 {
                     DdrId = args.DdrId,
                     Title = args.Title,
-                    Type = args.Type,
+                    Type = args.DdrType,
                     Status = args.Status,
                     ApprovedBy = args.ApprovedBy,
                     ApprovalTimestamp = args.ApprovalTimestamp,

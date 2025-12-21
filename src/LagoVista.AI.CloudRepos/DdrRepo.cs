@@ -44,17 +44,13 @@ namespace LagoVista.AI.CloudRepos
         public async Task<DetailedDesignReview> GetDdrByTlaIdentiferAsync(string tlaIdentifier, EntityHeader org, bool throwOnNotFound = true)
         {
             var catalog = await QueryAsync(qry => qry.OwnerOrganization.Id == org.Id && qry.DdrIdentifier == tlaIdentifier);
-            if (!catalog.Any())
+            if (!catalog.Any() && throwOnNotFound)
             {
                 _logger.AddError("[DdrRepo_GetDdrByTlaIdentiferAsync]", $"Could not find DDR by TLA {tlaIdentifier} org: {org.Id}.");
                 throw new RecordNotFoundException(nameof(DetailedDesignReview), tlaIdentifier);
             }
 
-            var ddr = catalog.SingleOrDefault();
-            if (ddr == null && throwOnNotFound)
-                throw new RecordNotFoundException(typeof(DetailedDesignReview).Name, tlaIdentifier);
-
-            return ddr;
+            return catalog.SingleOrDefault();          
         }
 
         public async Task<List<DetailedDesignReview>> GetDdrs(string[] ddrs, string orgId)
