@@ -88,7 +88,33 @@ namespace LagoVista.AI.Tests.Services
 
         #endregion
 
-        #region ExecuteAsync Validation
+        #region Pipeline ExecuteAsync Validation
+
+        [Test]
+        public async Task ExecuteAsync_NullPipelineContext_ReturnsErrorAndDoesNotCallDeps()
+        {
+            var result = await _sut.ExecuteAsync((AgentPipelineContext)null, CancellationToken.None);
+
+            Assert.That(result.Successful, Is.False);
+            Assert.That(result.Errors, Is.Not.Empty);
+            Assert.That(result.Errors[0].Message, Is.EqualTo("AgentPipelineContext cannot be null."));
+
+            _agentContextManager.Verify(
+                m => m.GetAgentContextWithSecretsAsync(It.IsAny<string>(), It.IsAny<EntityHeader>(), It.IsAny<EntityHeader>()),
+                Times.Never);
+
+            _reasoner.Verify(
+                r => r.ExecuteAsync(
+                    It.IsAny<AgentContext>(),
+                    It.IsAny<ConversationContext>(),
+                    It.IsAny<AgentExecuteRequest>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<EntityHeader>(),
+                    It.IsAny<EntityHeader>(),
+                    It.IsAny<CancellationToken>()),
+                Times.Never);
+        }
 
         [Test]
         public async Task ExecuteAsync_NullRequest_ReturnsErrorAndDoesNotCallDeps()
@@ -96,30 +122,22 @@ namespace LagoVista.AI.Tests.Services
             var org = CreateOrg();
             var user = CreateUser();
 
-            var result = await _sut.ExecuteAsync(null, org, user);
+            var ctx = new AgentPipelineContext
+            {
+                CorrelationId = "corr-1",
+                Org = org,
+                User = user,
+                Request = null
+            };
+
+            var result = await _sut.ExecuteAsync(ctx, CancellationToken.None);
 
             Assert.That(result.Successful, Is.False);
-            Assert.That(result.Errors, Is.Not.Null);
-            Assert.That(result.Errors.Count, Is.GreaterThan(0));
+            Assert.That(result.Errors, Is.Not.Empty);
             Assert.That(result.Errors[0].Message, Is.EqualTo("AgentExecuteRequest cannot be null."));
 
-            _adminLogger.Verify(l => l.AddError(
-                    "[AgentExecutionService_ExecuteAsync__ValidateRequest]",
-                    "AgentExecuteRequest cannot be null."),
-                Times.Once);
-
             _agentContextManager.Verify(
-                m => m.GetAgentContextWithSecretsAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<EntityHeader>(),
-                    It.IsAny<EntityHeader>()),
-                Times.Never);
-
-            _ragContextBuilder.Verify(
-                b => b.BuildContextSectionAsync(
-                    It.IsAny<AgentContext>(),
-                    It.IsAny<string>(),
-                    It.IsAny<RagScopeFilter>()),
+                m => m.GetAgentContextWithSecretsAsync(It.IsAny<string>(), It.IsAny<EntityHeader>(), It.IsAny<EntityHeader>()),
                 Times.Never);
 
             _reasoner.Verify(
@@ -148,7 +166,15 @@ namespace LagoVista.AI.Tests.Services
                 Instruction = "do something"
             };
 
-            var result = await _sut.ExecuteAsync(request, org, user);
+            var ctx = new AgentPipelineContext
+            {
+                CorrelationId = "corr-1",
+                Org = org,
+                User = user,
+                Request = request
+            };
+
+            var result = await _sut.ExecuteAsync(ctx, CancellationToken.None);
 
             Assert.That(result.Successful, Is.False);
             Assert.That(result.Errors[0].Message, Is.EqualTo("AgentContext is required."));
@@ -157,57 +183,6 @@ namespace LagoVista.AI.Tests.Services
                     "[AgentExecutionService_ExecuteAsync__ValidateRequest]",
                     "AgentContext is required."),
                 Times.Once);
-        }
-
-        [Test]
-        public async Task ExecuteAsync_MissingMode_DefaultsToGeneral_AndLogs()
-        {
-            var org = CreateOrg();
-            var user = CreateUser();
-
-            var request = new AgentExecuteRequest
-            {
-                AgentContext = new EntityHeader { Id = "agent-1", Text = "Agent" },
-                Mode = "   ", // intentionally blank
-                Instruction = "do something",
-                RagScopeFilter = new RagScopeFilter()
-            };
-
-            var agentContext = CreateAgentContextWithDefaultConversation();
-
-            _agentContextManager
-                .Setup(m => m.GetAgentContextWithSecretsAsync(request.AgentContext.Id, org, user))
-                .ReturnsAsync(agentContext);
-
-            // RAG is currently bypassed in the implementation, so we do NOT expect this to be called.
-            // No setup for _ragContextBuilder.BuildContextSectionAsync.
-
-            _reasoner
-                .Setup(r => r.ExecuteAsync(
-                    It.IsAny<AgentContext>(),
-                    It.IsAny<ConversationContext>(),
-                    It.IsAny<AgentExecuteRequest>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<EntityHeader>(),
-                    It.IsAny<EntityHeader>(),
-                    It.IsAny<CancellationToken>()))
-                .ReturnsAsync(InvokeResult<AgentExecuteResponse>.Create(new AgentExecuteResponse { Text = "ok" }));
-
-            var result = await _sut.ExecuteAsync(request, org, user);
-
-            Assert.That(result.Successful, Is.True);
-            Assert.That(result.Result, Is.Not.Null);
-            Assert.That(request.Mode, Is.EqualTo("general"));
-
-            _adminLogger.Verify(
-                l => l.AddError(
-                    "[AgentExecutionService_ExecuteAsync__MissingMode]",
-                    "Mode was null or whitespace; defaulting to 'general'."),
-                Times.Once);
-
-            // We no longer assert on specific prompt content here, since BuildSystemPrompt is
-            // implemented in AgentContext and not under test in this class.
         }
 
         [Test]
@@ -223,7 +198,15 @@ namespace LagoVista.AI.Tests.Services
                 Instruction = "  "
             };
 
-            var result = await _sut.ExecuteAsync(request, org, user);
+            var ctx = new AgentPipelineContext
+            {
+                CorrelationId = "corr-1",
+                Org = org,
+                User = user,
+                Request = request
+            };
+
+            var result = await _sut.ExecuteAsync(ctx, CancellationToken.None);
 
             Assert.That(result.Successful, Is.False);
             Assert.That(result.Errors[0].Message, Is.EqualTo("Instruction is required."));
@@ -231,6 +214,63 @@ namespace LagoVista.AI.Tests.Services
             _adminLogger.Verify(l => l.AddError(
                     "[AgentExecutionService_ExecuteAsync__ValidateRequest]",
                     "Instruction is required."),
+                Times.Once);
+        }
+
+        #endregion
+
+        #region Mode / ConversationContext Behavior
+
+        [Test]
+        public async Task ExecuteAsync_MissingMode_DefaultsToGeneral_AndLogs()
+        {
+            var org = CreateOrg();
+            var user = CreateUser();
+
+            var request = new AgentExecuteRequest
+            {
+                AgentContext = new EntityHeader { Id = "agent-1", Text = "Agent" },
+                Mode = "   ",
+                Instruction = "do something",
+                RagScopeFilter = new RagScopeFilter()
+            };
+
+            var ctx = new AgentPipelineContext
+            {
+                CorrelationId = "corr-2",
+                Org = org,
+                User = user,
+                Request = request
+            };
+
+            var agentContext = CreateAgentContextWithDefaultConversation();
+
+            _agentContextManager
+                .Setup(m => m.GetAgentContextWithSecretsAsync(request.AgentContext.Id, org, user))
+                .ReturnsAsync(agentContext);
+
+            _reasoner
+                .Setup(r => r.ExecuteAsync(
+                    It.IsAny<AgentContext>(),
+                    It.IsAny<ConversationContext>(),
+                    It.IsAny<AgentExecuteRequest>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<EntityHeader>(),
+                    It.IsAny<EntityHeader>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(InvokeResult<AgentExecuteResponse>.Create(new AgentExecuteResponse { Text = "ok" }));
+
+            var result = await _sut.ExecuteAsync(ctx, CancellationToken.None);
+
+            Assert.That(result.Successful, Is.True, result.ErrorMessage);
+            Assert.That(ctx.Response, Is.Not.Null);
+            Assert.That(request.Mode, Is.EqualTo("general"));
+
+            _adminLogger.Verify(
+                l => l.AddError(
+                    "[AgentExecutionService_ExecuteAsync__MissingMode]",
+                    "Mode was null or whitespace; defaulting to 'general'."),
                 Times.Once);
         }
 
@@ -250,7 +290,14 @@ namespace LagoVista.AI.Tests.Services
                 ConversationId = null
             };
 
-            // AgentContext with NO DefaultConversationContext set.
+            var ctx = new AgentPipelineContext
+            {
+                CorrelationId = "corr-3",
+                Org = org,
+                User = user,
+                Request = request
+            };
+
             var agentContext = new AgentContext
             {
                 Id = "ctx-1",
@@ -263,7 +310,7 @@ namespace LagoVista.AI.Tests.Services
                 .Setup(m => m.GetAgentContextWithSecretsAsync(request.AgentContext.Id, org, user))
                 .ReturnsAsync(agentContext);
 
-            var result = await _sut.ExecuteAsync(request, org, user);
+            var result = await _sut.ExecuteAsync(ctx, CancellationToken.None);
 
             Assert.That(result.Successful, Is.False);
             Assert.That(result.Errors[0].Message, Is.EqualTo("Unable to resolve ConversationContext for the request."));
@@ -272,13 +319,6 @@ namespace LagoVista.AI.Tests.Services
                     "[AgentExecutionService_ExecuteAsync__MissingConversationContext]",
                     It.Is<string>(msg => msg.Contains("Unable to resolve ConversationContext for the request."))),
                 Times.Once);
-
-            _ragContextBuilder.Verify(
-                b => b.BuildContextSectionAsync(
-                    It.IsAny<AgentContext>(),
-                    It.IsAny<string>(),
-                    It.IsAny<RagScopeFilter>()),
-                Times.Never);
 
             _reasoner.Verify(
                 r => r.ExecuteAsync(
@@ -293,12 +333,8 @@ namespace LagoVista.AI.Tests.Services
                 Times.Never);
         }
 
-        #endregion
-
-        #region Mode / Prompt Behavior
-
         [Test]
-        public async Task ExecuteAsync_AllowsArbitraryMode_UsesModePrompt_AndInvokesReasoner()
+        public async Task ExecuteAsync_AllowsArbitraryMode_NormalizesMode_AndInvokesReasoner()
         {
             var org = CreateOrg();
             var user = CreateUser();
@@ -306,11 +342,19 @@ namespace LagoVista.AI.Tests.Services
             var request = new AgentExecuteRequest
             {
                 AgentContext = new EntityHeader { Id = "agent-1", Text = "Agent" },
-                Mode = "DdR_Authoring ", // intentionally mixed case & trailing space
+                Mode = "DdR_Authoring ",
                 Instruction = "design a DDR",
                 Repo = "repo-1",
                 Language = "csharp",
                 RagScopeFilter = new RagScopeFilter()
+            };
+
+            var ctx = new AgentPipelineContext
+            {
+                CorrelationId = "corr-4",
+                Org = org,
+                User = user,
+                Request = request
             };
 
             var agentContext = CreateAgentContextWithDefaultConversation();
@@ -320,15 +364,9 @@ namespace LagoVista.AI.Tests.Services
                 .Setup(m => m.GetAgentContextWithSecretsAsync(request.AgentContext.Id, org, user))
                 .ReturnsAsync(agentContext);
 
-            // RAG is currently bypassed in implementation; we don't set up or assert on it.
-
             AgentContext capturedAgentContext = null;
             ConversationContext capturedConversationContext = null;
             AgentExecuteRequest capturedRequest = null;
-            string capturedRagBlock = null;
-            string capturedSessionId = null;
-            EntityHeader capturedOrg = null;
-            EntityHeader capturedUser = null;
 
             var reasonerResponse = new AgentExecuteResponse
             {
@@ -347,97 +385,24 @@ namespace LagoVista.AI.Tests.Services
                     It.IsAny<EntityHeader>(),
                     It.IsAny<CancellationToken>()))
                 .Callback<AgentContext, ConversationContext, AgentExecuteRequest, string, string, EntityHeader, EntityHeader, CancellationToken>(
-                    (ctx, convCtx, req, rag, sessionId, o, u, ct) =>
+                    (ac, cc, req, rag, sessionId, o, u, ctkn) =>
                     {
-                        capturedAgentContext = ctx;
-                        capturedConversationContext = convCtx;
+                        capturedAgentContext = ac;
+                        capturedConversationContext = cc;
                         capturedRequest = req;
-                        capturedRagBlock = rag;
-                        capturedSessionId = sessionId;
-                        capturedOrg = o;
-                        capturedUser = u;
                     })
                 .ReturnsAsync(InvokeResult<AgentExecuteResponse>.Create(reasonerResponse));
 
-            var result = await _sut.ExecuteAsync(request, org, user);
+            var result = await _sut.ExecuteAsync(ctx, CancellationToken.None);
 
-            Assert.That(result.Successful, Is.True);
-            Assert.That(result.Result, Is.SameAs(reasonerResponse));
+            Assert.That(result.Successful, Is.True, result.ErrorMessage);
+            Assert.That(ctx.Response, Is.SameAs(reasonerResponse));
 
-            // Mode should be normalized on the request.
             Assert.That(request.Mode, Is.EqualTo("ddr_authoring"));
 
-            // Reasoner wiring.
             Assert.That(capturedAgentContext, Is.SameAs(agentContext));
             Assert.That(capturedConversationContext, Is.SameAs(chosenConversationContext));
             Assert.That(capturedRequest, Is.SameAs(request));
-            Assert.That(capturedRagBlock, Is.Not.Null); // will be "" from the current implementation
-            Assert.That(capturedSessionId, Is.Not.Null.And.Not.Empty);
-            Assert.That(capturedOrg, Is.SameAs(org));
-            Assert.That(capturedUser, Is.SameAs(user));
-
-            // We intentionally no longer assert the exact mode prompt string here.
-        }
-
-        #endregion
-
-        #region RAG & ConversationContext Behavior
-
-        [Test]
-        public async Task ExecuteAsync_UsesDefaultConversationContextWhenRequestDoesNotSpecifyOne()
-        {
-            var org = CreateOrg();
-            var user = CreateUser();
-
-            var request = new AgentExecuteRequest
-            {
-                AgentContext = new EntityHeader { Id = "agent-1", Text = "Agent" },
-                Mode = "general",
-                Instruction = "what is the meaning of life?",
-                ConversationId = null,
-                ConversationContext = null,
-                Repo = "repo-1",
-                Language = "csharp",
-                RagScopeFilter = new RagScopeFilter()
-            };
-
-            var agentContext = CreateAgentContextWithDefaultConversation();
-            var chosenConversationContext = agentContext.ConversationContexts[0];
-
-            _agentContextManager
-                .Setup(m => m.GetAgentContextWithSecretsAsync(request.AgentContext.Id, org, user))
-                .ReturnsAsync(agentContext);
-
-            // No RAG setup; implementation uses an empty block.
-
-            AgentContext capturedAgentContext = null;
-            ConversationContext capturedConversationContext = null;
-
-            _reasoner
-                .Setup(r => r.ExecuteAsync(
-                    It.IsAny<AgentContext>(),
-                    It.IsAny<ConversationContext>(),
-                    It.IsAny<AgentExecuteRequest>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<EntityHeader>(),
-                    It.IsAny<EntityHeader>(),
-                    It.IsAny<CancellationToken>()))
-                .Callback<AgentContext, ConversationContext, AgentExecuteRequest, string, string, EntityHeader, EntityHeader, CancellationToken>(
-                    (ctx, convCtx, req, rag, sessionId, o, u, ct) =>
-                    {
-                        capturedAgentContext = ctx;
-                        capturedConversationContext = convCtx;
-                    })
-                .ReturnsAsync(InvokeResult<AgentExecuteResponse>.Create(new AgentExecuteResponse { Text = "42" }));
-
-            var result = await _sut.ExecuteAsync(request, org, user);
-
-            Assert.That(result.Successful, Is.True);
-            Assert.That(capturedAgentContext, Is.SameAs(agentContext));
-            Assert.That(capturedConversationContext, Is.SameAs(chosenConversationContext));
-
-            // We don't assert on SystemPrompts content here, since it's built by AgentContext.
         }
 
         [Test]
@@ -462,11 +427,17 @@ namespace LagoVista.AI.Tests.Services
                 RagScopeFilter = new RagScopeFilter()
             };
 
+            var ctx = new AgentPipelineContext
+            {
+                CorrelationId = "corr-5",
+                Org = org,
+                User = user,
+                Request = request
+            };
+
             _agentContextManager
                 .Setup(m => m.GetAgentContextWithSecretsAsync(agentContext.Id, org, user))
                 .ReturnsAsync(agentContext);
-
-            // No RAG setup; implementation uses an empty block.
 
             ConversationContext capturedConversationContext = null;
 
@@ -481,19 +452,14 @@ namespace LagoVista.AI.Tests.Services
                     It.IsAny<EntityHeader>(),
                     It.IsAny<CancellationToken>()))
                 .Callback<AgentContext, ConversationContext, AgentExecuteRequest, string, string, EntityHeader, EntityHeader, CancellationToken>(
-                    (ctx, convCtx, req, rag, sessionId, o, u, ct) =>
-                    {
-                        capturedConversationContext = convCtx;
-                    })
+                    (ac, cc, req, rag, sessionId, o, u, ctkn) => { capturedConversationContext = cc; })
                 .ReturnsAsync(InvokeResult<AgentExecuteResponse>.Create(new AgentExecuteResponse { Text = "ok" }));
 
-            var result = await _sut.ExecuteAsync(request, org, user);
+            var result = await _sut.ExecuteAsync(ctx, CancellationToken.None);
 
-            Assert.That(result.Successful, Is.True);
+            Assert.That(result.Successful, Is.True, result.ErrorMessage);
             Assert.That(capturedConversationContext, Is.Not.Null);
             Assert.That(capturedConversationContext.Id, Is.EqualTo("conv-2"));
-
-            // Mode prompt application is owned by AgentContext; we don't assert specific content.
         }
 
         #endregion
@@ -538,35 +504,16 @@ namespace LagoVista.AI.Tests.Services
                 ConversationContexts = new List<ConversationContext> { conv },
                 AgentModes = new List<AgentMode>
                 {
-                    new AgentMode
-                    {
-                        Key = "general",
-                        DisplayName = "General",
-                        WhenToUse = "Default general-purpose mode."
-                    },
-                    new AgentMode
-                    {
-                        Key = "ddr_authoring",
-                        DisplayName = "DDR Authoring",
-                        WhenToUse = "Use when authoring or editing DDRs."
-                    }
+                    new AgentMode { Key = "general", DisplayName = "General", WhenToUse = "Default general-purpose mode." },
+                    new AgentMode { Key = "ddr_authoring", DisplayName = "DDR Authoring", WhenToUse = "Use when authoring or editing DDRs." }
                 }
             };
         }
 
         private static AgentContext CreateAgentContextWithTwoConversations()
         {
-            var conv1 = new ConversationContext
-            {
-                Id = "conv-1",
-                Name = "Context 1"
-            };
-
-            var conv2 = new ConversationContext
-            {
-                Id = "conv-2",
-                Name = "Context 2"
-            };
+            var conv1 = new ConversationContext { Id = "conv-1", Name = "Context 1" };
+            var conv2 = new ConversationContext { Id = "conv-2", Name = "Context 2" };
 
             return new AgentContext
             {
@@ -580,18 +527,8 @@ namespace LagoVista.AI.Tests.Services
                 ConversationContexts = new List<ConversationContext> { conv1, conv2 },
                 AgentModes = new List<AgentMode>
                 {
-                    new AgentMode
-                    {
-                        Key = "general",
-                        DisplayName = "General",
-                        WhenToUse = "Default general-purpose mode."
-                    },
-                    new AgentMode
-                    {
-                        Key = "ddr_authoring",
-                        DisplayName = "DDR Authoring",
-                        WhenToUse = "Use when authoring or editing DDRs."
-                    }
+                    new AgentMode { Key = "general", DisplayName = "General", WhenToUse = "Default general-purpose mode." },
+                    new AgentMode { Key = "ddr_authoring", DisplayName = "DDR Authoring", WhenToUse = "Use when authoring or editing DDRs." }
                 }
             };
         }

@@ -24,7 +24,6 @@ using LagoVista.AI.Rag.Services;
 using LagoVista.AI.Services;
 using LagoVista.AI.Services.Hashing;
 using LagoVista.AI.Services.Tools;
-using LagoVista.Core.AI.Interfaces;
 using LagoVista.Core.Interfaces;
 using LagoVista.Core.IOC;
 using LagoVista.IoT.Logging.Loggers;
