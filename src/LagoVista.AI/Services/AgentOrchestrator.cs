@@ -30,11 +30,11 @@ namespace LagoVista.AI.Services
     /// Heavy lifting (RAG, LLM, transcripts) is delegated to collaborators so
     /// this class remains easy to mock and test.
     /// </summary>
-    public class AgentOrchestrator : IAgentOrchestrator, IAgentPipelineStep
+    public class AgentOrchestrator : IAgentOrchestrator
     {
         private readonly IAgentSessionManager _sessionManager;
         private readonly IAgentSessionFactory _sessionFactory;
-        private readonly IAgentPipelineStep _next;
+        private readonly IAgentTurnExecutor _next;
         private readonly INotificationPublisher _notificationPublisher;
         private readonly IAdminLogger _adminLogger;
         private readonly IAgentContextManager _contextManager;

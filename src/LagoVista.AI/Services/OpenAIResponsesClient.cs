@@ -1,3 +1,4 @@
+// File: ./src/LagoVista.AI.Services/OpenAIResponsesClient.cs
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -16,23 +17,23 @@ using LagoVista.Core;
 using LagoVista.Core.AI.Models;
 using LagoVista.Core.Exceptions;
 using LagoVista.Core.Interfaces;
-using LagoVista.Core.Models.Drawing;
+using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json;
-using OpenTelemetry.Trace;
-using RingCentral;
 
 namespace LagoVista.AI.Services
 {
     /// <summary>
-    /// OpenAI implementation of ILLMClient using the Responses API (/v1/responses).
+    /// OpenAI implementation of the LLM pipeline step using the Responses API (/v1/responses).
     ///
-    /// Supports optional streaming-style narration via the notification pipeline
-    /// when a sessionId is supplied. The orchestrator remains unaware of these
-    /// events; they are an implementation detail keyed by the Aptix session id.
+    /// This is now a pipeline step:
+    /// - Reads inputs from AgentPipelineContext (AgentContext, ConversationContext, Request, RagContextBlock, ConversationId).
+    /// - Calls OpenAI
+    /// - Sets ctx.Response
+    /// - Returns InvokeResult&lt;AgentPipelineContext&gt;
     /// </summary>
-    public class OpenAIResponsesClient : ILLMClient
+    public class OpenAIResponsesClient : ILLMClient 
     {
         private readonly IOpenAISettings _openAiSettings;
         private readonly IAdminLogger _adminLogger;
@@ -41,6 +42,8 @@ namespace LagoVista.AI.Services
         private readonly IServerToolSchemaProvider _toolSchemaProvider;
         private readonly IAgentStreamingContext _agentStreamingContext;
         private readonly IResponsesRequestBuilder _responsesRequestBuilder;
+
+        public bool UseStreaming { get; set; } = true;
 
         public string[] connectingMessage =
         {
@@ -58,18 +61,15 @@ namespace LagoVista.AI.Services
             "calling it in…"
         };
 
-        public string[] thinkingMessges = {
+        public string[] thinkingMessges =
+        {
             "let me mull that over…",
             "one sec—connecting the dots…",
             "calling in a second opinion…",
             "asking my inner narrator…",
             "running it through the gears…",
-            "spinning up some thoughts…" };
-
-
-
-
-        public bool UseStreaming { get; set; } = true;
+            "spinning up some thoughts…"
+        };
 
         public OpenAIResponsesClient(
             IOpenAISettings openAiSettings,
@@ -89,35 +89,95 @@ namespace LagoVista.AI.Services
             _responsesRequestBuilder = responsesRequestBuilder ?? throw new ArgumentNullException(nameof(responsesRequestBuilder));
         }
 
-        public async Task<InvokeResult<AgentExecuteResponse>> GetAnswerAsync(AgentContext agentContext,
-            ConversationContext conversationContext, AgentExecuteRequest executeRequest, string ragContextBlock,
-            string sessionId, CancellationToken cancellationToken = default)
+        public async Task<InvokeResult<AgentPipelineContext>> ExecuteAsync(
+            AgentPipelineContext ctx,
+            CancellationToken cancellationToken = default)
         {
-            if (agentContext == null) throw new ArgumentNullException(nameof(agentContext));
-            if (conversationContext == null) throw new ArgumentNullException(nameof(conversationContext));
-            if (executeRequest == null) throw new ArgumentNullException(nameof(executeRequest));
-
-            if (string.IsNullOrWhiteSpace(executeRequest.Instruction))
+            if (ctx == null)
             {
-                return InvokeResult<AgentExecuteResponse>.FromError("Instruction is required for LLM call.");
+                return InvokeResult<AgentPipelineContext>.FromError(
+                    "AgentPipelineContext cannot be null.",
+                    "OPENAI_CLIENT_NULL_CONTEXT");
+            }
+
+            if (ctx.AgentContext == null)
+            {
+                return InvokeResult<AgentPipelineContext>.FromError(
+                    "AgentContext is required for LLM call.",
+                    "OPENAI_CLIENT_MISSING_AGENT_CONTEXT");
+            }
+
+            if (ctx.ConversationContext == null)
+            {
+                return InvokeResult<AgentPipelineContext>.FromError(
+                    "ConversationContext is required for LLM call.",
+                    "OPENAI_CLIENT_MISSING_CONVERSATION_CONTEXT");
+            }
+
+            if (ctx.Request == null)
+            {
+                return InvokeResult<AgentPipelineContext>.FromError(
+                    "AgentExecuteRequest is required for LLM call.",
+                    "OPENAI_CLIENT_MISSING_REQUEST");
+            }
+
+            if (string.IsNullOrWhiteSpace(ctx.Request.Instruction))
+            {
+                return InvokeResult<AgentPipelineContext>.FromError(
+                    "Instruction is required for LLM call.",
+                    "OPENAI_CLIENT_MISSING_INSTRUCTION");
+            }
+
+            // Effective session id
+            var sessionId = !string.IsNullOrWhiteSpace(ctx.ConversationId)
+                ? ctx.ConversationId
+                : ctx.Request.ConversationId;
+
+            if (string.IsNullOrWhiteSpace(sessionId))
+            {
+                return InvokeResult<AgentPipelineContext>.FromError(
+                    "ConversationId (session id) is required for LLM call.",
+                    "OPENAI_CLIENT_MISSING_CONVERSATION_ID");
             }
 
             var baseUrl = _openAiSettings.OpenAIUrl;
             if (string.IsNullOrWhiteSpace(baseUrl))
             {
-                return InvokeResult<AgentExecuteResponse>.FromError("OpenAIUrl is not configured in IOpenAISettings.");
+                return InvokeResult<AgentPipelineContext>.FromError(
+                    "OpenAIUrl is not configured in IOpenAISettings.",
+                    "OPENAI_CLIENT_MISSING_OPENAI_URL");
             }
 
-            if (string.IsNullOrWhiteSpace(agentContext.LlmApiKey))
+            if (string.IsNullOrWhiteSpace(ctx.AgentContext.LlmApiKey))
             {
-                return InvokeResult<AgentExecuteResponse>.FromError("LlmApiKey is not configured on AgentContext.");
+                return InvokeResult<AgentPipelineContext>.FromError(
+                    "LlmApiKey is not configured on AgentContext.",
+                    "OPENAI_CLIENT_MISSING_API_KEY");
             }
 
-            var mode = agentContext.AgentModes.SingleOrDefault(m => m.Key == executeRequest.Mode);
-            if (mode == null)
-                throw new RecordNotFoundException(nameof(AgentMode), executeRequest.Mode);
+            var agentContext = ctx.AgentContext;
+            var conversationContext = ctx.ConversationContext;
+            var executeRequest = ctx.Request;
+            var ragContextBlock = ctx.RagContextBlock ?? string.Empty;
 
-            var tools = mode.AssociatedToolIds.ToList();
+            // Ensure system prompts list exists
+            if (conversationContext.SystemPrompts == null)
+            {
+                conversationContext.SystemPrompts = new List<string>();
+            }
+
+            var mode = agentContext.AgentModes != null
+                ? agentContext.AgentModes.SingleOrDefault(m => m.Key == executeRequest.Mode)
+                : null;
+
+            if (mode == null)
+            {
+                throw new RecordNotFoundException(nameof(AgentMode), executeRequest.Mode);
+            }
+
+            var tools = (mode.AssociatedToolIds == null ? new List<string>() : mode.AssociatedToolIds.ToList());
+
+            // Global tools always available
             tools.Add(ModeChangeTool.ToolName);
             tools.Add(AgentListModesTool.ToolName);
             tools.Add(SessionCheckpointListTool.ToolName);
@@ -129,43 +189,44 @@ namespace LagoVista.AI.Services
             tools.Add(FetchWebPageTool.ToolName);
 
             var toolUsageBlock = _metaUsageProvider.GetToolUsageMetadata(tools.ToArray());
+
+            // Schemas (ok if provider returns null; serialize(null) => "null")
             executeRequest.ToolsJson = JsonConvert.SerializeObject(_toolSchemaProvider.GetToolSchemas(tools));
 
-            var modeInstructions = String.Empty;
-
+            // Mode system prompt
             conversationContext.SystemPrompts.Add(agentContext.BuildSystemPrompt(executeRequest.Mode));
 
-            var requestObject = _responsesRequestBuilder.Build(conversationContext, executeRequest,
-                        ragContextBlock, toolUsageBlock);
+            var requestObject = _responsesRequestBuilder.Build(conversationContext, executeRequest, ragContextBlock, toolUsageBlock);
 
             var requestJson = JsonConvert.SerializeObject(requestObject);
-            _adminLogger.Trace($"[OpenAIResponsesClient__GetAnswerAsync] Call LLM with JSON\r\n=====\r\n{requestJson}\r\n====");
+            _adminLogger.Trace("[OpenAIResponsesClient__ExecuteAsync] Call LLM with JSON\r\n=====\r\n" + requestJson + "\r\n====");
+
             try
             {
                 await PublishLlmEventAsync(sessionId, "LLMStarted", "in-progress", "Calling OpenAI model...", null, cancellationToken);
 
                 using (var httpClient = CreateHttpClient(baseUrl, agentContext.LlmApiKey))
                 {
-                    var request = new HttpRequestMessage(HttpMethod.Post, "/v1/responses")
+                    var httpRequest = new HttpRequestMessage(HttpMethod.Post, "/v1/responses")
                     {
                         Content = new StringContent(requestJson, Encoding.UTF8, "application/json")
                     };
 
                     var rnd = new Random();
-                    await _agentStreamingContext.AddWorkflowAsync(connectingMessage[rnd.Next(0,connectingMessage.Length-1)], cancellationToken);
+                    await _agentStreamingContext.AddWorkflowAsync(connectingMessage[rnd.Next(0, connectingMessage.Length - 1)], cancellationToken);
 
                     var sw = Stopwatch.StartNew();
-                    var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+                    var httpResponse = await httpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
 
                     await _agentStreamingContext.AddWorkflowAsync(thinkingMessges[rnd.Next(0, thinkingMessges.Length - 1)], cancellationToken);
 
-                    if (!response.IsSuccessStatusCode)
+                    if (!httpResponse.IsSuccessStatusCode)
                     {
-                        var errorBody = await response.Content.ReadAsStringAsync();
-                        var errorMessage = $"LLM call failed with HTTP {(int)response.StatusCode} ({response.ReasonPhrase}).";
+                        var errorBody = await httpResponse.Content.ReadAsStringAsync();
+                        var errorMessage = "LLM call failed with HTTP " + (int)httpResponse.StatusCode + " (" + httpResponse.ReasonPhrase + ").";
 
-                        _adminLogger.AddError("[OpenAIResponsesClient_GetAnswerAsync__HTTP]", errorMessage);
-                        _adminLogger.AddError("[OpenAIResponsesClient_GetAnswerAsync__Body]", errorBody);
+                        _adminLogger.AddError("[OpenAIResponsesClient_ExecuteAsync__HTTP]", errorMessage);
+                        _adminLogger.AddError("[OpenAIResponsesClient_ExecuteAsync__Body]", errorBody);
 
                         OpenAIErrorResponse error = null;
                         try
@@ -174,69 +235,67 @@ namespace LagoVista.AI.Services
                         }
                         catch (Exception ex)
                         {
-                            // Don't let a malformed error payload blow up the HTTP error branch.
-                            _adminLogger.AddException("[OpenAIResponsesClient_GetAnswerAsync__ErrorDeserialize]", ex);
+                            _adminLogger.AddException("[OpenAIResponsesClient_ExecuteAsync__ErrorDeserialize]", ex);
                         }
 
-                        var reasonSuffix = error != null ? $"Reason: {error}" : $"Raw: {errorBody}";
+                        var reasonSuffix = error != null ? "Reason: " + error : "Raw: " + errorBody;
 
-                        await PublishLlmEventAsync(sessionId, "LLMFailed", "failed", $"{errorMessage} - {reasonSuffix}", null, cancellationToken);
+                        await PublishLlmEventAsync(sessionId, "LLMFailed", "failed", errorMessage + " - " + reasonSuffix, null, cancellationToken);
 
-                        return InvokeResult<AgentExecuteResponse>.FromError($"{errorMessage}; {reasonSuffix}");
+                        return InvokeResult<AgentPipelineContext>.FromError(
+                            errorMessage + "; " + reasonSuffix,
+                            "OPENAI_CLIENT_HTTP_ERROR");
                     }
 
                     InvokeResult<AgentExecuteResponse> agentResponse;
+
                     if (UseStreaming)
                     {
-                        agentResponse = await ReadStreamingResponseAsync(
-                            response, executeRequest, sessionId, sw, cancellationToken);
+                        agentResponse = await ReadStreamingResponseAsync(httpResponse, executeRequest, sessionId, sw, cancellationToken);
                     }
                     else
                     {
-                        agentResponse = await ReadNonStreamingResponseAsync(
-                            response, executeRequest, sw, cancellationToken);
+                        agentResponse = await ReadNonStreamingResponseAsync(httpResponse, executeRequest, sw, cancellationToken);
                     }
 
                     await _agentStreamingContext.AddWorkflowAsync("got it give me a minute to summarize...", cancellationToken);
 
-
                     if (!agentResponse.Successful)
-                        return agentResponse;
+                    {
+                        return InvokeResult<AgentPipelineContext>.FromInvokeResult(agentResponse.ToInvokeResult());
+                    }
 
                     if (cancellationToken.IsCancellationRequested)
                     {
-                        return InvokeResult<AgentExecuteResponse>.Abort();
+                        return InvokeResult<AgentPipelineContext>.Abort();
                     }
-
 
                     await PublishLlmEventAsync(sessionId, "LLMCompleted", "completed", "Model response received.", null, cancellationToken);
 
-                    return agentResponse;
+                    ctx.Response = agentResponse.Result;
+                    return InvokeResult<AgentPipelineContext>.Create(ctx);
                 }
             }
             catch (TaskCanceledException tex) when (tex.CancellationToken == cancellationToken)
             {
                 const string msg = "LLM call was cancelled.";
 
-                _adminLogger.AddError("[OpenAIResponsesClient_GetAnswerAsync__Cancelled]", msg);
+                _adminLogger.AddError("[OpenAIResponsesClient_ExecuteAsync__Cancelled]", msg);
                 await PublishLlmEventAsync(sessionId, "LLMCancelled", "aborted", msg, null, cancellationToken);
 
-                return InvokeResult<AgentExecuteResponse>.FromError(msg);
+                return InvokeResult<AgentPipelineContext>.FromError(msg, "OPENAI_CLIENT_CANCELLED");
             }
             catch (Exception ex)
             {
                 const string msg = "Unexpected exception during LLM call.";
 
-                _adminLogger.AddException("[OpenAIResponsesClient_GetAnswerAsync__Exception]", ex);
+                _adminLogger.AddException("[OpenAIResponsesClient_ExecuteAsync__Exception]", ex);
                 await PublishLlmEventAsync(sessionId, "LLMFailed", "failed", msg, null, cancellationToken);
 
-                return InvokeResult<AgentExecuteResponse>.FromError(msg);
+                return InvokeResult<AgentPipelineContext>.FromError(msg, "OPENAI_CLIENT_EXCEPTION");
             }
         }
 
-        /// <summary>
-        /// Handles the non-streaming /v1/responses JSON shape directly (stream:false).
-        /// </summary>
         private async Task<InvokeResult<AgentExecuteResponse>> ReadNonStreamingResponseAsync(
             HttpResponseMessage httpResponse,
             AgentExecuteRequest request,
@@ -246,7 +305,7 @@ namespace LagoVista.AI.Services
             var json = await httpResponse.Content.ReadAsStringAsync();
 
             _adminLogger.Trace(
-                $"[OpenAIResponsesClient_ReadNonStreamingResponseAsync] Agent Response in {sw.Elapsed.TotalSeconds} seconds. JSON\r\n====\r\n{json}\r\n====");
+                "[OpenAIResponsesClient_ReadNonStreamingResponseAsync] Agent Response in " + sw.Elapsed.TotalSeconds + " seconds. JSON\r\n====\r\n" + json + "\r\n====");
 
             if (string.IsNullOrWhiteSpace(json))
             {
@@ -257,8 +316,8 @@ namespace LagoVista.AI.Services
                 return InvokeResult<AgentExecuteResponse>.Create(new AgentExecuteResponse
                 {
                     Kind = "empty",
-                    ConversationContextId = request.ConversationContext?.Id,
-                    AgentContextId = request.AgentContext?.Id,
+                    ConversationContextId = request.ConversationContext != null ? request.ConversationContext.Id : null,
+                    AgentContextId = request.AgentContext != null ? request.AgentContext.Id : null,
                     Mode = request.Mode,
                     Text = string.Empty,
                     RawResponseJson = json,
@@ -266,18 +325,16 @@ namespace LagoVista.AI.Services
                 });
             }
 
-            // Non-streaming JSON should already match the shape expected by AgentExecuteResponseParser.
             var agentResponse = AgentExecuteResponseParser.Parse(json, request);
             if (!agentResponse.Successful)
             {
                 return agentResponse;
             }
 
-            // Preserve raw JSON for diagnostics.
             agentResponse.Result.RawResponseJson = json;
 
-            _adminLogger.Trace($"[OpenAIResponseClient_ReadStreamingResponseAsync] Agent Response. JSON\r\n====<<<\r\n{json}\r\n====<<< in {sw.Elapsed.TotalSeconds} seconds");
-
+            _adminLogger.Trace(
+                "[OpenAIResponsesClient_ReadNonStreamingResponseAsync] Parsed Agent Response in " + sw.Elapsed.TotalSeconds + " seconds.");
 
             return agentResponse;
         }
@@ -299,8 +356,8 @@ namespace LagoVista.AI.Services
                 string currentEvent = null;
                 var dataBuilder = new StringBuilder();
 
-                // This will hold the *final* response.completed payload
                 string completedEventJson = null;
+
                 while (!reader.EndOfStream)
                 {
                     if (cancellationToken.IsCancellationRequested)
@@ -311,11 +368,9 @@ namespace LagoVista.AI.Services
                     var line = await reader.ReadLineAsync();
                     if (line == null)
                     {
-                        Console.WriteLine("-null-");
                         break;
                     }
 
-                    // Blank line => end of one SSE event
                     if (string.IsNullOrWhiteSpace(line))
                     {
                         if (dataBuilder.Length > 0)
@@ -343,9 +398,6 @@ namespace LagoVista.AI.Services
                         continue;
                     }
 
-                    // You can still log the raw SSE line if useful
-                    Console.Write(line);
-
                     if (line.StartsWith("event:", StringComparison.OrdinalIgnoreCase))
                     {
                         currentEvent = line.Substring("event:".Length).Trim();
@@ -364,19 +416,19 @@ namespace LagoVista.AI.Services
                     }
                 }
 
+                _adminLogger.Trace(
+                    "[OpenAIResponsesClient_ReadStreamingResponseAsync] CompletedEvent JSON\r\n====<<<\r\n" +
+                    completedEventJson + "\r\n====<<< in " + sw.Elapsed.TotalSeconds + " seconds");
 
-                _adminLogger.Trace($"[OpenAIResponseClient_ReadStreamingResponseAsync] Agent Response. JSON\r\n====<<<\r\n{completedEventJson}\r\n====<<< in {sw.Elapsed.TotalSeconds} seconds");
-
-                // If we never got any text or a completed event, treat as null/empty
                 if (string.IsNullOrWhiteSpace(completedEventJson))
                 {
-                    _adminLogger.AddError("[OpenAIResponseClient_ReadStreamingResponseAsync_Finalize]", "Empty Completed EventJSON");
+                    _adminLogger.AddError("[OpenAIResponsesClient_ReadStreamingResponseAsync_Finalize]", "Empty Completed EventJSON");
 
                     return InvokeResult<AgentExecuteResponse>.Create(new AgentExecuteResponse
                     {
                         Kind = string.IsNullOrWhiteSpace(fullTextBuilder.ToString()) ? "empty" : "ok",
-                        ConversationContextId = request.ConversationContext?.Id,
-                        AgentContextId = request.AgentContext?.Id,
+                        ConversationContextId = request.ConversationContext != null ? request.ConversationContext.Id : null,
+                        AgentContextId = request.AgentContext != null ? request.AgentContext.Id : null,
                         Mode = request.Mode,
                         Text = fullTextBuilder.ToString(),
                         RawResponseJson = rawEventLogBuilder.ToString(),
@@ -384,8 +436,6 @@ namespace LagoVista.AI.Services
                     });
                 }
 
-                // Convert the streaming response.completed payload into the
-                // non-stream /responses JSON shape expected by AgentExecuteResponseParser.
                 var finalResponse = OpenAiStreamingEventHelper.ExtractCompletedResponseJson(completedEventJson);
                 if (!finalResponse.Successful)
                 {
@@ -394,32 +444,27 @@ namespace LagoVista.AI.Services
 
                 var finalResponseJson = finalResponse.Result;
 
-                // Parse into our normalized envelope
                 var agentResponse = AgentExecuteResponseParser.Parse(finalResponseJson, request);
-
                 if (!agentResponse.Successful)
                 {
                     return agentResponse;
                 }
 
-                // Preserve the streaming raw event log and incremental text as extra diagnostics
                 agentResponse.Result.RawResponseJson = rawEventLogBuilder.ToString();
 
-                // If the parser did not see text (e.g., only tool calls), we can still
-                // fill in the visible text from the streaming builder as a convenience.
                 if (string.IsNullOrWhiteSpace(agentResponse.Result.Text) && fullTextBuilder.Length > 0)
                 {
                     agentResponse.Result.Text = fullTextBuilder.ToString();
                 }
 
-                // If we got a responseId earlier (e.g., from ProcessSseEventAsync),
-                // prefer that as the continuation id if the parser did not set one.
                 if (string.IsNullOrWhiteSpace(agentResponse.Result.ResponseContinuationId) && !string.IsNullOrWhiteSpace(responseId))
                 {
                     agentResponse.Result.ResponseContinuationId = responseId;
                 }
 
-                _adminLogger.Trace($"[OpenAIResponseClient_ReadStreamingResponseAsync_Finalize] - Built Agent response {agentResponse.Result.ResponseContinuationId}.");
+                _adminLogger.Trace(
+                    "[OpenAIResponsesClient_ReadStreamingResponseAsync_Finalize] - Built Agent response " +
+                    agentResponse.Result.ResponseContinuationId + ".");
 
                 return agentResponse;
             }
@@ -442,13 +487,10 @@ namespace LagoVista.AI.Services
             {
                 var result = OpenAiStreamingEventHelper.AnalyzeEventPayload(eventName, dataJson);
 
-                // Handle delta text
                 if (!string.IsNullOrEmpty(result.DeltaText))
                 {
-                    // Append to the full response buffer
                     fullTextBuilder.Append(result.DeltaText);
 
-                    // Existing diagnostics/event pipeline
                     await PublishLlmEventAsync(
                         sessionId,
                         "LLMDelta",
@@ -457,11 +499,9 @@ namespace LagoVista.AI.Services
                         null,
                         cancellationToken);
 
-                    // NEW: stream a clean partial chunk to the client
                     await _agentStreamingContext.AddPartialAsync(result.DeltaText, cancellationToken);
                 }
 
-                // Handle response id from response.completed (or similar)
                 if (!string.IsNullOrWhiteSpace(result.ResponseId))
                 {
                     setResponseId(result.ResponseId);
@@ -473,10 +513,6 @@ namespace LagoVista.AI.Services
             }
         }
 
-        /// <summary>
-        /// Publish a lightweight LLM-related event if a session id is available.
-        /// This keeps narration fully optional and scoped to the LLM implementation.
-        /// </summary>
         private async Task PublishLlmEventAsync(
             string sessionId,
             string stage,
@@ -485,7 +521,10 @@ namespace LagoVista.AI.Services
             double? elapsedMs,
             CancellationToken cancellationToken)
         {
-            if (string.IsNullOrWhiteSpace(sessionId)) return;
+            if (string.IsNullOrWhiteSpace(sessionId))
+            {
+                return;
+            }
 
             var evt = new AptixOrchestratorEvent
             {
@@ -538,11 +577,13 @@ namespace LagoVista.AI.Services
         public override string ToString()
         {
             if (Error == null)
+            {
                 return base.ToString();
+            }
 
-            var paramInfo = string.IsNullOrEmpty(Error.Param) ? "" : $" (param: {Error.Param})";
-            var codeInfo = string.IsNullOrEmpty(Error.Code) ? "" : $" (code: {Error.Code})";
-            return $"OpenAI error: {Error.Message} [{Error.Type}]{paramInfo}{codeInfo}";
+            var paramInfo = string.IsNullOrEmpty(Error.Param) ? "" : " (param: " + Error.Param + ")";
+            var codeInfo = string.IsNullOrEmpty(Error.Code) ? "" : " (code: " + Error.Code + ")";
+            return "OpenAI error: " + Error.Message + " [" + Error.Type + "]" + paramInfo + codeInfo;
         }
     }
 

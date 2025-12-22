@@ -23,15 +23,15 @@ namespace LagoVista.AI.Services
     /// - Future client-specific response shaping can be added here without
     ///   impacting the orchestration pipeline.
     /// </summary>
-    public class AgentRequestHandler : IAgentRequestHandler, IAgentPipelineStep
+    public class AgentRequestHandler : IAgentRequestHandler
     {
-        private readonly IAgentPipelineStep _next;
+        private readonly IAgentOrchestrator _next;
         private readonly IAdminLogger _adminLogger;
         private readonly IAgentStreamingContext _agentStreamingContext;
         private readonly IOrganizationManager _orgManager;
 
         public AgentRequestHandler(
-            IAgentPipelineStep next,
+            IAgentOrchestrator next,
             IAdminLogger adminLogger,
             IOrganizationManager orgManager,
             IAgentStreamingContext agentStreamingContext)

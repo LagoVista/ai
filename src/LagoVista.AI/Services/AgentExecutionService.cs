@@ -25,7 +25,7 @@ namespace LagoVista.AI.Services
     /// - Invoke the RAG pipeline to build the ragContextBlock. (currently bypassed)
     /// - Delegate to IAgentReasoner for the actual LLM/tool loop.
     /// </summary>
-    public class AgentExecutionService : IAgentExecutionService, IAgentPipelineStep
+    public class AgentExecutionService : IAgentExecutionService
     {
         private const string DefaultMode = "general";
 

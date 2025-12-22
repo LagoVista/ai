@@ -18,9 +18,9 @@ namespace LagoVista.AI.Services
     /// <summary>
     /// Pipeline step that performs the LLM/tool loop and sets ctx.Response.
     /// </summary>
-    public class AgentReasoner : IAgentReasoner, IAgentPipelineStep
+    public class AgentReasoner : IAgentReasoner
     {
-        private readonly IAgentPipelineStep _llmClient;
+        private readonly ILLMClient _llmClient;
         private readonly IAgentToolExecutor _toolExecutor;
         private readonly IAdminLogger _logger;
         private readonly IAgentStreamingContext _agentStreamingContext;
@@ -29,7 +29,7 @@ namespace LagoVista.AI.Services
         private const int MaxReasoningIterations = 4;
 
         public AgentReasoner(
-            IAgentPipelineStep llmClient,
+            ILLMClient llmClient,
             IAgentToolExecutor toolExecutor,
             IAdminLogger logger,
             IAgentStreamingContext agentStreamingContext,

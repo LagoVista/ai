@@ -19,7 +19,7 @@ namespace LagoVista.AI.Tests.Services
     [TestFixture]
     public class AgentRequestHandlerTests
     {
-        private Mock<IAgentPipelineStep> _next;
+        private Mock<IAgentOrchestrator> _next;
         private Mock<IAdminLogger> _adminLogger;
         private Mock<IAgentStreamingContext> _streamingContext;
         private Mock<IOrganizationManager> _orgManager;
@@ -28,7 +28,7 @@ namespace LagoVista.AI.Tests.Services
         [SetUp]
         public void SetUp()
         {
-            _next = new Mock<IAgentPipelineStep>(MockBehavior.Strict);
+            _next = new Mock<IAgentOrchestrator>(MockBehavior.Strict);
             _adminLogger = new Mock<IAdminLogger>(MockBehavior.Loose);
             _streamingContext = new Mock<IAgentStreamingContext>(MockBehavior.Strict);
             _orgManager = new Mock<IOrganizationManager>(MockBehavior.Strict);

@@ -19,7 +19,7 @@ namespace LagoVista.AI.Tests.Services
     [TestFixture]
     public class AgentReasonerTests
     {
-        private Mock<IAgentPipelineStep> _llmClient;
+        private Mock<ILLMClient> _llmClient;
         private Mock<IAgentToolExecutor> _toolExecutor;
         private Mock<IAdminLogger> _logger;
         private Mock<IAgentStreamingContext> _streaming;
@@ -30,7 +30,7 @@ namespace LagoVista.AI.Tests.Services
         [SetUp]
         public void SetUp()
         {
-            _llmClient = new Mock<IAgentPipelineStep>(MockBehavior.Strict);
+            _llmClient = new Mock<ILLMClient>(MockBehavior.Strict);
             _toolExecutor = new Mock<IAgentToolExecutor>(MockBehavior.Strict);
             _logger = new Mock<IAdminLogger>(MockBehavior.Loose);
             _streaming = new Mock<IAgentStreamingContext>(MockBehavior.Loose);

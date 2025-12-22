@@ -18,7 +18,7 @@ namespace LagoVista.AI.Tests.Services
     [TestFixture]
     public class AgentTurnExecutorTests
     {
-        private Mock<IAgentPipelineStep> _agentExecutionStep;
+        private Mock<IAgentExecutionService> _agentExecutionStep;
         private Mock<IAgentTurnTranscriptStore> _transcriptStore;
         private Mock<IAdminLogger> _adminLogger;
 
@@ -27,7 +27,7 @@ namespace LagoVista.AI.Tests.Services
         [SetUp]
         public void SetUp()
         {
-            _agentExecutionStep = new Mock<IAgentPipelineStep>(MockBehavior.Strict);
+            _agentExecutionStep = new Mock<IAgentExecutionService>(MockBehavior.Strict);
             _transcriptStore = new Mock<IAgentTurnTranscriptStore>(MockBehavior.Strict);
             _adminLogger = new Mock<IAdminLogger>(MockBehavior.Loose);
 

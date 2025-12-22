@@ -16,7 +16,7 @@ namespace LagoVista.AI.Interfaces
     /// NewAgentExecutionSession or AgentExecutionRequest, and returning
     /// the AgentExecutionResponse produced by the orchestrator.
     /// </summary>
-    public interface IAgentRequestHandler
+    public interface IAgentRequestHandler 
     {
         Task<InvokeResult<AgentExecuteResponse>> HandleAsync(AgentExecuteRequest request, EntityHeader org, EntityHeader user, CancellationToken cancellationToken = default);
     }

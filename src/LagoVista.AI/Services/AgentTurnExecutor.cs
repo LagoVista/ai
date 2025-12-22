@@ -20,12 +20,12 @@ namespace LagoVista.AI.Services
     /// </summary>
     public sealed class AgentTurnExecutor : IAgentTurnExecutor
     {
-        private readonly IAgentPipelineStep _agentExecutionStep;
+        private readonly IAgentExecutionService _agentExecutionStep;
         private readonly IAgentTurnTranscriptStore _transcriptStore;
         private readonly IAdminLogger _adminLogger;
 
         public AgentTurnExecutor(
-            IAgentPipelineStep agentExecutionStep,
+            IAgentExecutionService agentExecutionStep,
             IAgentTurnTranscriptStore transcriptStore,
             IAdminLogger adminLogger)
         {
