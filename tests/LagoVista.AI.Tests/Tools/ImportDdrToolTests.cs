@@ -137,6 +137,11 @@ Some content.";
         public async Task ExecuteAsync_WhenConfirmedTrue_PersistsDDR()
         {
             var mgr = new Mock<IDdrManager>(MockBehavior.Strict);
+
+            // Confirmed path should still check existence first.
+            mgr.Setup(m => m.GetDdrByTlaIdentiferAsync("AGN-050", It.IsAny<EntityHeader>(), It.IsAny<EntityHeader>(), false))
+               .ReturnsAsync(null as DetailedDesignReview);
+
             mgr.Setup(m => m.AddDdrAsync(It.IsAny<DetailedDesignReview>(), It.IsAny<EntityHeader>(), It.IsAny<EntityHeader>()))
                .ReturnsAsync(InvokeResult.Success);
 
@@ -164,6 +169,13 @@ Some content.";
 
             Assert.That(res.Successful, Is.True, res.ErrorMessage);
 
+            mgr.Verify(m => m.GetDdrByTlaIdentiferAsync(
+                "AGN-050",
+                It.IsAny<EntityHeader>(),
+                It.IsAny<EntityHeader>(),
+                false),
+            Times.Once);
+
             mgr.Verify(m => m.AddDdrAsync(
                     It.Is<DetailedDesignReview>(d => d.DdrIdentifier == "AGN-050" && d.Name == "Confirmed DDR"),
                     It.IsAny<EntityHeader>(),
@@ -172,6 +184,44 @@ Some content.";
 
             mgr.VerifyNoOtherCalls();
         }
+
+        [Test]
+        public async Task ExecuteAsync_WhenConfirmedTrue_AndDdrAlreadyExists_ReturnsError_AndDoesNotPersist()
+        {
+            var mgr = new Mock<IDdrManager>(MockBehavior.Strict);
+
+            // Confirmed path should still check existence first.
+            mgr.Setup(m => m.GetDdrByTlaIdentiferAsync("AGN-777", It.IsAny<EntityHeader>(), It.IsAny<EntityHeader>(), false))
+               .ReturnsAsync(new DetailedDesignReview { DdrIdentifier = "AGN-777", Name = "Already There" });
+
+            // If the tool incorrectly tries to persist, we want to catch it.
+            mgr.Setup(m => m.AddDdrAsync(It.IsAny<DetailedDesignReview>(), It.IsAny<EntityHeader>(), It.IsAny<EntityHeader>()))
+               .ReturnsAsync(InvokeResult.Success);
+
+            var tool = CreateTool(mgr);
+
+            var args = new
+            {
+                Markdown = BuildMarkdown("AGN-777", "Duplicate DDR"),
+                DdrType = "Generation",
+                NeedsHumanConfirmation = false,
+                HumanSummary = "Summary.",
+                CondensedDdrContent = "Condensed.",
+                RagIndexCard = "AGN-777 Generation Approved 2025-12-21: Routes DDR.",
+                DryRun = false,
+                Confirmed = true
+            };
+
+            var res = await tool.ExecuteAsync(ToArgsJson(args), BuildContext(), CancellationToken.None);
+
+            Assert.That(res.Successful, Is.False);
+            Assert.That(res.ErrorMessage, Does.Contain("already exists").IgnoreCase);
+
+            mgr.Verify(m => m.GetDdrByTlaIdentiferAsync("AGN-777", It.IsAny<EntityHeader>(), It.IsAny<EntityHeader>(), false), Times.Once);
+            mgr.Verify(m => m.AddDdrAsync(It.IsAny<DetailedDesignReview>(), It.IsAny<EntityHeader>(), It.IsAny<EntityHeader>()), Times.Never);
+            mgr.VerifyNoOtherCalls();
+        }
+
 
         [Test]
         public async Task ExecuteAsync_WhenMarkdownMissing_ReturnsError()
