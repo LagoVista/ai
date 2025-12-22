@@ -94,7 +94,7 @@ namespace LagoVista.AI.Managers
 
         public Task<List<DetailedDesignReview>> GetDdrs(string[] dds, EntityHeader org, EntityHeader user)
         {
-            throw new NotImplementedException();
+            return _ddrRepo.GetDdrs(dds, org.Id);
         }
 
         public async Task<ListResponse<DetailedDesignReviewSummary>> GetDdrsAsync(EntityHeader org, EntityHeader user, ListRequest listRequest)

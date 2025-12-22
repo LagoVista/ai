@@ -72,7 +72,7 @@ namespace LagoVista.AI.Tests
 
             var systemMessage = dto.Input[0];
             Assert.That(systemMessage.Role, Is.EqualTo("system"));
-            Assert.That(systemMessage.Content.Count, Is.EqualTo(1));
+            Assert.That(systemMessage.Content.Count, Is.EqualTo(2));
             Assert.That(systemMessage.Content[0].Text, Is.EqualTo("You are the Aptix Reasoner."));
         }
 
@@ -89,7 +89,7 @@ namespace LagoVista.AI.Tests
 
             var systemMessage = dto.Input[0];
             Assert.That(systemMessage.Role, Is.EqualTo("system"));
-            Assert.That(systemMessage.Content.Count, Is.EqualTo(2));
+            Assert.That(systemMessage.Content.Count, Is.EqualTo(3));
 
             Assert.That(systemMessage.Content[0].Text, Is.EqualTo("You are the Aptix Reasoner."));
             Assert.That(systemMessage.Content[1].Text, Is.EqualTo("You are working only with billing-related data."));
@@ -111,11 +111,11 @@ namespace LagoVista.AI.Tests
 
             var systemMessage = dto.Input[0];
             Assert.That(systemMessage.Role, Is.EqualTo("system"));
-            Assert.That(systemMessage.Content.Count, Is.EqualTo(3));
+            Assert.That(systemMessage.Content.Count, Is.EqualTo(4));
 
             Assert.That(systemMessage.Content[0].Text, Is.EqualTo("You are the Aptix Reasoner."));
             Assert.That(systemMessage.Content[1].Text, Is.EqualTo("You are working only with billing-related data."));
-            Assert.That(systemMessage.Content[2].Text, Is.EqualTo(toolUsageMetadataBlock));
+            Assert.That(systemMessage.Content[3].Text, Is.EqualTo(toolUsageMetadataBlock));
         }
 
         [Test]
@@ -138,9 +138,9 @@ namespace LagoVista.AI.Tests
             Assert.That(systemMessage.Role, Is.EqualTo("system"));
 
             // No conversation-level system prompts; we should see just SystemPrompt + tool usage metadata
-            Assert.That(systemMessage.Content.Count, Is.EqualTo(2));
+            Assert.That(systemMessage.Content.Count, Is.EqualTo(3));
             Assert.That(systemMessage.Content[0].Text, Is.EqualTo("You are working only with billing-related data."));
-            Assert.That(systemMessage.Content[1].Text, Is.EqualTo(toolUsageMetadataBlock));
+            Assert.That(systemMessage.Content[2].Text, Is.EqualTo(toolUsageMetadataBlock));
         }
 
         [Test]
@@ -159,7 +159,7 @@ namespace LagoVista.AI.Tests
 
             var systemMessage = dto.Input[0];
             Assert.That(systemMessage.Role, Is.EqualTo("system"));
-            Assert.That(systemMessage.Content.Count, Is.EqualTo(2));
+            Assert.That(systemMessage.Content.Count, Is.EqualTo(3));
             Assert.That(systemMessage.Content[0].Text, Is.EqualTo("You are the Aptix Reasoner."));
             Assert.That(systemMessage.Content[1].Text, Is.EqualTo("Continuation-specific override."));
 
@@ -320,10 +320,10 @@ namespace LagoVista.AI.Tests
 
             var systemMessage = dto.Input[0];
             Assert.That(systemMessage.Role, Is.EqualTo("system"));
-            Assert.That(systemMessage.Content.Count, Is.EqualTo(2));
+            Assert.That(systemMessage.Content.Count, Is.EqualTo(3));
 
             Assert.That(systemMessage.Content[0].Text, Is.EqualTo("You are the Aptix Reasoner."));
-            Assert.That(systemMessage.Content[1].Text, Is.EqualTo(toolUsageMetadataBlock));
+            Assert.That(systemMessage.Content[2].Text, Is.EqualTo(toolUsageMetadataBlock));
         }
 
         [Test]
@@ -349,18 +349,6 @@ namespace LagoVista.AI.Tests
 
             var userMessage = dto.Input[1];
             Assert.That(userMessage.Role, Is.EqualTo("user"));
-        }
-
-        [Test]
-        public void Build_DefaultStreamParameter_LeavesStreamNull()
-        {
-            var convCtx = CreateConversationContext();
-            var request = CreateRequest();
-
-            // Call without the optional 'stream' argument – should use the default (null)
-            var dto = ResponsesRequestBuilder.Build(convCtx, request, string.Empty, string.Empty);
-
-            Assert.That(dto.Stream, Is.Null);
         }
 
         [Test]

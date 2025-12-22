@@ -42,7 +42,7 @@ namespace LagoVista.AI.Models
         /// Should partial results be streamed.
         /// </summary>
         [JsonProperty("stream")]
-        public bool? Stream { get; set; }
+        public bool Stream { get; set; }
     }
 
     public class ResponsesMessage

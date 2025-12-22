@@ -450,6 +450,12 @@ Additional rules:
                     }
                 }
 
+                var existingDdr = await _ddrManager.GetDdrByTlaIdentiferAsync(parsed.Identifier, context.Org, context.User, false);
+                if (existingDdr != null)
+                {
+                    return InvokeResult<string>.FromError($"import_ddr - Failed DDR {parsed.Identifier} already exists as {existingDdr.Name}");
+                }
+
                 var dryRun = args.DryRun.GetValueOrDefault(false);
 
                 if (dryRun || args.Confirmed != true)
@@ -468,12 +474,6 @@ Additional rules:
                         ConversationId = context?.Request?.ConversationId,
                         SessionId = context?.SessionId
                     };
-
-                    var existingDdr = await _ddrManager.GetDdrByTlaIdentiferAsync(parsed.Identifier, context.Org, context.User, false);
-                    if (existingDdr != null)
-                    {
-                        return InvokeResult<string>.FromError($"import_ddr - Failed DDR {parsed.Identifier} already exists as {existingDdr.Name}");
-                    }
 
                     return InvokeResult<string>.Create(JsonConvert.SerializeObject(preview));
                 }
