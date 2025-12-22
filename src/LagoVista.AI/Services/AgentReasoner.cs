@@ -1,50 +1,35 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
+using LagoVista.AI.Services.Tools;
 using LagoVista.Core.AI.Models;
 using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json;
-using LagoVista.AI.Services.Tools;
-using System.Diagnostics;
 
 namespace LagoVista.AI.Services
 {
     /// <summary>
-    /// Default implementation of IAgentReasoner.
-    ///
-    /// Implements a simple loop:
-    /// 1) Call ILLMClient.GetAnswerAsync(...)
-    /// 2) If no ToolCalls => return final result.
-    /// 3) Execute any server-side tools via IAgentToolExecutor.
-    /// 4) If any non-server (client) tools remain => return response so the
-    ///    client can fulfill them.
-    /// 5) If only server tools existed and succeeded => feed their results
-    ///    back into the LLM via ToolResultsJson and repeat.
-    ///
-    /// AGN-011 additionally requires:
-    /// - Detecting mode changes via ModeChangeTool (TUL-007).
-    /// - Updating request.Mode and response.Mode accordingly.
-    /// - Emitting a mode-specific welcome message when the mode changes.
+    /// Pipeline step that performs the LLM/tool loop and sets ctx.Response.
     /// </summary>
-    public class AgentReasoner : IAgentReasoner
+    public class AgentReasoner : IAgentReasoner, IAgentPipelineStep
     {
-        private readonly ILLMClient _llmClient;
+        private readonly IAgentPipelineStep _llmClient;
         private readonly IAgentToolExecutor _toolExecutor;
         private readonly IAdminLogger _logger;
         private readonly IAgentStreamingContext _agentStreamingContext;
         private readonly IModeEntryBootstrapService _modeEntryBootstrapService;
 
-        // Safety cap to avoid runaway tool-trigger loops.
         private const int MaxReasoningIterations = 4;
 
         public AgentReasoner(
-            ILLMClient llmClient,
+            IAgentPipelineStep llmClient,
             IAgentToolExecutor toolExecutor,
             IAdminLogger logger,
             IAgentStreamingContext agentStreamingContext,
@@ -57,75 +42,141 @@ namespace LagoVista.AI.Services
             _modeEntryBootstrapService = modeEntryBootstrapService ?? throw new ArgumentNullException(nameof(modeEntryBootstrapService));
         }
 
-        public async Task<InvokeResult<AgentExecuteResponse>> ExecuteAsync(
-            AgentContext agentContext,
-            ConversationContext conversationContext,
-            AgentExecuteRequest request,
-            string ragContextBlock,
-            string sessionId,
-            EntityHeader org,
-            EntityHeader user,
+        public async Task<InvokeResult<AgentPipelineContext>> ExecuteAsync(
+            AgentPipelineContext ctx,
             CancellationToken cancellationToken = default)
         {
-            if (agentContext == null) throw new ArgumentNullException(nameof(agentContext));
-            if (conversationContext == null) throw new ArgumentNullException(nameof(conversationContext));
-            if (request == null) throw new ArgumentNullException(nameof(request));
+            if (ctx == null)
+            {
+                return InvokeResult<AgentPipelineContext>.FromError(
+                    "AgentPipelineContext cannot be null.",
+                    "AGENT_REASONER_NULL_CONTEXT");
+            }
+
+            if (ctx.AgentContext == null)
+            {
+                return InvokeResult<AgentPipelineContext>.FromError(
+                    "AgentContext is required.",
+                    "AGENT_REASONER_MISSING_AGENT_CONTEXT");
+            }
+
+            if (ctx.ConversationContext == null)
+            {
+                return InvokeResult<AgentPipelineContext>.FromError(
+                    "ConversationContext is required.",
+                    "AGENT_REASONER_MISSING_CONVERSATION_CONTEXT");
+            }
+
+            if (ctx.Request == null)
+            {
+                return InvokeResult<AgentPipelineContext>.FromError(
+                    "AgentExecuteRequest is required.",
+                    "AGENT_REASONER_MISSING_REQUEST");
+            }
+
+            if (ctx.Org == null || EntityHeader.IsNullOrEmpty(ctx.Org))
+            {
+                return InvokeResult<AgentPipelineContext>.FromError(
+                    "Org is required.",
+                    "AGENT_REASONER_MISSING_ORG");
+            }
+
+            if (ctx.User == null || EntityHeader.IsNullOrEmpty(ctx.User))
+            {
+                return InvokeResult<AgentPipelineContext>.FromError(
+                    "User is required.",
+                    "AGENT_REASONER_MISSING_USER");
+            }
+
+            var sessionId = !string.IsNullOrWhiteSpace(ctx.ConversationId)
+                ? ctx.ConversationId
+                : ctx.Request.ConversationId;
+
+            if (string.IsNullOrWhiteSpace(sessionId))
+            {
+                return InvokeResult<AgentPipelineContext>.FromError(
+                    "ConversationId (session id) is required.",
+                    "AGENT_REASONER_MISSING_CONVERSATION_ID");
+            }
+
+            var currentTurnId = string.Empty;
+            try { currentTurnId = ctx.Request.CurrentTurnId; } catch { }
+
+            if (string.IsNullOrWhiteSpace(currentTurnId) && ctx.Turn != null)
+            {
+                currentTurnId = ctx.Turn.Id;
+            }
+
+            if (string.IsNullOrWhiteSpace(currentTurnId))
+            {
+                return InvokeResult<AgentPipelineContext>.FromError(
+                    "CurrentTurnId is required.",
+                    "AGENT_REASONER_MISSING_CURRENT_TURN_ID");
+            }
 
             AgentExecuteResponse lastResponse = null;
-
-            // Accumulate the "mode welcome" across iterations.
-            // If multiple mode changes occur, the *last* one wins.
             string pendingWelcomeMessage = null;
+
+            var agentContext = ctx.AgentContext;
+            var conversationContext = ctx.ConversationContext;
+            var request = ctx.Request;
+            var ragContextBlock = ctx.RagContextBlock ?? string.Empty;
 
             for (var iteration = 0; iteration < MaxReasoningIterations; iteration++)
             {
                 _logger.Trace(
-                    $"[AgentReasoner_ExecuteAsync] Iteration {iteration + 1} starting. " +
-                    $"sessionId={sessionId}, mode={request.Mode}, conversationId={request.ConversationId}");
+                    "[AgentReasoner_ExecuteAsync] Iteration " + (iteration + 1) + " starting. " +
+                    "sessionId=" + sessionId + ", mode=" + request.Mode + ", conversationId=" + request.ConversationId);
 
-                if(cancellationToken.IsCancellationRequested)
+                if (cancellationToken.IsCancellationRequested)
                 {
-                    return InvokeResult<AgentExecuteResponse>.Abort();
+                    return InvokeResult<AgentPipelineContext>.Abort();
                 }
 
-                var llmResult = await _llmClient.GetAnswerAsync(
-                    agentContext,
-                    conversationContext,
-                    request,
-                    ragContextBlock,
-                    sessionId,
-                    cancellationToken);
+                // Ensure the LLM step has everything it needs on ctx (future-proofing).
+                ctx.AgentContext = agentContext;
+                ctx.ConversationContext = conversationContext;
+                ctx.Request = request;
+                ctx.RagContextBlock = ragContextBlock;
+                ctx.ConversationId = sessionId;
 
-                if (!llmResult.Successful)
+                // IMPORTANT: LLM step must set ctx.Response
+                var llmCtxResult = await _llmClient.ExecuteAsync(ctx, cancellationToken);
+                if (!llmCtxResult.Successful)
                 {
                     _logger.AddError(
                         "[AgentReasoner_ExecuteAsync__LLMFailed]",
-                        $"LLM call failed on iteration {iteration + 1}: {llmResult.ErrorMessage}");
-                    return llmResult;
+                        "LLM call failed on iteration " + (iteration + 1) + ": " + llmCtxResult.ErrorMessage);
+
+                    return InvokeResult<AgentPipelineContext>.FromInvokeResult(llmCtxResult.ToInvokeResult());
                 }
 
-                lastResponse = llmResult.Result;
+                var updatedCtx = llmCtxResult.Result;
+                if (updatedCtx == null)
+                {
+                    const string nullMsg = "LLM step returned null AgentPipelineContext.";
+                    _logger.AddError("[AgentReasoner_ExecuteAsync__NullPipelineContext]", nullMsg);
+                    return InvokeResult<AgentPipelineContext>.FromError(nullMsg, "AGENT_REASONER_NULL_PIPELINE_CONTEXT");
+                }
+
+                lastResponse = updatedCtx.Response;
                 if (lastResponse == null)
                 {
-                    const string nullMsg = "LLM returned a null AgentExecuteResponse.";
+                    const string nullMsg = "LLM step did not set ctx.Response.";
                     _logger.AddError("[AgentReasoner_ExecuteAsync__NullResponse]", nullMsg);
-                    return InvokeResult<AgentExecuteResponse>.FromError(nullMsg);
+                    return InvokeResult<AgentPipelineContext>.FromError(nullMsg, "AGENT_REASONER_NULL_RESPONSE");
                 }
 
                 // If there are no tool calls, we are done.
                 if (lastResponse.ToolCalls == null || lastResponse.ToolCalls.Count == 0)
                 {
-                    _logger.Trace(
-                        "[AgentReasoner_ExecuteAsync] No tool calls detected. " +
-                        "Returning final LLM response.");
+                    _logger.Trace("[AgentReasoner_ExecuteAsync] No tool calls detected. Returning final LLM response.");
 
-                    // If LLM didn't set Mode, default to request.Mode.
                     if (string.IsNullOrWhiteSpace(lastResponse.Mode) && !string.IsNullOrWhiteSpace(request.Mode))
                     {
                         lastResponse.Mode = request.Mode;
                     }
 
-                    // If a mode change happened in a prior iteration, prepend the welcome now.
                     if (!string.IsNullOrWhiteSpace(pendingWelcomeMessage))
                     {
                         if (string.IsNullOrWhiteSpace(lastResponse.Text))
@@ -136,28 +187,25 @@ namespace LagoVista.AI.Services
                         {
                             lastResponse.Text = pendingWelcomeMessage + "\n\n" + lastResponse.Text;
                         }
-
-                        // Make sure the InvokeResult we return sees the updated response.
-                        llmResult.Result = lastResponse;
                     }
 
-                    return llmResult;
+                    updatedCtx.Response = lastResponse;
+                    return InvokeResult<AgentPipelineContext>.Create(updatedCtx);
                 }
 
                 _logger.Trace(
-                    $"[AgentReasoner_ExecuteAsync] Detected {lastResponse.ToolCalls.Count} tool call(s) " +
-                    $"from LLM on iteration {iteration + 1}.");
+                    "[AgentReasoner_ExecuteAsync] Detected " + lastResponse.ToolCalls.Count + " tool call(s) " +
+                    "from LLM on iteration " + (iteration + 1) + ".");
 
-                // Build a context for all server-side tools.
                 var toolContext = new AgentToolExecutionContext
                 {
                     AgentContext = agentContext,
                     ConversationContext = conversationContext,
                     Request = request,
                     SessionId = sessionId,
-                    CurrentTurnId = request.CurrentTurnId,
-                    Org = org,
-                    User = user
+                    CurrentTurnId = currentTurnId,
+                    Org = updatedCtx.Org,
+                    User = updatedCtx.User
                 };
 
                 var executedServerCalls = new List<AgentToolCall>();
@@ -165,68 +213,64 @@ namespace LagoVista.AI.Services
 
                 foreach (var toolCall in lastResponse.ToolCalls)
                 {
-                    await _agentStreamingContext.AddWorkflowAsync($"calling tool {toolCall.Name}...",cancellationToken);
+                    await _agentStreamingContext.AddWorkflowAsync("calling tool " + toolCall.Name + "...", cancellationToken);
                     var sw = Stopwatch.StartNew();
 
-                    // Let the executor decide if this is a server tool or not.
-                    var updatedCallResponse = await _toolExecutor.ExecuteServerToolAsync(
-                        toolCall,
-                        toolContext,
-                        cancellationToken);
+                    var updatedCallResponse = await _toolExecutor.ExecuteServerToolAsync(toolCall, toolContext, cancellationToken);
 
                     if (updatedCallResponse.Successful)
-                        await _agentStreamingContext.AddWorkflowAsync($"success calling tool {toolCall.Name} in {sw.Elapsed.TotalMilliseconds.ToString("0.0")}ms...", cancellationToken);
+                    {
+                        await _agentStreamingContext.AddWorkflowAsync(
+                            "success calling tool " + toolCall.Name + " in " + sw.Elapsed.TotalMilliseconds.ToString("0.0") + "ms...",
+                            cancellationToken);
+                    }
                     else
-
-                        await _agentStreamingContext.AddWorkflowAsync($"failed to call tool {toolCall.Name}, err: {updatedCallResponse.ErrorMessage} in {sw.Elapsed.TotalMilliseconds.ToString("0.0")}ms...", cancellationToken);
+                    {
+                        await _agentStreamingContext.AddWorkflowAsync(
+                            "failed to call tool " + toolCall.Name + ", err: " + updatedCallResponse.ErrorMessage + " in " + sw.Elapsed.TotalMilliseconds.ToString("0.0") + "ms...",
+                            cancellationToken);
+                    }
 
                     if (cancellationToken.IsCancellationRequested)
                     {
-                        return InvokeResult<AgentExecuteResponse>.Abort();
+                        return InvokeResult<AgentPipelineContext>.Abort();
                     }
 
                     if (!updatedCallResponse.Successful)
                     {
-                        return InvokeResult<AgentExecuteResponse>.FromInvokeResult(
-                            updatedCallResponse.ToInvokeResult());
+                        return InvokeResult<AgentPipelineContext>.FromInvokeResult(updatedCallResponse.ToInvokeResult());
                     }
 
                     var updatedCall = updatedCallResponse.Result;
 
-                    // All server executions should mark IsServerTool = true. If not, log.
-                    if (!updatedCall.IsServerTool)
+                    if (updatedCall != null && !updatedCall.IsServerTool)
                     {
                         _logger.AddError(
                             "[AgentReasoner_ExecuteAsync__UnexpectedNonServerToolCall]",
-                            $"Tool '{updatedCall?.Name ?? "<null>"}' returned IsServerTool=false during server execution.");
+                            "Tool '" + (updatedCall.Name ?? "<null>") + "' returned IsServerTool=false during server execution.");
                     }
 
-                    if (updatedCall.WasExecuted && !updatedCall.RequiresClientExecution)
+                    if (updatedCall != null && updatedCall.WasExecuted && !updatedCall.RequiresClientExecution)
                     {
-                        // Either:
-                        // - Server-final tool (IsToolFullyExecutedOnServer == true), OR
-                        // - Preflight failed/short-circuited, and we do NOT want a client retry.
                         executedServerCalls.Add(updatedCall);
                     }
-                    else if (updatedCall.WasExecuted && updatedCall.RequiresClientExecution)
+                    else if (updatedCall != null && updatedCall.WasExecuted && updatedCall.RequiresClientExecution)
                     {
-                        // Server preflight succeeded, but final behavior needs client execution.
                         pendingClientCalls.Add(updatedCall);
                     }
                     else
                     {
-                        // WasExecuted == false -> error/cancellation prior to running logic.
-                        // Surface to caller for visibility, but do not send to client.
-                        executedServerCalls.Add(updatedCall);
+                        if (updatedCall != null)
+                        {
+                            executedServerCalls.Add(updatedCall);
+                        }
                     }
                 }
 
-                //
-                // MODE CHANGE HANDLING (TUL-007 / AGN-011)
-                //
+                // MODE CHANGE HANDLING
                 string newModeFromTool = null;
-                bool modeChangeDetected = false;
-                int successfulModeChangeCount = 0;
+                var modeChangeDetected = false;
+                var successfulModeChangeCount = 0;
 
                 foreach (var call in executedServerCalls)
                 {
@@ -251,28 +295,23 @@ namespace LagoVista.AI.Services
                             successfulModeChangeCount++;
                             modeChangeDetected = true;
                             newModeFromTool = modeResult.Mode;
-                            var bootStrapRequest = new ModeEntryBootstrapRequest()
-                            {
-                             
 
-                                //Mode = newModeFromTool,
+                            var bootStrapRequest = new ModeEntryBootstrapRequest
+                            {
                                 ModeKey = newModeFromTool,
                                 ToolContext = toolContext
-
                             };
 
                             var bootStrapResult = await _modeEntryBootstrapService.ExecuteAsync(bootStrapRequest, cancellationToken);
-                            if(!bootStrapResult.Successful)
+                            if (!bootStrapResult.Successful)
                             {
-                                return InvokeResult<AgentExecuteResponse>.FromInvokeResult(bootStrapResult.ToInvokeResult());
+                                return InvokeResult<AgentPipelineContext>.FromInvokeResult(bootStrapResult.ToInvokeResult());
                             }
                         }
                     }
                     catch (Exception ex)
                     {
-                        _logger.AddException(
-                            "[AgentReasoner_ExecuteAsync__ModeChangeResultDeserializeError]",
-                            ex);
+                        _logger.AddException("[AgentReasoner_ExecuteAsync__ModeChangeResultDeserializeError]", ex);
                     }
                 }
 
@@ -280,51 +319,37 @@ namespace LagoVista.AI.Services
                 {
                     _logger.AddError(
                         "[AgentReasoner_ExecuteAsync__MultipleModeChanges]",
-                        $"Detected {successfulModeChangeCount} successful mode-change " +
-                        $"tool calls in a single turn. Using last mode '{newModeFromTool}'.");
+                        "Detected " + successfulModeChangeCount + " successful mode-change tool calls in a single turn. Using last mode '" + newModeFromTool + "'.");
                 }
 
                 if (modeChangeDetected && !string.IsNullOrWhiteSpace(newModeFromTool))
                 {
-                    // Update the in-flight request mode so any subsequent LLM
-                    // calls in this session use the new mode.
                     request.Mode = newModeFromTool;
-
-                    // Ensure the current response also reflects the new mode.
                     lastResponse.Mode = newModeFromTool;
 
-                    // Fetch and store the mode-specific welcome message.
                     try
                     {
                         var mode = agentContext.AgentModes.Single(m => m.Key == newModeFromTool);
-
                         var welcome = mode.WelcomeMessage;
                         if (!string.IsNullOrWhiteSpace(welcome))
                         {
-                            // Last welcome wins if multiple changes occur.
                             pendingWelcomeMessage = welcome;
                         }
                     }
                     catch (Exception ex)
                     {
-                        _logger.AddException(
-                            "[AgentReasoner_ExecuteAsync__WelcomeMessageException]",
-                            ex);
+                        _logger.AddException("[AgentReasoner_ExecuteAsync__WelcomeMessageException]", ex);
                     }
                 }
                 else
                 {
-                    // If no mode change occurred in this iteration, make sure response mode at
-                    // least reflects the current request mode for this turn.
                     if (string.IsNullOrWhiteSpace(lastResponse.Mode) && !string.IsNullOrWhiteSpace(request.Mode))
                     {
                         lastResponse.Mode = request.Mode;
                     }
                 }
 
-                //
-                // Build tool outputs for the Responses API tool-result continuation flow.
-                //
+                // Build tool outputs for continuation flow
                 var toolOutputs = executedServerCalls
                     .Where(c => c.IsServerTool && c.WasExecuted && !string.IsNullOrWhiteSpace(c.CallId))
                     .Select(c => new ResponsesToolOutput
@@ -336,12 +361,9 @@ namespace LagoVista.AI.Services
 
                 request.ToolResultsJson = JsonConvert.SerializeObject(toolOutputs);
 
-                // If there are any client tools, we stop here.
                 if (pendingClientCalls.Count > 0)
                 {
-                    _logger.Trace(
-                        "[AgentReasoner_ExecuteAsync] Client tools detected. " +
-                        "Returning response with mixed server/client tool calls.");
+                    _logger.Trace("[AgentReasoner_ExecuteAsync] Client tools detected. Returning response with mixed server/client tool calls.");
 
                     var mergedCalls = new List<AgentToolCall>();
                     mergedCalls.AddRange(executedServerCalls);
@@ -349,7 +371,6 @@ namespace LagoVista.AI.Services
 
                     lastResponse.ToolCalls = mergedCalls;
 
-                    // If we have a welcome pending, prepend it to the text before returning.
                     if (!string.IsNullOrWhiteSpace(pendingWelcomeMessage))
                     {
                         if (string.IsNullOrWhiteSpace(lastResponse.Text))
@@ -362,18 +383,14 @@ namespace LagoVista.AI.Services
                         }
                     }
 
-                    return InvokeResult<AgentExecuteResponse>.Create(lastResponse);
+                    updatedCtx.Response = lastResponse;
+                    return InvokeResult<AgentPipelineContext>.Create(updatedCtx);
                 }
 
-                // Only server tools were requested. If none executed successfully,
-                // there's nothing more we can do; return the last response as-is.
                 if (executedServerCalls.Count == 0)
                 {
-                    _logger.Trace(
-                        "[AgentReasoner_ExecuteAsync] Only server tools requested, but none executed. " +
-                        "Returning last response as-is.");
+                    _logger.Trace("[AgentReasoner_ExecuteAsync] Only server tools requested, but none executed. Returning last response as-is.");
 
-                    // Apply pending welcome if we have one.
                     if (!string.IsNullOrWhiteSpace(pendingWelcomeMessage))
                     {
                         if (string.IsNullOrWhiteSpace(lastResponse.Text))
@@ -386,44 +403,31 @@ namespace LagoVista.AI.Services
                         }
                     }
 
-                    return InvokeResult<AgentExecuteResponse>.Create(lastResponse);
+                    updatedCtx.Response = lastResponse;
+                    return InvokeResult<AgentPipelineContext>.Create(updatedCtx);
                 }
 
-                // At this point: all tool calls are server tools, and at least one executed.
-                // Feed the server tool results back into the LLM via the request.
                 _logger.Trace(
-                    $"[AgentReasoner_ExecuteAsync] Executed {executedServerCalls.Count} server-side tool(s). " +
-                    "Preparing to call LLM again with tool results.");
+                    "[AgentReasoner_ExecuteAsync] Executed " + executedServerCalls.Count + " server-side tool(s). Preparing to call LLM again with tool results.");
 
                 try
                 {
-                    // Keep the strongly typed results (optional convenience).
                     request.ToolResults = executedServerCalls;
-
-                    // JSON payload that ResponsesRequestBuilder should inject into the
-                    // /responses request as tool outputs.
                     request.ToolResultsJson = JsonConvert.SerializeObject(executedServerCalls);
                 }
                 catch (Exception ex)
                 {
-                    _logger.AddException(
-                        "[AgentReasoner_ExecuteAsync__ToolResultsSerializeException]",
-                        ex);
-
-                    var msg = $"Failed to serialize tool results for LLM follow-up call: {ex.Message}";
-                    return InvokeResult<AgentExecuteResponse>.FromError(msg);
+                    _logger.AddException("[AgentReasoner_ExecuteAsync__ToolResultsSerializeException]", ex);
+                    var msg = "Failed to serialize tool results for LLM follow-up call: " + ex.Message;
+                    return InvokeResult<AgentPipelineContext>.FromError(msg, "AGENT_REASONER_TOOL_RESULTS_SERIALIZE_FAILED");
                 }
 
-                // IMPORTANT:
-                // We do NOT propagate the previous response id when feeding back tool results
-                // as plain text. Doing so would cause the Responses API to expect structured
-                // tool outputs for the earlier function_call ids.
                 request.ResponseContinuationId = null;
 
-                // Loop back to call the LLM again, now with tool results (and possibly updated mode).
+                // Loop back: next iteration will call _llmClient.ExecuteAsync(updatedCtx)
+                ctx = updatedCtx;
             }
 
-            // If we reach here, we hit the max iteration safety cap.
             if (lastResponse != null)
             {
                 const string warning = "Maximum reasoning iterations reached in AgentReasoner.";
@@ -436,13 +440,11 @@ namespace LagoVista.AI.Services
 
                 lastResponse.Warnings.Add(warning);
 
-                // Ensure final response mode reflects the effective request mode.
-                if (string.IsNullOrWhiteSpace(lastResponse.Mode) && !string.IsNullOrWhiteSpace(request.Mode))
+                if (string.IsNullOrWhiteSpace(lastResponse.Mode) && !string.IsNullOrWhiteSpace(ctx.Request.Mode))
                 {
-                    lastResponse.Mode = request.Mode;
+                    lastResponse.Mode = ctx.Request.Mode;
                 }
 
-                // Apply pending welcome, if any.
                 if (!string.IsNullOrWhiteSpace(pendingWelcomeMessage))
                 {
                     if (string.IsNullOrWhiteSpace(lastResponse.Text))
@@ -455,13 +457,13 @@ namespace LagoVista.AI.Services
                     }
                 }
 
-                return InvokeResult<AgentExecuteResponse>.Create(lastResponse);
+                ctx.Response = lastResponse;
+                return InvokeResult<AgentPipelineContext>.Create(ctx);
             }
 
             const string noResponseMsg = "AgentReasoner completed without producing any LLM response.";
             _logger.AddError("[AgentReasoner_ExecuteAsync__NoResponse]", noResponseMsg);
-
-            return InvokeResult<AgentExecuteResponse>.FromError(noResponseMsg);
+            return InvokeResult<AgentPipelineContext>.FromError(noResponseMsg, "AGENT_REASONER_NO_RESPONSE");
         }
 
         private sealed class ResponsesToolOutput

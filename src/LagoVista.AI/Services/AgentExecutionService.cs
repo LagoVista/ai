@@ -113,7 +113,7 @@ namespace LagoVista.AI.Services
                 "correlationId=" + correlationId + ", agentContextId=" + request.AgentContext.Id);
 
             var agentContext = await _agentContextManager.GetAgentContextWithSecretsAsync(request.AgentContext.Id, org, user);
-
+            ctx.AgentContext = agentContext;
             _adminLogger.Trace(
                 "[AgentExecutionService_ExecuteAsync__SelectConversationContext] Resolving ConversationContext. " +
                 "correlationId=" + correlationId);
@@ -144,7 +144,7 @@ namespace LagoVista.AI.Services
             }
 
             var conversationContext = agentContext.ConversationContexts.Single(cctx => cctx.Id == conversationContextId);
-
+            ctx.ConversationContext = conversationContext;
             _adminLogger.Trace(
                 "[AgentExecutionService_ExecuteAsync__ConversationId] Resolving ConversationId. " +
                 "correlationId=" + correlationId + ", requestConversationId=" + request.ConversationId);
@@ -172,27 +172,12 @@ namespace LagoVista.AI.Services
             // Keep the builder dependency wired, but don't invoke it until re-enabled.
             var ragContextBlock = InvokeResult<string>.Create(string.Empty);
 
-            var execResult = await _reasoner.ExecuteAsync(
-                agentContext,
-                conversationContext,
-                request,
-                ragContextBlock.Result,
-                sessionId,
-                org,
-                user,
-                cancellationToken);
+            var execResult = await _reasoner.ExecuteAsync(ctx);
 
             if (!execResult.Successful)
             {
                 return InvokeResult<AgentPipelineContext>.FromInvokeResult(execResult.ToInvokeResult());
             }
-
-            ctx.Response = execResult.Result;
-
-            // Optional: stash resolved objects on the pipeline context if you have these fields
-            // (you said you'll clean up interfaces, so leaving these as comments):
-            // ctx.AgentContext = agentContext;
-            // ctx.ConversationContext = conversationContext;
 
             return InvokeResult<AgentPipelineContext>.Create(ctx);
         }

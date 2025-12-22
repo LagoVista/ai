@@ -16,23 +16,7 @@ namespace LagoVista.AI.Interfaces
     /// - Execute any server-side tools and feed their results back into the LLM.
     /// - Stop and return early if any non-server (client) tools are requested.
     /// </summary>
-    public interface IAgentReasoner
+    public interface IAgentReasoner : IAgentPipelineStep
     {
-        /// <summary>
-        /// Execute the reasoning loop for a single Aptix agent turn.
-        ///
-        /// May call the LLM multiple times if server-only tools are involved.
-        /// If client tools are requested, returns once those tool calls are
-        /// discovered, leaving client execution to the caller.
-        /// </summary>
-        Task<InvokeResult<AgentExecuteResponse>> ExecuteAsync(
-            AgentContext agentContext,
-            ConversationContext conversationContext,
-            AgentExecuteRequest request,
-            string ragContextBlock,
-            string sessionId,
-            EntityHeader org,
-            EntityHeader user,
-            CancellationToken cancellationToken = default);
     }
 }

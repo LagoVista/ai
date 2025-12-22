@@ -104,15 +104,7 @@ namespace LagoVista.AI.Tests.Services
                 Times.Never);
 
             _reasoner.Verify(
-                r => r.ExecuteAsync(
-                    It.IsAny<AgentContext>(),
-                    It.IsAny<ConversationContext>(),
-                    It.IsAny<AgentExecuteRequest>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<EntityHeader>(),
-                    It.IsAny<EntityHeader>(),
-                    It.IsAny<CancellationToken>()),
+                r => r.ExecuteAsync(It.IsAny<AgentPipelineContext>(), It.IsAny<CancellationToken>()),
                 Times.Never);
         }
 
@@ -141,15 +133,7 @@ namespace LagoVista.AI.Tests.Services
                 Times.Never);
 
             _reasoner.Verify(
-                r => r.ExecuteAsync(
-                    It.IsAny<AgentContext>(),
-                    It.IsAny<ConversationContext>(),
-                    It.IsAny<AgentExecuteRequest>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<EntityHeader>(),
-                    It.IsAny<EntityHeader>(),
-                    It.IsAny<CancellationToken>()),
+                r => r.ExecuteAsync(It.IsAny<AgentPipelineContext>(), It.IsAny<CancellationToken>()),
                 Times.Never);
         }
 
@@ -250,16 +234,12 @@ namespace LagoVista.AI.Tests.Services
                 .ReturnsAsync(agentContext);
 
             _reasoner
-                .Setup(r => r.ExecuteAsync(
-                    It.IsAny<AgentContext>(),
-                    It.IsAny<ConversationContext>(),
-                    It.IsAny<AgentExecuteRequest>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<EntityHeader>(),
-                    It.IsAny<EntityHeader>(),
-                    It.IsAny<CancellationToken>()))
-                .ReturnsAsync(InvokeResult<AgentExecuteResponse>.Create(new AgentExecuteResponse { Text = "ok" }));
+                .Setup(r => r.ExecuteAsync(It.IsAny<AgentPipelineContext>(), It.IsAny<CancellationToken>()))
+                .Callback<AgentPipelineContext, CancellationToken>((c, _) =>
+                {
+                    c.Response = new AgentExecuteResponse { Text = "ok" };
+                })
+                .ReturnsAsync((AgentPipelineContext c, CancellationToken _) => InvokeResult<AgentPipelineContext>.Create(c));
 
             var result = await _sut.ExecuteAsync(ctx, CancellationToken.None);
 
@@ -321,15 +301,7 @@ namespace LagoVista.AI.Tests.Services
                 Times.Once);
 
             _reasoner.Verify(
-                r => r.ExecuteAsync(
-                    It.IsAny<AgentContext>(),
-                    It.IsAny<ConversationContext>(),
-                    It.IsAny<AgentExecuteRequest>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<EntityHeader>(),
-                    It.IsAny<EntityHeader>(),
-                    It.IsAny<CancellationToken>()),
+                r => r.ExecuteAsync(It.IsAny<AgentPipelineContext>(), It.IsAny<CancellationToken>()),
                 Times.Never);
         }
 
@@ -364,9 +336,7 @@ namespace LagoVista.AI.Tests.Services
                 .Setup(m => m.GetAgentContextWithSecretsAsync(request.AgentContext.Id, org, user))
                 .ReturnsAsync(agentContext);
 
-            AgentContext capturedAgentContext = null;
-            ConversationContext capturedConversationContext = null;
-            AgentExecuteRequest capturedRequest = null;
+            AgentPipelineContext capturedCtx = null;
 
             var reasonerResponse = new AgentExecuteResponse
             {
@@ -375,23 +345,13 @@ namespace LagoVista.AI.Tests.Services
             };
 
             _reasoner
-                .Setup(r => r.ExecuteAsync(
-                    It.IsAny<AgentContext>(),
-                    It.IsAny<ConversationContext>(),
-                    It.IsAny<AgentExecuteRequest>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<EntityHeader>(),
-                    It.IsAny<EntityHeader>(),
-                    It.IsAny<CancellationToken>()))
-                .Callback<AgentContext, ConversationContext, AgentExecuteRequest, string, string, EntityHeader, EntityHeader, CancellationToken>(
-                    (ac, cc, req, rag, sessionId, o, u, ctkn) =>
-                    {
-                        capturedAgentContext = ac;
-                        capturedConversationContext = cc;
-                        capturedRequest = req;
-                    })
-                .ReturnsAsync(InvokeResult<AgentExecuteResponse>.Create(reasonerResponse));
+                .Setup(r => r.ExecuteAsync(It.IsAny<AgentPipelineContext>(), It.IsAny<CancellationToken>()))
+                .Callback<AgentPipelineContext, CancellationToken>((c, _) =>
+                {
+                    capturedCtx = c;
+                    c.Response = reasonerResponse;
+                })
+                .ReturnsAsync((AgentPipelineContext c, CancellationToken _) => InvokeResult<AgentPipelineContext>.Create(c));
 
             var result = await _sut.ExecuteAsync(ctx, CancellationToken.None);
 
@@ -400,9 +360,12 @@ namespace LagoVista.AI.Tests.Services
 
             Assert.That(request.Mode, Is.EqualTo("ddr_authoring"));
 
-            Assert.That(capturedAgentContext, Is.SameAs(agentContext));
-            Assert.That(capturedConversationContext, Is.SameAs(chosenConversationContext));
-            Assert.That(capturedRequest, Is.SameAs(request));
+            Assert.That(capturedCtx, Is.Not.Null);
+            Assert.That(capturedCtx.AgentContext, Is.SameAs(agentContext));
+            Assert.That(capturedCtx.ConversationContext, Is.SameAs(chosenConversationContext));
+            Assert.That(capturedCtx.Request, Is.SameAs(request));
+            Assert.That(capturedCtx.Org, Is.SameAs(org));
+            Assert.That(capturedCtx.User, Is.SameAs(user));
         }
 
         [Test]
@@ -442,18 +405,13 @@ namespace LagoVista.AI.Tests.Services
             ConversationContext capturedConversationContext = null;
 
             _reasoner
-                .Setup(r => r.ExecuteAsync(
-                    It.IsAny<AgentContext>(),
-                    It.IsAny<ConversationContext>(),
-                    It.IsAny<AgentExecuteRequest>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<EntityHeader>(),
-                    It.IsAny<EntityHeader>(),
-                    It.IsAny<CancellationToken>()))
-                .Callback<AgentContext, ConversationContext, AgentExecuteRequest, string, string, EntityHeader, EntityHeader, CancellationToken>(
-                    (ac, cc, req, rag, sessionId, o, u, ctkn) => { capturedConversationContext = cc; })
-                .ReturnsAsync(InvokeResult<AgentExecuteResponse>.Create(new AgentExecuteResponse { Text = "ok" }));
+                .Setup(r => r.ExecuteAsync(It.IsAny<AgentPipelineContext>(), It.IsAny<CancellationToken>()))
+                .Callback<AgentPipelineContext, CancellationToken>((c, _) =>
+                {
+                    capturedConversationContext = c.ConversationContext;
+                    c.Response = new AgentExecuteResponse { Text = "ok" };
+                })
+                .ReturnsAsync((AgentPipelineContext c, CancellationToken _) => InvokeResult<AgentPipelineContext>.Create(c));
 
             var result = await _sut.ExecuteAsync(ctx, CancellationToken.None);
 
