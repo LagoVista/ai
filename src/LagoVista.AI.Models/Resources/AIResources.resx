@@ -715,4 +715,16 @@
   <data name="AgentSessions_Title" xml:space="preserve">
     <value>Aptix Sessions</value>
   </data>
+  <data name="AgentContext_MaxTokenCount" xml:space="preserve">
+    <value>Max Token Count</value>
+  </data>
+  <data name="AgentContext_MaxTokenCount_Help" xml:space="preserve">
+    <value>Reserves a percentage of the maximum context tokens exclusively for the model’s response.</value>
+  </data>
+  <data name="AgentContext_CompletionReservePercent" xml:space="preserve">
+    <value>Completion Reserve Percent</value>
+  </data>
+  <data name="AgentContext_CompletionReservePercent_Help" xml:space="preserve">
+    <value>Percentage of tokens held back for the model’s response to avoid truncated answers.</value>
+  </data>
 </root>

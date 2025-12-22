@@ -1,8 +1,8 @@
-﻿/*12/6/2025 8:01:55 AM*/
+﻿/*12/22/2025 12:38:02 PM*/
 using System.Globalization;
 using System.Reflection;
 
-//Resources:AIResources:AgentContext_ConversationContext_Description
+//Resources:AIResources:AgentContext_CompletionReservePercent
 namespace LagoVista.AI.Models.Resources
 {
 	public class AIResources
@@ -56,6 +56,12 @@ namespace LagoVista.AI.Models.Resources
 			return new HtmlString(str);
         }*/
 		
+		public static string AgentContext_CompletionReservePercent { get { return GetResourceString("AgentContext_CompletionReservePercent"); } }
+//Resources:AIResources:AgentContext_CompletionReservePercent_Help
+
+		public static string AgentContext_CompletionReservePercent_Help { get { return GetResourceString("AgentContext_CompletionReservePercent_Help"); } }
+//Resources:AIResources:AgentContext_ConversationContext_Description
+
 		public static string AgentContext_ConversationContext_Description { get { return GetResourceString("AgentContext_ConversationContext_Description"); } }
 //Resources:AIResources:AgentContext_ConversationContext_ModelName
 
@@ -90,6 +96,12 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:AgentContext_LlmProvider_Select
 
 		public static string AgentContext_LlmProvider_Select { get { return GetResourceString("AgentContext_LlmProvider_Select"); } }
+//Resources:AIResources:AgentContext_MaxTokenCount
+
+		public static string AgentContext_MaxTokenCount { get { return GetResourceString("AgentContext_MaxTokenCount"); } }
+//Resources:AIResources:AgentContext_MaxTokenCount_Help
+
+		public static string AgentContext_MaxTokenCount_Help { get { return GetResourceString("AgentContext_MaxTokenCount_Help"); } }
 //Resources:AIResources:AgentSession_Description
 
 		public static string AgentSession_Description { get { return GetResourceString("AgentSession_Description"); } }
@@ -651,6 +663,8 @@ namespace LagoVista.AI.Models.Resources
 
 		public static class Names
 		{
+			public const string AgentContext_CompletionReservePercent = "AgentContext_CompletionReservePercent";
+			public const string AgentContext_CompletionReservePercent_Help = "AgentContext_CompletionReservePercent_Help";
 			public const string AgentContext_ConversationContext_Description = "AgentContext_ConversationContext_Description";
 			public const string AgentContext_ConversationContext_ModelName = "AgentContext_ConversationContext_ModelName";
 			public const string AgentContext_ConversationContext_System = "AgentContext_ConversationContext_System";
@@ -663,6 +677,8 @@ namespace LagoVista.AI.Models.Resources
 			public const string AgentContext_DefaultConversationContext_Select = "AgentContext_DefaultConversationContext_Select";
 			public const string AgentContext_LlmProvider = "AgentContext_LlmProvider";
 			public const string AgentContext_LlmProvider_Select = "AgentContext_LlmProvider_Select";
+			public const string AgentContext_MaxTokenCount = "AgentContext_MaxTokenCount";
+			public const string AgentContext_MaxTokenCount_Help = "AgentContext_MaxTokenCount_Help";
 			public const string AgentSession_Description = "AgentSession_Description";
 			public const string AgentSession_Help = "AgentSession_Help";
 			public const string AgentSession_Title = "AgentSession_Title";

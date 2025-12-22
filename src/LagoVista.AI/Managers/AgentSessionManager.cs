@@ -41,10 +41,13 @@ namespace LagoVista.AI.Managers
         public async Task AddAgentSessionTurnAsync(string agentSessionId, AgentSessionTurn turn, EntityHeader org, EntityHeader user)
         {
             var session = await _repo.GetAgentSessionAsync(agentSessionId);
+            var now = DateTime.UtcNow.ToJSONString();
+            session.LastUpdatedDate = now;
+            session.LastUpdatedBy = user;
 
             turn.Status = EntityHeader<AgentSessionTurnStatuses>.Create(AgentSessionTurnStatuses.Pending);
-            turn.StatusTimeStamp = session.LastUpdatedDate;
-            turn.CreationDate = session.LastUpdatedDate;
+            turn.StatusTimeStamp = now;
+            turn.CreationDate = now;
             turn.CreatedByUser = user;
             turn.SequenceNumber = session.Turns.Count + 1;
             session.Turns.Add(turn);
@@ -214,7 +217,7 @@ namespace LagoVista.AI.Managers
             var now = DateTime.UtcNow.ToJSONString();
             session.ModeHistory.Add(new ModeHistory()
             {
-                PreviousMode = mode,
+                PreviousMode = session.Mode,
                 NewMode = mode,
                 Reason = reason,
                 TimeStamp = now,

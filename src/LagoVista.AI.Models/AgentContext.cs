@@ -44,6 +44,7 @@ namespace LagoVista.AI.Models
         public string AzureAccountId { get; set; }
 
         public string AzureApiTokenSecretId { get; set; }
+
         [FormField(LabelResource: AIResources.Names.VectorDatabase_AzureApiToken, HelpResource: AIResources.Names.VectorDatabase_AzureApiToken_Help, SecureIdFieldName: nameof(AzureApiTokenSecretId), FieldType: FieldTypes.Secret, ResourceType: typeof(AIResources))]
         public string AzureApiToken { get; set; }
 
@@ -68,6 +69,14 @@ namespace LagoVista.AI.Models
         [FormField(LabelResource: AIResources.Names.AgentContext_ConversationContexts, HelpResource: AIResources.Names.AgentContext_ConversationContext_Description, FieldType: FieldTypes.ChildListInline, FactoryUrl: "/api/ai/agent/conversation/context/factory",
             ResourceType: typeof(AIResources))]
         public List<ConversationContext> ConversationContexts { get; set; } = new List<ConversationContext>();
+
+        [FormField(LabelResource: AIResources.Names.AgentContext_MaxTokenCount, HelpResource: AIResources.Names.AgentContext_MaxTokenCount_Help, FieldType: FieldTypes.Integer, ResourceType: typeof(AIResources))]
+        public int MaxTokenCount { get; set; } = 256 * 1024;
+
+        [FormField(LabelResource: AIResources.Names.AgentContext_CompletionReservePercent, HelpResource: AIResources.Names.AgentContext_CompletionReservePercent_Help, FieldType: FieldTypes.Percent, ResourceType: typeof(AIResources))]
+        public int CompletionReservePercent { get; set; } = 5;
+
+
 
         public List<AgentMode> AgentModes { get; set; } = new List<AgentMode>();
 
@@ -154,6 +163,8 @@ namespace LagoVista.AI.Models
                 nameof(LlmProvider),
                 nameof(LlmApiKey),
                 nameof(EmbeddingModel),
+                nameof(MaxTokenCount),
+                nameof(CompletionReservePercent),
                 nameof(DefaultConversationContext),
                 nameof(ConversationContexts),
             };
