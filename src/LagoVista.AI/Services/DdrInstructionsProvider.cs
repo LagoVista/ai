@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
 using LagoVista.Core.Models;
 
@@ -58,7 +59,6 @@ namespace LagoVista.AI.Services
                 return;
             }
 
-            // Fetch DDRs in bulk. We will re-order deterministically to match AgentMode.PreloadDDRs.
             var ddrs = await _ddrManager.GetDdrs(preload, org, user);
 
             var instructions = BuildInstructionsText(mode, ddrs);

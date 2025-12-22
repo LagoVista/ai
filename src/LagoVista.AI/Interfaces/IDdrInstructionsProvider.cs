@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 using LagoVista.AI.Models;
 using LagoVista.Core.Models;
 
-namespace LagoVista.AI.Services
+namespace LagoVista.AI.Interfaces
 {
     /// <summary>
     /// AGN-018: Provides per-mode DDR instruction text suitable for the OpenAI Responses API "instructions" field.

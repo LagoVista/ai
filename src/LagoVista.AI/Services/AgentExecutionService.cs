@@ -158,7 +158,7 @@ namespace LagoVista.AI.Services
             _adminLogger.Trace($"[AgentExecutionService_ExecuteAsync__ConversationId] Resolving ConversationId. " +
                 $"correlationId={correlationId}, requestConversationId={request.ConversationId}");
 
-            var conversationId = string.IsNullOrWhiteSpace(request.ConversationId) ? Guid.NewGuid().ToId() : request.ConversationId;
+            var sessionId = string.IsNullOrWhiteSpace(request.ConversationId) ? Guid.NewGuid().ToId() : request.ConversationId;
 
             // Mode catalog system prompt (AGN-013)
             var modeCatalogSystemPrompt = agentContext.BuildSystemPrompt(modeKey);
@@ -173,7 +173,7 @@ namespace LagoVista.AI.Services
             }
 
             _adminLogger.Trace( $"[AgentExecutionService_ExecuteAsync__RAG] Invoking RAG pipeline. " +
-                $"correlationId={correlationId}, conversationId={conversationId}, " +
+                $"correlationId={correlationId}, agentSessionId={sessionId}, " +
                 $"repo={request.Repo}, language={request.Language ?? "csharp"}");
 
             //var ragContextBlock = await _ragContextBuilder.BuildContextSectionAsync(
@@ -196,7 +196,7 @@ namespace LagoVista.AI.Services
                 conversationContext,
                 request,
                 ragContextBlock.Result,
-                conversationId,
+                sessionId,
                 org,
                 user,
                 cancellationToken);
