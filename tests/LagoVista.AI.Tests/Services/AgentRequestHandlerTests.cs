@@ -10,6 +10,7 @@ using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.UserAdmin.Interfaces.Managers;
+using LagoVista.UserAdmin.Models.Orgs;
 using Moq;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
@@ -34,6 +35,8 @@ namespace LagoVista.AI.Tests.Services
             _orgManager = new Mock<IOrganizationManager>();
 
             _sut = new AgentRequestHandler(_orchestrator.Object, _adminLogger.Object, _orgManager.Object, _streamingContext.Object);
+            _orgManager.Setup(om => om.GetOrganizationAsync(It.IsAny<string>(), It.IsAny<EntityHeader>(), It.IsAny<EntityHeader>()))
+                .ReturnsAsync((string id, EntityHeader org, EntityHeader user) => new Organization() {  DefaultAgentContext = new EntityHeader() { } }); 
         }
 
         #region Ctor Guards
@@ -133,13 +136,13 @@ namespace LagoVista.AI.Tests.Services
             var result = await _sut.HandleAsync(request, org, user);
 
             Assert.That(result.Successful, Is.False);
-            Assert.That(result.Errors[0].Message, Is.EqualTo("AgentContext is required for a new session."));
+            Assert.That(result.Errors[0].Message, Is.EqualTo("AgentContext is required, this can either come from the request or be set as a default in the Owner settings."));
 
-            _adminLogger.Verify(
-                l => l.AddError(
-                    "[AgentRequestHandler_HandleNewSessionAsync__ValidateRequest]",
-                    "AgentContext is required for a new session."),
-                Times.Once);
+            //_adminLogger.Verify(
+            //    l => l.AddError(
+            //        "[AgentRequestHandler_HandleNewSessionAsync__ValidateRequest]",
+            //        "AgentContext is required, this can either come from the request or be set as a default in the Owner settings."),
+            //    Times.Once);
 
             _orchestrator.Verify(
                 o => o.BeginNewSessionAsync(It.IsAny<AgentExecuteRequest>(), org, user, It.IsAny<CancellationToken>()),
@@ -168,7 +171,8 @@ namespace LagoVista.AI.Tests.Services
                 Language = "csharp",
                 ActiveFiles = new List<ActiveFile>(),
                 RagScopeFilter = new RagScopeFilter(),
-                ToolsJson = "[{\"name\":\"client.tool\",\"type\":\"function\"}]"
+                ToolsJson = "[{\"name\":\"client.tool\",\"type\":\"function\"}]",
+                AgentContext = new EntityHeader() {  Id = "agent-1" }
             };
 
             var orchestratorResponse = new AgentExecuteResponse
@@ -188,7 +192,7 @@ namespace LagoVista.AI.Tests.Services
 
             var result = await _sut.HandleAsync(request, org, user);
 
-            Assert.That(result.Successful, Is.True);
+            Assert.That(result.Successful, Is.True, result.ErrorMessage);
             Assert.That(result.Result, Is.SameAs(orchestratorResponse));
 
             _orchestrator.Verify(

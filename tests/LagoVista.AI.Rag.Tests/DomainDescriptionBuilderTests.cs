@@ -31,7 +31,15 @@ namespace LagoVista.AI.Rag.Tests
                 FullPath = "C:/src/LagoVista.AI.Rag/Domains/Devices.md",
                 RelativePath = "Domains/Devices.md",
                 RepoId = "TestRepo",
-                Language = "markdown"
+                Language = "markdown",
+                GitRepoInfo = new GitRepoInfo()
+                {
+
+                },
+                DocumentIdentity = new DocumentIdentity()
+                {
+
+                }
             };
 
             var deviceClass = new ModelClassEntry(
@@ -125,7 +133,15 @@ namespace LagoVista.AI.Rag.Tests
                 FullPath = "C:/src/LagoVista.AI.Rag/Domains/Business.md",
                 RelativePath = "Domains/Business.md",
                 RepoId = "TestRepo",
-                Language = "markdown"
+                Language = "markdown",
+                GitRepoInfo = new GitRepoInfo()
+                {
+
+                },
+                DocumentIdentity = new DocumentIdentity()
+                {
+
+                }
             };
 
             var catalogMock = new Mock<IDomainCatalogService>();
@@ -144,7 +160,7 @@ namespace LagoVista.AI.Rag.Tests
                 resourceDictionary: null);
 
             // Assert
-            Assert.That(result.Successful, Is.True, "Builder should succeed even without an explicit heading.");
+            Assert.That(result.Successful, Is.True, "Builder should succeed even without an explicit heading." + result.ErrorMessage);
 
             var domainDescription = result.Result as DomainDescriptionRag;
             Assert.That(domainDescription, Is.Not.Null);

@@ -225,6 +225,10 @@ namespace LagoVista.AI.Tests.Services
                 .Setup(c => c.GetAgentContextAsync(request.AgentContext.Id, org, user))
                 .ReturnsAsync(agentContext);
 
+            _contextManager
+                .Setup(c => c.GetAgentContextWithSecretsAsync(request.AgentContext.Id, org, user))
+                .ReturnsAsync(agentContext);
+
             _sessionFactory
                 .Setup(f => f.CreateSession(request, agentContext, OperationKinds.Code, org, user))
                 .ReturnsAsync(session);
@@ -278,8 +282,8 @@ namespace LagoVista.AI.Tests.Services
                     It.IsAny<List<string>>(),
                     org,
                     user))
-                .Callback<string, string, string, string, string, double, List<string>, EntityHeader, EntityHeader>(
-                    (sessId, turnId, text, url, contId, elapsed, warnings, o, u) =>
+                .Callback<string, string, string, string, string, int, int, int, double, List<string>, EntityHeader, EntityHeader>(
+                    (sessId, turnId, text, url, contId,pt, rp, tt, elapsed, warnings, o, u) =>
                     {
                         completedSessionId = sessId;
                         completedTurnId = turnId;
@@ -333,12 +337,16 @@ namespace LagoVista.AI.Tests.Services
                 Mode = "ask"
             };
 
-            var agentContext = new AgentContext { Id = "ctx-1", Name = "Context 1" };
+            var agentContext = new AgentContext { Id = "ctx-1", Name = "Context 1", AgentModes = new List<AgentMode>() };
             var session = new AgentSession { Id = "session-1", AgentContext = EntityHeader.Create("id","text"), ConversationContext = EntityHeader.Create("id", "text") };
             var turn = new AgentSessionTurn { Id = "turn-1", ConversationId = "conv-1" };
 
             _contextManager
                 .Setup(c => c.GetAgentContextAsync(request.AgentContext.Id, org, user))
+                .ReturnsAsync(agentContext);
+
+            _contextManager
+                .Setup(c => c.GetAgentContextWithSecretsAsync(request.AgentContext.Id, org, user))
                 .ReturnsAsync(agentContext);
 
             _sessionFactory
@@ -413,7 +421,8 @@ namespace LagoVista.AI.Tests.Services
                 Repo = "repo-1",
                 Language = "csharp",
                 ActiveFiles = new List<ActiveFile>(),
-                RagScopeFilter = new RagScopeFilter()
+                RagScopeFilter = new RagScopeFilter(),
+                AgentContext = new EntityHeader() { Id = "12"}
             };
 
             var agentContext = new AgentContext { Id = "ctx-1", Name = "Context 1" };
@@ -454,6 +463,10 @@ namespace LagoVista.AI.Tests.Services
             _sessionManager
                 .Setup(m => m.GetAgentSessionAsync(request.ConversationId, org, user))
                 .ReturnsAsync(session);
+
+            _contextManager
+                .Setup(c => c.GetAgentContextWithSecretsAsync(request.AgentContext.Id, org, user))
+                .ReturnsAsync(agentContext);
 
             _sessionManager
                 .Setup(m => m.GetLastAgentSessionTurnAsync(request.ConversationId, org, user))
@@ -505,8 +518,8 @@ namespace LagoVista.AI.Tests.Services
                     It.IsAny<List<string>>(),
                     org,
                     user))
-                .Callback<string, string, string, string, string, double, List<string>, EntityHeader, EntityHeader>(
-                    (sessId, turnId, text, url, contId, elapsed, warnings, o, u) =>
+                .Callback<string, string, string, string, string, int, int, int, double, List<string>, EntityHeader, EntityHeader>(
+                    (sessId, turnId, text, url, contId, pt, rt, tt, elapsed, warnings, o, u) =>
                     {
                         completedSessionId = sessId;
                         completedTurnId = turnId;

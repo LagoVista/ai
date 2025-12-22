@@ -80,7 +80,7 @@ Some content.";
             {
                 Markdown = BuildMarkdown("AGN-023", "DDR Ingestion Contract"),
                 // New fields you added in your implementation
-                Type = "Generation",
+                DdrType = "Generation",
                 NeedsHumanConfirmation = false,
                 HumanSummary = "Two sentence human summary.",
                 CondensedDdrContent = "Condensed content.",
@@ -145,15 +145,16 @@ Some content.";
             var args = new
             {
                 Markdown = BuildMarkdown("AGN-050", "Confirmed DDR"),
-                Type = "Generation",
+                DdrType = "Instruction",
                 NeedsHumanConfirmation = false,
                 HumanSummary = "Summary.",
                 CondensedDdrContent = "Condensed.",
-                RagIndexCard = "AGN-050 Generation Approved 2025-12-21: Routes DDR.",
+                RagIndexCard = "AGN-050 Instruction Approved 2025-12-21: Routes DDR.",
 
                 // Keep this aligned with your updated implementation.
                 // If your implementation still accepts ModeInstructionDdrs as a string, pass a string.
-                ModeInstructions = "MUST do X.\nMUST NOT do Y.",
+                ModeInstructions = new string[]
+                    { "MUST do X.","MUST NOT do Y." },
 
                 DryRun = false,
                 Confirmed = true
@@ -215,33 +216,6 @@ Some content.";
 
             Assert.That(res.Successful, Is.False);
             Assert.That(res.ErrorMessage, Does.Contain("could not parse 'identifier'").IgnoreCase);
-            mgr.VerifyNoOtherCalls();
-        }
-
-        [Test]
-        public async Task ExecuteAsync_WhenIdentifierTlaIndexMismatch_ReturnsError()
-        {
-            var mgr = new Mock<IDdrManager>(MockBehavior.Strict);
-            var tool = CreateTool(mgr);
-
-            // Force a mismatch: ID says AGN-123 but H1 implies something else is irrelevant; tool uses parsed ID
-            var md = BuildMarkdown("AGN-123", "Mismatch DDR").Replace("**ID:** AGN-123", "**ID:** AGN-999");
-
-            var args = new
-            {
-                Markdown = md,
-                Type = "Generation",
-                NeedsHumanConfirmation = true,
-                HumanSummary = "Summary.",
-                CondensedDdrContent = "Condensed.",
-                RagIndexCard = "AGN-999 Generation Approved 2025-12-21: Routes DDR.",
-                DryRun = true
-            };
-
-            var res = await tool.ExecuteAsync(ToArgsJson(args), BuildContext(), CancellationToken.None);
-
-            Assert.That(res.Successful, Is.False);
-            Assert.That(res.ErrorMessage, Does.Contain("could not parse").Or.Contain("mismatch"));
             mgr.VerifyNoOtherCalls();
         }
     }

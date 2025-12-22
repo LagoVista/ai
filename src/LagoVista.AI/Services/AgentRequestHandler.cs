@@ -65,7 +65,7 @@ namespace LagoVista.AI.Services
                 var organization = await _orgManager.GetOrganizationAsync(org.Id, org, user);
                 if(EntityHeader.IsNullOrEmpty(organization.DefaultAgentContext))
                 {
-                    const string msg = "AgentContext is required, this can either come from the request or be set as a default in the Owner settings";
+                    const string msg = "AgentContext is required, this can either come from the request or be set as a default in the Owner settings.";
                     _adminLogger.AddError("[AgentRequestHandler_HandleAsync__ValidateRequest]", msg);
                     return InvokeResult<AgentExecuteResponse>.FromError(msg, "AGENT_REQ_MISSING_AGENT_CONTEXT");
                 }
