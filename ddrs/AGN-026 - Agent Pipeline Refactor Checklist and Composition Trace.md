@@ -65,7 +65,7 @@ All pipeline steps MUST implement the same signature:
 
 ### 6.1 What it is
 
-A durable trace of what happened while composing a single agent execution, suitable for:
+A durable trace of what happened while composing a single agent execution, suitable for:OK - 
 
 - diagnostics
 - auditing composition decisions

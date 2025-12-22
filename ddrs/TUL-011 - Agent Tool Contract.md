@@ -2,6 +2,7 @@
 
 **ID:** TUL-011  
 **Title:** Agent Tool Contract  
+**Type:** Referential
 **Status:** Approved  
 **Owner:** Kevin Wolf & Aptix  
 
@@ -69,4 +70,4 @@ HelloWorldTool is the canonical minimal example of a compliant Aptix agent tool:
 - On success, ExecuteAsync returns JSON containing Message, ConversationId, and SessionId fields in a HelloWorldResult payload.
 - GetSchema returns a function tool schema with one required string parameter name and a short description describing that the tool creates a friendly greeting using the user's name.
 
-TUL-011 is now approved and serves as the authoritative contract for all Aptix agent tools.
+TUL-011 is now approved and serves as the authoritative contract for all Aptix agent tools. 
