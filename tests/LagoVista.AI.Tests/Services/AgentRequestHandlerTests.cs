@@ -138,12 +138,6 @@ namespace LagoVista.AI.Tests.Services
             Assert.That(result.Successful, Is.False);
             Assert.That(result.Errors[0].Message, Is.EqualTo("AgentContext is required, this can either come from the request or be set as a default in the Owner settings."));
 
-            //_adminLogger.Verify(
-            //    l => l.AddError(
-            //        "[AgentRequestHandler_HandleNewSessionAsync__ValidateRequest]",
-            //        "AgentContext is required, this can either come from the request or be set as a default in the Owner settings."),
-            //    Times.Once);
-
             _orchestrator.Verify(
                 o => o.BeginNewSessionAsync(It.IsAny<AgentExecuteRequest>(), org, user, It.IsAny<CancellationToken>()),
                 Times.Never);
