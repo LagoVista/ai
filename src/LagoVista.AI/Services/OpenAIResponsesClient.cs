@@ -40,6 +40,7 @@ namespace LagoVista.AI.Services
         private readonly INotificationPublisher _notificationPublisher;
         private readonly IServerToolSchemaProvider _toolSchemaProvider;
         private readonly IAgentStreamingContext _agentStreamingContext;
+        private readonly IResponsesRequestBuilder _responsesRequestBuilder;
 
         public string[] connectingMessage =
         {
@@ -76,6 +77,7 @@ namespace LagoVista.AI.Services
             IServerToolUsageMetadataProvider usageProvider,
             INotificationPublisher notificationPublisher,
             IServerToolSchemaProvider toolSchemaProvider,
+            IResponsesRequestBuilder responsesRequestBuilder,
             IAgentStreamingContext agentStreamingContext)
         {
             _openAiSettings = openAiSettings ?? throw new ArgumentNullException(nameof(openAiSettings));
@@ -84,6 +86,7 @@ namespace LagoVista.AI.Services
             _metaUsageProvider = usageProvider ?? throw new ArgumentNullException(nameof(usageProvider));
             _toolSchemaProvider = toolSchemaProvider ?? throw new ArgumentNullException(nameof(toolSchemaProvider));
             _agentStreamingContext = agentStreamingContext ?? throw new ArgumentNullException(nameof(agentStreamingContext));
+            _responsesRequestBuilder = responsesRequestBuilder ?? throw new ArgumentNullException(nameof(responsesRequestBuilder));
         }
 
         public async Task<InvokeResult<AgentExecuteResponse>> GetAnswerAsync(AgentContext agentContext,
@@ -132,7 +135,7 @@ namespace LagoVista.AI.Services
 
             conversationContext.SystemPrompts.Add(agentContext.BuildSystemPrompt(executeRequest.Mode));
 
-            var requestObject = ResponsesRequestBuilder.Build(conversationContext, executeRequest,
+            var requestObject = _responsesRequestBuilder.Build(conversationContext, executeRequest,
                         ragContextBlock, toolUsageBlock);
 
             var requestJson = JsonConvert.SerializeObject(requestObject);

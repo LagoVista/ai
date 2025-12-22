@@ -10,6 +10,7 @@ using LagoVista.Core.Models.UIMetaData;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json;
+using NLog.LayoutRenderers.Wrappers;
 using RingCentral;
 using System;
 using System.Collections.Generic;
@@ -85,6 +86,9 @@ namespace LagoVista.AI.Managers
             turn.OpenAIResponseBlobUrl = answerBlobUrl;
             turn.Warnings.AddRange(warnings);
             turn.ExecutionMs = executionMs;
+
+            var result = new InvokeResult();
+
 
             ValidationCheck(session, Actions.Update);
 

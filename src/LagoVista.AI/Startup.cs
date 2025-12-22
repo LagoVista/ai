@@ -2,6 +2,7 @@
 // ContentHash: 8af30e234e22ac58836993d70b71054e82111113afd916ba48c95d9522589431
 // IndexVersion: 2
 // --- END CODE INDEX META ---
+using LagoVista.AI.Helpers;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Managers;
 using LagoVista.AI.Rag.Chunkers.Interfaces;
@@ -151,7 +152,8 @@ namespace LagoVista.AI
             services.AddTransient<ISampleManager, SampleManager>();
             services.AddTransient<ILabelManager, LabelManager>();
             services.AddTransient<IExperimentResultManager, ExperimentResultManager>();
-            
+
+            services.AddTransient<IResponsesRequestBuilder, ResponsesRequestBuilder>();
             services.AddScoped<ITextQueryManager, OpenAIManager>();
             services.AddScoped<IImageGeneratorManager, OpenAIManager>();
             services.AddScoped<IQdrantClient, QdrantClient>();

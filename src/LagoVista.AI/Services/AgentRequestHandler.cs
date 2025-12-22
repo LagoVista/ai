@@ -14,42 +14,78 @@ namespace LagoVista.AI.Services
 {
     /// <summary>
     /// Takes a client-facing AgentRequestEnvelope (browser/CLI/thick client),
-    /// performs light validation, maps it into NewAgentExecutionSession or
-    /// AgentExecutionRequest, and delegates to the AgentOrchestrator.
+    /// performs light validation, maps it into AgentPipelineContext, and delegates
+    /// to the next pipeline step (temporary seam until orchestrator is migrated).
     ///
     /// This class is intentionally thin so that:
     /// - Controllers have a single entry point regardless of client type.
-    /// - The orchestrator only sees domain models, not transport DTOs.
+    /// - The downstream pipeline only sees domain models, not transport DTOs.
     /// - Future client-specific response shaping can be added here without
     ///   impacting the orchestration pipeline.
     /// </summary>
-    public class AgentRequestHandler : IAgentRequestHandler
+    public class AgentRequestHandler : IAgentRequestHandler, IAgentPipelineStep
     {
-        private readonly IAgentOrchestrator _orchestrator;
+        private readonly IAgentPipelineStep _next;
         private readonly IAdminLogger _adminLogger;
         private readonly IAgentStreamingContext _agentStreamingContext;
         private readonly IOrganizationManager _orgManager;
 
-        public AgentRequestHandler(IAgentOrchestrator orchestrator, IAdminLogger adminLogger, IOrganizationManager orgManager, IAgentStreamingContext agentStreamingContext)
+        public AgentRequestHandler(
+            IAgentPipelineStep next,
+            IAdminLogger adminLogger,
+            IOrganizationManager orgManager,
+            IAgentStreamingContext agentStreamingContext)
         {
-            _orchestrator = orchestrator ?? throw new ArgumentNullException(nameof(orchestrator));
+            _next = next ?? throw new ArgumentNullException(nameof(next));
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
             _agentStreamingContext = agentStreamingContext ?? throw new ArgumentNullException(nameof(agentStreamingContext));
             _orgManager = orgManager ?? throw new ArgumentNullException(nameof(orgManager));
         }
 
-        public async Task<InvokeResult<AgentExecuteResponse>> HandleAsync(AgentExecuteRequest request, EntityHeader org, EntityHeader user, CancellationToken cancellationToken = default)
+        public async Task<InvokeResult<AgentExecuteResponse>> HandleAsync(
+            AgentExecuteRequest request,
+            EntityHeader org,
+            EntityHeader user,
+            CancellationToken cancellationToken = default)
         {
-            var correlationId = Guid.NewGuid().ToId();
+            var ctx = new AgentPipelineContext
+            {
+                CorrelationId = Guid.NewGuid().ToId(),
+                Org = org,
+                User = user,
+                Request = request,
+                ConversationId = request?.ConversationId
+            };
 
-            _adminLogger.Trace("[AgentRequestHandler_HandleAsync] Handling agent request. " + $"correlationId={correlationId}, org={org?.Id}, user={user?.Id}, sessionId={request?.ConversationId ?? "<null>"}");
+            _adminLogger.Trace("[AgentRequestHandler_HandleAsync] Handling agent request. " +
+                               $"correlationId={ctx.CorrelationId}, org={org?.Id}, user={user?.Id}, sessionId={request?.ConversationId ?? "<null>"}");
+
+            var pipelineResult = await ExecuteAsync(ctx, cancellationToken);
+            if (!pipelineResult.Successful)
+            {
+                return InvokeResult<AgentExecuteResponse>.FromInvokeResult(pipelineResult.ToInvokeResult());
+            }
+
+            return InvokeResult<AgentExecuteResponse>.Create(ctx.Response);
+        }
+
+        public async Task<InvokeResult<AgentPipelineContext>> ExecuteAsync(
+            AgentPipelineContext ctx,
+            CancellationToken cancellationToken = default)
+        {
+            if (ctx == null)
+            {
+                return InvokeResult<AgentPipelineContext>.FromError("AgentPipelineContext cannot be null.", "AGENT_REQ_NULL_CONTEXT");
+            }
+
+            var request = ctx.Request;
 
             if (request == null)
             {
                 const string msg = "AgentRequestEnvelope cannot be null.";
                 _adminLogger.AddError("[AgentRequestHandler_HandleAsync__ValidateRequest]", msg);
 
-                return InvokeResult<AgentExecuteResponse>.FromError(msg, "AGENT_REQ_NULL_REQUEST");
+                return InvokeResult<AgentPipelineContext>.FromError(msg, "AGENT_REQ_NULL_REQUEST");
             }
 
             if (string.IsNullOrWhiteSpace(request.Instruction))
@@ -57,66 +93,72 @@ namespace LagoVista.AI.Services
                 const string msg = "Instruction is required.";
                 _adminLogger.AddError("[AgentRequestHandler_HandleAsync__ValidateRequest]", msg);
 
-                return InvokeResult<AgentExecuteResponse>.FromError(msg, "AGENT_REQ_MISSING_INSTRUCTION");
+                return InvokeResult<AgentPipelineContext>.FromError(msg, "AGENT_REQ_MISSING_INSTRUCTION");
             }
 
             if (EntityHeader.IsNullOrEmpty(request.AgentContext))
             {
-                var organization = await _orgManager.GetOrganizationAsync(org.Id, org, user);
-                if(EntityHeader.IsNullOrEmpty(organization.DefaultAgentContext))
+                var organization = await _orgManager.GetOrganizationAsync(ctx.Org.Id, ctx.Org, ctx.User);
+                if (EntityHeader.IsNullOrEmpty(organization.DefaultAgentContext))
                 {
                     const string msg = "AgentContext is required, this can either come from the request or be set as a default in the Owner settings.";
                     _adminLogger.AddError("[AgentRequestHandler_HandleAsync__ValidateRequest]", msg);
-                    return InvokeResult<AgentExecuteResponse>.FromError(msg, "AGENT_REQ_MISSING_AGENT_CONTEXT");
+                    return InvokeResult<AgentPipelineContext>.FromError(msg, "AGENT_REQ_MISSING_AGENT_CONTEXT");
                 }
 
                 request.AgentContext = organization.DefaultAgentContext;
             }
 
+            ctx.ConversationId = request.ConversationId;
+
             var isNewSession = string.IsNullOrWhiteSpace(request.ConversationId);
 
             if (isNewSession)
             {
-                return await HandleNewSessionAsync(request, org, user, correlationId, cancellationToken);
+                return await HandleNewSessionAsync(ctx, cancellationToken);
             }
 
-            return await HandleFollowupTurnAsync(request, org, user, correlationId, cancellationToken);
+            return await HandleFollowupTurnAsync(ctx, cancellationToken);
         }
 
-        private async Task<InvokeResult<AgentExecuteResponse>> HandleNewSessionAsync(AgentExecuteRequest request, EntityHeader org, EntityHeader user, string correlationId, CancellationToken cancellationToken)
+        private async Task<InvokeResult<AgentPipelineContext>> HandleNewSessionAsync(
+            AgentPipelineContext ctx,
+            CancellationToken cancellationToken)
         {
-            await _agentStreamingContext.AddWorkflowAsync("Welcome to Aptix, Finding the next available agent...please wait...");
+            await _agentStreamingContext.AddWorkflowAsync("Welcome to Aptix, Finding the next available agent...please wait...", cancellationToken);
 
-            _adminLogger.Trace("[AgentRequestHandler_HandleNewSessionAsync] Normalizing new session request. " + $"correlationId={correlationId}, org={org?.Id}, user={user?.Id}");
+            _adminLogger.Trace("[AgentRequestHandler_HandleNewSessionAsync] Normalizing new session request. " +
+                               $"correlationId={ctx.CorrelationId}, org={ctx.Org?.Id}, user={ctx.User?.Id}");
 
-            if (request.AgentContext == null || EntityHeader.IsNullOrEmpty(request.AgentContext))
+            if (ctx.Request.AgentContext == null || EntityHeader.IsNullOrEmpty(ctx.Request.AgentContext))
             {
                 const string msg = "AgentContext is required for a new session.";
                 _adminLogger.AddError("[AgentRequestHandler_HandleNewSessionAsync__ValidateRequest]", msg);
 
-                return InvokeResult<AgentExecuteResponse>.FromError(msg, "AGENT_REQ_MISSING_AGENT_CONTEXT");
+                return InvokeResult<AgentPipelineContext>.FromError(msg, "AGENT_REQ_MISSING_AGENT_CONTEXT");
             }
 
-            return await _orchestrator.BeginNewSessionAsync(request, org, user, cancellationToken);
+            return await _next.ExecuteAsync(ctx, cancellationToken);
         }
 
-        private async Task<InvokeResult<AgentExecuteResponse>> HandleFollowupTurnAsync(AgentExecuteRequest request, EntityHeader org, EntityHeader user, string correlationId, CancellationToken cancellationToken)
+        private async Task<InvokeResult<AgentPipelineContext>> HandleFollowupTurnAsync(
+            AgentPipelineContext ctx,
+            CancellationToken cancellationToken)
         {
+            await _agentStreamingContext.AddWorkflowAsync("Welcome Back to Aptix, let's get started...", cancellationToken);
 
-            await _agentStreamingContext.AddWorkflowAsync("Welcome Back to Aptix, let's get started...");
+            _adminLogger.Trace("[AgentRequestHandler_HandleFollowupTurnAsync] Normalizing follow-up turn request. " +
+                               $"correlationId={ctx.CorrelationId}, org={ctx.Org?.Id}, user={ctx.User?.Id}, conversationId={ctx.Request.ConversationId}");
 
-            _adminLogger.Trace("[AgentRequestHandler_HandleFollowupTurnAsync] Normalizing follow-up turn request. " + $"correlationId={correlationId}, org={org?.Id}, user={user?.Id}, conversationId={request.ConversationId}");
-
-            if (string.IsNullOrWhiteSpace(request.ConversationId))
+            if (string.IsNullOrWhiteSpace(ctx.Request.ConversationId))
             {
                 const string msg = "ConversationId is required for a follow-up turn.";
                 _adminLogger.AddError("[AgentRequestHandler_HandleFollowupTurnAsync__ValidateRequest]", msg);
 
-                return InvokeResult<AgentExecuteResponse>.FromError(msg, "AGENT_REQ_MISSING_SESSION_ID");
+                return InvokeResult<AgentPipelineContext>.FromError(msg, "AGENT_REQ_MISSING_SESSION_ID");
             }
 
-
-            return await _orchestrator.ExecuteTurnAsync(request, org, user, cancellationToken);
+            return await _next.ExecuteAsync(ctx, cancellationToken);
         }
     }
 }

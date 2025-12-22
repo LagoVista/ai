@@ -6,6 +6,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using LagoVista.AI.Helpers;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
 using LagoVista.AI.Services;
@@ -102,7 +103,7 @@ namespace LagoVista.AI.Tests
             private readonly HttpClient _httpClient;
 
             public TestOpenAIResponsesClient(IOpenAISettings settings, IAdminLogger logger, INotificationPublisher publisher, IServerToolSchemaProvider schemaProvider, HttpClient httpClient)
-                : base(settings, logger, new FakeMetaDataProvider(), publisher, schemaProvider, new Mock<IAgentStreamingContext>().Object)
+                : base(settings, logger, new FakeMetaDataProvider(), publisher, schemaProvider, new ResponsesRequestBuilder(), new Mock<IAgentStreamingContext>().Object)
             {
                 _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             }

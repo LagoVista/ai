@@ -22,7 +22,7 @@ namespace LagoVista.AI.Tests.Services
     {
         private Mock<IAgentSessionManager> _sessionManager;
         private Mock<IAgentSessionFactory> _sessionFactory;
-        private Mock<IAgentTurnExecutor> _turnExecutor;
+        private Mock<IAgentTurnExecutor> _next;
         private Mock<INotificationPublisher> _notificationPublisher;
         private Mock<IAdminLogger> _adminLogger;
         private Mock<IAgentContextManager> _contextManager;
@@ -36,7 +36,7 @@ namespace LagoVista.AI.Tests.Services
         {
             _sessionManager = new Mock<IAgentSessionManager>();
             _sessionFactory = new Mock<IAgentSessionFactory>();
-            _turnExecutor = new Mock<IAgentTurnExecutor>();
+            _next = new Mock<IAgentTurnExecutor>();
             _notificationPublisher = new Mock<INotificationPublisher>();
             _adminLogger = new Mock<IAdminLogger>();
             _contextManager = new Mock<IAgentContextManager>();
@@ -57,7 +57,7 @@ namespace LagoVista.AI.Tests.Services
                 _contextManager.Object,
                 _transcriptStore.Object,
                 _sessionFactory.Object,
-                _turnExecutor.Object,
+                _next.Object,
                 _notificationPublisher.Object,
                 _adminLogger.Object,
                 _streamingContext.Object);
@@ -74,7 +74,7 @@ namespace LagoVista.AI.Tests.Services
                     _contextManager.Object,
                     _transcriptStore.Object,
                     _sessionFactory.Object,
-                    _turnExecutor.Object,
+                    _next.Object,
                     _notificationPublisher.Object,
                     _adminLogger.Object,
                     _streamingContext.Object));
@@ -89,7 +89,7 @@ namespace LagoVista.AI.Tests.Services
                     null,
                     _transcriptStore.Object,
                     _sessionFactory.Object,
-                    _turnExecutor.Object,
+                    _next.Object,
                     _notificationPublisher.Object,
                     _adminLogger.Object,
                     _streamingContext.Object));
@@ -104,7 +104,7 @@ namespace LagoVista.AI.Tests.Services
                     _contextManager.Object,
                     null,
                     _sessionFactory.Object,
-                    _turnExecutor.Object,
+                    _next.Object,
                     _notificationPublisher.Object,
                     _adminLogger.Object,
                     _streamingContext.Object));
@@ -119,14 +119,14 @@ namespace LagoVista.AI.Tests.Services
                     _contextManager.Object,
                     _transcriptStore.Object,
                     null,
-                    _turnExecutor.Object,
+                    _next.Object,
                     _notificationPublisher.Object,
                     _adminLogger.Object,
                     _streamingContext.Object));
         }
 
         [Test]
-        public void Ctor_NullTurnExecutor_Throws()
+        public void Ctor_NullNext_Throws()
         {
             Assert.Throws<ArgumentNullException>(() =>
                 new AgentOrchestrator(
@@ -149,7 +149,7 @@ namespace LagoVista.AI.Tests.Services
                     _contextManager.Object,
                     _transcriptStore.Object,
                     _sessionFactory.Object,
-                    _turnExecutor.Object,
+                    _next.Object,
                     null,
                     _adminLogger.Object,
                     _streamingContext.Object));
@@ -164,19 +164,18 @@ namespace LagoVista.AI.Tests.Services
                     _contextManager.Object,
                     _transcriptStore.Object,
                     _sessionFactory.Object,
-                    _turnExecutor.Object,
+                    _next.Object,
                     _notificationPublisher.Object,
                     null,
                     _streamingContext.Object));
-
         }
 
         #endregion
 
-        #region BeginNewSessionAsync – request envelope
+        #region ExecuteAsync – New Session (request envelope)
 
         [Test]
-        public async Task BeginNewSessionAsync_Success_StoresRequestEnvelope_SetsRequestEnvelopeUrl_AndCompletesTurn()
+        public async Task ExecuteAsync_NewSession_Success_StoresRequestEnvelope_SetsRequestEnvelopeUrl_AndCompletesTurn()
         {
             // Arrange
             var org = CreateOrg();
@@ -194,12 +193,20 @@ namespace LagoVista.AI.Tests.Services
                 RagScopeFilter = new RagScopeFilter()
             };
 
+            var ctx = new AgentPipelineContext
+            {
+                CorrelationId = "corr-1",
+                Org = org,
+                User = user,
+                Request = request
+            };
+
             var agentContext = new AgentContext { Id = "ctx-1", Name = "Context 1" };
 
             var session = new AgentSession
             {
                 Id = "session-1",
-                AgentContext = EntityHeader.Create("id","text"),
+                AgentContext = EntityHeader.Create("id", "text"),
                 ConversationContext = EntityHeader.Create("id", "text"),
                 Repo = request.Repo,
                 DefaultLanguage = request.Language,
@@ -221,9 +228,9 @@ namespace LagoVista.AI.Tests.Services
                 Warnings = new List<string> { "warn-1" }
             };
 
-            _contextManager
-                .Setup(c => c.GetAgentContextAsync(request.AgentContext.Id, org, user))
-                .ReturnsAsync(agentContext);
+            _streamingContext
+                .Setup(sc => sc.AddWorkflowAsync("...connected, let's get started...", It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
 
             _contextManager
                 .Setup(c => c.GetAgentContextWithSecretsAsync(request.AgentContext.Id, org, user))
@@ -249,16 +256,17 @@ namespace LagoVista.AI.Tests.Services
 
             _transcriptStore
                 .Setup(t => t.SaveTurnRequestAsync(org.Id, session.Id, turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .Callback<string, string, string, string, CancellationToken>((o, sId, tId, json, ct) => capturedRequestJson = json)
+                .Callback<string, string, string, string, CancellationToken>((o, sId, tId, json, ctkn) => capturedRequestJson = json)
                 .ReturnsAsync(InvokeResult<Uri>.Create(new Uri("blob://req-1")));
 
             _sessionManager
-                .Setup(m => m.SetRequestBlobUriAsync(session.Id, turn.Id, "blob://req-1", org, user))
+                .Setup(m => m.SetRequestBlobUriAsync(session.Id, turn.Id, "blob://req-1/", org, user))
                 .Returns(Task.CompletedTask);
 
-            _turnExecutor
-                .Setup(t => t.ExecuteNewSessionTurnAsync(agentContext, session, turn, request, org, user, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(InvokeResult<AgentExecuteResponse>.Create(agentResponse));
+            _next
+                .Setup(n => n.ExecuteAsync(ctx, It.IsAny<CancellationToken>()))
+                .Callback<AgentPipelineContext, CancellationToken>((c, _) => c.Response = agentResponse)
+                .ReturnsAsync((AgentPipelineContext c, CancellationToken _) => InvokeResult<AgentPipelineContext>.Create(c));
 
             string completedSessionId = null;
             string completedTurnId = null;
@@ -283,7 +291,7 @@ namespace LagoVista.AI.Tests.Services
                     org,
                     user))
                 .Callback<string, string, string, string, string, int, int, int, double, List<string>, EntityHeader, EntityHeader>(
-                    (sessId, turnId, text, url, contId,pt, rp, tt, elapsed, warnings, o, u) =>
+                    (sessId, turnId, text, url, contId, pt, rt, tt, elapsed, warnings, o, u) =>
                     {
                         completedSessionId = sessId;
                         completedTurnId = turnId;
@@ -296,11 +304,11 @@ namespace LagoVista.AI.Tests.Services
                 .Returns(Task.CompletedTask);
 
             // Act
-            var result = await _sut.BeginNewSessionAsync(request, org, user);
+            var result = await _sut.ExecuteAsync(ctx);
 
-            // Assert – orchestrator result
-            Assert.That(result.Successful, Is.True);
-            Assert.That(result.Result, Is.SameAs(agentResponse));
+            // Assert – pipeline result
+            Assert.That(result.Successful, Is.True, result.ErrorMessage);
+            Assert.That(ctx.Response, Is.SameAs(agentResponse));
 
             // Assert – request envelope JSON persisted correctly
             Assert.That(capturedRequestJson, Is.Not.Null.And.Not.Empty);
@@ -324,7 +332,7 @@ namespace LagoVista.AI.Tests.Services
         }
 
         [Test]
-        public async Task BeginNewSessionAsync_SaveRequestFails_ReturnsErrorAndDoesNotExecuteTurn()
+        public async Task ExecuteAsync_NewSession_SaveRequestFails_ReturnsErrorAndDoesNotCallNext()
         {
             // Arrange
             var org = CreateOrg();
@@ -337,13 +345,17 @@ namespace LagoVista.AI.Tests.Services
                 Mode = "ask"
             };
 
-            var agentContext = new AgentContext { Id = "ctx-1", Name = "Context 1", AgentModes = new List<AgentMode>() };
-            var session = new AgentSession { Id = "session-1", AgentContext = EntityHeader.Create("id","text"), ConversationContext = EntityHeader.Create("id", "text") };
-            var turn = new AgentSessionTurn { Id = "turn-1", ConversationId = "conv-1" };
+            var ctx = new AgentPipelineContext
+            {
+                CorrelationId = "corr-1",
+                Org = org,
+                User = user,
+                Request = request
+            };
 
-            _contextManager
-                .Setup(c => c.GetAgentContextAsync(request.AgentContext.Id, org, user))
-                .ReturnsAsync(agentContext);
+            var agentContext = new AgentContext { Id = "ctx-1", Name = "Context 1", AgentModes = new List<AgentMode>() };
+            var session = new AgentSession { Id = "session-1", AgentContext = EntityHeader.Create("id", "text"), ConversationContext = EntityHeader.Create("id", "text") };
+            var turn = new AgentSessionTurn { Id = "turn-1", ConversationId = "conv-1" };
 
             _contextManager
                 .Setup(c => c.GetAgentContextWithSecretsAsync(request.AgentContext.Id, org, user))
@@ -370,19 +382,12 @@ namespace LagoVista.AI.Tests.Services
                 .ReturnsAsync(InvokeResult<Uri>.FromError("failed to save"));
 
             // Act
-            var result = await _sut.BeginNewSessionAsync(request, org, user);
+            var result = await _sut.ExecuteAsync(ctx);
 
             // Assert
             Assert.That(result.Successful, Is.False);
 
-            _turnExecutor.Verify(t => t.ExecuteNewSessionTurnAsync(
-                It.IsAny<AgentContext>(),
-                It.IsAny<AgentSession>(),
-                It.IsAny<AgentSessionTurn>(),
-                It.IsAny<AgentExecuteRequest>(),
-                org,
-                user,
-                It.IsAny<CancellationToken>()), Times.Never);
+            _next.Verify(n => n.ExecuteAsync(It.IsAny<AgentPipelineContext>(), It.IsAny<CancellationToken>()), Times.Never);
 
             _sessionManager.Verify(m => m.SetRequestBlobUriAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), org, user), Times.Never);
             _sessionManager.Verify(m => m.CompleteAgentSessionTurnAsync(
@@ -402,10 +407,10 @@ namespace LagoVista.AI.Tests.Services
 
         #endregion
 
-        #region ExecuteTurnAsync – request envelope
+        #region ExecuteAsync – Follow-up Turn (request envelope)
 
         [Test]
-        public async Task ExecuteTurnAsync_Success_StoresRequestEnvelope_SetsRequestEnvelopeUrl_AndCompletesTurn()
+        public async Task ExecuteAsync_Followup_Success_StoresRequestEnvelope_SetsRequestEnvelopeUrl_AndCompletesTurn()
         {
             // Arrange
             var org = CreateOrg();
@@ -422,7 +427,15 @@ namespace LagoVista.AI.Tests.Services
                 Language = "csharp",
                 ActiveFiles = new List<ActiveFile>(),
                 RagScopeFilter = new RagScopeFilter(),
-                AgentContext = new EntityHeader() { Id = "12"}
+                AgentContext = new EntityHeader { Id = "12" }
+            };
+
+            var ctx = new AgentPipelineContext
+            {
+                CorrelationId = "corr-2",
+                Org = org,
+                User = user,
+                Request = request
             };
 
             var agentContext = new AgentContext { Id = "ctx-1", Name = "Context 1" };
@@ -464,10 +477,6 @@ namespace LagoVista.AI.Tests.Services
                 .Setup(m => m.GetAgentSessionAsync(request.ConversationId, org, user))
                 .ReturnsAsync(session);
 
-            _contextManager
-                .Setup(c => c.GetAgentContextWithSecretsAsync(request.AgentContext.Id, org, user))
-                .ReturnsAsync(agentContext);
-
             _sessionManager
                 .Setup(m => m.GetLastAgentSessionTurnAsync(request.ConversationId, org, user))
                 .ReturnsAsync(previousTurn);
@@ -488,12 +497,13 @@ namespace LagoVista.AI.Tests.Services
 
             _transcriptStore
                 .Setup(t => t.SaveTurnRequestAsync(org.Id, session.Id, newTurn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .Callback<string, string, string, string, CancellationToken>((o, sId, tId, json, ct) => capturedRequestJson = json)
+                .Callback<string, string, string, string, CancellationToken>((o, sId, tId, json, ctkn) => capturedRequestJson = json)
                 .ReturnsAsync(InvokeResult<Uri>.Create(new Uri("blob://req-1")));
 
-            _turnExecutor
-                .Setup(t => t.ExecuteFollowupTurnAsync(agentContext, session, newTurn, request, org, user, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(InvokeResult<AgentExecuteResponse>.Create(agentResponse));
+            _next
+                .Setup(n => n.ExecuteAsync(ctx, It.IsAny<CancellationToken>()))
+                .Callback<AgentPipelineContext, CancellationToken>((c, _) => c.Response = agentResponse)
+                .ReturnsAsync((AgentPipelineContext c, CancellationToken _) => InvokeResult<AgentPipelineContext>.Create(c));
 
             string completedSessionId = null;
             string completedTurnId = null;
@@ -513,7 +523,6 @@ namespace LagoVista.AI.Tests.Services
                     It.IsAny<int>(),
                     It.IsAny<int>(),
                     It.IsAny<int>(),
-
                     It.IsAny<double>(),
                     It.IsAny<List<string>>(),
                     org,
@@ -532,11 +541,11 @@ namespace LagoVista.AI.Tests.Services
                 .Returns(Task.CompletedTask);
 
             // Act
-            var result = await _sut.ExecuteTurnAsync(request, org, user);
+            var result = await _sut.ExecuteAsync(ctx);
 
-            // Assert – orchestrator result
-            Assert.That(result.Successful, Is.True);
-            Assert.That(result.Result, Is.SameAs(agentResponse));
+            // Assert – pipeline result
+            Assert.That(result.Successful, Is.True, result.ErrorMessage);
+            Assert.That(ctx.Response, Is.SameAs(agentResponse));
 
             // Assert – request envelope JSON persisted correctly with PreviousOpenAIResponseId
             Assert.That(capturedRequestJson, Is.Not.Null.And.Not.Empty);
@@ -546,6 +555,9 @@ namespace LagoVista.AI.Tests.Services
             Assert.That((string)envelope.TurnId, Is.EqualTo(newTurn.Id));
             Assert.That((string)envelope.PreviousOpenAIResponseId, Is.EqualTo(previousTurn.OpenAIResponseId));
 
+            // RequestEnvelopeUrl should be set from the blob result
+            Assert.That(agentResponse.RequestEnvelopeUrl, Is.EqualTo("blob://req-1/"));
+
             // Assert – response completion uses required fields
             Assert.That(completedSessionId, Is.EqualTo(session.Id));
             Assert.That(completedTurnId, Is.EqualTo(newTurn.Id));
@@ -554,13 +566,10 @@ namespace LagoVista.AI.Tests.Services
             Assert.That(completedContinuationId, Is.EqualTo(agentResponse.ResponseContinuationId));
             Assert.That(completedWarnings, Is.SameAs(agentResponse.Warnings));
             Assert.That(completedElapsed, Is.GreaterThan(0));
-
-            // RequestEnvelopeUrl should be set from the blob result
-            Assert.That(agentResponse.RequestEnvelopeUrl, Is.EqualTo("blob://req-1/"));
         }
 
         [Test]
-        public async Task ExecuteTurnAsync_SaveRequestFails_ReturnsErrorAndDoesNotExecuteTurn()
+        public async Task ExecuteAsync_Followup_SaveRequestFails_ReturnsErrorAndDoesNotCallNext()
         {
             // Arrange
             var org = CreateOrg();
@@ -571,6 +580,14 @@ namespace LagoVista.AI.Tests.Services
                 ConversationId = "conv-1",
                 Instruction = "follow up",
                 Mode = "ask"
+            };
+
+            var ctx = new AgentPipelineContext
+            {
+                CorrelationId = "corr-3",
+                Org = org,
+                User = user,
+                Request = request
             };
 
             var agentContext = new AgentContext { Id = "ctx-1", Name = "Context 1" };
@@ -603,19 +620,12 @@ namespace LagoVista.AI.Tests.Services
                 .ReturnsAsync(InvokeResult<Uri>.FromError("failed"));
 
             // Act
-            var result = await _sut.ExecuteTurnAsync(request, org, user);
+            var result = await _sut.ExecuteAsync(ctx);
 
             // Assert
             Assert.That(result.Successful, Is.False);
 
-            _turnExecutor.Verify(t => t.ExecuteFollowupTurnAsync(
-                It.IsAny<AgentContext>(),
-                It.IsAny<AgentSession>(),
-                It.IsAny<AgentSessionTurn>(),
-                It.IsAny<AgentExecuteRequest>(),
-                org,
-                user,
-                It.IsAny<CancellationToken>()), Times.Never);
+            _next.Verify(n => n.ExecuteAsync(It.IsAny<AgentPipelineContext>(), It.IsAny<CancellationToken>()), Times.Never);
 
             _sessionManager.Verify(m => m.CompleteAgentSessionTurnAsync(
                 It.IsAny<string>(),
@@ -653,6 +663,215 @@ namespace LagoVista.AI.Tests.Services
                 Text = "User 1"
             };
         }
+
+        [Test]
+        public async Task ExecuteAsync_NewSession_SetsCtxSessionAndTurn_BeforeCallingNext()
+        {
+            // Arrange
+            var org = CreateOrg();
+            var user = CreateUser();
+
+            var request = new AgentExecuteRequest
+            {
+                AgentContext = new EntityHeader { Id = "agent-ctx-1", Text = "Agent Ctx" },
+                Instruction = "do something",
+                Mode = "ask",
+                WorkspaceId = "ws-1",
+                Repo = "repo-1",
+                Language = "csharp"
+            };
+
+            var ctx = new AgentPipelineContext
+            {
+                CorrelationId = "corr-1",
+                Org = org,
+                User = user,
+                Request = request
+            };
+
+            var agentContext = new AgentContext { Id = "ctx-1", Name = "Context 1" };
+
+            var session = new AgentSession { Id = "session-1", AgentContext = EntityHeader.Create("id", "text"), ConversationContext = EntityHeader.Create("id", "text") };
+            var turn = new AgentSessionTurn { Id = "turn-1", SequenceNumber = 1, ConversationId = "conv-1" };
+
+            _contextManager
+                .Setup(c => c.GetAgentContextWithSecretsAsync(request.AgentContext.Id, org, user))
+                .ReturnsAsync(agentContext);
+
+            _sessionFactory
+                .Setup(f => f.CreateSession(request, agentContext, OperationKinds.Code, org, user))
+                .ReturnsAsync(session);
+
+            _sessionFactory
+                .Setup(f => f.CreateTurnForNewSession(session, request, org, user))
+                .Returns(turn);
+
+            _sessionManager
+                .Setup(m => m.AddAgentSessionAsync(session, org, user))
+                .Returns(Task.CompletedTask);
+
+            _sessionManager
+                .Setup(m => m.AddAgentSessionTurnAsync(session.Id, turn, org, user))
+                .Returns(Task.CompletedTask);
+
+            _transcriptStore
+                .Setup(t => t.SaveTurnRequestAsync(org.Id, session.Id, turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(InvokeResult<Uri>.Create(new Uri("blob://req-1")));
+
+            _sessionManager
+                .Setup(m => m.SetRequestBlobUriAsync(session.Id, turn.Id, "blob://req-1/", org, user))
+                .Returns(Task.CompletedTask);
+
+            _streamingContext
+                .Setup(sc => sc.AddWorkflowAsync("...connected, let's get started...", It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
+
+            var agentResponse = new AgentExecuteResponse { Text = "ok" };
+
+            _next
+                .Setup(n => n.ExecuteAsync(It.IsAny<AgentPipelineContext>(), It.IsAny<CancellationToken>()))
+                .Callback<AgentPipelineContext, CancellationToken>((c, _) =>
+                {
+                    // Assert *inside* the callback so we verify ordering: orchestrator must set these before calling next.
+                    Assert.That(c.Session, Is.SameAs(session));
+                    Assert.That(c.Turn, Is.SameAs(turn));
+
+                    c.Response = agentResponse;
+                })
+                .ReturnsAsync((AgentPipelineContext c, CancellationToken _) => InvokeResult<AgentPipelineContext>.Create(c));
+
+            _sessionManager
+                .Setup(m => m.CompleteAgentSessionTurnAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<int>(),
+                    It.IsAny<int>(),
+                    It.IsAny<int>(),
+                    It.IsAny<double>(),
+                    It.IsAny<List<string>>(),
+                    org,
+                    user))
+                .Returns(Task.CompletedTask);
+
+            // Act
+            var result = await _sut.ExecuteAsync(ctx);
+
+            // Assert
+            Assert.That(result.Successful, Is.True, result.ErrorMessage);
+            _next.Verify(n => n.ExecuteAsync(It.IsAny<AgentPipelineContext>(), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Test]
+        public async Task ExecuteAsync_Followup_SetsCtxSessionAndTurn_BeforeCallingNext()
+        {
+            // Arrange
+            var org = CreateOrg();
+            var user = CreateUser();
+
+            var request = new AgentExecuteRequest
+            {
+                ConversationId = "conv-1",
+                Instruction = "follow up",
+                Mode = "ask",
+                AgentContext = new EntityHeader { Id = "12" }
+            };
+
+            var ctx = new AgentPipelineContext
+            {
+                CorrelationId = "corr-2",
+                Org = org,
+                User = user,
+                Request = request
+            };
+
+            var session = new AgentSession
+            {
+                Id = "session-1",
+                AgentContext = EntityHeader.Create("id", "text"),
+                ConversationContext = EntityHeader.Create("id", "text")
+            };
+
+            var previousTurn = new AgentSessionTurn
+            {
+                Id = "prev-turn",
+                SequenceNumber = 1,
+                ConversationId = "conv-1",
+                OpenAIResponseId = "open-ai-prev"
+            };
+
+            var newTurn = new AgentSessionTurn
+            {
+                Id = "turn-2",
+                SequenceNumber = 0,
+                ConversationId = null
+            };
+
+            var agentContext = new AgentContext { Id = "ctx-1", Name = "Context 1" };
+
+            _sessionManager
+                .Setup(m => m.GetAgentSessionAsync(request.ConversationId, org, user))
+                .ReturnsAsync(session);
+
+            _sessionManager
+                .Setup(m => m.GetLastAgentSessionTurnAsync(request.ConversationId, org, user))
+                .ReturnsAsync(previousTurn);
+
+            _contextManager
+                .Setup(c => c.GetAgentContextAsync(session.AgentContext.Id, org, user))
+                .ReturnsAsync(agentContext);
+
+            _sessionFactory
+                .Setup(f => f.CreateTurnForExistingSession(session, request, org, user))
+                .Returns(newTurn);
+
+            _sessionManager
+                .Setup(m => m.AddAgentSessionTurnAsync(session.Id, newTurn, org, user))
+                .Returns(Task.CompletedTask);
+
+            _transcriptStore
+                .Setup(t => t.SaveTurnRequestAsync(org.Id, session.Id, newTurn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(InvokeResult<Uri>.Create(new Uri("blob://req-1")));
+
+            var agentResponse = new AgentExecuteResponse { Text = "ok" };
+
+            _next
+                .Setup(n => n.ExecuteAsync(It.IsAny<AgentPipelineContext>(), It.IsAny<CancellationToken>()))
+                .Callback<AgentPipelineContext, CancellationToken>((c, _) =>
+                {
+                    Assert.That(c.Session, Is.SameAs(session));
+                    Assert.That(c.Turn, Is.SameAs(newTurn));
+
+                    c.Response = agentResponse;
+                })
+                .ReturnsAsync((AgentPipelineContext c, CancellationToken _) => InvokeResult<AgentPipelineContext>.Create(c));
+
+            _sessionManager
+                .Setup(m => m.CompleteAgentSessionTurnAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<int>(),
+                    It.IsAny<int>(),
+                    It.IsAny<int>(),
+                    It.IsAny<double>(),
+                    It.IsAny<List<string>>(),
+                    org,
+                    user))
+                .Returns(Task.CompletedTask);
+
+            // Act
+            var result = await _sut.ExecuteAsync(ctx);
+
+            // Assert
+            Assert.That(result.Successful, Is.True, result.ErrorMessage);
+            _next.Verify(n => n.ExecuteAsync(It.IsAny<AgentPipelineContext>(), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
 
         #endregion
     }

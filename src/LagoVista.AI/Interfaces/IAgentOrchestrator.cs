@@ -11,12 +11,7 @@ namespace LagoVista.AI.Interfaces
     /// Coordinates the full Aptix agent execution flow for a single request,
     /// including session/turn management, RAG, and OpenAI calls.
     /// </summary>
-    public interface IAgentOrchestrator
+    public interface IAgentOrchestrator : IAgentPipelineStep
     {
-        Task<InvokeResult<AgentExecuteResponse>> BeginNewSessionAsync(AgentExecuteRequest request, EntityHeader org,
-            EntityHeader user, CancellationToken cancellationToken = default);
-    
-        Task<InvokeResult<AgentExecuteResponse>> ExecuteTurnAsync(AgentExecuteRequest request, EntityHeader org,
-            EntityHeader user, CancellationToken cancellationToken = default);
     }
 }

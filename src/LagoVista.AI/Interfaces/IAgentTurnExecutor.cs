@@ -11,24 +11,7 @@ namespace LagoVista.AI.Interfaces
     /// Executes a single logical turn for an Aptix agent session,
     /// given the already-loaded AgentContext.
     /// </summary>
-    public interface IAgentTurnExecutor
+    public interface IAgentTurnExecutor : IAgentPipelineStep
     {
-        Task<InvokeResult<AgentExecuteResponse>> ExecuteNewSessionTurnAsync(
-            AgentContext agentContext,
-            AgentSession session,
-            AgentSessionTurn turn,
-            AgentExecuteRequest request,
-            EntityHeader org,
-            EntityHeader user,
-            CancellationToken cancellationToken = default);
-
-        Task<InvokeResult<AgentExecuteResponse>> ExecuteFollowupTurnAsync(
-            AgentContext agentContext,
-            AgentSession session,
-            AgentSessionTurn turn,
-            AgentExecuteRequest request,
-            EntityHeader org,
-            EntityHeader user,
-            CancellationToken cancellationToken = default);
     }
 }

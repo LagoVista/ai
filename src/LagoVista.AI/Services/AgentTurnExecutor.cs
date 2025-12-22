@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
@@ -26,83 +25,101 @@ namespace LagoVista.AI.Services
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
         }
 
-        public async Task<InvokeResult<AgentExecuteResponse>> ExecuteNewSessionTurnAsync(AgentContext agentContext, AgentSession session, AgentSessionTurn turn, AgentExecuteRequest execRequest, EntityHeader org, EntityHeader user, CancellationToken cancellationToken = default)
+        public async Task<InvokeResult<AgentPipelineContext>> ExecuteAsync(
+            AgentPipelineContext ctx,
+            CancellationToken cancellationToken = default)
         {
-            if (agentContext == null) throw new ArgumentNullException(nameof(agentContext));
-            if (session == null) throw new ArgumentNullException(nameof(session));
-            if (turn == null) throw new ArgumentNullException(nameof(turn));
-            if (execRequest == null) throw new ArgumentNullException(nameof(execRequest));
+            if (ctx == null)
+            {
+                return InvokeResult<AgentPipelineContext>.FromError("AgentPipelineContext cannot be null.", "AGENT_TURN_NULL_CONTEXT");
+            }
 
-            var execResult = await _agentExecutionService.ExecuteAsync(execRequest, org, user, cancellationToken);
+            if (ctx.AgentContext == null)
+            {
+                return InvokeResult<AgentPipelineContext>.FromError("AgentContext is required.", "AGENT_TURN_MISSING_AGENT_CONTEXT");
+            }
+
+            if (ctx.Session == null)
+            {
+                return InvokeResult<AgentPipelineContext>.FromError("Session is required.", "AGENT_TURN_MISSING_SESSION");
+            }
+
+            if (ctx.Turn == null)
+            {
+                return InvokeResult<AgentPipelineContext>.FromError("Turn is required.", "AGENT_TURN_MISSING_TURN");
+            }
+
+            if (ctx.Request == null)
+            {
+                return InvokeResult<AgentPipelineContext>.FromError("AgentExecuteRequest is required.", "AGENT_TURN_MISSING_REQUEST");
+            }
+
+            if (ctx.Org == null || EntityHeader.IsNullOrEmpty(ctx.Org))
+            {
+                return InvokeResult<AgentPipelineContext>.FromError("Org is required.", "AGENT_TURN_MISSING_ORG");
+            }
+
+            if (ctx.User == null || EntityHeader.IsNullOrEmpty(ctx.User))
+            {
+                return InvokeResult<AgentPipelineContext>.FromError("User is required.", "AGENT_TURN_MISSING_USER");
+            }
+
+            var execResult = await _agentExecutionService.ExecuteAsync(ctx.Request, ctx.Org, ctx.User, cancellationToken);
             if (!execResult.Successful)
             {
-                return InvokeResult<AgentExecuteResponse>.FromInvokeResult(execResult.ToInvokeResult());
+                return InvokeResult<AgentPipelineContext>.FromInvokeResult(execResult.ToInvokeResult());
             }
 
             var execResponse = execResult.Result;
 
-            var responseEnvelope = new
+            var isNewSessionTurn = string.IsNullOrWhiteSpace(ctx.Request.ConversationId);
+            object responseEnvelope;
+
+            if (isNewSessionTurn)
             {
-                OrgId = org?.Id,
-                SessionId = session.Id,
-                ConversationId = session.Id,
-                TurnId = turn.Id,
-                Response = execResponse
-            };
+                responseEnvelope = new
+                {
+                    OrgId = ctx.Org?.Id,
+                    SessionId = ctx.Session.Id,
+                    ConversationId = ctx.Session.Id,
+                    TurnId = ctx.Turn.Id,
+                    Response = execResponse
+                };
+            }
+            else
+            {
+                responseEnvelope = new
+                {
+                    OrgId = ctx.Org?.Id,
+                    SessionId = ctx.Session.Id,
+                    ConversationId = ctx.Session.Id,
+                    ResponseId = ctx.Request.ResponseContinuationId,
+                    TurnId = ctx.Turn.Id,
+                    Response = execResponse
+                };
+            }
 
             var responseJson = JsonConvert.SerializeObject(responseEnvelope);
-            var responseBlobResult = await _transcriptStore.SaveTurnResponseAsync(org.Id, session.Id, turn.Id, responseJson, cancellationToken);
+            var responseBlobResult = await _transcriptStore.SaveTurnResponseAsync(ctx.Org.Id, ctx.Session.Id, ctx.Turn.Id, responseJson, cancellationToken);
 
             if (!responseBlobResult.Successful)
             {
-                _adminLogger.AddError("[AgentTurnExecutor_ExecuteNewSessionTurnAsync__Transcript]", "Failed to store turn response transcript.");
-                return InvokeResult<AgentExecuteResponse>.FromInvokeResult(responseBlobResult.ToInvokeResult());
+                _adminLogger.AddError(
+                    isNewSessionTurn
+                        ? "[AgentTurnExecutor_ExecuteNewSessionTurnAsync__Transcript]"
+                        : "[AgentTurnExecutor_ExecuteFollowupTurnAsync__Transcript]",
+                    "Failed to store turn response transcript.");
+
+                return InvokeResult<AgentPipelineContext>.FromInvokeResult(responseBlobResult.ToInvokeResult());
             }
 
-            execResult.Result.FullResponseUrl = responseBlobResult.Result.ToString();
-            execResult.Result.ConversationId = session.Id;
-            execResult.Result.TurnId = turn.Id;
-            return execResult;
-        }
+            execResponse.FullResponseUrl = responseBlobResult.Result.ToString();
+            execResponse.ConversationId = ctx.Session.Id;
+            execResponse.TurnId = ctx.Turn.Id;
 
-        public async Task<InvokeResult<AgentExecuteResponse>> ExecuteFollowupTurnAsync(AgentContext agentContext, AgentSession session, AgentSessionTurn turn, AgentExecuteRequest execRequest, EntityHeader org, EntityHeader user, CancellationToken cancellationToken = default)
-        {
-            if (agentContext == null) throw new ArgumentNullException(nameof(agentContext));
-            if (session == null) throw new ArgumentNullException(nameof(session));
-            if (turn == null) throw new ArgumentNullException(nameof(turn));
-            if (execRequest == null) throw new ArgumentNullException(nameof(execRequest));
+            ctx.Response = execResponse;
 
-            var execResult = await _agentExecutionService.ExecuteAsync(execRequest, org, user, cancellationToken);
-            if (!execResult.Successful)
-            {
-                return InvokeResult<AgentExecuteResponse>.FromInvokeResult(execResult.ToInvokeResult());
-            }
-
-            var execResponse = execResult.Result;
-
-            var responseEnvelope = new
-            {
-                OrgId = org?.Id,
-                SessionId = session.Id,
-                ConversationId = session.Id,
-                ResponseId = execRequest.ResponseContinuationId,
-                TurnId = turn.Id,
-                Response = execResponse
-            };
-
-            var responseJson = JsonConvert.SerializeObject(responseEnvelope);
-            var responseBlobResult = await _transcriptStore.SaveTurnResponseAsync(org.Id, session.Id, turn.Id, responseJson, cancellationToken);
-
-            if (!responseBlobResult.Successful)
-            {
-                _adminLogger.AddError("[AgentTurnExecutor_ExecuteFollowupTurnAsync__Transcript]", "Failed to store turn response transcript.");
-                return InvokeResult<AgentExecuteResponse>.FromInvokeResult(responseBlobResult.ToInvokeResult());
-            }
-
-            execResult.Result.FullResponseUrl = responseBlobResult.Result.ToString();
-            execResult.Result.ConversationId = session.Id;
-            execResult.Result.TurnId = turn.Id;
-            return execResult;
+            return InvokeResult<AgentPipelineContext>.Create(ctx);
         }
     }
 }

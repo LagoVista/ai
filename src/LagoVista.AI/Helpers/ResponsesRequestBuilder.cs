@@ -6,6 +6,7 @@ using LagoVista.AI.Models;
 using LagoVista.Core.AI.Models;
 using System.Text;
 using System.Linq;
+using LagoVista.AI.Interfaces;
 
 namespace LagoVista.AI.Helpers
 {
@@ -19,7 +20,7 @@ namespace LagoVista.AI.Helpers
     /// - ragContextBlock (pre-formatted [CONTEXT] block per AGN-002)
     /// - toolUsageMetadataBlock (LLM-facing usage metadata for ALL server tools)
     /// </summary>
-    public static class ResponsesRequestBuilder
+    public class ResponsesRequestBuilder : IResponsesRequestBuilder
     {
         /// <summary>
         /// Build the /responses request object as a strongly-typed DTO.
@@ -33,7 +34,7 @@ namespace LagoVista.AI.Helpers
         /// <param name="referenceSection">Table of Contents for Reference Documents helpful for this mode.</param>
         /// <param name="stream">Whether to stream the response via SSE.</param>
         /// <returns>ResponsesApiRequest representing the body for the /responses call.</returns>
-        public static ResponsesApiRequest Build(
+        public ResponsesApiRequest Build(
                 ConversationContext conversationContext,
                 AgentExecuteRequest request,
                 string ragContextBlock,

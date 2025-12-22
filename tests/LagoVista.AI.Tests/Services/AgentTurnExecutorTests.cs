@@ -62,52 +62,39 @@ namespace LagoVista.AI.Tests.Services
 
         #endregion
 
-        #region Argument Guards
+        #region ExecuteAsync - Context Guards
 
         [Test]
-        public void ExecuteNewSessionTurnAsync_NullAgentContext_Throws()
+        public async Task ExecuteAsync_WhenCtxNull_ReturnsError()
         {
-            var session = CreateSession();
-            var turn = CreateTurn();
-            var execRequest = CreateExecRequestForNewSession(session, turn);
-            var org = CreateOrg();
-            var user = CreateUser();
+            var result = await _sut.ExecuteAsync(null);
 
-            Assert.ThrowsAsync<ArgumentNullException>(
-                () => _sut.ExecuteNewSessionTurnAsync(null, session, turn, execRequest, org, user));
+            Assert.That(result.Successful, Is.False);
+            Assert.That(result.Errors, Is.Not.Empty);
+            Assert.That(result.Errors[0].ErrorCode, Is.EqualTo("AGENT_TURN_NULL_CONTEXT"));
         }
 
         [Test]
-        public void ExecuteFollowupTurnAsync_NullAgentContext_Throws()
+        public async Task ExecuteAsync_WhenMissingSession_ReturnsError()
         {
-            var session = CreateSession();
-            var turn = CreateTurn();
-            var execRequest = CreateExecRequestForFollowup(session, turn);
-            var org = CreateOrg();
-            var user = CreateUser();
+            var ctx = BuildContext();
+            ctx.Session = null;
 
-            Assert.ThrowsAsync<ArgumentNullException>(
-                () => _sut.ExecuteFollowupTurnAsync(null, session, turn, execRequest, org, user));
+            var result = await _sut.ExecuteAsync(ctx);
+
+            Assert.That(result.Successful, Is.False);
+            Assert.That(result.Errors[0].ErrorCode, Is.EqualTo("AGENT_TURN_MISSING_SESSION"));
         }
 
         #endregion
 
-        #region ExecuteNewSessionTurnAsync
+        #region ExecuteAsync - New Session
 
         [Test]
-        public async Task ExecuteNewSessionTurnAsync_Success_ReturnsExecResult()
+        public async Task ExecuteAsync_NewSession_Success_WritesResponseTranscript_AndSetsResponseFields()
         {
-            // Arrange
-            var agentContext = new AgentContext();
-            var session = CreateSession();
-            var turn = CreateTurn();
-            var execRequest = CreateExecRequestForNewSession(session, turn);
-            var org = CreateOrg();
-            var user = CreateUser();
-
-            _transcriptStore
-                .Setup(t => t.SaveTurnRequestAsync(org.Id, session.Id, turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(InvokeResult<Uri>.Create(new Uri("https://www.test.ai/reqeust")));
+            var ctx = BuildContext();
+            ctx.Request.ConversationId = null; // new session signal
 
             var execResponse = new AgentExecuteResponse
             {
@@ -116,86 +103,63 @@ namespace LagoVista.AI.Tests.Services
             };
 
             _agentExecutionService
-                .Setup(s => s.ExecuteAsync(execRequest, org, user, It.IsAny<CancellationToken>()))
+                .Setup(s => s.ExecuteAsync(ctx.Request, ctx.Org, ctx.User, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(InvokeResult<AgentExecuteResponse>.Create(execResponse));
 
             _transcriptStore
-                .Setup(t => t.SaveTurnResponseAsync(org.Id, session.Id, turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Setup(t => t.SaveTurnResponseAsync(ctx.Org.Id, ctx.Session.Id, ctx.Turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(InvokeResult<Uri>.Create(new Uri("https://www.test.ai/response")));
 
-            // Act
-            var result = await _sut.ExecuteNewSessionTurnAsync(agentContext, session, turn, execRequest, org, user);
+            var result = await _sut.ExecuteAsync(ctx);
 
-            // Assert
-            Assert.That(result, Is.Not.Null);
-            Assert.That(result.Successful, Is.True);
-            Assert.That(result.Result, Is.SameAs(execResponse));
+            Assert.That(result.Successful, Is.True, result.ErrorMessage);
+            Assert.That(ctx.Response, Is.SameAs(execResponse));
 
-            _agentExecutionService.Verify(s => s.ExecuteAsync(execRequest, org, user, It.IsAny<CancellationToken>()), Times.Once);
-            _transcriptStore.Verify(t => t.SaveTurnResponseAsync(org.Id, session.Id, turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+            Assert.That(execResponse.FullResponseUrl, Is.EqualTo("https://www.test.ai/response"));
+            Assert.That(execResponse.ConversationId, Is.EqualTo(ctx.Session.Id));
+            Assert.That(execResponse.TurnId, Is.EqualTo(ctx.Turn.Id));
+
+            _agentExecutionService.Verify(s => s.ExecuteAsync(ctx.Request, ctx.Org, ctx.User, It.IsAny<CancellationToken>()), Times.Once);
+            _transcriptStore.Verify(t => t.SaveTurnResponseAsync(ctx.Org.Id, ctx.Session.Id, ctx.Turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Test]
-        public async Task ExecuteNewSessionTurnAsync_ExecFails_ReturnsErrorAndDoesNotWriteResponseTranscript()
+        public async Task ExecuteAsync_NewSession_ExecFails_ReturnsError_AndDoesNotWriteResponseTranscript()
         {
-            // Arrange
-            var agentContext = new AgentContext();
-            var session = CreateSession();
-            var turn = CreateTurn();
-            var execRequest = CreateExecRequestForNewSession(session, turn);
-            var org = CreateOrg();
-            var user = CreateUser();
-
-            _transcriptStore
-                .Setup(t => t.SaveTurnRequestAsync(org.Id, session.Id, turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(InvokeResult<Uri>.Create(new Uri("https://www.test.ai/reqeust")));
-
-            var failingExecResult = InvokeResult<AgentExecuteResponse>.FromError("exec-failed");
+            var ctx = BuildContext();
+            ctx.Request.ConversationId = null;
 
             _agentExecutionService
-                .Setup(s => s.ExecuteAsync(execRequest, org, user, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(failingExecResult);
+                .Setup(s => s.ExecuteAsync(ctx.Request, ctx.Org, ctx.User, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(InvokeResult<AgentExecuteResponse>.FromError("exec-failed"));
 
-            // Act
-            var result = await _sut.ExecuteNewSessionTurnAsync(agentContext, session, turn, execRequest, org, user);
+            var result = await _sut.ExecuteAsync(ctx);
 
-            // Assert
             Assert.That(result.Successful, Is.False);
 
-            _transcriptStore.Verify(t => t.SaveTurnResponseAsync( It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+            _transcriptStore.Verify(
+                t => t.SaveTurnResponseAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+                Times.Never);
         }
 
         [Test]
-        public async Task ExecuteNewSessionTurnAsync_SaveResponseFails_LogsErrorAndReturnsError()
+        public async Task ExecuteAsync_NewSession_SaveResponseFails_LogsErrorAndReturnsError()
         {
-            // Arrange
-            var agentContext = new AgentContext();
-            var session = CreateSession();
-            var turn = CreateTurn();
-            var execRequest = CreateExecRequestForNewSession(session, turn);
-            var org = CreateOrg();
-            var user = CreateUser();
-
-            _transcriptStore
-                .Setup(t => t.SaveTurnRequestAsync(org.Id, session.Id, turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(InvokeResult<Uri>.Create(new Uri("https://www.test.ai/reqeust")));
+            var ctx = BuildContext();
+            ctx.Request.ConversationId = null;
 
             var execResponse = new AgentExecuteResponse { Text = "answer" };
 
             _agentExecutionService
-                .Setup(s => s.ExecuteAsync(execRequest, org, user, It.IsAny<CancellationToken>()))
+                .Setup(s => s.ExecuteAsync(ctx.Request, ctx.Org, ctx.User, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(InvokeResult<AgentExecuteResponse>.Create(execResponse));
 
-            var failingResponseResult = InvokeResult<Uri>.FromError("failed-to-save-response");
-
             _transcriptStore
-                .Setup(t => t.SaveTurnResponseAsync(org.Id, session.Id, turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(failingResponseResult);
+                .Setup(t => t.SaveTurnResponseAsync(ctx.Org.Id, ctx.Session.Id, ctx.Turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(InvokeResult<Uri>.FromError("failed-to-save-response"));
 
-            // Act
-            var result = await _sut.ExecuteNewSessionTurnAsync(agentContext, session, turn, execRequest, org, user);
+            var result = await _sut.ExecuteAsync(ctx);
 
-            // Assert
             Assert.That(result.Successful, Is.False);
 
             _adminLogger.Verify(l => l.AddError(
@@ -206,22 +170,14 @@ namespace LagoVista.AI.Tests.Services
 
         #endregion
 
-        #region ExecuteFollowupTurnAsync
+        #region ExecuteAsync - Followup
 
         [Test]
-        public async Task ExecuteFollowupTurnAsync_Success_ReturnsExecResult_AndWritesPrevResponseIdAndResponseId()
+        public async Task ExecuteAsync_Followup_Success_WritesResponseEnvelopeIncludingResponseId()
         {
-            // Arrange
-            var agentContext = new AgentContext();
-            var session = CreateSession();
-            var turn = CreateTurn();
-            turn.PreviousOpenAIResponseId = "prev-001";
-
-            var execRequest = CreateExecRequestForFollowup(session, turn);
-            execRequest.ResponseContinuationId = "resp-cont-999";
-
-            var org = CreateOrg();
-            var user = CreateUser();
+            var ctx = BuildContext();
+            ctx.Request.ConversationId = "conv-1";
+            ctx.Request.ResponseContinuationId = "resp-cont-999";
 
             string capturedResponseJson = null;
 
@@ -232,58 +188,41 @@ namespace LagoVista.AI.Tests.Services
             };
 
             _agentExecutionService
-                .Setup(s => s.ExecuteAsync(execRequest, org, user, It.IsAny<CancellationToken>()))
+                .Setup(s => s.ExecuteAsync(ctx.Request, ctx.Org, ctx.User, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(InvokeResult<AgentExecuteResponse>.Create(execResponse));
 
             _transcriptStore
-                .Setup(t => t.SaveTurnResponseAsync(org.Id, session.Id, turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Setup(t => t.SaveTurnResponseAsync(ctx.Org.Id, ctx.Session.Id, ctx.Turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .Callback<string, string, string, string, CancellationToken>((o, sid, tid, json, ct) => capturedResponseJson = json)
                 .ReturnsAsync(InvokeResult<Uri>.Create(new Uri("https://www.test.ai/response")));
 
-            // Act
-            var result = await _sut.ExecuteFollowupTurnAsync(agentContext, session, turn, execRequest, org, user);
+            var result = await _sut.ExecuteAsync(ctx);
 
-            // Assert
-            Assert.That(result.Successful, Is.True);
-            Assert.That(result.Result, Is.SameAs(execResponse));
-            Assert.That(capturedResponseJson, Is.Not.Null);
+            Assert.That(result.Successful, Is.True, result.ErrorMessage);
+            Assert.That(capturedResponseJson, Is.Not.Null.And.Not.Empty);
 
-            
-            dynamic responseEnvelope = JsonConvert.DeserializeObject(capturedResponseJson);
-            Assert.That((string)responseEnvelope.ResponseId, Is.EqualTo("resp-cont-999"));
+            dynamic envelope = JsonConvert.DeserializeObject(capturedResponseJson);
+            Assert.That((string)envelope.ResponseId, Is.EqualTo("resp-cont-999"));
         }
 
         [Test]
-        public async Task ExecuteFollowupTurnAsync_SaveResponseFails_LogsErrorAndReturnsError()
+        public async Task ExecuteAsync_Followup_SaveResponseFails_LogsErrorAndReturnsError()
         {
-            // Arrange
-            var agentContext = new AgentContext();
-            var session = CreateSession();
-            var turn = CreateTurn();
-            var execRequest = CreateExecRequestForFollowup(session, turn);
-            var org = CreateOrg();
-            var user = CreateUser();
-
-            _transcriptStore
-                .Setup(t => t.SaveTurnRequestAsync(org.Id, session.Id, turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(InvokeResult<Uri>.Create(new Uri("https://www.test.ai/reqeust")));
+            var ctx = BuildContext();
+            ctx.Request.ConversationId = "conv-1";
 
             var execResponse = new AgentExecuteResponse { Text = "answer" };
 
             _agentExecutionService
-                .Setup(s => s.ExecuteAsync(execRequest, org, user, It.IsAny<CancellationToken>()))
+                .Setup(s => s.ExecuteAsync(ctx.Request, ctx.Org, ctx.User, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(InvokeResult<AgentExecuteResponse>.Create(execResponse));
 
-            var failingResponseResult = InvokeResult<Uri>.FromError("failed-to-save-response");
-
             _transcriptStore
-                .Setup(t => t.SaveTurnResponseAsync(org.Id, session.Id, turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(failingResponseResult);
+                .Setup(t => t.SaveTurnResponseAsync(ctx.Org.Id, ctx.Session.Id, ctx.Turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(InvokeResult<Uri>.FromError("failed-to-save-response"));
 
-            // Act
-            var result = await _sut.ExecuteFollowupTurnAsync(agentContext, session, turn, execRequest, org, user);
+            var result = await _sut.ExecuteAsync(ctx);
 
-            // Assert
             Assert.That(result.Successful, Is.False);
 
             _adminLogger.Verify(l => l.AddError(
@@ -296,9 +235,12 @@ namespace LagoVista.AI.Tests.Services
 
         #region Helpers
 
-        private static AgentSession CreateSession()
+        private static AgentPipelineContext BuildContext()
         {
-            return new AgentSession
+            var org = new EntityHeader { Id = "org-1", Text = "Org 1" };
+            var user = new EntityHeader { Id = "user-1", Text = "User 1" };
+
+            var session = new AgentSession
             {
                 Id = "session-1",
                 AgentContext = new EntityHeader(),
@@ -307,96 +249,37 @@ namespace LagoVista.AI.Tests.Services
                 DefaultLanguage = "csharp",
                 WorkspaceId = "workspace-1"
             };
-        }
 
-        private static AgentSessionTurn CreateTurn()
-        {
-            return new AgentSessionTurn
+            var turn = new AgentSessionTurn
             {
                 Id = "turn-1",
                 ConversationId = "conversation-1",
                 PreviousOpenAIResponseId = null
             };
-        }
 
-        private static AgentExecuteRequest CreateExecRequestForNewSession(AgentSession session, AgentSessionTurn turn)
-        {
-            return new AgentExecuteRequest
+            var request = new AgentExecuteRequest
             {
                 AgentContext = session.AgentContext,
                 ConversationContext = session.ConversationContext,
                 Mode = "ask",
                 Instruction = "do something",
                 ConversationId = turn.ConversationId,
-                Repo = "repo-name",
-                Language = "csharp",
-                WorkspaceId = session.WorkspaceId,
-                ActiveFiles = new List<ActiveFile>
-                {
-                    new ActiveFile
-                    {
-                        AbsolutePath = "d:/path/one.cs",
-                        RelativePath = "./path/onme.cs",
-                        Sha256Hash = "SHAAA---FF",
-                        Contents = "// file one",
-                        Language = "csharp"
-                    },
-                    new ActiveFile
-                    {
-                        AbsolutePath = "d:/path/one.cs",
-                        RelativePath = "./path/onme.cs",
-                        Sha256Hash = "SHAAA---FF",
-                        Contents = "// file one",
-                        Language = "csharp"
-                    }
-                },
-                RagScopeFilter = new RagScopeFilter()
-            };
-        }
-
-        private static AgentExecuteRequest CreateExecRequestForFollowup(AgentSession session, AgentSessionTurn turn)
-        {
-            return new AgentExecuteRequest
-            {
-                AgentContext = session.AgentContext,
-                ConversationContext = session.ConversationContext,
-                Mode = "ask",
-                Instruction = "follow up",
-                ConversationId = turn.ConversationId,
                 Repo = session.Repo,
                 Language = session.DefaultLanguage,
                 WorkspaceId = session.WorkspaceId,
-                ActiveFiles = new List<ActiveFile>
-                {
-                    new ActiveFile
-                    {
-
-                        AbsolutePath = "d:/path/one.cs",
-                        RelativePath = "./path/onme.cs",
-                        Sha256Hash = "SHAAA---FF",
-                        Contents = "// file one",
-                        Language = "csharp"
-                    }
-                },
+                ActiveFiles = new List<ActiveFile>(),
                 RagScopeFilter = new RagScopeFilter()
             };
-        }
 
-        private static EntityHeader CreateOrg()
-        {
-            return new EntityHeader
+            return new AgentPipelineContext
             {
-                Id = "org-1",
-                Text = "Org 1"
-            };
-        }
-
-        private static EntityHeader CreateUser()
-        {
-            return new EntityHeader
-            {
-                Id = "user-1",
-                Text = "User 1"
+                CorrelationId = "corr-1",
+                Org = org,
+                User = user,
+                AgentContext = new AgentContext(),
+                Session = session,
+                Turn = turn,
+                Request = request
             };
         }
 

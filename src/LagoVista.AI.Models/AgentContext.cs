@@ -71,10 +71,10 @@ namespace LagoVista.AI.Models
         public List<ConversationContext> ConversationContexts { get; set; } = new List<ConversationContext>();
 
         [FormField(LabelResource: AIResources.Names.AgentContext_MaxTokenCount, HelpResource: AIResources.Names.AgentContext_MaxTokenCount_Help, FieldType: FieldTypes.Integer, ResourceType: typeof(AIResources))]
-        public int MaxTokenCount { get; set; } = 256 * 1024;
+        public int MaxTokenCount { get; set; } = 400000;
 
         [FormField(LabelResource: AIResources.Names.AgentContext_CompletionReservePercent, HelpResource: AIResources.Names.AgentContext_CompletionReservePercent_Help, FieldType: FieldTypes.Percent, ResourceType: typeof(AIResources))]
-        public int CompletionReservePercent { get; set; } = 5;
+        public int CompletionReservePercent { get; set; } = 15;
 
 
 
