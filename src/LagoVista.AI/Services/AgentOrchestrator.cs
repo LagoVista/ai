@@ -61,9 +61,8 @@ namespace LagoVista.AI.Services
             _agentStreamingContext = agentStreamingContext ?? throw new ArgumentNullException(nameof(agentStreamingContext));
         }
 
-        public async Task<InvokeResult<AgentPipelineContext>> ExecuteAsync(
-            AgentPipelineContext ctx,
-            CancellationToken cancellationToken = default)
+
+        public async Task<InvokeResult<AgentPipelineContext>> ExecuteAsync(AgentPipelineContext ctx)
         {
             if (ctx == null)
             {
@@ -84,10 +83,10 @@ namespace LagoVista.AI.Services
 
             if (isNewSession)
             {
-                return await ExecuteNewSessionAsync(ctx, cancellationToken);
+                return await ExecuteNewSessionAsync(ctx);
             }
 
-            return await ExecuteFollowupTurnAsync(ctx, cancellationToken);
+            return await ExecuteFollowupTurnAsync(ctx);
         }
 
         private async Task AddGeneralMode(AgentContext context, EntityHeader org, EntityHeader user)
@@ -130,8 +129,7 @@ namespace LagoVista.AI.Services
         }
 
         private async Task<InvokeResult<AgentPipelineContext>> ExecuteNewSessionAsync(
-            AgentPipelineContext ctx,
-            CancellationToken cancellationToken)
+            AgentPipelineContext ctx)
         {
             var correlationId = ctx.CorrelationId ?? Guid.NewGuid().ToId();
 
@@ -168,7 +166,7 @@ namespace LagoVista.AI.Services
 
             ctx.Request.CurrentTurnId = turn.Id;
 
-            if (cancellationToken.IsCancellationRequested)
+            if (ctx.CancellationToken.IsCancellationRequested)
             {
                 return InvokeResult<AgentPipelineContext>.Abort();
             }
@@ -194,7 +192,7 @@ namespace LagoVista.AI.Services
             };
 
             var requestJson = JsonConvert.SerializeObject(requestEnvelope);
-            var requestBlobResult = await _transcriptStore.SaveTurnRequestAsync(ctx.Org.Id, session.Id, turn.Id, requestJson, cancellationToken);
+            var requestBlobResult = await _transcriptStore.SaveTurnRequestAsync(ctx.Org.Id, session.Id, turn.Id, requestJson, ctx.CancellationToken);
 
             if (!requestBlobResult.Successful)
             {
@@ -206,7 +204,7 @@ namespace LagoVista.AI.Services
 
             await _agentStreamingContext.AddWorkflowAsync("...connected, let's get started...");
 
-            var downstream = await _next.ExecuteAsync(ctx, cancellationToken);
+            var downstream = await _next.ExecuteAsync(ctx);
             if (downstream.Aborted)
             {
                 await _sessionManager.AbortTurnAsync(session.Id, turn.Id, ctx.Org, ctx.User);
@@ -265,8 +263,7 @@ namespace LagoVista.AI.Services
         }
 
         private async Task<InvokeResult<AgentPipelineContext>> ExecuteFollowupTurnAsync(
-            AgentPipelineContext ctx,
-            CancellationToken cancellationToken)
+            AgentPipelineContext ctx)
         {
             var correlationId = ctx.CorrelationId ?? Guid.NewGuid().ToId();
 
@@ -351,7 +348,7 @@ namespace LagoVista.AI.Services
             };
 
             var requestJson = JsonConvert.SerializeObject(requestEnvelope);
-            var requestBlobResult = await _transcriptStore.SaveTurnRequestAsync(ctx.Org.Id, session.Id, turn.Id, requestJson, cancellationToken);
+            var requestBlobResult = await _transcriptStore.SaveTurnRequestAsync(ctx.Org.Id, session.Id, turn.Id, requestJson, ctx.CancellationToken);
 
             if (!requestBlobResult.Successful)
             {
@@ -359,7 +356,7 @@ namespace LagoVista.AI.Services
                 return InvokeResult<AgentPipelineContext>.FromInvokeResult(requestBlobResult.ToInvokeResult());
             }
 
-            var downstream = await _next.ExecuteAsync(ctx, cancellationToken);
+            var downstream = await _next.ExecuteAsync(ctx);
 
             if (downstream.Aborted)
             {

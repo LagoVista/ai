@@ -90,8 +90,7 @@ namespace LagoVista.AI.Services
         }
 
         public async Task<InvokeResult<AgentPipelineContext>> ExecuteAsync(
-            AgentPipelineContext ctx,
-            CancellationToken cancellationToken = default)
+            AgentPipelineContext ctx)
         {
             if (ctx == null)
             {
@@ -203,7 +202,7 @@ namespace LagoVista.AI.Services
 
             try
             {
-                await PublishLlmEventAsync(sessionId, "LLMStarted", "in-progress", "Calling OpenAI model...", null, cancellationToken);
+                await PublishLlmEventAsync(sessionId, "LLMStarted", "in-progress", "Calling OpenAI model...", null, ctx.CancellationToken);
 
                 using (var httpClient = CreateHttpClient(baseUrl, agentContext.LlmApiKey))
                 {
@@ -213,12 +212,12 @@ namespace LagoVista.AI.Services
                     };
 
                     var rnd = new Random();
-                    await _agentStreamingContext.AddWorkflowAsync(connectingMessage[rnd.Next(0, connectingMessage.Length - 1)], cancellationToken);
+                    await _agentStreamingContext.AddWorkflowAsync(connectingMessage[rnd.Next(0, connectingMessage.Length - 1)], ctx.CancellationToken);
 
                     var sw = Stopwatch.StartNew();
-                    var httpResponse = await httpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+                    var httpResponse = await httpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, ctx.CancellationToken);
 
-                    await _agentStreamingContext.AddWorkflowAsync(thinkingMessges[rnd.Next(0, thinkingMessges.Length - 1)], cancellationToken);
+                    await _agentStreamingContext.AddWorkflowAsync(thinkingMessges[rnd.Next(0, thinkingMessges.Length - 1)], ctx.CancellationToken);
 
                     if (!httpResponse.IsSuccessStatusCode)
                     {
@@ -240,7 +239,7 @@ namespace LagoVista.AI.Services
 
                         var reasonSuffix = error != null ? "Reason: " + error : "Raw: " + errorBody;
 
-                        await PublishLlmEventAsync(sessionId, "LLMFailed", "failed", errorMessage + " - " + reasonSuffix, null, cancellationToken);
+                        await PublishLlmEventAsync(sessionId, "LLMFailed", "failed", errorMessage + " - " + reasonSuffix, null, ctx.CancellationToken);
 
                         return InvokeResult<AgentPipelineContext>.FromError(
                             errorMessage + "; " + reasonSuffix,
@@ -251,37 +250,37 @@ namespace LagoVista.AI.Services
 
                     if (UseStreaming)
                     {
-                        agentResponse = await ReadStreamingResponseAsync(httpResponse, executeRequest, sessionId, sw, cancellationToken);
+                        agentResponse = await ReadStreamingResponseAsync(httpResponse, executeRequest, sessionId, sw, ctx.CancellationToken);
                     }
                     else
                     {
-                        agentResponse = await ReadNonStreamingResponseAsync(httpResponse, executeRequest, sw, cancellationToken);
+                        agentResponse = await ReadNonStreamingResponseAsync(httpResponse, executeRequest, sw, ctx.CancellationToken);
                     }
 
-                    await _agentStreamingContext.AddWorkflowAsync("got it give me a minute to summarize...", cancellationToken);
+                    await _agentStreamingContext.AddWorkflowAsync("got it give me a minute to summarize...", ctx.CancellationToken);
 
                     if (!agentResponse.Successful)
                     {
                         return InvokeResult<AgentPipelineContext>.FromInvokeResult(agentResponse.ToInvokeResult());
                     }
 
-                    if (cancellationToken.IsCancellationRequested)
+                    if (ctx.CancellationToken.IsCancellationRequested)
                     {
                         return InvokeResult<AgentPipelineContext>.Abort();
                     }
 
-                    await PublishLlmEventAsync(sessionId, "LLMCompleted", "completed", "Model response received.", null, cancellationToken);
+                    await PublishLlmEventAsync(sessionId, "LLMCompleted", "completed", "Model response received.", null, ctx.CancellationToken);
 
                     ctx.Response = agentResponse.Result;
                     return InvokeResult<AgentPipelineContext>.Create(ctx);
                 }
             }
-            catch (TaskCanceledException tex) when (tex.CancellationToken == cancellationToken)
+            catch (TaskCanceledException tex) when (tex.CancellationToken == ctx.CancellationToken)
             {
                 const string msg = "LLM call was cancelled.";
 
                 _adminLogger.AddError("[OpenAIResponsesClient_ExecuteAsync__Cancelled]", msg);
-                await PublishLlmEventAsync(sessionId, "LLMCancelled", "aborted", msg, null, cancellationToken);
+                await PublishLlmEventAsync(sessionId, "LLMCancelled", "aborted", msg, null, ctx.CancellationToken);
 
                 return InvokeResult<AgentPipelineContext>.FromError(msg, "OPENAI_CLIENT_CANCELLED");
             }
@@ -290,7 +289,7 @@ namespace LagoVista.AI.Services
                 const string msg = "Unexpected exception during LLM call.";
 
                 _adminLogger.AddException("[OpenAIResponsesClient_ExecuteAsync__Exception]", ex);
-                await PublishLlmEventAsync(sessionId, "LLMFailed", "failed", msg, null, cancellationToken);
+                await PublishLlmEventAsync(sessionId, "LLMFailed", "failed", msg, null, ctx.CancellationToken);
 
                 return InvokeResult<AgentPipelineContext>.FromError(msg, "OPENAI_CLIENT_EXCEPTION");
             }

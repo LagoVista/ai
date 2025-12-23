@@ -46,9 +46,7 @@ namespace LagoVista.AI.Services
             _ragContextBuilder = ragContextBuilder ?? throw new ArgumentNullException(nameof(ragContextBuilder));
         }
 
-        public async Task<InvokeResult<AgentPipelineContext>> ExecuteAsync(
-            AgentPipelineContext ctx,
-            CancellationToken cancellationToken = default)
+        public async Task<InvokeResult<AgentPipelineContext>> ExecuteAsync(AgentPipelineContext ctx)
         {
             var correlationId = Guid.NewGuid().ToId();
 

@@ -48,14 +48,16 @@ namespace LagoVista.AI.Services
             EntityHeader user,
             CancellationToken cancellationToken = default)
         {
-            var ctx = new AgentPipelineContext(cancellationToken)
+            var ctx = new AgentPipelineContext()
             {
                 CorrelationId = Guid.NewGuid().ToId(),
                 Org = org,
                 User = user,
                 Request = request,
-                ConversationId = request?.ConversationId
+                ConversationId = request?.ConversationId,
+                CancellationToken = cancellationToken
             };
+
 
             _adminLogger.Trace("[AgentRequestHandler_HandleAsync] Handling agent request. " +
                                $"correlationId={ctx.CorrelationId}, org={org?.Id}, user={user?.Id}, sessionId={request?.ConversationId ?? "<null>"}");
@@ -138,7 +140,7 @@ namespace LagoVista.AI.Services
                 return InvokeResult<AgentPipelineContext>.FromError(msg, "AGENT_REQ_MISSING_AGENT_CONTEXT");
             }
 
-            return await _next.ExecuteAsync(ctx, cancellationToken);
+            return await _next.ExecuteAsync(ctx);
         }
 
         private async Task<InvokeResult<AgentPipelineContext>> HandleFollowupTurnAsync(
@@ -158,7 +160,7 @@ namespace LagoVista.AI.Services
                 return InvokeResult<AgentPipelineContext>.FromError(msg, "AGENT_REQ_MISSING_SESSION_ID");
             }
 
-            return await _next.ExecuteAsync(ctx, cancellationToken);
+            return await _next.ExecuteAsync(ctx);
         }
     }
 }

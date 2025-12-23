@@ -9,10 +9,11 @@ namespace LagoVista.AI.Models
 {
     public sealed class AgentPipelineContext
     {
-        public AgentPipelineContext(CancellationToken token = default)
+        public AgentPipelineContext()
         {
-            CancellationToken = token;
+            CancellationToken = default;
         }
+
 
         // Identity / correlation
         public string CorrelationId { get; set; }
@@ -40,7 +41,7 @@ namespace LagoVista.AI.Models
         // Trace (optional)
         public CompositionTrace Trace { get; set; } = new CompositionTrace();
 
-        public CancellationToken CancellationToken { get; } = default;
+        public CancellationToken CancellationToken { get; set; } 
 
 
         public AgentToolExecutionContext ToToolContext()

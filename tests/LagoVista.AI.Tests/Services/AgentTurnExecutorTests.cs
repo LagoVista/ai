@@ -176,9 +176,9 @@ namespace LagoVista.AI.Tests.Services
             };
 
             _agentExecutionStep
-                .Setup(s => s.ExecuteAsync(ctx, It.IsAny<CancellationToken>()))
-                .Callback<AgentPipelineContext, CancellationToken>((c, _) => c.Response = execResponse)
-                .ReturnsAsync((AgentPipelineContext c, CancellationToken _) => InvokeResult<AgentPipelineContext>.Create(c));
+                .Setup(s => s.ExecuteAsync(ctx))
+                .Callback<AgentPipelineContext>((c) => c.Response = execResponse)
+                .ReturnsAsync((AgentPipelineContext c) => InvokeResult<AgentPipelineContext>.Create(c));
 
             string capturedResponseJson = null;
 
@@ -206,7 +206,7 @@ namespace LagoVista.AI.Tests.Services
             Assert.That((string)envelope.TurnId, Is.EqualTo(ctx.Turn.Id));
             Assert.That(envelope.Response, Is.Not.Null);
 
-            _agentExecutionStep.Verify(s => s.ExecuteAsync(ctx, It.IsAny<CancellationToken>()), Times.Once);
+            _agentExecutionStep.Verify(s => s.ExecuteAsync(ctx), Times.Once);
             _transcriptStore.Verify(t => t.SaveTurnResponseAsync(ctx.Org.Id, ctx.Session.Id, ctx.Turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
@@ -218,7 +218,7 @@ namespace LagoVista.AI.Tests.Services
             ctx.Request.ConversationId = null;
 
             _agentExecutionStep
-                .Setup(s => s.ExecuteAsync(ctx, It.IsAny<CancellationToken>()))
+                .Setup(s => s.ExecuteAsync(ctx))
                 .ReturnsAsync(InvokeResult<AgentPipelineContext>.FromError("exec-failed"));
 
             // Act
@@ -240,7 +240,7 @@ namespace LagoVista.AI.Tests.Services
             ctx.Request.ConversationId = null;
 
             _agentExecutionStep
-                .Setup(s => s.ExecuteAsync(ctx, It.IsAny<CancellationToken>()))
+                .Setup(s => s.ExecuteAsync(ctx))
                 .ReturnsAsync(InvokeResult<AgentPipelineContext>.Create(ctx)); // Response not set
 
             // Act
@@ -265,9 +265,9 @@ namespace LagoVista.AI.Tests.Services
             var execResponse = new AgentExecuteResponse { Text = "answer" };
 
             _agentExecutionStep
-                .Setup(s => s.ExecuteAsync(ctx, It.IsAny<CancellationToken>()))
-                .Callback<AgentPipelineContext, CancellationToken>((c, _) => c.Response = execResponse)
-                .ReturnsAsync((AgentPipelineContext c, CancellationToken _) => InvokeResult<AgentPipelineContext>.Create(c));
+                .Setup(s => s.ExecuteAsync(ctx))
+                .Callback<AgentPipelineContext>((c) => c.Response = execResponse)
+                .ReturnsAsync((AgentPipelineContext c ) => InvokeResult<AgentPipelineContext>.Create(c));
 
             _transcriptStore
                 .Setup(t => t.SaveTurnResponseAsync(ctx.Org.Id, ctx.Session.Id, ctx.Turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -304,9 +304,9 @@ namespace LagoVista.AI.Tests.Services
             };
 
             _agentExecutionStep
-                .Setup(s => s.ExecuteAsync(ctx, It.IsAny<CancellationToken>()))
-                .Callback<AgentPipelineContext, CancellationToken>((c, _) => c.Response = execResponse)
-                .ReturnsAsync((AgentPipelineContext c, CancellationToken _) => InvokeResult<AgentPipelineContext>.Create(c));
+                .Setup(s => s.ExecuteAsync(ctx))
+                .Callback<AgentPipelineContext>((c) => c.Response = execResponse)
+                .ReturnsAsync((AgentPipelineContext c) => InvokeResult<AgentPipelineContext>.Create(c));
 
             string capturedResponseJson = null;
 
@@ -341,9 +341,9 @@ namespace LagoVista.AI.Tests.Services
             var execResponse = new AgentExecuteResponse { Text = "answer" };
 
             _agentExecutionStep
-                .Setup(s => s.ExecuteAsync(ctx, It.IsAny<CancellationToken>()))
-                .Callback<AgentPipelineContext, CancellationToken>((c, _) => c.Response = execResponse)
-                .ReturnsAsync((AgentPipelineContext c, CancellationToken _) => InvokeResult<AgentPipelineContext>.Create(c));
+                .Setup(s => s.ExecuteAsync(ctx))
+                .Callback<AgentPipelineContext>((c) => c.Response = execResponse)
+                .ReturnsAsync((AgentPipelineContext c) => InvokeResult<AgentPipelineContext>.Create(c));
 
             _transcriptStore
                 .Setup(t => t.SaveTurnResponseAsync(ctx.Org.Id, ctx.Session.Id, ctx.Turn.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))

@@ -10,6 +10,7 @@ using LagoVista.Core.AI.Models;
 using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
+using log4net.Filter;
 using Moq;
 using NUnit.Framework;
 
@@ -93,7 +94,7 @@ namespace LagoVista.AI.Tests.Services
         [Test]
         public async Task ExecuteAsync_NullPipelineContext_ReturnsErrorAndDoesNotCallDeps()
         {
-            var result = await _sut.ExecuteAsync((AgentPipelineContext)null, CancellationToken.None);
+            var result = await _sut.ExecuteAsync((AgentPipelineContext)null);
 
             Assert.That(result.Successful, Is.False);
             Assert.That(result.Errors, Is.Not.Empty);
@@ -104,7 +105,7 @@ namespace LagoVista.AI.Tests.Services
                 Times.Never);
 
             _reasoner.Verify(
-                r => r.ExecuteAsync(It.IsAny<AgentPipelineContext>(), It.IsAny<CancellationToken>()),
+                r => r.ExecuteAsync(It.IsAny<AgentPipelineContext>()),
                 Times.Never);
         }
 
@@ -122,7 +123,7 @@ namespace LagoVista.AI.Tests.Services
                 Request = null
             };
 
-            var result = await _sut.ExecuteAsync(ctx, CancellationToken.None);
+            var result = await _sut.ExecuteAsync(ctx);
 
             Assert.That(result.Successful, Is.False);
             Assert.That(result.Errors, Is.Not.Empty);
@@ -133,7 +134,7 @@ namespace LagoVista.AI.Tests.Services
                 Times.Never);
 
             _reasoner.Verify(
-                r => r.ExecuteAsync(It.IsAny<AgentPipelineContext>(), It.IsAny<CancellationToken>()),
+                r => r.ExecuteAsync(It.IsAny<AgentPipelineContext>()),
                 Times.Never);
         }
 
@@ -158,7 +159,7 @@ namespace LagoVista.AI.Tests.Services
                 Request = request
             };
 
-            var result = await _sut.ExecuteAsync(ctx, CancellationToken.None);
+            var result = await _sut.ExecuteAsync(ctx);
 
             Assert.That(result.Successful, Is.False);
             Assert.That(result.Errors[0].Message, Is.EqualTo("AgentContext is required."));
@@ -190,7 +191,7 @@ namespace LagoVista.AI.Tests.Services
                 Request = request
             };
 
-            var result = await _sut.ExecuteAsync(ctx, CancellationToken.None);
+            var result = await _sut.ExecuteAsync(ctx);
 
             Assert.That(result.Successful, Is.False);
             Assert.That(result.Errors[0].Message, Is.EqualTo("Instruction is required."));
@@ -234,14 +235,14 @@ namespace LagoVista.AI.Tests.Services
                 .ReturnsAsync(agentContext);
 
             _reasoner
-                .Setup(r => r.ExecuteAsync(It.IsAny<AgentPipelineContext>(), It.IsAny<CancellationToken>()))
-                .Callback<AgentPipelineContext, CancellationToken>((c, _) =>
+                .Setup(r => r.ExecuteAsync(It.IsAny<AgentPipelineContext>()))
+                .Callback<AgentPipelineContext>((c) =>
                 {
                     c.Response = new AgentExecuteResponse { Text = "ok" };
                 })
-                .ReturnsAsync((AgentPipelineContext c, CancellationToken _) => InvokeResult<AgentPipelineContext>.Create(c));
+                .ReturnsAsync((AgentPipelineContext c) => InvokeResult<AgentPipelineContext>.Create(c));
 
-            var result = await _sut.ExecuteAsync(ctx, CancellationToken.None);
+            var result = await _sut.ExecuteAsync(ctx);
 
             Assert.That(result.Successful, Is.True, result.ErrorMessage);
             Assert.That(ctx.Response, Is.Not.Null);
@@ -290,7 +291,7 @@ namespace LagoVista.AI.Tests.Services
                 .Setup(m => m.GetAgentContextWithSecretsAsync(request.AgentContext.Id, org, user))
                 .ReturnsAsync(agentContext);
 
-            var result = await _sut.ExecuteAsync(ctx, CancellationToken.None);
+            var result = await _sut.ExecuteAsync(ctx);
 
             Assert.That(result.Successful, Is.False);
             Assert.That(result.Errors[0].Message, Is.EqualTo("Unable to resolve ConversationContext for the request."));
@@ -301,7 +302,7 @@ namespace LagoVista.AI.Tests.Services
                 Times.Once);
 
             _reasoner.Verify(
-                r => r.ExecuteAsync(It.IsAny<AgentPipelineContext>(), It.IsAny<CancellationToken>()),
+                r => r.ExecuteAsync(It.IsAny<AgentPipelineContext>()),
                 Times.Never);
         }
 
@@ -321,7 +322,7 @@ namespace LagoVista.AI.Tests.Services
                 RagScopeFilter = new RagScopeFilter()
             };
 
-            var ctx = new AgentPipelineContext
+            var ctx = new AgentPipelineContext()
             {
                 CorrelationId = "corr-4",
                 Org = org,
@@ -345,15 +346,15 @@ namespace LagoVista.AI.Tests.Services
             };
 
             _reasoner
-                .Setup(r => r.ExecuteAsync(It.IsAny<AgentPipelineContext>(), It.IsAny<CancellationToken>()))
-                .Callback<AgentPipelineContext, CancellationToken>((c, _) =>
+                .Setup(r => r.ExecuteAsync(It.IsAny<AgentPipelineContext>()))
+                .Callback<AgentPipelineContext>((c ) =>
                 {
                     capturedCtx = c;
                     c.Response = reasonerResponse;
                 })
-                .ReturnsAsync((AgentPipelineContext c, CancellationToken _) => InvokeResult<AgentPipelineContext>.Create(c));
+                .ReturnsAsync((AgentPipelineContext c) => InvokeResult<AgentPipelineContext>.Create(c));
 
-            var result = await _sut.ExecuteAsync(ctx, CancellationToken.None);
+            var result = await _sut.ExecuteAsync(ctx);
 
             Assert.That(result.Successful, Is.True, result.ErrorMessage);
             Assert.That(ctx.Response, Is.SameAs(reasonerResponse));
@@ -390,7 +391,7 @@ namespace LagoVista.AI.Tests.Services
                 RagScopeFilter = new RagScopeFilter()
             };
 
-            var ctx = new AgentPipelineContext
+            var ctx = new AgentPipelineContext()
             {
                 CorrelationId = "corr-5",
                 Org = org,
@@ -405,15 +406,15 @@ namespace LagoVista.AI.Tests.Services
             ConversationContext capturedConversationContext = null;
 
             _reasoner
-                .Setup(r => r.ExecuteAsync(It.IsAny<AgentPipelineContext>(), It.IsAny<CancellationToken>()))
-                .Callback<AgentPipelineContext, CancellationToken>((c, _) =>
+                .Setup(r => r.ExecuteAsync(It.IsAny<AgentPipelineContext>()))
+                .Callback<AgentPipelineContext>((c) =>
                 {
                     capturedConversationContext = c.ConversationContext;
                     c.Response = new AgentExecuteResponse { Text = "ok" };
                 })
-                .ReturnsAsync((AgentPipelineContext c, CancellationToken _) => InvokeResult<AgentPipelineContext>.Create(c));
+                .ReturnsAsync((AgentPipelineContext c) => InvokeResult<AgentPipelineContext>.Create(c));
 
-            var result = await _sut.ExecuteAsync(ctx, CancellationToken.None);
+            var result = await _sut.ExecuteAsync(ctx);
 
             Assert.That(result.Successful, Is.True, result.ErrorMessage);
             Assert.That(capturedConversationContext, Is.Not.Null);

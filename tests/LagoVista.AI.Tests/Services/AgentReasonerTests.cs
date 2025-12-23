@@ -146,8 +146,8 @@ namespace LagoVista.AI.Tests.Services
             var idx = 0;
 
             _llmClient
-                .Setup(s => s.ExecuteAsync(It.IsAny<AgentPipelineContext>(), It.IsAny<CancellationToken>()))
-                .Returns((AgentPipelineContext c, CancellationToken ct) =>
+                .Setup(s => s.ExecuteAsync(It.IsAny<AgentPipelineContext>()))
+                .Returns((AgentPipelineContext c) =>
                 {
                     var pick = idx < responses.Length ? responses[idx] : responses[responses.Length - 1];
                     idx++;
@@ -175,7 +175,7 @@ namespace LagoVista.AI.Tests.Services
 
             SetupLlmResponses(llmResponse);
 
-            var result = await _sut.ExecuteAsync(ctx, CancellationToken.None);
+            var result = await _sut.ExecuteAsync(ctx);
 
             Assert.That(result.Successful, Is.True, result.ErrorMessage);
             Assert.That(result.Result, Is.SameAs(ctx));
@@ -237,7 +237,7 @@ namespace LagoVista.AI.Tests.Services
 
             SetupBootstrapSuccess();
 
-            var result = await _sut.ExecuteAsync(ctx, CancellationToken.None);
+            var result = await _sut.ExecuteAsync(ctx);
 
             Assert.That(result.Successful, Is.True, result.ErrorMessage);
             Assert.That(ctx.Response, Is.Not.Null);
@@ -307,7 +307,7 @@ namespace LagoVista.AI.Tests.Services
 
             SetupBootstrapSuccess();
 
-            var result = await _sut.ExecuteAsync(ctx, CancellationToken.None);
+            var result = await _sut.ExecuteAsync(ctx);
 
             Assert.That(result.Successful, Is.True, result.ErrorMessage);
             Assert.That(ctx.Response, Is.Not.Null);
@@ -366,7 +366,7 @@ namespace LagoVista.AI.Tests.Services
                 .ReturnsAsync(InvokeResult<AgentToolCall>.Create(updatedCall));
 
             // No mode change in this test; bootstrap won't be called.
-            var result = await _sut.ExecuteAsync(ctx, CancellationToken.None);
+            var result = await _sut.ExecuteAsync(ctx);
 
             Assert.That(result.Successful, Is.True, result.ErrorMessage);
             Assert.That(ctx.Response, Is.Not.Null);
@@ -407,7 +407,7 @@ namespace LagoVista.AI.Tests.Services
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(InvokeResult<AgentToolCall>.Create(updatedCall));
 
-            var result = await _sut.ExecuteAsync(ctx, CancellationToken.None);
+            var result = await _sut.ExecuteAsync(ctx);
 
             Assert.That(result.Successful, Is.True, result.ErrorMessage);
             Assert.That(ctx.Response, Is.Not.Null);

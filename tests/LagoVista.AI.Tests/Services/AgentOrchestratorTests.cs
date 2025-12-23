@@ -264,9 +264,9 @@ namespace LagoVista.AI.Tests.Services
                 .Returns(Task.CompletedTask);
 
             _next
-                .Setup(n => n.ExecuteAsync(ctx, It.IsAny<CancellationToken>()))
-                .Callback<AgentPipelineContext, CancellationToken>((c, _) => c.Response = agentResponse)
-                .ReturnsAsync((AgentPipelineContext c, CancellationToken _) => InvokeResult<AgentPipelineContext>.Create(c));
+                .Setup(n => n.ExecuteAsync(ctx))
+                .Callback<AgentPipelineContext>((c) => c.Response = agentResponse)
+                .ReturnsAsync((AgentPipelineContext c) => InvokeResult<AgentPipelineContext>.Create(c));
 
             string completedSessionId = null;
             string completedTurnId = null;
@@ -387,7 +387,7 @@ namespace LagoVista.AI.Tests.Services
             // Assert
             Assert.That(result.Successful, Is.False);
 
-            _next.Verify(n => n.ExecuteAsync(It.IsAny<AgentPipelineContext>(), It.IsAny<CancellationToken>()), Times.Never);
+            _next.Verify(n => n.ExecuteAsync(It.IsAny<AgentPipelineContext>()), Times.Never);
 
             _sessionManager.Verify(m => m.SetRequestBlobUriAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), org, user), Times.Never);
             _sessionManager.Verify(m => m.CompleteAgentSessionTurnAsync(
@@ -501,9 +501,9 @@ namespace LagoVista.AI.Tests.Services
                 .ReturnsAsync(InvokeResult<Uri>.Create(new Uri("blob://req-1")));
 
             _next
-                .Setup(n => n.ExecuteAsync(ctx, It.IsAny<CancellationToken>()))
-                .Callback<AgentPipelineContext, CancellationToken>((c, _) => c.Response = agentResponse)
-                .ReturnsAsync((AgentPipelineContext c, CancellationToken _) => InvokeResult<AgentPipelineContext>.Create(c));
+                .Setup(n => n.ExecuteAsync(ctx))
+                .Callback<AgentPipelineContext>((c) => c.Response = agentResponse)
+                .ReturnsAsync((AgentPipelineContext c) => InvokeResult<AgentPipelineContext>.Create(c));
 
             string completedSessionId = null;
             string completedTurnId = null;
@@ -625,7 +625,7 @@ namespace LagoVista.AI.Tests.Services
             // Assert
             Assert.That(result.Successful, Is.False);
 
-            _next.Verify(n => n.ExecuteAsync(It.IsAny<AgentPipelineContext>(), It.IsAny<CancellationToken>()), Times.Never);
+            _next.Verify(n => n.ExecuteAsync(It.IsAny<AgentPipelineContext>()), Times.Never);
 
             _sessionManager.Verify(m => m.CompleteAgentSessionTurnAsync(
                 It.IsAny<string>(),
@@ -729,16 +729,17 @@ namespace LagoVista.AI.Tests.Services
             var agentResponse = new AgentExecuteResponse { Text = "ok" };
 
             _next
-                .Setup(n => n.ExecuteAsync(It.IsAny<AgentPipelineContext>(), It.IsAny<CancellationToken>()))
-                .Callback<AgentPipelineContext, CancellationToken>((c, _) =>
-                {
-                    // Assert *inside* the callback so we verify ordering: orchestrator must set these before calling next.
-                    Assert.That(c.Session, Is.SameAs(session));
-                    Assert.That(c.Turn, Is.SameAs(turn));
+                .Setup(n => n.ExecuteAsync(It.IsAny<AgentPipelineContext>()))
+    .Callback<AgentPipelineContext>((c) =>
 
-                    c.Response = agentResponse;
-                })
-                .ReturnsAsync((AgentPipelineContext c, CancellationToken _) => InvokeResult<AgentPipelineContext>.Create(c));
+    {
+        // Assert *inside* the callback so we verify ordering: orchestrator must set these before calling next.
+        Assert.That(c.Session, Is.SameAs(session));
+        Assert.That(c.Turn, Is.SameAs(turn));
+
+        c.Response = agentResponse;
+    })
+                .ReturnsAsync((AgentPipelineContext c) => InvokeResult<AgentPipelineContext>.Create(c));
 
             _sessionManager
                 .Setup(m => m.CompleteAgentSessionTurnAsync(
@@ -761,7 +762,7 @@ namespace LagoVista.AI.Tests.Services
 
             // Assert
             Assert.That(result.Successful, Is.True, result.ErrorMessage);
-            _next.Verify(n => n.ExecuteAsync(It.IsAny<AgentPipelineContext>(), It.IsAny<CancellationToken>()), Times.Once);
+            _next.Verify(n => n.ExecuteAsync(It.IsAny<AgentPipelineContext>()), Times.Once);
         }
 
         [Test]
@@ -838,15 +839,15 @@ namespace LagoVista.AI.Tests.Services
             var agentResponse = new AgentExecuteResponse { Text = "ok" };
 
             _next
-                .Setup(n => n.ExecuteAsync(It.IsAny<AgentPipelineContext>(), It.IsAny<CancellationToken>()))
-                .Callback<AgentPipelineContext, CancellationToken>((c, _) =>
+                .Setup(n => n.ExecuteAsync(It.IsAny<AgentPipelineContext>()))
+                .Callback<AgentPipelineContext>((c) =>
                 {
                     Assert.That(c.Session, Is.SameAs(session));
                     Assert.That(c.Turn, Is.SameAs(newTurn));
 
                     c.Response = agentResponse;
                 })
-                .ReturnsAsync((AgentPipelineContext c, CancellationToken _) => InvokeResult<AgentPipelineContext>.Create(c));
+                .ReturnsAsync((AgentPipelineContext c) => InvokeResult<AgentPipelineContext>.Create(c));
 
             _sessionManager
                 .Setup(m => m.CompleteAgentSessionTurnAsync(
@@ -869,7 +870,7 @@ namespace LagoVista.AI.Tests.Services
 
             // Assert
             Assert.That(result.Successful, Is.True, result.ErrorMessage);
-            _next.Verify(n => n.ExecuteAsync(It.IsAny<AgentPipelineContext>(), It.IsAny<CancellationToken>()), Times.Once);
+            _next.Verify(n => n.ExecuteAsync(It.IsAny<AgentPipelineContext>()), Times.Once);
         }
 
 

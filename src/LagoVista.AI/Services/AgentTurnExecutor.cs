@@ -34,9 +34,7 @@ namespace LagoVista.AI.Services
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
         }
 
-        public async Task<InvokeResult<AgentPipelineContext>> ExecuteAsync(
-            AgentPipelineContext ctx,
-            CancellationToken cancellationToken = default)
+        public async Task<InvokeResult<AgentPipelineContext>> ExecuteAsync(AgentPipelineContext ctx)
         {
             if (ctx == null)
             {
@@ -95,7 +93,7 @@ namespace LagoVista.AI.Services
             }
 
             // Execute the inner step that produces ctx.Response (e.g., AgentExecutionService as IAgentPipelineStep)
-            var execCtxResult = await _agentExecutionStep.ExecuteAsync(ctx, cancellationToken);
+            var execCtxResult = await _agentExecutionStep.ExecuteAsync(ctx);
             if (!execCtxResult.Successful)
             {
                 return InvokeResult<AgentPipelineContext>.FromInvokeResult(execCtxResult.ToInvokeResult());
@@ -144,7 +142,7 @@ namespace LagoVista.AI.Services
                 updatedCtx.Session.Id,
                 updatedCtx.Turn.Id,
                 responseJson,
-                cancellationToken);
+                ctx.CancellationToken);
 
             if (!responseBlobResult.Successful)
             {

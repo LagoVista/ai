@@ -78,7 +78,7 @@ namespace LagoVista.AI.Tests.Services
                 Times.Once);
 
             _next.Verify(
-                n => n.ExecuteAsync(It.IsAny<AgentPipelineContext>(), It.IsAny<CancellationToken>()),
+                n => n.ExecuteAsync(It.IsAny<AgentPipelineContext>()),
                 Times.Never);
         }
 
@@ -104,7 +104,7 @@ namespace LagoVista.AI.Tests.Services
                 Times.Once);
 
             _next.Verify(
-                n => n.ExecuteAsync(It.IsAny<AgentPipelineContext>(), It.IsAny<CancellationToken>()),
+                n => n.ExecuteAsync(It.IsAny<AgentPipelineContext>()),
                 Times.Never);
         }
 
@@ -131,7 +131,7 @@ namespace LagoVista.AI.Tests.Services
             Assert.That(result.Errors[0].Message, Is.EqualTo("AgentContext is required, this can either come from the request or be set as a default in the Owner settings."));
 
             _next.Verify(
-                n => n.ExecuteAsync(It.IsAny<AgentPipelineContext>(), It.IsAny<CancellationToken>()),
+                n => n.ExecuteAsync(It.IsAny<AgentPipelineContext>()),
                 Times.Never);
         }
 
@@ -175,13 +175,13 @@ namespace LagoVista.AI.Tests.Services
                 .Returns(Task.CompletedTask);
 
             _next
-                .Setup(n => n.ExecuteAsync(It.IsAny<AgentPipelineContext>(), It.IsAny<CancellationToken>()))
-                .Callback<AgentPipelineContext, CancellationToken>((ctx, _) =>
+                .Setup(n => n.ExecuteAsync(It.IsAny<AgentPipelineContext>()))
+                .Callback<AgentPipelineContext>((ctx) =>
                 {
                     capturedCtx = ctx;
                     ctx.Response = downstreamResponse;
                 })
-                .ReturnsAsync((AgentPipelineContext ctx, CancellationToken _) => InvokeResult<AgentPipelineContext>.Create(ctx));
+                .ReturnsAsync((AgentPipelineContext ctx) => InvokeResult<AgentPipelineContext>.Create(ctx));
 
             var result = await _sut.HandleAsync(request, org, user);
 
@@ -189,7 +189,7 @@ namespace LagoVista.AI.Tests.Services
             Assert.That(result.Result, Is.SameAs(downstreamResponse));
 
             _next.Verify(
-                n => n.ExecuteAsync(It.IsAny<AgentPipelineContext>(), It.IsAny<CancellationToken>()),
+                n => n.ExecuteAsync(It.IsAny<AgentPipelineContext>()),
                 Times.Once);
 
             Assert.That(capturedCtx, Is.Not.Null);

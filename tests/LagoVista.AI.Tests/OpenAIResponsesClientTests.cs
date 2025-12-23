@@ -233,7 +233,7 @@ namespace LagoVista.AI.Tests
 
             var ctx = BuildCtx("session-1");
 
-            var result = await client.ExecuteAsync(ctx, CancellationToken.None);
+            var result = await client.ExecuteAsync(ctx);
 
             Assert.That(result.Successful, Is.True, result.ErrorMessage);
             Assert.That(ctx.Response, Is.Not.Null);
@@ -300,7 +300,7 @@ namespace LagoVista.AI.Tests
 
             var ctx = BuildCtx("session-err");
 
-            var result = await client.ExecuteAsync(ctx, CancellationToken.None);
+            var result = await client.ExecuteAsync(ctx);
 
             Assert.That(result.Successful, Is.False);
             Assert.That(result.ErrorMessage, Does.Contain("LLM call failed with HTTP"));
@@ -352,7 +352,7 @@ namespace LagoVista.AI.Tests
             var ctx = BuildCtx("session-empty");
             ctx.Request.Instruction = null;
 
-            var result = await client.ExecuteAsync(ctx, CancellationToken.None);
+            var result = await client.ExecuteAsync(ctx);
 
             Assert.That(result.Successful, Is.False);
             Assert.That(result.ErrorMessage, Does.Contain("Instruction is required"));
@@ -391,7 +391,7 @@ namespace LagoVista.AI.Tests
 
             var ctx = BuildCtx("session-url");
 
-            var result = await client.ExecuteAsync(ctx, CancellationToken.None);
+            var result = await client.ExecuteAsync(ctx);
 
             Assert.That(result.Successful, Is.False);
             Assert.That(result.ErrorMessage, Does.Contain("OpenAIUrl is not configured"));
@@ -431,7 +431,7 @@ namespace LagoVista.AI.Tests
             var ctx = BuildCtx("session-key");
             ctx.AgentContext.LlmApiKey = null;
 
-            var result = await client.ExecuteAsync(ctx, CancellationToken.None);
+            var result = await client.ExecuteAsync(ctx);
 
             Assert.That(result.Successful, Is.False);
             Assert.That(result.ErrorMessage, Does.Contain("LlmApiKey is not configured"));
@@ -464,7 +464,7 @@ namespace LagoVista.AI.Tests
 
             var ctx = BuildCtx("session-fallback");
 
-            var result = await client.ExecuteAsync(ctx, CancellationToken.None);
+            var result = await client.ExecuteAsync(ctx);
 
             Assert.That(result.Successful, Is.True, result.ErrorMessage);
             Assert.That(ctx.Response, Is.Not.Null);
@@ -523,7 +523,7 @@ namespace LagoVista.AI.Tests
 
             var ctx = BuildCtx("session-nonstream");
 
-            var result = await client.ExecuteAsync(ctx, CancellationToken.None);
+            var result = await client.ExecuteAsync(ctx);
 
             Assert.That(result.Successful, Is.True, result.ErrorMessage);
             Assert.That(ctx.Response, Is.Not.Null);

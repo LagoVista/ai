@@ -42,9 +42,7 @@ namespace LagoVista.AI.Services
             _modeEntryBootstrapService = modeEntryBootstrapService ?? throw new ArgumentNullException(nameof(modeEntryBootstrapService));
         }
 
-        public async Task<InvokeResult<AgentPipelineContext>> ExecuteAsync(
-            AgentPipelineContext ctx,
-            CancellationToken cancellationToken = default)
+        public async Task<InvokeResult<AgentPipelineContext>> ExecuteAsync(AgentPipelineContext ctx)
         {
             if (ctx == null)
             {
@@ -128,7 +126,7 @@ namespace LagoVista.AI.Services
                     "[AgentReasoner_ExecuteAsync] Iteration " + (iteration + 1) + " starting. " +
                     "sessionId=" + sessionId + ", mode=" + request.Mode + ", conversationId=" + request.ConversationId);
 
-                if (cancellationToken.IsCancellationRequested)
+                if (ctx.CancellationToken.IsCancellationRequested)
                 {
                     return InvokeResult<AgentPipelineContext>.Abort();
                 }
@@ -141,7 +139,7 @@ namespace LagoVista.AI.Services
                 ctx.ConversationId = sessionId;
 
                 // IMPORTANT: LLM step must set ctx.Response
-                var llmCtxResult = await _llmClient.ExecuteAsync(ctx, cancellationToken);
+                var llmCtxResult = await _llmClient.ExecuteAsync(ctx);
                 if (!llmCtxResult.Successful)
                 {
                     _logger.AddError(
@@ -213,25 +211,25 @@ namespace LagoVista.AI.Services
 
                 foreach (var toolCall in lastResponse.ToolCalls)
                 {
-                    await _agentStreamingContext.AddWorkflowAsync("calling tool " + toolCall.Name + "...", cancellationToken);
+                    await _agentStreamingContext.AddWorkflowAsync("calling tool " + toolCall.Name + "...", ctx.CancellationToken);
                     var sw = Stopwatch.StartNew();
 
-                    var updatedCallResponse = await _toolExecutor.ExecuteServerToolAsync(toolCall, toolContext, cancellationToken);
+                    var updatedCallResponse = await _toolExecutor.ExecuteServerToolAsync(toolCall, toolContext, ctx.CancellationToken);
 
                     if (updatedCallResponse.Successful)
                     {
                         await _agentStreamingContext.AddWorkflowAsync(
                             "success calling tool " + toolCall.Name + " in " + sw.Elapsed.TotalMilliseconds.ToString("0.0") + "ms...",
-                            cancellationToken);
+                            ctx.CancellationToken);
                     }
                     else
                     {
                         await _agentStreamingContext.AddWorkflowAsync(
                             "failed to call tool " + toolCall.Name + ", err: " + updatedCallResponse.ErrorMessage + " in " + sw.Elapsed.TotalMilliseconds.ToString("0.0") + "ms...",
-                            cancellationToken);
+                            ctx.CancellationToken);
                     }
 
-                    if (cancellationToken.IsCancellationRequested)
+                    if (ctx.CancellationToken.IsCancellationRequested)
                     {
                         return InvokeResult<AgentPipelineContext>.Abort();
                     }
@@ -302,7 +300,7 @@ namespace LagoVista.AI.Services
                                 ToolContext = toolContext
                             };
 
-                            var bootStrapResult = await _modeEntryBootstrapService.ExecuteAsync(bootStrapRequest, cancellationToken);
+                            var bootStrapResult = await _modeEntryBootstrapService.ExecuteAsync(bootStrapRequest, ctx.CancellationToken);
                             if (!bootStrapResult.Successful)
                             {
                                 return InvokeResult<AgentPipelineContext>.FromInvokeResult(bootStrapResult.ToInvokeResult());
