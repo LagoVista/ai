@@ -55,7 +55,7 @@ namespace LagoVista.AI.Tests.Services
         public void ExecuteServerToolAsync_NullCall_Throws()
         {
             Assert.ThrowsAsync<ArgumentNullException>(
-                async () => await _sut.ExecuteServerToolAsync(null, new AgentToolExecutionContext(), CancellationToken.None));
+                async () => await _sut.ExecuteServerToolAsync(null, new AgentPipelineContext()));
         }
 
         [Test]
@@ -67,9 +67,9 @@ namespace LagoVista.AI.Tests.Services
                 Name = "  "
             };
 
-            var context = new AgentToolExecutionContext();
+            var context = new AgentPipelineContext();
 
-            var result = await _sut.ExecuteServerToolAsync(call, context, CancellationToken.None);
+            var result = await _sut.ExecuteServerToolAsync(call, context);
 
             // InvokeResult reflects error
             Assert.That(result.Successful, Is.False);
@@ -98,11 +98,11 @@ namespace LagoVista.AI.Tests.Services
                 Name = "testing_ping_pong"
             };
 
-            var context = new AgentToolExecutionContext();
+            var context = new AgentPipelineContext();
 
             _toolRegistry.Setup(r => r.HasTool(call.Name)).Returns(false);
 
-            var result = await _sut.ExecuteServerToolAsync(call, context, CancellationToken.None);
+            var result = await _sut.ExecuteServerToolAsync(call, context);
 
             // InvokeResult is an error (per current implementation)
             Assert.That(result.Successful, Is.False);
@@ -128,7 +128,7 @@ namespace LagoVista.AI.Tests.Services
                 ArgumentsJson = "{\"message\":\"hi\"}"
             };
 
-            var context = new AgentToolExecutionContext();
+            var context = new AgentPipelineContext();
 
             _toolRegistry.Setup(r => r.HasTool(call.Name)).Returns(true);
 
@@ -136,7 +136,7 @@ namespace LagoVista.AI.Tests.Services
                 .Setup(f => f.GetTool(call.Name))
                 .Returns(InvokeResult<IAgentTool>.FromError("Factory failed", "AGENT_TOOL_CREATE_FAILED"));
 
-            var result = await _sut.ExecuteServerToolAsync(call, context, CancellationToken.None);
+            var result = await _sut.ExecuteServerToolAsync(call, context);
 
             // InvokeResult is error from factory
             Assert.That(result.Successful, Is.False);
@@ -161,21 +161,21 @@ namespace LagoVista.AI.Tests.Services
                 ArgumentsJson = "{\"message\":\"hi\"}"
             };
 
-            var context = new AgentToolExecutionContext();
+            var context = new AgentPipelineContext();
 
             _toolRegistry.Setup(r => r.HasTool(call.Name)).Returns(true);
 
             var toolMock = new Mock<IAgentTool>();
             toolMock.Setup(t => t.IsToolFullyExecutedOnServer).Returns(true);
             toolMock
-                .Setup(t => t.ExecuteAsync(call.ArgumentsJson, context, It.IsAny<CancellationToken>()))
+                .Setup(t => t.ExecuteAsync(call.ArgumentsJson, context))
                 .ReturnsAsync(InvokeResult<string>.Create("{\"reply\":\"pong: hi\"}"));
 
             _toolFactory
                 .Setup(f => f.GetTool(call.Name))
                 .Returns(InvokeResult<IAgentTool>.Create(toolMock.Object));
 
-            var result = await _sut.ExecuteServerToolAsync(call, context, CancellationToken.None);
+            var result = await _sut.ExecuteServerToolAsync(call, context);
 
             // InvokeResult success
             Assert.That(result.Successful, Is.True);
@@ -190,7 +190,7 @@ namespace LagoVista.AI.Tests.Services
 
             _toolFactory.Verify(f => f.GetTool(call.Name), Times.Once);
             toolMock.Verify(
-                t => t.ExecuteAsync(call.ArgumentsJson, context, It.IsAny<CancellationToken>()),
+                t => t.ExecuteAsync(call.ArgumentsJson, context),
                 Times.Once);
         }
 
@@ -204,14 +204,14 @@ namespace LagoVista.AI.Tests.Services
                 ArgumentsJson = "{\"message\":\"hi\"}"
             };
 
-            var context = new AgentToolExecutionContext();
+            var context = new AgentPipelineContext();
 
             _toolRegistry.Setup(r => r.HasTool(call.Name)).Returns(true);
 
             var toolMock = new Mock<IAgentTool>();
             toolMock.Setup(t => t.IsToolFullyExecutedOnServer).Returns(true);
             toolMock
-                 .Setup(t => t.ExecuteAsync(call.ArgumentsJson, context, It.IsAny<CancellationToken>()))
+                 .Setup(t => t.ExecuteAsync(call.ArgumentsJson, context))
                 .ReturnsAsync(InvokeResult<string>.FromError("Tool failed"));
 
 
@@ -220,7 +220,7 @@ namespace LagoVista.AI.Tests.Services
                 .Setup(f => f.GetTool(call.Name))
                 .Returns(InvokeResult<IAgentTool>.Create(toolMock.Object));
 
-            var result = await _sut.ExecuteServerToolAsync(call, context, CancellationToken.None);
+            var result = await _sut.ExecuteServerToolAsync(call, context);
 
             // InvokeResult is error from tool execution
             Assert.That(result.Successful, Is.False);
@@ -251,7 +251,7 @@ namespace LagoVista.AI.Tests.Services
                 ArgumentsJson = "{\"patchId\":\"123\"}"
             };
 
-            var context = new AgentToolExecutionContext();
+            var context = new AgentPipelineContext();
 
             _toolRegistry.Setup(r => r.HasTool(call.Name)).Returns(true);
 
@@ -262,14 +262,14 @@ namespace LagoVista.AI.Tests.Services
 
             // Whatever your current signature is, adapt this:
             toolMock
-                .Setup(t => t.ExecuteAsync(call.ArgumentsJson, context, It.IsAny<CancellationToken>()))
+                .Setup(t => t.ExecuteAsync(call.ArgumentsJson, context))
                 .ReturnsAsync(InvokeResult<string>.Create("{\"normalizedPatchId\":\"123\"}"));
 
             _toolFactory
                 .Setup(f => f.GetTool(call.Name))
                 .Returns(InvokeResult<IAgentTool>.Create(toolMock.Object));
 
-            var result = await _sut.ExecuteServerToolAsync(call, context, CancellationToken.None);
+            var result = await _sut.ExecuteServerToolAsync(call, context);
 
             Assert.That(result.Successful, Is.True);
             Assert.That(result.Result, Is.SameAs(call));

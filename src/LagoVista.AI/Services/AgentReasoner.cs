@@ -214,7 +214,7 @@ namespace LagoVista.AI.Services
                     await _agentStreamingContext.AddWorkflowAsync("calling tool " + toolCall.Name + "...", ctx.CancellationToken);
                     var sw = Stopwatch.StartNew();
 
-                    var updatedCallResponse = await _toolExecutor.ExecuteServerToolAsync(toolCall, toolContext, ctx.CancellationToken);
+                    var updatedCallResponse = await _toolExecutor.ExecuteServerToolAsync(toolCall, ctx);
 
                     if (updatedCallResponse.Successful)
                     {

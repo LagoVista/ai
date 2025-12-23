@@ -26,7 +26,6 @@ namespace LagoVista.AI.Interfaces
         /// </summary>
         Task<InvokeResult<AgentToolCall>> ExecuteServerToolAsync(
             AgentToolCall call,
-            AgentToolExecutionContext context,
-            CancellationToken cancellationToken = default);
+            AgentPipelineContext context);
     }
 }

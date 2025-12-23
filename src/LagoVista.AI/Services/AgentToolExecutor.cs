@@ -31,8 +31,7 @@ namespace LagoVista.AI.Services
 
         public async Task<InvokeResult<AgentToolCall>> ExecuteServerToolAsync(
             AgentToolCall call,
-            AgentToolExecutionContext context,
-            CancellationToken cancellationToken = default)
+            AgentPipelineContext context)
         {
             if (call == null)
             {
@@ -89,7 +88,7 @@ namespace LagoVista.AI.Services
                 call.ErrorMessage = null;
 
 
-                var execResult = await tool.ExecuteAsync(call.ArgumentsJson, context, cancellationToken);
+                var execResult = await tool.ExecuteAsync(call.ArgumentsJson, context);
 
                 call.WasExecuted = execResult.Successful;
                 call.ResultJson = execResult.Successful ? execResult.Result : null;
@@ -116,7 +115,7 @@ namespace LagoVista.AI.Services
                 _logger.Trace($"[AgentToolExecutor_ExecuteServerToolAsync] Tool '{call.Name}' Was Successfully Executed, Response\r\n{execResult.Result}\r\n");
 
             }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            catch (OperationCanceledException) when (context.CancellationToken.IsCancellationRequested)
             {
                 call.WasExecuted = false;
                 call.ErrorMessage = $"Tool '{call.Name}' execution was cancelled.";

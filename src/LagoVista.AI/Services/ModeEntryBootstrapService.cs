@@ -92,47 +92,47 @@ namespace LagoVista.AI.Services
 
                     _logger.Trace($"{tag} Executing bootstrap tool '{call.Name}'.");
 
-                    var result = await _toolExecutor.ExecuteServerToolAsync(call, request.ToolContext, cancellationToken);
-                    if (!result.Successful)
-                    {
-                        _logger.LogInvokeResult("[ModeEntryBootstrapService__ExecuteAsync__ToolExecutorFailed]", result);
-                        return InvokeResult<ModeEntryBootstrapDetails>.FromInvokeResult(result.ToInvokeResult());
-                    }
+                    //var result = await _toolExecutor.ExecuteServerToolAsync(call, request.ToolContext, cancellationToken);
+                    //if (!result.Successful)
+                    //{
+                    //    _logger.LogInvokeResult("[ModeEntryBootstrapService__ExecuteAsync__ToolExecutorFailed]", result);
+                    //    return InvokeResult<ModeEntryBootstrapDetails>.FromInvokeResult(result.ToInvokeResult());
+                    //}
 
-                    var executed = result.Result;
-                    if (executed == null)
-                    {
-                        var msg = $"Tool executor returned null AgentToolCall for tool '{call.Name}'.";
-                        _logger.AddError("[ModeEntryBootstrapService__ExecuteAsync__NullToolResult]", msg);
-                        return InvokeResult<ModeEntryBootstrapDetails>.FromError(msg);
-                    }
+                    //var executed = result.Result;
+                    //if (executed == null)
+                    //{
+                    //    var msg = $"Tool executor returned null AgentToolCall for tool '{call.Name}'.";
+                    //    _logger.AddError("[ModeEntryBootstrapService__ExecuteAsync__NullToolResult]", msg);
+                    //    return InvokeResult<ModeEntryBootstrapDetails>.FromError(msg);
+                    //}
 
-                    // Per AgentReasoner semantics: WasExecuted=false indicates tool did not run logic.
-                    // For bootstrap, tools are expected to succeed; treat non-execution as failure.
-                    if (!executed.WasExecuted)
-                    {
-                        var msg = $"Bootstrap tool '{executed.Name}' did not execute. err='{executed.ErrorMessage ?? ""}'.";
-                        _logger.AddError("[ModeEntryBootstrapService__ExecuteAsync__ToolNotExecuted]", msg);
-                        return InvokeResult<ModeEntryBootstrapDetails>.FromError(msg);
-                    }
+                    //// Per AgentReasoner semantics: WasExecuted=false indicates tool did not run logic.
+                    //// For bootstrap, tools are expected to succeed; treat non-execution as failure.
+                    //if (!executed.WasExecuted)
+                    //{
+                    //    var msg = $"Bootstrap tool '{executed.Name}' did not execute. err='{executed.ErrorMessage ?? ""}'.";
+                    //    _logger.AddError("[ModeEntryBootstrapService__ExecuteAsync__ToolNotExecuted]", msg);
+                    //    return InvokeResult<ModeEntryBootstrapDetails>.FromError(msg);
+                    //}
 
-                    // If tool requires client execution, bootstrap cannot complete server-side.
-                    // Treat as failure because bootstrap tools are required to hydrate context.
-                    if (executed.RequiresClientExecution)
-                    {
-                        var msg = $"Bootstrap tool '{executed.Name}' requires client execution, which is not allowed for bootstrap.";
-                        _logger.AddError("[ModeEntryBootstrapService__ExecuteAsync__ClientExecutionNotAllowed]", msg);
-                        return InvokeResult<ModeEntryBootstrapDetails>.FromError(msg);
-                    }
+                    //// If tool requires client execution, bootstrap cannot complete server-side.
+                    //// Treat as failure because bootstrap tools are required to hydrate context.
+                    //if (executed.RequiresClientExecution)
+                    //{
+                    //    var msg = $"Bootstrap tool '{executed.Name}' requires client execution, which is not allowed for bootstrap.";
+                    //    _logger.AddError("[ModeEntryBootstrapService__ExecuteAsync__ClientExecutionNotAllowed]", msg);
+                    //    return InvokeResult<ModeEntryBootstrapDetails>.FromError(msg);
+                    //}
 
-                    details.ExecutedTools.Add(new ModeEntryBootstrapToolResult
-                    {
-                        ToolName = executed.Name,
-                        WasExecuted = executed.WasExecuted,
-                        RequiresClientExecution = executed.RequiresClientExecution,
-                        ResultJson = executed.ResultJson,
-                        ErrorMessage = executed.ErrorMessage
-                    });
+                    //details.ExecutedTools.Add(new ModeEntryBootstrapToolResult
+                    //{
+                    //    ToolName = executed.Name,
+                    //    WasExecuted = executed.WasExecuted,
+                    //    RequiresClientExecution = executed.RequiresClientExecution,
+                    //    ResultJson = executed.ResultJson,
+                    //    ErrorMessage = executed.ErrorMessage
+                    //});
                 }
 
                 _logger.Trace($"{tag} Bootstrap complete. modeKey={request.ModeKey}, executed={details.ExecutedTools.Count}");

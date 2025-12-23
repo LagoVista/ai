@@ -185,7 +185,7 @@ namespace LagoVista.AI.Tests.Services
             Assert.That(ctx.Response.Text, Is.EqualTo("final answer"));
 
             _toolExecutor.Verify(
-                t => t.ExecuteServerToolAsync(It.IsAny<AgentToolCall>(), It.IsAny<AgentToolExecutionContext>(), It.IsAny<CancellationToken>()),
+                t => t.ExecuteServerToolAsync(It.IsAny<AgentToolCall>(), It.IsAny<AgentPipelineContext>()),
                 Times.Never);
         }
 
@@ -231,8 +231,7 @@ namespace LagoVista.AI.Tests.Services
             _toolExecutor
                 .Setup(t => t.ExecuteServerToolAsync(
                     It.IsAny<AgentToolCall>(),
-                    It.IsAny<AgentToolExecutionContext>(),
-                    It.IsAny<CancellationToken>()))
+                    It.IsAny<AgentPipelineContext>()))
                 .ReturnsAsync(InvokeResult<AgentToolCall>.Create(updatedCall));
 
             SetupBootstrapSuccess();
@@ -300,8 +299,7 @@ namespace LagoVista.AI.Tests.Services
             _toolExecutor
                 .SetupSequence(t => t.ExecuteServerToolAsync(
                     It.IsAny<AgentToolCall>(),
-                    It.IsAny<AgentToolExecutionContext>(),
-                    It.IsAny<CancellationToken>()))
+                    It.IsAny<AgentPipelineContext>()))
                 .ReturnsAsync(InvokeResult<AgentToolCall>.Create(firstUpdatedCall))
                 .ReturnsAsync(InvokeResult<AgentToolCall>.Create(secondUpdatedCall));
 
@@ -361,8 +359,7 @@ namespace LagoVista.AI.Tests.Services
             _toolExecutor
                 .Setup(t => t.ExecuteServerToolAsync(
                     It.IsAny<AgentToolCall>(),
-                    It.IsAny<AgentToolExecutionContext>(),
-                    It.IsAny<CancellationToken>()))
+                    It.IsAny<AgentPipelineContext>()))
                 .ReturnsAsync(InvokeResult<AgentToolCall>.Create(updatedCall));
 
             // No mode change in this test; bootstrap won't be called.
@@ -403,8 +400,7 @@ namespace LagoVista.AI.Tests.Services
             _toolExecutor
                 .Setup(t => t.ExecuteServerToolAsync(
                     It.IsAny<AgentToolCall>(),
-                    It.IsAny<AgentToolExecutionContext>(),
-                    It.IsAny<CancellationToken>()))
+                    It.IsAny<AgentPipelineContext>()))
                 .ReturnsAsync(InvokeResult<AgentToolCall>.Create(updatedCall));
 
             var result = await _sut.ExecuteAsync(ctx);
