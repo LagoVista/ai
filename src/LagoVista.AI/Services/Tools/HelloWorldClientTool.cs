@@ -65,6 +65,8 @@ namespace LagoVista.AI.Services.Tools
          * EXECUTION LOGIC (Contract §4)
          * -------------------------------------------------------------- */
 
+        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
+
         public Task<InvokeResult<string>> ExecuteAsync(
             string argumentsJson,
             AgentToolExecutionContext context,

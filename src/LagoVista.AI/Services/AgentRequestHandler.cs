@@ -48,7 +48,7 @@ namespace LagoVista.AI.Services
             EntityHeader user,
             CancellationToken cancellationToken = default)
         {
-            var ctx = new AgentPipelineContext
+            var ctx = new AgentPipelineContext(cancellationToken)
             {
                 CorrelationId = Guid.NewGuid().ToId(),
                 Org = org,

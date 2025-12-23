@@ -149,6 +149,7 @@ namespace LagoVista.AI.Services.Tools
         }
 
         public const string ToolUsageMetadata = WorkspaceWritePatchOrchestrator.ToolUsageMetadata;
+        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
 
         public Task<InvokeResult<string>> ExecuteAsync(
             string argumentsJson,

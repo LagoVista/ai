@@ -139,6 +139,7 @@ namespace LagoVista.AI.Tests.Services
                 // Simple, easy-to-assert schema
                 return $"SCHEMA:{ToolName}";
             }
+            public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
 
             public Task<InvokeResult<string>> ExecuteAsync(
                 string argumentsJson,
@@ -166,6 +167,7 @@ namespace LagoVista.AI.Tests.Services
             {
                 return $"SCHEMA:{ToolName}";
             }
+            public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
 
             public Task<InvokeResult<string>> ExecuteAsync(
                 string argumentsJson,

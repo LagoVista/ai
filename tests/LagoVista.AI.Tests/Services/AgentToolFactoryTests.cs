@@ -173,6 +173,7 @@ namespace LagoVista.AI.Tests.Services
                     parameters = new { type = "object" }
                 };
             }
+            public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
 
             public Task<InvokeResult<string>> ExecuteAsync(
                 string argumentsJson,
@@ -210,6 +211,7 @@ namespace LagoVista.AI.Tests.Services
                     parameters = new { type = "object" }
                 };
             }
+            public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
 
             public Task<InvokeResult<string>> ExecuteAsync(
                 string argumentsJson,

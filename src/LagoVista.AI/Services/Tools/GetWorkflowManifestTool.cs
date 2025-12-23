@@ -39,6 +39,7 @@ namespace LagoVista.AI.Services.Tools
         {
             public string WorkflowId { get; set; }
         }
+        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
 
         public async Task<InvokeResult<string>> ExecuteAsync(
             string argumentsJson,

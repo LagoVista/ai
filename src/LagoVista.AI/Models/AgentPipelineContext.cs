@@ -3,11 +3,17 @@ using LagoVista.Core.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 
 namespace LagoVista.AI.Models
 {
     public sealed class AgentPipelineContext
     {
+        public AgentPipelineContext(CancellationToken token = default)
+        {
+            CancellationToken = token;
+        }
+
         // Identity / correlation
         public string CorrelationId { get; set; }
         public EntityHeader Org { get; set; }
@@ -33,5 +39,23 @@ namespace LagoVista.AI.Models
 
         // Trace (optional)
         public CompositionTrace Trace { get; set; } = new CompositionTrace();
+
+        public CancellationToken CancellationToken { get; } = default;
+
+
+        public AgentToolExecutionContext ToToolContext()
+        {
+            return new AgentToolExecutionContext()
+            {
+                AgentContext = AgentContext,
+                ConversationContext = ConversationContext,
+                Org = Org,
+                User = User,
+                SessionId = Session.Id,
+                CurrentTurnId = Turn.Id,
+                Request = Request,
+               
+            };
+        }
     }
 }

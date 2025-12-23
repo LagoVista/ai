@@ -37,6 +37,7 @@ namespace LagoVista.AI.Services.Tools
         /// </summary>
         protected abstract string Tag { get; }
 
+        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
         /// <inheritdoc />
         public async Task<InvokeResult<string>> ExecuteAsync(
             string argumentsJson,

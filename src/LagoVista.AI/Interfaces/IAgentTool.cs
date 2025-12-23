@@ -39,5 +39,10 @@ namespace LagoVista.AI.Interfaces
             string argumentsJson,
             AgentToolExecutionContext context,
             CancellationToken cancellationToken = default);
+
+        Task<InvokeResult<string>> ExecuteAsync(
+            string argumentsJson,
+            AgentPipelineContext context);
+
     }
 }
