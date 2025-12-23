@@ -1,0 +1,159 @@
+# AGN-030 — Implementation of Prompt Context Providers
+
+**ID:** AGN-030  
+**Title:** Implementation of Prompt Context Providers  
+**Status:** Approved
+
+## Approval Metadata
+- **Approved By:** Kevin Wolf  
+- **Approval Timestamp:** 2025-12-23 EST (UTC-05:00)
+
+---
+
+## 1. Purpose & Scope
+
+### Purpose
+AGN-030 defines the concrete structural model for prompt-related context within the agent pipeline. It specifies how context is represented, classified, and carried between components without introducing execution logic or business behavior.
+
+### Scope
+This DDR defines:
+- The ContentProvider state container
+- Registers and line-item organization
+- Session Context vs Consumable Context classification
+- The ToolCallManifest register
+- CompletionTrace integration boundaries
+
+This DDR does not define pipeline orchestration, reasoner behavior, or persistence implementation details.
+
+---
+
+## 2. Conceptual Recap (Non-Normative)
+
+Prompt context is treated as structured state, not as ad-hoc prompt text. Context is accumulated over time, classified by lifetime, and consumed by request composition logic. This DDR formalizes that state shape without prescribing how decisions are made.
+
+---
+
+## 3. Implementation Goals & Constraints
+
+### Goals
+- Clearly separate persistent and consumable context
+- Maintain deterministic prompt composition inputs
+- Support multi-invocation flows (initial + continuations)
+- Remain testable without requiring an LLM
+
+### Constraints
+- Exactly two context classifications are permitted: Session Context and Consumable Context
+- Context representation must be independent of execution choreography
+- No business logic may be embedded in context containers
+
+---
+
+## 4. Core Abstractions
+
+### 4.1 ContentProvider
+The ContentProvider is a file-cabinet style state container that holds all prompt-relevant context for an agent execution.
+
+### 4.2 Registers
+The ContentProvider contains multiple Registers. Each Register:
+- Has a stable name
+- Holds an ordered collection of line items
+- Is classified as either Session Context or Consumable Context
+
+Line items represent accumulated content entries.
+
+### 4.3 Context Classifications
+
+**Session Context**:
+- Persistent across calls
+- Serialized into the per-request `instructions` lane
+- Not automatically cleared
+
+**Consumable Context**:
+- Intended to be consumed by the LLM
+- Serialized into retained conversation input/tool items
+- Cleared after successful delivery to the LLM
+
+### 4.4 ToolCallManifest Register
+The ContentProvider MUST include a ToolCallManifest register.
+
+The ToolCallManifest:
+- Is classified as Consumable Context
+- Stores structured records of tool calls including:
+  - tool name
+  - call parameters
+  - tool output
+  - tool call reference
+
+---
+
+## 5. ContentProvider Structure (File Cabinet Model)
+
+### 5.1 Single ContentProvider
+Exactly one ContentProvider instance exists per agent execution.
+
+### 5.2 Register-Based Organization
+The ContentProvider is composed solely of Registers. Registers are the only containment level beneath the ContentProvider.
+
+### 5.3 Structural Responsibility
+The ContentProvider and its Registers are state holders only. They do not contain business logic, orchestration rules, or reasoning behavior.
+
+---
+
+## 6. Pipeline Attachment & Persistence Boundary
+
+### 6.1 Attachment
+The ContentProvider is attached to the AgentPipelineContext for the duration of execution. All pipeline participants access context through this attachment.
+
+### 6.2 Persistence Interface
+The system provides an interface responsible for persisting and rehydrating the ContentProvider when required.
+
+### 6.3 Ownership
+Persistence and rehydration are owned by the AgentRequestHandler. The ContentProvider itself has no awareness of persistence or serialization.
+
+---
+
+## 7. CompletionTrace (Invocation-Scoped)
+
+### 7.1 Purpose
+CompletionTrace provides diagnostic visibility into each LLM invocation.
+
+### 7.2 Granularity
+Each CompletionTrace represents exactly one LLM invocation. An AgentPipelineContext may contain multiple CompletionTraces when continuations occur.
+
+### 7.3 Structure
+- AgentPipelineContext contains a list of CompletionTraces
+- Each CompletionTrace contains:
+  - invocation-level token totals
+  - invocation-level summary data
+  - a list of CompletionTraceSteps
+
+The order of CompletionTraces implies invocation order.
+
+### 7.4 Steps
+CompletionTraceSteps capture diagnostic information for individual steps within an invocation. The schema is intentionally deferred.
+
+### 7.5 Population Point
+The ResponseRequestBuilder is responsible for initializing and populating the CompletionTrace for each invocation.
+
+---
+
+## 8. Generated Artifacts
+
+### Primary Artifact
+- This Markdown DDR (AGN-030)
+
+### Referenced but Not Generated
+- ContentProvider
+- Register
+- ToolCallManifest
+- CompletionTrace
+- CompletionTraceStep
+- AgentPipelineContext
+- AgentRequestHandler
+- ResponseRequestBuilder
+
+No executable code, persistence implementations, or tests are generated by this DDR.
+
+---
+
+## End of AGN-030
