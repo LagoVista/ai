@@ -19,7 +19,7 @@ namespace LagoVista.AI.Services
             _namingService = namingService ?? throw new ArgumentNullException(nameof(namingService));
         }
 
-        public async Task<AgentSession> CreateSession(AgentExecuteRequest request, AgentContext agentContext, OperationKinds kind, EntityHeader org, EntityHeader user)
+        public Task<AgentSession> CreateSession(AgentExecuteRequest request, OperationKinds kind, EntityHeader org, EntityHeader user)
         {
             var now = DateTime.UtcNow.ToJSONString();
 
@@ -27,7 +27,6 @@ namespace LagoVista.AI.Services
             {
                 throw new ArgumentNullException(nameof(request));
             }
-
 
             var session = new AgentSession
             {
@@ -43,13 +42,18 @@ namespace LagoVista.AI.Services
                 Repo = request.Repo,
                 ModeReason = "initial startup",
                 ModeSetTimestamp = now,
+                Name = "Place Holder",
                 DefaultLanguage = request.Language
             };
 
             session.Key = session.Id.ToLower();
-            session.Name = await _namingService.GenerateNameAsync(agentContext, request.Instruction, default);
 
-            return session;
+            return Task.FromResult(session);
+        }
+
+        public async Task<string> GenerateSessionNameAsync(AgentContext context, string instructions, EntityHeader org, EntityHeader user)
+        {
+            return await _namingService.GenerateNameAsync(context, instructions, default);    
         }
 
         public AgentSessionTurn CreateTurnForNewSession(AgentSession session, AgentExecuteRequest request, EntityHeader org, EntityHeader user)
@@ -120,5 +124,7 @@ namespace LagoVista.AI.Services
 
             return instruction.Substring(0, InstructionSummaryMaxLength);
         }
+
+     
     }
 }

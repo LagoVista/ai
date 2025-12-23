@@ -158,7 +158,7 @@ namespace LagoVista.AI.Services
 
             ctx.AgentContext = context;
 
-            var session = await _sessionFactory.CreateSession(ctx.Request, context, OperationKinds.Code, ctx.Org, ctx.User);
+            var session = await _sessionFactory.CreateSession(ctx.Request, OperationKinds.Code, ctx.Org, ctx.User);
             var turn = _sessionFactory.CreateTurnForNewSession(session, ctx.Request, ctx.Org, ctx.User);
 
             ctx.Session = session;
@@ -170,9 +170,6 @@ namespace LagoVista.AI.Services
             {
                 return InvokeResult<AgentPipelineContext>.Abort();
             }
-
-            await _sessionManager.AddAgentSessionAsync(session, ctx.Org, ctx.User);
-            await _sessionManager.AddAgentSessionTurnAsync(session.Id, turn, ctx.Org, ctx.User);
 
             await PublishSessionStartedAsync(session);
             await PublishTurnCreatedAsync(session, turn);
@@ -191,18 +188,7 @@ namespace LagoVista.AI.Services
                 Request = ctx.Request,
             };
 
-            var requestJson = JsonConvert.SerializeObject(requestEnvelope);
-            var requestBlobResult = await _transcriptStore.SaveTurnRequestAsync(ctx.Org.Id, session.Id, turn.Id, requestJson, ctx.CancellationToken);
-
-            if (!requestBlobResult.Successful)
-            {
-                _adminLogger.AddError("[AgentTurnExecutor_ExecuteNewSessionTurnAsync__Transcript]", "Failed to store turn request transcript.");
-                return InvokeResult<AgentPipelineContext>.FromInvokeResult(requestBlobResult.ToInvokeResult());
-            }
-
-            await _sessionManager.SetRequestBlobUriAsync(session.Id, turn.Id, requestBlobResult.Result.ToString(), ctx.Org, ctx.User);
-
-            await _agentStreamingContext.AddWorkflowAsync("...connected, let's get started...");
+            await _agentStreamingContext.AddWorkflowAsync("connected, let's get started...");
 
             var downstream = await _next.ExecuteAsync(ctx);
             if (downstream.Aborted)
@@ -230,12 +216,6 @@ namespace LagoVista.AI.Services
                 await PublishTurnFailedAsync(session, turn, downstream.Transform<AgentExecuteResponse>(), stopwatch.ElapsedMilliseconds);
 
                 return downstream;
-            }
-
-            // Downstream must set ctx.Response on success.
-            if (ctx.Response != null)
-            {
-                ctx.Response.RequestEnvelopeUrl = requestBlobResult.Result.ToString();
             }
 
             _adminLogger.Trace("[AgentOrchestrator_ExecuteNewSessionAsync] Session Completed. " +
