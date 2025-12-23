@@ -15,7 +15,7 @@ namespace LagoVista.AI.Tests
         {
             return new AgentExecuteRequest
             {
-                ConversationId = "conv-1",
+                SessionId = "conv-1",
                 Mode = "TEST_MODE",
                 AgentContext = new EntityHeader { Id = "agent-ctx", Text = "Agent Ctx" },
                 ConversationContext = new EntityHeader { Id = "conv-ctx", Text = "Conv Ctx" }

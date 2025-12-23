@@ -167,7 +167,7 @@ namespace LagoVista.AI.Tests.Services
         {
             // Arrange
             var ctx = BuildContext();
-            ctx.Request.ConversationId = null; // new session signal
+            ctx.Request.SessionId = null; // new session signal
 
             var execResponse = new AgentExecuteResponse
             {
@@ -196,13 +196,13 @@ namespace LagoVista.AI.Tests.Services
             Assert.That(ctx.Response, Is.SameAs(execResponse));
 
             Assert.That(execResponse.FullResponseUrl, Is.EqualTo("https://www.test.ai/response"));
-            Assert.That(execResponse.ConversationId, Is.EqualTo(ctx.Session.Id));
+            Assert.That(execResponse.SessionId, Is.EqualTo(ctx.Session.Id));
             Assert.That(execResponse.TurnId, Is.EqualTo(ctx.Turn.Id));
 
             Assert.That(capturedResponseJson, Is.Not.Null.And.Not.Empty);
             dynamic envelope = JsonConvert.DeserializeObject(capturedResponseJson);
             Assert.That((string)envelope.SessionId, Is.EqualTo(ctx.Session.Id));
-            Assert.That((string)envelope.ConversationId, Is.EqualTo(ctx.Session.Id));
+            Assert.That((string)envelope.SessionId, Is.EqualTo(ctx.Session.Id));
             Assert.That((string)envelope.TurnId, Is.EqualTo(ctx.Turn.Id));
             Assert.That(envelope.Response, Is.Not.Null);
 
@@ -215,7 +215,7 @@ namespace LagoVista.AI.Tests.Services
         {
             // Arrange
             var ctx = BuildContext();
-            ctx.Request.ConversationId = null;
+            ctx.Request.SessionId = null;
 
             _agentExecutionStep
                 .Setup(s => s.ExecuteAsync(ctx))
@@ -237,7 +237,7 @@ namespace LagoVista.AI.Tests.Services
         {
             // Arrange
             var ctx = BuildContext();
-            ctx.Request.ConversationId = null;
+            ctx.Request.SessionId = null;
 
             _agentExecutionStep
                 .Setup(s => s.ExecuteAsync(ctx))
@@ -260,7 +260,7 @@ namespace LagoVista.AI.Tests.Services
         {
             // Arrange
             var ctx = BuildContext();
-            ctx.Request.ConversationId = null;
+            ctx.Request.SessionId = null;
 
             var execResponse = new AgentExecuteResponse { Text = "answer" };
 
@@ -294,7 +294,7 @@ namespace LagoVista.AI.Tests.Services
         {
             // Arrange
             var ctx = BuildContext();
-            ctx.Request.ConversationId = "conv-1";
+            ctx.Request.SessionId = "conv-1";
             ctx.Request.ResponseContinuationId = "resp-cont-999";
 
             var execResponse = new AgentExecuteResponse
@@ -326,7 +326,7 @@ namespace LagoVista.AI.Tests.Services
             Assert.That((string)envelope.ResponseId, Is.EqualTo("resp-cont-999"));
 
             Assert.That(execResponse.FullResponseUrl, Is.EqualTo("https://www.test.ai/response"));
-            Assert.That(execResponse.ConversationId, Is.EqualTo(ctx.Session.Id));
+            Assert.That(execResponse.SessionId, Is.EqualTo(ctx.Session.Id));
             Assert.That(execResponse.TurnId, Is.EqualTo(ctx.Turn.Id));
         }
 
@@ -335,7 +335,7 @@ namespace LagoVista.AI.Tests.Services
         {
             // Arrange
             var ctx = BuildContext();
-            ctx.Request.ConversationId = "conv-1";
+            ctx.Request.SessionId = "conv-1";
             ctx.Request.ResponseContinuationId = "resp-cont-999";
 
             var execResponse = new AgentExecuteResponse { Text = "answer" };
@@ -383,7 +383,7 @@ namespace LagoVista.AI.Tests.Services
             var turn = new AgentSessionTurn
             {
                 Id = "turn-1",
-                ConversationId = "conversation-1",
+                SessionId = "conversation-1",
                 PreviousOpenAIResponseId = null
             };
 
@@ -393,7 +393,7 @@ namespace LagoVista.AI.Tests.Services
                 ConversationContext = session.ConversationContext,
                 Mode = "ask",
                 Instruction = "do something",
-                ConversationId = turn.ConversationId,
+                SessionId = turn.SessionId,
                 Repo = session.Repo,
                 Language = session.DefaultLanguage,
                 WorkspaceId = session.WorkspaceId,

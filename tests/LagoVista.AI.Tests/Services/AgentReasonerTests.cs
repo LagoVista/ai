@@ -102,7 +102,7 @@ namespace LagoVista.AI.Tests.Services
 
             var request = new AgentExecuteRequest
             {
-                ConversationId = "conv-1",
+                SessionId = "conv-1",
                 Mode = mode,
                 Instruction = "do something",
                 AgentContext = new EntityHeader { Id = "agent-1", Text = "Agent" },
@@ -121,7 +121,6 @@ namespace LagoVista.AI.Tests.Services
                 Request = request,
                 AgentContext = CreateAgentContext(),
                 ConversationContext = CreateConversationContext(),
-                ConversationId = "session-1",
                 RagContextBlock = string.Empty,
                 Turn = new AgentSessionTurn { Id = "turn-1" }
             };

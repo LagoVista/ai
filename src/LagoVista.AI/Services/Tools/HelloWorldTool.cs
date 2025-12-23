@@ -56,7 +56,6 @@ namespace LagoVista.AI.Services.Tools
         private sealed class HelloWorldResult
         {
             public string Message { get; set; }
-            public string ConversationId { get; set; }
             public string SessionId { get; set; }
         }
 
@@ -94,8 +93,7 @@ namespace LagoVista.AI.Services.Tools
                 var reply = new HelloWorldResult
                 {
                     Message = $"Hello, {args.Name}!",
-                    ConversationId = context?.Request?.ConversationId,
-                    SessionId = context?.SessionId
+                    SessionId = context?.Request?.SessionId,
                 };
 
                 var json = JsonConvert.SerializeObject(reply);

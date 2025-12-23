@@ -65,7 +65,6 @@ namespace LagoVista.AI.Services.Tools
 
             public string SessionId { get; set; } = string.Empty;
 
-            public string ConversationId { get; set; } = string.Empty;
 
             /// <summary>
             /// Indicates that this tool is intended for client execution only.
@@ -107,7 +106,6 @@ namespace LagoVista.AI.Services.Tools
                 {
                     ToolName = ToolName,
                     SessionId = context?.SessionId ?? string.Empty,
-                    ConversationId = context?.Request?.ConversationId ?? string.Empty,
                     IsClientExecutedOnly = true,
                     Message = "workspace_create_file is defined as a client-executed tool. Server-side ExecuteAsync should not be invoked; ensure the client handles this tool call and performs the filesystem operation."
                 };
@@ -119,7 +117,7 @@ namespace LagoVista.AI.Services.Tools
                     "workspace_create_file was executed on the server, but it is a client-executed-only tool.",
                     new[]
                     {
-                        new KeyValuePair<string, string>("ConversationId", context?.Request?.ConversationId ?? string.Empty),
+                        new KeyValuePair<string, string>("SessionId", context?.Request?.SessionId ?? string.Empty),
                         new KeyValuePair<string, string>("SessionId", context?.SessionId ?? string.Empty),
                         new KeyValuePair<string, string>("ArgumentsJson", argumentsJson ?? string.Empty)
                     });

@@ -34,7 +34,7 @@ namespace LagoVista.AI.Tests.Tools
                 SessionId = "session-1",
                 Request = new AgentExecuteRequest
                 {
-                    ConversationId = "conv-1"
+                    SessionId = "conv-1"
                 }
             };
         }

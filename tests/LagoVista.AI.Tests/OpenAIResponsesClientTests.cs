@@ -183,7 +183,7 @@ namespace LagoVista.AI.Tests
         {
             return new AgentExecuteRequest
             {
-                ConversationId = "conv-1",
+                SessionId = "conv-1",
                 Mode = "TEST_MODE",
                 Instruction = "Say hello to the world.",
                 AgentContext = new EntityHeader { Id = "agent-1", Text = "Test Agent" },
@@ -198,7 +198,6 @@ namespace LagoVista.AI.Tests
                 CorrelationId = "corr-1",
                 Org = new EntityHeader { Id = "org-1", Text = "Org 1" },
                 User = new EntityHeader { Id = "user-1", Text = "User 1" },
-                ConversationId = sessionId,
                 RagContextBlock = string.Empty,
                 AgentContext = CreateAgentContext(),
                 ConversationContext = CreateConversationContext(),

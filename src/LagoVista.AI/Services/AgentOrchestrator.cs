@@ -78,8 +78,8 @@ namespace LagoVista.AI.Services
                 return InvokeResult<AgentPipelineContext>.FromError(msg, "AGENT_ORCH_NULL_REQUEST");
             }
 
-            // Routing rule: new session if ConversationId is empty (request handler already normalizes this).
-            var isNewSession = string.IsNullOrWhiteSpace(request.ConversationId);
+            // Routing rule: new session if SessionId is empty (request handler already normalizes this).
+            var isNewSession = string.IsNullOrWhiteSpace(request.SessionId);
 
             if (isNewSession)
             {
@@ -270,9 +270,9 @@ namespace LagoVista.AI.Services
             _adminLogger.Trace("[AgentOrchestrator_ExecuteFollowupTurnAsync] Starting follow-up turn. " +
                                $"correlationId={correlationId}, org={ctx.Org?.Id}, user={ctx.User?.Id}");
 
-            if (string.IsNullOrWhiteSpace(ctx.Request.ConversationId))
+            if (string.IsNullOrWhiteSpace(ctx.Request.SessionId))
             {
-                const string msg = "ConversationId is required.";
+                const string msg = "SessionId is required.";
                 _adminLogger.AddError("[AgentOrchestrator_ExecuteFollowupTurnAsync__ValidateRequest]", msg);
 
                 return InvokeResult<AgentPipelineContext>.FromError(msg, "AGENT_ORCH_MISSING_SESSION_ID");
@@ -286,7 +286,7 @@ namespace LagoVista.AI.Services
                 return InvokeResult<AgentPipelineContext>.FromError(msg, "AGENT_ORCH_MISSING_INSTRUCTION");
             }
 
-            var session = await _sessionManager.GetAgentSessionAsync(ctx.Request.ConversationId, ctx.Org, ctx.User);
+            var session = await _sessionManager.GetAgentSessionAsync(ctx.Request.SessionId, ctx.Org, ctx.User);
             ctx.Session = session;
 
             if (session == null)
@@ -300,11 +300,11 @@ namespace LagoVista.AI.Services
             AgentSessionTurn previousTurn;
             if (!string.IsNullOrWhiteSpace(ctx.Request.PreviousTurnId))
             {
-                previousTurn = await _sessionManager.GetAgentSessionTurnAsync(ctx.Request.ConversationId, ctx.Request.PreviousTurnId, ctx.Org, ctx.User);
+                previousTurn = await _sessionManager.GetAgentSessionTurnAsync(ctx.Request.SessionId, ctx.Request.PreviousTurnId, ctx.Org, ctx.User);
             }
             else
             {
-                previousTurn = await _sessionManager.GetLastAgentSessionTurnAsync(ctx.Request.ConversationId, ctx.Org, ctx.User);
+                previousTurn = await _sessionManager.GetLastAgentSessionTurnAsync(ctx.Request.SessionId, ctx.Org, ctx.User);
             }
 
             if (previousTurn == null)
@@ -328,7 +328,7 @@ namespace LagoVista.AI.Services
             ctx.Request.CurrentTurnId = turn.Id;
 
             turn.SequenceNumber = previousTurn.SequenceNumber + 1;
-            turn.ConversationId = string.IsNullOrWhiteSpace(previousTurn.ConversationId) ? Guid.NewGuid().ToId() : previousTurn.ConversationId;
+            turn.SessionId = string.IsNullOrWhiteSpace(previousTurn.SessionId) ? Guid.NewGuid().ToId() : previousTurn.SessionId;
             turn.PreviousOpenAIResponseId = previousTurn.OpenAIResponseId;
 
             await _sessionManager.AddAgentSessionTurnAsync(session.Id, turn, ctx.Org, ctx.User);

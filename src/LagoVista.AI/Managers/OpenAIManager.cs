@@ -58,7 +58,7 @@ namespace LagoVista.AI.Managers
                 {
                     var queryResponse = new TextQueryResponse()
                     {
-                        ConversationId = result.id,
+                        SessionId = result.id,
                         Response = result.choices.First().message.content,
                         
                     };

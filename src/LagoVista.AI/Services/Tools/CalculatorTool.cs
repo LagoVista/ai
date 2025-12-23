@@ -42,7 +42,6 @@ namespace LagoVista.AI.Services.Tools
             public double Left { get; set; }
             public double Right { get; set; }
             public double Result { get; set; }
-            public string ConversationId { get; set; }
             public string SessionId { get; set; }
         }
         public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
@@ -115,7 +114,6 @@ namespace LagoVista.AI.Services.Tools
                     Left = left,
                     Right = right,
                     Result = result,
-                    ConversationId = context?.Request?.ConversationId,
                     SessionId = context?.SessionId
                 };
 

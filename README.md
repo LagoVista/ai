@@ -111,7 +111,7 @@ AgentExecuteRequest:
 - AgentContext (EntityHeader)
 - ConversationContext (EntityHeader)
 - Instruction
-- ConversationId
+- SessionId
 - WorkspaceId, Repo, Language, RagScope
 - Mode: ask/edit
 - ActiveFiles

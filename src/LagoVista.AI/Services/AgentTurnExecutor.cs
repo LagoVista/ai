@@ -108,7 +108,7 @@ namespace LagoVista.AI.Services
                     "AGENT_TURN_MISSING_RESPONSE");
             }
 
-            var isNewSessionTurn = string.IsNullOrWhiteSpace(updatedCtx.Request.ConversationId);
+            var isNewSessionTurn = string.IsNullOrWhiteSpace(updatedCtx.Request.SessionId);
 
             object responseEnvelope;
             if (isNewSessionTurn)
@@ -117,7 +117,6 @@ namespace LagoVista.AI.Services
                 {
                     OrgId = updatedCtx.Org?.Id,
                     SessionId = updatedCtx.Session.Id,
-                    ConversationId = updatedCtx.Session.Id,
                     TurnId = updatedCtx.Turn.Id,
                     Response = updatedCtx.Response
                 };
@@ -128,7 +127,6 @@ namespace LagoVista.AI.Services
                 {
                     OrgId = updatedCtx.Org?.Id,
                     SessionId = updatedCtx.Session.Id,
-                    ConversationId = updatedCtx.Session.Id,
                     ResponseId = updatedCtx.Request.ResponseContinuationId,
                     TurnId = updatedCtx.Turn.Id,
                     Response = updatedCtx.Response
@@ -157,7 +155,7 @@ namespace LagoVista.AI.Services
 
             // Stamp response metadata
             updatedCtx.Response.FullResponseUrl = responseBlobResult.Result.ToString();
-            updatedCtx.Response.ConversationId = updatedCtx.Session.Id;
+            updatedCtx.Response.SessionId = updatedCtx.Session.Id;
             updatedCtx.Response.TurnId = updatedCtx.Turn.Id;
 
             return InvokeResult<AgentPipelineContext>.Create(updatedCtx);

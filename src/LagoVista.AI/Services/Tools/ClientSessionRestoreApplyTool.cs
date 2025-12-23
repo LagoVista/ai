@@ -50,7 +50,6 @@ namespace LagoVista.AI.Services.Tools
             public bool ResetConversationChain { get; set; }
             public string RestoreOperationId { get; set; }
             public string Message { get; set; }
-            public string ConversationId { get; set; }
             public string SessionId { get; set; }
         }
         public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
@@ -76,7 +75,6 @@ namespace LagoVista.AI.Services.Tools
                     ResetConversationChain = args.ResetConversationChain ?? true,
                     RestoreOperationId = string.IsNullOrWhiteSpace(args.RestoreOperationId) ? null : args.RestoreOperationId.Trim(),
                     Message = string.IsNullOrWhiteSpace(args.Message) ? "Apply session restore in the client." : args.Message,
-                    ConversationId = context?.Request?.ConversationId,
                     SessionId = context?.SessionId
                 };
 

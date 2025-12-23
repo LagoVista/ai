@@ -217,7 +217,7 @@ namespace LagoVista.AI.Tests.Services
             {
                 Id = "turn-1",
                 SequenceNumber = 1,
-                ConversationId = "conv-1"
+                SessionId = "conv-1"
             };
 
             var agentResponse = new AgentExecuteResponse
@@ -355,7 +355,7 @@ namespace LagoVista.AI.Tests.Services
 
             var agentContext = new AgentContext { Id = "ctx-1", Name = "Context 1", AgentModes = new List<AgentMode>() };
             var session = new AgentSession { Id = "session-1", AgentContext = EntityHeader.Create("id", "text"), ConversationContext = EntityHeader.Create("id", "text") };
-            var turn = new AgentSessionTurn { Id = "turn-1", ConversationId = "conv-1" };
+            var turn = new AgentSessionTurn { Id = "turn-1", SessionId = "conv-1" };
 
             _contextManager
                 .Setup(c => c.GetAgentContextWithSecretsAsync(request.AgentContext.Id, org, user))
@@ -418,7 +418,7 @@ namespace LagoVista.AI.Tests.Services
 
             var request = new AgentExecuteRequest
             {
-                ConversationId = "conv-1",
+                SessionId = "conv-1",
                 Instruction = "follow up",
                 PreviousTurnId = null,
                 Mode = "ask",
@@ -454,7 +454,7 @@ namespace LagoVista.AI.Tests.Services
             {
                 Id = "prev-turn",
                 SequenceNumber = 1,
-                ConversationId = "conv-1",
+                SessionId = "conv-1",
                 OpenAIResponseId = "open-ai-prev"
             };
 
@@ -462,7 +462,7 @@ namespace LagoVista.AI.Tests.Services
             {
                 Id = "turn-2",
                 SequenceNumber = 0,
-                ConversationId = null
+                SessionId = null
             };
 
             var agentResponse = new AgentExecuteResponse
@@ -474,11 +474,11 @@ namespace LagoVista.AI.Tests.Services
             };
 
             _sessionManager
-                .Setup(m => m.GetAgentSessionAsync(request.ConversationId, org, user))
+                .Setup(m => m.GetAgentSessionAsync(request.SessionId, org, user))
                 .ReturnsAsync(session);
 
             _sessionManager
-                .Setup(m => m.GetLastAgentSessionTurnAsync(request.ConversationId, org, user))
+                .Setup(m => m.GetLastAgentSessionTurnAsync(request.SessionId, org, user))
                 .ReturnsAsync(previousTurn);
 
             _contextManager
@@ -577,7 +577,7 @@ namespace LagoVista.AI.Tests.Services
 
             var request = new AgentExecuteRequest
             {
-                ConversationId = "conv-1",
+                SessionId = "conv-1",
                 Instruction = "follow up",
                 Mode = "ask"
             };
@@ -592,15 +592,15 @@ namespace LagoVista.AI.Tests.Services
 
             var agentContext = new AgentContext { Id = "ctx-1", Name = "Context 1" };
             var session = new AgentSession { Id = "session-1", AgentContext = EntityHeader.Create("id", "text"), ConversationContext = EntityHeader.Create("id", "text") };
-            var previousTurn = new AgentSessionTurn { Id = "prev", SequenceNumber = 1, ConversationId = "conv-1", OpenAIResponseId = "prev-open" };
+            var previousTurn = new AgentSessionTurn { Id = "prev", SequenceNumber = 1, SessionId = "conv-1", OpenAIResponseId = "prev-open" };
             var newTurn = new AgentSessionTurn { Id = "turn-2" };
 
             _sessionManager
-                .Setup(m => m.GetAgentSessionAsync(request.ConversationId, org, user))
+                .Setup(m => m.GetAgentSessionAsync(request.SessionId, org, user))
                 .ReturnsAsync(session);
 
             _sessionManager
-                .Setup(m => m.GetLastAgentSessionTurnAsync(request.ConversationId, org, user))
+                .Setup(m => m.GetLastAgentSessionTurnAsync(request.SessionId, org, user))
                 .ReturnsAsync(previousTurn);
 
             _contextManager
@@ -692,7 +692,7 @@ namespace LagoVista.AI.Tests.Services
             var agentContext = new AgentContext { Id = "ctx-1", Name = "Context 1" };
 
             var session = new AgentSession { Id = "session-1", AgentContext = EntityHeader.Create("id", "text"), ConversationContext = EntityHeader.Create("id", "text") };
-            var turn = new AgentSessionTurn { Id = "turn-1", SequenceNumber = 1, ConversationId = "conv-1" };
+            var turn = new AgentSessionTurn { Id = "turn-1", SequenceNumber = 1, SessionId = "conv-1" };
 
             _contextManager
                 .Setup(c => c.GetAgentContextWithSecretsAsync(request.AgentContext.Id, org, user))
@@ -774,7 +774,7 @@ namespace LagoVista.AI.Tests.Services
 
             var request = new AgentExecuteRequest
             {
-                ConversationId = "conv-1",
+                SessionId = "conv-1",
                 Instruction = "follow up",
                 Mode = "ask",
                 AgentContext = new EntityHeader { Id = "12" }
@@ -799,7 +799,7 @@ namespace LagoVista.AI.Tests.Services
             {
                 Id = "prev-turn",
                 SequenceNumber = 1,
-                ConversationId = "conv-1",
+                SessionId = "conv-1",
                 OpenAIResponseId = "open-ai-prev"
             };
 
@@ -807,17 +807,17 @@ namespace LagoVista.AI.Tests.Services
             {
                 Id = "turn-2",
                 SequenceNumber = 0,
-                ConversationId = null
+                SessionId = null
             };
 
             var agentContext = new AgentContext { Id = "ctx-1", Name = "Context 1" };
 
             _sessionManager
-                .Setup(m => m.GetAgentSessionAsync(request.ConversationId, org, user))
+                .Setup(m => m.GetAgentSessionAsync(request.SessionId, org, user))
                 .ReturnsAsync(session);
 
             _sessionManager
-                .Setup(m => m.GetLastAgentSessionTurnAsync(request.ConversationId, org, user))
+                .Setup(m => m.GetLastAgentSessionTurnAsync(request.SessionId, org, user))
                 .ReturnsAsync(previousTurn);
 
             _contextManager

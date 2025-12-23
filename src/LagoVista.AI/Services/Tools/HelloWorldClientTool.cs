@@ -57,7 +57,6 @@ namespace LagoVista.AI.Services.Tools
         private sealed class HelloWorldResult
         {
             public string Message { get; set; }
-            public string ConversationId { get; set; }
             public string SessionId { get; set; }
         }
 

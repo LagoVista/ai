@@ -40,7 +40,6 @@ namespace LagoVista.AI.Services.Tools
                 BatchLabel = args.BatchLabel,
                 BatchKey = args.BatchKey,
                 SessionId = context?.SessionId,
-                ConversationId = context?.Request?.ConversationId,
                 Files = new List<WorkspaceFilePatch>()
             };
 
@@ -96,8 +95,7 @@ namespace LagoVista.AI.Services.Tools
                 BatchId = batch.BatchId,
                 BatchKey = batch.BatchKey,
                 BatchLabel = batch.BatchLabel,
-                SessionId = batch.SessionId ?? context?.SessionId,
-                ConversationId = batch.ConversationId ?? context?.Request?.ConversationId,
+                SessionId = batch.SessionId ?? context.SessionId,
                 Files = new List<WorkspaceWritePatchResponseFile>()
             };
 
@@ -153,7 +151,6 @@ namespace LagoVista.AI.Services.Tools
 
         public string SessionId { get; set; }
 
-        public string ConversationId { get; set; }
 
         public IList<WorkspaceFilePatch> Files { get; set; } = new List<WorkspaceFilePatch>();
     }
@@ -245,8 +242,7 @@ namespace LagoVista.AI.Services.Tools
 
         public string SessionId { get; set; }
 
-        public string ConversationId { get; set; }
-
+     
         public List<WorkspaceWritePatchResponseFile> Files { get; set; } = new List<WorkspaceWritePatchResponseFile>();
     }
 

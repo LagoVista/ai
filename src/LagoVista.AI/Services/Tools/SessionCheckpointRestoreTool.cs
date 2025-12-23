@@ -51,7 +51,6 @@ namespace LagoVista.AI.Services.Tools
             public string RestoreTurnId { get; set; }
             public string RestoreOperationId { get; set; }
             public string RestoredOnUtc { get; set; }
-            public string ConversationId { get; set; }
             public string SessionId { get; set; }
             public string Message { get; set; }
         }
@@ -85,8 +84,7 @@ namespace LagoVista.AI.Services.Tools
                     RestoreTurnId = newSession.SourceTurnSourceId,
                     RestoreOperationId = newSession.RestoreOperationId,
                     RestoredOnUtc = newSession.RestoredOnUtc,
-                    ConversationId = context?.Request?.ConversationId,
-                    SessionId = context?.SessionId,
+                    SessionId = context?.Request?.SessionId,
                     Message = $"Restored checkpoint {args.CheckpointId.Trim()} into a new branched session."
                 };
 

@@ -59,7 +59,6 @@ namespace LagoVista.AI.Services.Tools
             public string ContentType { get; set; }
             public bool Truncated { get; set; }
             public string Text { get; set; }
-            public string ConversationId { get; set; }
             public string SessionId { get; set; }
         }
         public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
@@ -114,8 +113,7 @@ namespace LagoVista.AI.Services.Tools
                     ContentType = contentType,
                     Truncated = truncated,
                     Text = text,
-                    ConversationId = context?.Request?.ConversationId,
-                    SessionId = context?.SessionId
+                    SessionId = context?.Request?.SessionId,
                 };
 
                 return InvokeResult<string>.Create(JsonConvert.SerializeObject(payload));

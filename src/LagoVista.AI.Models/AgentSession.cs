@@ -200,7 +200,7 @@ namespace LagoVista.AI.Models
 
         public string TurnSourceId { get; set; }
 
-        public string ConversationId { get; set; }
+        public string SessionId { get; set; }
     }
 
     public class ModeHistory
@@ -252,7 +252,7 @@ namespace LagoVista.AI.Models
 
         public string AgentAnswerSummary { get; set; }
 
-        public string ConversationId { get; set; }
+        public string SessionId { get; set; }
 
         public string OpenAIResponseId { get; set; }
 
@@ -340,7 +340,7 @@ namespace LagoVista.AI.Models
         /// <summary>
         /// Conversation id at time of capture (diagnostics / traceability).
         /// </summary>
-        public string ConversationId { get; set; }
+        public string SessionId { get; set; }
 
         /// <summary>
         /// UTC timestamp when the checkpoint was created.

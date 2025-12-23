@@ -145,7 +145,7 @@ namespace LagoVista.AI.AgentClient
         }
 
         public Task<AgentExecuteResponse> AskAsync(EntityHeader agentContext, EntityHeader conversationContext,
-            string instruction, string? conversationId = null, string? workspaceId = null, string? repo = null,
+            string instruction, string? SessionId = null, string? workspaceId = null, string? repo = null,
             string? language = null, string? ragScope = null, IEnumerable<ActiveFile>? activeFiles = null,
             CancellationToken cancellationToken = default)
         {
@@ -163,12 +163,12 @@ namespace LagoVista.AI.AgentClient
             {
                 AgentContext = agentContext,
                 ConversationContext = conversationContext,
-                ConversationId = conversationId,
                 Mode = "general",
                 Instruction = instruction,
                 WorkspaceId = workspaceId,
                 Repo = repo,
                 Language = language,
+                SessionId = SessionId,
                 ActiveFiles = activeFiles != null
                     ? new List<ActiveFile>(activeFiles)
                     : new List<ActiveFile>()
@@ -178,7 +178,7 @@ namespace LagoVista.AI.AgentClient
         }
 
         public Task<AgentExecuteResponse> EditAsync(EntityHeader agentContext, EntityHeader conversationContext,
-            string instruction, IEnumerable<ActiveFile> activeFiles, string? conversationId = null,
+            string instruction, IEnumerable<ActiveFile> activeFiles, string? SessionId = null,
             string? workspaceId = null, string? repo = null, string? language = null, string? ragScope = null,
             CancellationToken cancellationToken = default)
         {
@@ -201,7 +201,7 @@ namespace LagoVista.AI.AgentClient
             {
                 AgentContext = agentContext,
                 ConversationContext = conversationContext,
-                ConversationId = conversationId,
+                SessionId = SessionId,
                 Mode = "general",
                 Instruction = instruction,
                 WorkspaceId = workspaceId,

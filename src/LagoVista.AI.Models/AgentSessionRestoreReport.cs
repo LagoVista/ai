@@ -67,7 +67,7 @@ namespace LagoVista.AI.Models
         /// <summary>
         /// Conversation id at time of restore.
         /// </summary>
-        public string ConversationId { get; set; }
+        public string SessionId { get; set; }
 
         /// <summary>
         /// Optional diagnostic warnings/errors for troubleshooting.

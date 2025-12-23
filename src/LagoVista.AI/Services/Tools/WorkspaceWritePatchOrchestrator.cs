@@ -120,7 +120,6 @@ Bad usage:
                     ErrorCode = "CANCELLED",
                     ErrorMessage = "workspace_write_patch execution was cancelled before processing.",
                     SessionId = context?.SessionId,
-                    ConversationId = context?.Request?.ConversationId
                 });
 
                 return InvokeResult<string>.Create(cancelledPayload);
@@ -136,7 +135,6 @@ Bad usage:
                         ErrorCode = "MISSING_ARGUMENTS",
                         ErrorMessage = "workspace_write_patch requires a non-empty JSON arguments payload.",
                         SessionId = context?.SessionId,
-                        ConversationId = context?.Request?.ConversationId
                     });
 
                     return InvokeResult<string>.Create(missingPayload);
@@ -158,7 +156,6 @@ Bad usage:
                         ErrorCode = "DESERIALIZATION_ERROR",
                         ErrorMessage = "Unable to deserialize workspace_write_patch arguments.",
                         SessionId = context?.SessionId,
-                        ConversationId = context?.Request?.ConversationId
                     });
 
                     return InvokeResult<string>.Create(errorPayload);
@@ -173,7 +170,6 @@ Bad usage:
                         ErrorCode = "VALIDATION_FAILED",
                         ErrorMessage = validationResult.ErrorMessage,
                         SessionId = context?.SessionId,
-                        ConversationId = context?.Request?.ConversationId
                     });
 
                     return InvokeResult<string>.Create(validationPayload);
@@ -190,7 +186,6 @@ Bad usage:
                         ErrorCode = "STORE_ERROR",
                         ErrorMessage = storeResult.ErrorMessage,
                         SessionId = context?.SessionId,
-                        ConversationId = context?.Request?.ConversationId
                     });
 
                     return InvokeResult<string>.Create(storePayload);
@@ -212,7 +207,6 @@ Bad usage:
                     ErrorCode = "UNEXPECTED_ERROR",
                     ErrorMessage = "workspace_write_patch failed to process arguments.",
                     SessionId = context?.SessionId,
-                    ConversationId = context?.Request?.ConversationId
                 });
 
                 return InvokeResult<string>.Create(errorPayload);

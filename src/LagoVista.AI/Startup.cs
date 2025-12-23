@@ -4,6 +4,7 @@
 // --- END CODE INDEX META ---
 using LagoVista.AI.Helpers;
 using LagoVista.AI.Interfaces;
+using LagoVista.AI.Interfaces.Pipeline;
 using LagoVista.AI.Managers;
 using LagoVista.AI.Rag.Chunkers.Interfaces;
 using LagoVista.AI.Rag.Chunkers.Services;

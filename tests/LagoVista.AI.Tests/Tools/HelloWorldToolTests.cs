@@ -32,7 +32,7 @@ namespace LagoVista.AI.Tests.Tools
                 SessionId = "session-123",
                 Request = new AgentExecuteRequest
                 {
-                    ConversationId = "conversation-456"
+                    SessionId = "conversation-456"
                 }
             };
         }
@@ -61,14 +61,12 @@ namespace LagoVista.AI.Tests.Tools
             Assert.That(payload, Is.Not.Null);
 
             Assert.That(payload.Message, Does.Contain("Hello, Kevin!"));
-            Assert.That(payload.ConversationId, Is.EqualTo("conversation-456"));
             Assert.That(payload.SessionId, Is.EqualTo("session-123"));
         }
 
         private sealed class HelloWorldResultDto
         {
             public string Message { get; set; }
-            public string ConversationId { get; set; }
             public string SessionId { get; set; }
         }
 

@@ -23,7 +23,6 @@ namespace LagoVista.AI.Models
         public AgentSession Session { get; set; }
         public AgentSessionTurn Turn { get; set; }
 
-
         // Core request inputs
         public AgentExecuteRequest Request { get; set; }
 
@@ -31,8 +30,9 @@ namespace LagoVista.AI.Models
         public AgentContext AgentContext { get; set; }
         public ConversationContext ConversationContext { get; set; }
 
+        public string SessionId => Session?.Id;
+
         // Derived / working values
-        public string ConversationId { get; set; }
         public string RagContextBlock { get; set; } = string.Empty;
 
         // Output (set by final step)
@@ -55,7 +55,7 @@ namespace LagoVista.AI.Models
                 SessionId = Session.Id,
                 CurrentTurnId = Turn.Id,
                 Request = Request,
-               
+            
             };
         }
     }

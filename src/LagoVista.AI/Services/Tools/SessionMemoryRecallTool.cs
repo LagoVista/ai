@@ -56,7 +56,6 @@ namespace LagoVista.AI.Services.Tools
         private sealed class RecallResult
         {
             public List<RecallItem> Items { get; set; } = new List<RecallItem>();
-            public string ConversationId { get; set; }
             public string SessionId { get; set; }
             public int Count { get; set; }
         }
@@ -130,8 +129,7 @@ namespace LagoVista.AI.Services.Tools
                 var payload = new RecallResult
                 {
                     Items = items,
-                    ConversationId = context?.Request?.ConversationId,
-                    SessionId = context?.SessionId,
+                    SessionId = context?.Request?.SessionId,
                     Count = items.Count
                 };
 

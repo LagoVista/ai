@@ -47,7 +47,6 @@ namespace LagoVista.AI.Services.Tools
             public string Notes { get; set; }
             public string TurnSourceId { get; set; }
             public string CreationDate { get; set; }
-            public string ConversationId { get; set; }
             public string SessionId { get; set; }
         }
 
@@ -71,7 +70,7 @@ namespace LagoVista.AI.Services.Tools
                     Name = args.Name.Trim(),
                     Notes = string.IsNullOrWhiteSpace(args.Notes) ? null : args.Notes,
                     TurnSourceId = context.CurrentTurnId,
-                    ConversationId = context.Request.ConversationId,
+                    SessionId = context.Request.SessionId,
                     CreationDate = DateTime.UtcNow.ToString("o"),
                     CreatedByUser = context?.User
                 };
@@ -88,8 +87,7 @@ namespace LagoVista.AI.Services.Tools
                     Notes = stored?.Notes,
                     TurnSourceId = stored?.TurnSourceId,
                     CreationDate = DateTime.UtcNow.ToJSONString(),
-                    ConversationId = context?.Request?.ConversationId,
-                    SessionId = context?.SessionId
+                    SessionId = context?.Request?.SessionId,
                 };
 
                 return InvokeResult<string>.Create(JsonConvert.SerializeObject(payload));

@@ -157,7 +157,6 @@ Error semantics:
                     ErrorCode = "CANCELLED",
                     Errors = new List<string> { "workspace.read_file execution was cancelled." },
                     SessionId = context?.SessionId,
-                    ConversationId = context?.Request?.ConversationId
                 };
 
                 invokeResult.Result = JsonConvert.SerializeObject(cancelled);
@@ -230,9 +229,6 @@ Error semantics:
             [JsonProperty("sessionId")]
             public string SessionId { get; set; }
 
-            [JsonProperty("conversationId")]
-            public string ConversationId { get; set; }
-
             public static WorkspaceReadFileToolResult CreateError(
                 AgentToolExecutionContext context,
                 string errorCode,
@@ -244,7 +240,6 @@ Error semantics:
                     ErrorCode = errorCode,
                     Errors = new List<string> { message },
                     SessionId = context?.SessionId,
-                    ConversationId = context?.Request?.ConversationId
                 };
             }
         }

@@ -283,7 +283,6 @@ Additional rules:
             // LLM-extracted identity + derived fields (for review and batch workflows)
             public ImportDdrGenerated Generated { get; set; }
 
-            public string ConversationId { get; set; }
             public string SessionId { get; set; }
         }
 
@@ -473,7 +472,6 @@ Additional rules:
                         Title = parsed.Title,
                         Status = parsed.Status,
                         Parsed = parsed,
-                        ConversationId = context?.Request?.ConversationId,
                         SessionId = context?.SessionId
                     };
 
@@ -544,7 +542,6 @@ Additional rules:
                     Title = finalTitle,
                     Status = finalStatus,
                     Parsed = parsed,
-                    ConversationId = context?.Request?.ConversationId,
                     SessionId = context?.SessionId
                 };
 

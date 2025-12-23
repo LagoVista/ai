@@ -28,7 +28,7 @@ namespace LagoVista.AI.Services
     /// OpenAI implementation of the LLM pipeline step using the Responses API (/v1/responses).
     ///
     /// This is now a pipeline step:
-    /// - Reads inputs from AgentPipelineContext (AgentContext, ConversationContext, Request, RagContextBlock, ConversationId).
+    /// - Reads inputs from AgentPipelineContext (AgentContext, ConversationContext, Request, RagContextBlock, SessionId).
     /// - Calls OpenAI
     /// - Sets ctx.Response
     /// - Returns InvokeResult&lt;AgentPipelineContext&gt;
@@ -128,14 +128,14 @@ namespace LagoVista.AI.Services
             }
 
             // Effective session id
-            var sessionId = !string.IsNullOrWhiteSpace(ctx.ConversationId)
-                ? ctx.ConversationId
-                : ctx.Request.ConversationId;
+            var sessionId = !string.IsNullOrWhiteSpace(ctx.SessionId)
+                ? ctx.SessionId
+                : ctx.Request.SessionId;
 
             if (string.IsNullOrWhiteSpace(sessionId))
             {
                 return InvokeResult<AgentPipelineContext>.FromError(
-                    "ConversationId (session id) is required for LLM call.",
+                    "SessionId (session id) is required for LLM call.",
                     "OPENAI_CLIENT_MISSING_CONVERSATION_ID");
             }
 

@@ -46,8 +46,8 @@ namespace LagoVista.AI.Services.Tools
             public int ElapsedMilliseconds { get; set; }
             public bool WasCancelled { get; set; }
             public string Note { get; set; }
-            public string ConversationId { get; set; }
             public string SessionId { get; set; }
+            public string ConversationId { get; set; }
         }
 
         public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
@@ -96,8 +96,8 @@ namespace LagoVista.AI.Services.Tools
                         ElapsedMilliseconds = (int)stopwatch.ElapsedMilliseconds,
                         WasCancelled = true,
                         Note = args.Note,
-                        ConversationId = context?.Request?.ConversationId,
-                        SessionId = context?.SessionId
+                        SessionId = context?.Request?.SessionId,
+                        ConversationId = context?.SessionId
                     };
 
                     var cancelledJson = JsonConvert.SerializeObject(cancelledResult);
@@ -113,8 +113,8 @@ namespace LagoVista.AI.Services.Tools
                     ElapsedMilliseconds = (int)stopwatch.ElapsedMilliseconds,
                     WasCancelled = false,
                     Note = args.Note,
-                    ConversationId = context?.Request?.ConversationId,
-                    SessionId = context?.SessionId
+                    SessionId = context?.Request?.SessionId,
+                    ConversationId = context?.SessionId
                 };
 
                 var json = JsonConvert.SerializeObject(result);

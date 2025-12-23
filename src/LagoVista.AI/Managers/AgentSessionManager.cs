@@ -410,7 +410,7 @@ namespace LagoVista.AI.Managers
                     CreationDate = n.CreationDate,
                     CreatedByUser = n.CreatedByUser,
                     TurnSourceId = n.TurnSourceId,
-                    ConversationId = n.ConversationId
+                    SessionId = n.SessionId
                 }).ToList();
             }
 
@@ -433,7 +433,7 @@ namespace LagoVista.AI.Managers
             checkpoint.CheckpointId = string.IsNullOrWhiteSpace(checkpoint.CheckpointId) ? NextCheckpointId(session.Checkpoints) : checkpoint.CheckpointId.Trim();
             checkpoint.CreationDate = string.IsNullOrWhiteSpace(checkpoint.CreationDate) ? DateTime.UtcNow.ToString("o") : checkpoint.CreationDate;
             checkpoint.CreatedByUser ??= user;
-            checkpoint.ConversationId ??= session.Turns?.LastOrDefault()?.ConversationId;
+            checkpoint.SessionId ??= session.Turns?.LastOrDefault()?.SessionId;
 
             session.Checkpoints.Add(checkpoint);
 
@@ -531,7 +531,7 @@ namespace LagoVista.AI.Managers
                 ActiveFileRefsCopiedCount = (branchedSession.Turns ?? new List<AgentSessionTurn>()).Sum(t => t.ActiveFileRefs?.Count ?? 0),
                 ChunkRefsCopiedCount = (branchedSession.Turns ?? new List<AgentSessionTurn>()).Sum(t => t.ChunkRefs?.Count ?? 0),
                 CreatedByUser = user,
-                ConversationId = branchedSession.Turns?.LastOrDefault()?.ConversationId,
+                SessionId = branchedSession.Turns?.LastOrDefault()?.SessionId,
                 Summary = $"Restored {cp.CheckpointId} from session {sourceSession.Id} to new session {branchedSession.Id}.",
                 Details = $"Restore checkpoint '{cp.CheckpointId}' (turn '{anchorTurnId}'). Created branched session '{branchedSession.Id}' with {branchedSession.Turns?.Count ?? 0} turns and {branchedSession.MemoryNotes?.Count ?? 0} memory notes."
             };
@@ -621,6 +621,12 @@ namespace LagoVista.AI.Managers
 
             await _repo.UpdateSessionAsyunc(session);
 
+            return InvokeResult.Success;
+        }
+
+        public async Task<InvokeResult> UpdateSessionAsync(AgentSession session, EntityHeader org, EntityHeader user)
+        {
+            await _repo.UpdateSessionAsyunc(session);
             return InvokeResult.Success;
         }
     }

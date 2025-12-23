@@ -72,7 +72,7 @@ namespace LagoVista.AI.Tests
             var context = new AgentToolExecutionContext
             {
                 SessionId = "session-123",
-                Request = new AgentExecuteRequest { ConversationId = "conv-456" }
+                Request = new AgentExecuteRequest { SessionId = "conv-456" }
             };
 
             InvokeResult<string> result = await tool.ExecuteAsync("{ \"path\": \"src/Foo.cs\", \"content\": \"class Foo { }\" }", context, CancellationToken.None);
@@ -89,7 +89,7 @@ namespace LagoVista.AI.Tests
             Assert.That((string)payload.ToolName, Is.EqualTo(WorkspaceCreateFileTool.ToolName));
             Assert.That((bool)payload.IsClientExecutedOnly, Is.True);
             Assert.That((string)payload.SessionId, Is.EqualTo("session-123"));
-            Assert.That((string)payload.ConversationId, Is.EqualTo("conv-456"));
+            Assert.That((string)payload.SessionId, Is.EqualTo("conv-456"));
         }
     }
 }

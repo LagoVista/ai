@@ -144,10 +144,10 @@ namespace LagoVista.AI.Services
             var conversationContext = agentContext.ConversationContexts.Single(cctx => cctx.Id == conversationContextId);
             ctx.ConversationContext = conversationContext;
             _adminLogger.Trace(
-                "[AgentExecutionService_ExecuteAsync__ConversationId] Resolving ConversationId. " +
-                "correlationId=" + correlationId + ", requestConversationId=" + request.ConversationId);
+                "[AgentExecutionService_ExecuteAsync__SessionId] Resolving SessionId. " +
+                "correlationId=" + correlationId + ", requestSessionId=" + request.SessionId);
 
-            var sessionId = string.IsNullOrWhiteSpace(request.ConversationId) ? Guid.NewGuid().ToId() : request.ConversationId;
+            var sessionId = string.IsNullOrWhiteSpace(request.SessionId) ? Guid.NewGuid().ToId() : request.SessionId;
 
             // Mode catalog system prompt (AGN-013)
             var modeCatalogSystemPrompt = agentContext.BuildSystemPrompt(modeKey);

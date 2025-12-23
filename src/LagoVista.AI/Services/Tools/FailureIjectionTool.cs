@@ -43,7 +43,6 @@ namespace LagoVista.AI.Services.Tools
         {
             public bool RequestedFailure { get; set; }
             public string Payload { get; set; }
-            public string ConversationId { get; set; }
             public string SessionId { get; set; }
         }
 
@@ -79,7 +78,7 @@ namespace LagoVista.AI.Services.Tools
                         "Intentional failure requested.",
                         new[]
                         {
-                            new KeyValuePair<string, string>("ConversationId", context?.Request?.ConversationId ?? string.Empty),
+                            new KeyValuePair<string, string>("SessionId", context?.Request?.SessionId ?? string.Empty),
                             new KeyValuePair<string, string>("SessionId", context?.SessionId ?? string.Empty),
                             new KeyValuePair<string, string>("Payload", args.Payload ?? string.Empty)
                         });
@@ -92,7 +91,6 @@ namespace LagoVista.AI.Services.Tools
                 {
                     RequestedFailure = false,
                     Payload = args.Payload,
-                    ConversationId = context?.Request?.ConversationId,
                     SessionId = context?.SessionId
                 };
 

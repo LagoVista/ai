@@ -74,7 +74,7 @@ namespace LagoVista.AI.Services
                 StatusTimeStamp = now,
                 Mode = request.Mode,
                 InstructionSummary = BuildInstructionSummary(request.Instruction),
-                ConversationId = Guid.NewGuid().ToId()
+                SessionId = Guid.NewGuid().ToId()
             };
 
             return turn;

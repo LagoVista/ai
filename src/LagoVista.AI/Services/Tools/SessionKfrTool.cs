@@ -124,7 +124,6 @@ Conflict Handling:
         {
             public string Operation { get; set; }
             public List<AgentSessionKfrEntry> Items { get; set; }
-            public string ConversationId { get; set; }
             public string SessionId { get; set; }
         }
         public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
@@ -159,7 +158,6 @@ Conflict Handling:
                     {
                         Operation = "list",
                         Items = items,
-                        ConversationId = context.Request?.ConversationId,
                         SessionId = context.SessionId
                     }));
                 }
@@ -175,7 +173,6 @@ Conflict Handling:
                     {
                         Operation = "clear",
                         Items = new List<AgentSessionKfrEntry>(),
-                        ConversationId = context.Request?.ConversationId,
                         SessionId = context.SessionId
                     }));
                 }
@@ -279,7 +276,6 @@ Conflict Handling:
                     {
                         Operation = "upsert",
                         Items = new List<AgentSessionKfrEntry> { entry },
-                        ConversationId = context.Request?.ConversationId,
                         SessionId = context.SessionId
                     }));
                 }
@@ -312,7 +308,6 @@ Conflict Handling:
                         {
                             Operation = "evict",
                             Items = new List<AgentSessionKfrEntry>(),
-                            ConversationId = context.Request?.ConversationId,
                             SessionId = context.SessionId
                         }));
                     }
@@ -329,7 +324,6 @@ Conflict Handling:
                         {
                             Operation = "evict",
                             Items = new List<AgentSessionKfrEntry>(),
-                            ConversationId = context.Request?.ConversationId,
                             SessionId = context.SessionId
                         }));
                     }
@@ -357,7 +351,6 @@ Conflict Handling:
                     {
                         Operation = "evict",
                         Items = matches,
-                        ConversationId = context.Request?.ConversationId,
                         SessionId = context.SessionId
                     }));
                 }

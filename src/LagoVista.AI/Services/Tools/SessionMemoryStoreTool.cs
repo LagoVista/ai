@@ -55,7 +55,6 @@ namespace LagoVista.AI.Services.Tools
             public string Kind { get; set; }
             public string Importance { get; set; }
             public List<string> Tags { get; set; }
-            public string ConversationId { get; set; }
             public string SessionId { get; set; }
             public string TurnSourceId { get; set; }
             public string CreationDate { get; set; }
@@ -101,7 +100,7 @@ namespace LagoVista.AI.Services.Tools
                     Summary = args.Summary.Trim(),
                     Details = string.IsNullOrWhiteSpace(args.Details) ? null : args.Details,
                     Tags = tags,
-                    ConversationId = context.Request.ConversationId,
+                    SessionId = context.Request.SessionId,
                     TurnSourceId = context.CurrentTurnId,
                     CreationDate = DateTime.UtcNow.ToString("o"),
                     CreatedByUser = context?.User
@@ -126,8 +125,7 @@ namespace LagoVista.AI.Services.Tools
                     Kind = stored?.Kind?.Value.ToString(),
                     Importance = stored?.Importance?.Value.ToString(),
                     Tags = stored?.Tags ?? new List<string>(),
-                    ConversationId = context.Request?.ConversationId,
-                    SessionId = context.SessionId,
+                    SessionId = context.Request?.SessionId,
                     TurnSourceId = stored.TurnSourceId,
                     CreationDate = stored.CreationDate
                 };

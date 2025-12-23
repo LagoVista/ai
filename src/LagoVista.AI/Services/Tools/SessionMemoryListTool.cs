@@ -55,7 +55,6 @@ namespace LagoVista.AI.Services.Tools
         private sealed class ListResult
         {
             public List<ListItem> Items { get; set; } = new List<ListItem>();
-            public string ConversationId { get; set; }
             public string SessionId { get; set; }
             public int Count { get; set; }
         }
@@ -107,8 +106,7 @@ namespace LagoVista.AI.Services.Tools
                 var payload = new ListResult
                 {
                     Items = items,
-                    ConversationId = context?.Request?.ConversationId,
-                    SessionId = context?.SessionId,
+                    SessionId = context?.Request?.SessionId,
                     Count = items.Count
                 };
 

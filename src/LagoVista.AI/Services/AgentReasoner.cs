@@ -86,14 +86,14 @@ namespace LagoVista.AI.Services
                     "AGENT_REASONER_MISSING_USER");
             }
 
-            var sessionId = !string.IsNullOrWhiteSpace(ctx.ConversationId)
-                ? ctx.ConversationId
-                : ctx.Request.ConversationId;
+            var sessionId = !string.IsNullOrWhiteSpace(ctx.SessionId)
+                ? ctx.SessionId
+                : ctx.Request.SessionId;
 
             if (string.IsNullOrWhiteSpace(sessionId))
             {
                 return InvokeResult<AgentPipelineContext>.FromError(
-                    "ConversationId (session id) is required.",
+                    "SessionId (session id) is required.",
                     "AGENT_REASONER_MISSING_CONVERSATION_ID");
             }
 
@@ -124,7 +124,7 @@ namespace LagoVista.AI.Services
             {
                 _logger.Trace(
                     "[AgentReasoner_ExecuteAsync] Iteration " + (iteration + 1) + " starting. " +
-                    "sessionId=" + sessionId + ", mode=" + request.Mode + ", conversationId=" + request.ConversationId);
+                    "sessionId=" + sessionId + ", mode=" + request.Mode + ", SessionId=" + request.SessionId);
 
                 if (ctx.CancellationToken.IsCancellationRequested)
                 {
@@ -136,7 +136,6 @@ namespace LagoVista.AI.Services
                 ctx.ConversationContext = conversationContext;
                 ctx.Request = request;
                 ctx.RagContextBlock = ragContextBlock;
-                ctx.ConversationId = sessionId;
 
                 // IMPORTANT: LLM step must set ctx.Response
                 var llmCtxResult = await _llmClient.ExecuteAsync(ctx);

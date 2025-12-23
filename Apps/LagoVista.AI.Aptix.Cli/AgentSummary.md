@@ -95,7 +95,7 @@ Each human instruction and its LLM answer maps to an `AgentSessionTurn`.
 
 - Mode & IDs:
   - `Mode` — e.g. `"ask"` or `"edit"`.
-  - `ConversationId` — logical conversation ID used to group related calls.
+  - `SessionId` — logical conversation ID used to group related calls.
   - `OpenAIResponseId` — `id` returned by the OpenAI Responses API for this turn.
   - `PreviousOpenAIResponseId` — the `id` used as `previous_response_id` for this call (if any).
   - `OpenAIModel` — OpenAI model name used (e.g. `gpt-5`).
@@ -150,7 +150,7 @@ When a new instruction is submitted:
     - `CreatedByUser`, `CreationDate`.
     - `Status = Pending`.
     - `StatusTimeStamp = CreationDate`.
-    - Mode, ConversationId, OpenAIModel (if known), chunk/file refs, etc.
+    - Mode, SessionId, OpenAIModel (if known), chunk/file refs, etc.
   - Calls `AddAgentSessionTurnAsync`.
 
 - Manager must:

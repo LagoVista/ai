@@ -268,7 +268,7 @@ namespace LagoVista.AI.Tests.Services
                 Instruction = "do something",
                 RagScopeFilter = new RagScopeFilter(),
                 ConversationContext = null,
-                ConversationId = null
+                SessionId = null
             };
 
             var ctx = new AgentPipelineContext

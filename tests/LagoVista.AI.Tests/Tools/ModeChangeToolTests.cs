@@ -37,7 +37,7 @@ namespace LagoVista.AI.Tests.Tools
                 User = EntityHeader.Create("user-1", "User One"),
                 Request = new AgentExecuteRequest
                 {
-                    ConversationId = "conversation-456"
+                    SessionId = "conversation-456"
                 }
             };
         }

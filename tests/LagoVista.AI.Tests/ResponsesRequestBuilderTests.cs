@@ -33,7 +33,7 @@ namespace LagoVista.AI.Tests
         {
             return new AgentExecuteRequest
             {
-                ConversationId = "conv-1",
+                SessionId = "conv-1",
                 Mode = mode,
                 Instruction = instruction,
                 ResponseContinuationId = previousResponseId,

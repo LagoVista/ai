@@ -43,7 +43,7 @@ namespace LagoVista.AI.Helpers
             var response = new AgentExecuteResponse
             {
                 RawResponseJson = rawJson,
-                ConversationId = request?.ConversationId,
+                SessionId = request?.SessionId,
                 ConversationContextId = request?.ConversationContext?.Id,
                 AgentContextId = request?.AgentContext?.Id,
                 Mode = request?.Mode

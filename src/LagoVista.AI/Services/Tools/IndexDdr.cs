@@ -68,7 +68,6 @@ namespace LagoVista.AI.Services.Tools
             public string VectorDocumentId { get; set; }
             public int? ChunkCount { get; set; }
 
-            public string ConversationId { get; set; }
             public string SessionId { get; set; }
         }
         public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
@@ -154,7 +153,6 @@ namespace LagoVista.AI.Services.Tools
                     Identifier = args.Identifier.Trim(),
                     VectorDocumentId = point.PointId,
                     ChunkCount = 1,
-                    ConversationId = context?.Request?.ConversationId,
                     SessionId = context?.SessionId
                 };
 

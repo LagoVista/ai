@@ -23,7 +23,8 @@ namespace LagoVista.AI.Tests.Tools
                 Org = EntityHeader.Create("org1", "Org 1"),
                 User = EntityHeader.Create("user1", "User 1"),
                 SessionId = "sess-1",
-                Request = new Core.AI.Models.AgentExecuteRequest { ConversationId = "conv-1" }
+                Request = new Core.AI.Models.AgentExecuteRequest { SessionId
+                = "conv-1" }
             };
         }
 

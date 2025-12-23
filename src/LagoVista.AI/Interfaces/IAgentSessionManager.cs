@@ -61,6 +61,8 @@ namespace LagoVista.AI.Interfaces
 
         Task<InvokeResult<AgentSession>> RestoreSessionCheckpointAsync(string sessionId, string checkpointId, EntityHeader org, EntityHeader user);
 
-        Task<InvokeResult> UpdateKFRsAsync(string sessionId, string mode, List<AgentSessionKfrEntry> entries, EntityHeader org, EntityHeader user);  
+        Task<InvokeResult> UpdateKFRsAsync(string sessionId, string mode, List<AgentSessionKfrEntry> entries, EntityHeader org, EntityHeader user);
+
+        Task<InvokeResult> UpdateSessionAsync(AgentSession session, EntityHeader org, EntityHeader user);
     }
 }
