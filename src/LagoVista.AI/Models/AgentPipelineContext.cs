@@ -7,6 +7,13 @@ using System.Threading;
 
 namespace LagoVista.AI.Models
 {
+    public enum AgentPipelineContextTypes
+    {
+        Initial,
+        FollowOn,
+        ClientToolCallContinuation
+    }
+
     public sealed class AgentPipelineContext
     {
         public AgentPipelineContext()
@@ -14,6 +21,8 @@ namespace LagoVista.AI.Models
             CancellationToken = default;
         }
 
+
+        public AgentPipelineContextTypes Type { get; set; }
 
         // Identity / correlation
         public string CorrelationId { get; set; }
