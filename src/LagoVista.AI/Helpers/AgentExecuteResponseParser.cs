@@ -6,6 +6,7 @@ using Newtonsoft.Json.Linq;
 using LagoVista.Core.AI.Models;
 using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
+using LagoVista.AI.Interfaces;
 
 namespace LagoVista.AI.Helpers
 {
@@ -13,7 +14,7 @@ namespace LagoVista.AI.Helpers
     /// Static helper to convert a raw OpenAI /responses JSON payload into an AgentExecuteResponse
     /// according to AGN-004.
     /// </summary>
-    public static class AgentExecuteResponseParser
+    public class AgentExecuteResponseParser : IAgentExecuteResponseParser
     {
         /// <summary>
         /// Parses the raw JSON string returned by the OpenAI /responses API into an AgentExecuteResponse.
@@ -22,7 +23,7 @@ namespace LagoVista.AI.Helpers
         /// <param name="rawJson">Raw JSON from the /responses call.</param>
         /// <param name="request">The AgentExecuteRequest used to initiate this call.</param>
         /// <returns>Populated AgentExecuteResponse.</returns>
-        public static InvokeResult<AgentExecuteResponse> Parse(string rawJson, AgentExecuteRequest request)
+        public InvokeResult<AgentExecuteResponse> Parse(string rawJson, AgentExecuteRequest request)
         {
             if (string.IsNullOrWhiteSpace(rawJson))
             {
@@ -285,7 +286,7 @@ namespace LagoVista.AI.Helpers
             }
             else if (response.ToolCalls.Any() && string.IsNullOrWhiteSpace(response.Text))
             {
-                response.Kind = "tool-only";
+                response.Kind = AgentExecuteResponse.ResponseKindToolsOnly;
             }
             else if (string.IsNullOrWhiteSpace(response.Text) && !response.ToolCalls.Any())
             {
@@ -293,7 +294,7 @@ namespace LagoVista.AI.Helpers
             }
             else
             {
-                response.Kind = "ok";
+                response.Kind = AgentExecuteResponse.ResponseKindOk;
             }
 
             return InvokeResult<AgentExecuteResponse>.Create(response);

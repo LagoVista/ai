@@ -30,9 +30,6 @@ namespace LagoVista.AI.Helpers
         /// <param name="request">The agent execute request from the client.</param>
         /// <param name="ragContextBlock">The pre-formatted RAG context block (may be null or empty).</param>
         /// <param name="toolUsageMetadataBlock">LLM-facing usage metadata block containing detailed instructions for all Aptix tools (may be null or empty).</param>
-        /// <param name="modeInstructions">Instructions from DDR on how to accomplish common tasks for this mode</param>
-        /// <param name="referenceSection">Table of Contents for Reference Documents helpful for this mode.</param>
-        /// <param name="stream">Whether to stream the response via SSE.</param>
         /// <returns>ResponsesApiRequest representing the body for the /responses call.</returns>
         public ResponsesApiRequest Build(
                 ConversationContext conversationContext,

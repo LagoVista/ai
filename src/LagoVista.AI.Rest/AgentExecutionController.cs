@@ -1,10 +1,8 @@
 using System;
 using System.Diagnostics;
-using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
-using LagoVista.AI.Interfaces.Pipeline;
 using LagoVista.AI.Models;
 using LagoVista.Core.AI.Models;
 using LagoVista.Core.Exceptions;
@@ -18,8 +16,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.Cosmos;
-using Microsoft.Azure.Cosmos.Serialization.HybridRow;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 

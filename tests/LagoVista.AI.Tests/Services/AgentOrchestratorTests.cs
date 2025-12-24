@@ -237,7 +237,7 @@ namespace LagoVista.AI.Tests.Services
                 .ReturnsAsync(agentContext);
 
             _sessionFactory
-                .Setup(f => f.CreateSession(request, agentContext, OperationKinds.Code, org, user))
+                .Setup(f => f.CreateSession(request, OperationKinds.Code, org, user))
                 .ReturnsAsync(session);
 
             _sessionFactory
@@ -362,7 +362,7 @@ namespace LagoVista.AI.Tests.Services
                 .ReturnsAsync(agentContext);
 
             _sessionFactory
-                .Setup(f => f.CreateSession(request, agentContext, OperationKinds.Code, org, user))
+                .Setup(f => f.CreateSession(request, OperationKinds.Code, org, user))
                 .ReturnsAsync(session);
 
             _sessionFactory
@@ -699,7 +699,7 @@ namespace LagoVista.AI.Tests.Services
                 .ReturnsAsync(agentContext);
 
             _sessionFactory
-                .Setup(f => f.CreateSession(request, agentContext, OperationKinds.Code, org, user))
+                .Setup(f => f.CreateSession(request, OperationKinds.Code, org, user))
                 .ReturnsAsync(session);
 
             _sessionFactory

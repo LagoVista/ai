@@ -153,7 +153,8 @@ namespace LagoVista.AI
             services.AddTransient<ILabelManager, LabelManager>();
             services.AddTransient<IExperimentResultManager, ExperimentResultManager>();
 
-            services.AddTransient<IResponsesRequestBuilder, ResponsesRequestBuilder>();
+            services.AddSingleton<IResponsesRequestBuilder, ResponsesRequestBuilder>();
+            services.AddSingleton<IResponsesRequestBuilder, ResponsesRequestBuilder>();
             services.AddScoped<ITextQueryManager, OpenAIManager>();
             services.AddScoped<IImageGeneratorManager, OpenAIManager>();
             services.AddScoped<IQdrantClient, QdrantClient>();

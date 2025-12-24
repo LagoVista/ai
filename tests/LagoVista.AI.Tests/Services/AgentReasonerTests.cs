@@ -215,7 +215,6 @@ namespace LagoVista.AI.Tests.Services
             {
                 CallId = "call-1",
                 Name = ModeChangeTool.ToolName,
-                IsServerTool = true,
                 WasExecuted = true,
                 RequiresClientExecution = false,
                 ResultJson = JsonConvert.SerializeObject(new
@@ -279,7 +278,6 @@ namespace LagoVista.AI.Tests.Services
             {
                 CallId = "call-1",
                 Name = ModeChangeTool.ToolName,
-                IsServerTool = true,
                 WasExecuted = true,
                 RequiresClientExecution = false,
                 ResultJson = JsonConvert.SerializeObject(new { success = true, mode = "ddr_authoring" })
@@ -289,7 +287,6 @@ namespace LagoVista.AI.Tests.Services
             {
                 CallId = "call-2",
                 Name = ModeChangeTool.ToolName,
-                IsServerTool = true,
                 WasExecuted = true,
                 RequiresClientExecution = false,
                 ResultJson = JsonConvert.SerializeObject(new { success = true, mode = "workflow_authoring" })
@@ -349,7 +346,6 @@ namespace LagoVista.AI.Tests.Services
             {
                 CallId = "call-1",
                 Name = "testing_ping_pong",
-                IsServerTool = true,
                 WasExecuted = true,
                 RequiresClientExecution = false,
                 ResultJson = "{\"reply\":\"pong\"}"
@@ -390,7 +386,6 @@ namespace LagoVista.AI.Tests.Services
             {
                 CallId = "call-1",
                 Name = "apply_file_bundle",
-                IsServerTool = true,
                 WasExecuted = true,
                 RequiresClientExecution = true,
                 ResultJson = "{\"bundleId\":\"B-123\",\"files\":[\"foo.cs\"]}"
@@ -413,7 +408,6 @@ namespace LagoVista.AI.Tests.Services
             var returnedCall = ctx.Response.ToolCalls[0];
             Assert.That(returnedCall.CallId, Is.EqualTo("call-1"));
             Assert.That(returnedCall.RequiresClientExecution, Is.True);
-            Assert.That(returnedCall.IsServerTool, Is.True);
             Assert.That(returnedCall.ResultJson, Does.Contain("bundleId"));
         }
 

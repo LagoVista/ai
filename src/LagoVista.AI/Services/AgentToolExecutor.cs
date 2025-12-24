@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
@@ -47,19 +48,7 @@ namespace LagoVista.AI.Services
             }
 
             _logger.Trace($"[AgentToolExecutor_ExecuteServerToolAsync] Tool '{call.Name}' Was Called, Starting Execution with Arguments\r\n{call.ArgumentsJson}\r\n");
-
-            // If the registry does not know this tool, it's a client-only tool.
-            if (!_toolRegistry.HasTool(call.Name))
-            {
-                _logger.Trace(
-                    $"[AgentToolExecutor_ExecuteServerToolAsync] Tool '{call.Name}' not registered as a server tool. " +
-                    "Leaving for client execution.");
-
-                return InvokeResult<AgentToolCall>.FromError($"[AgentToolExecutor_ExecuteServerToolAsync] Tool '{call.Name}' not registered as a server tool. " +
-                    "Leaving for client execution.");
-            }
-
-
+           
             var toolResult = _toolFactory.GetTool(call.Name);
             if (!toolResult.Successful)
             {
@@ -82,17 +71,10 @@ namespace LagoVista.AI.Services
 
             try
             {
-                call.IsServerTool = true;                 // produced by server
-                call.RequiresClientExecution = false;     // default
-                call.WasExecuted = false;                 // will flip on success
-                call.ErrorMessage = null;
-
-
+                var sw = Stopwatch.StartNew();
                 var execResult = await tool.ExecuteAsync(call.ArgumentsJson, context);
 
                 call.WasExecuted = execResult.Successful;
-                call.ResultJson = execResult.Successful ? execResult.Result : null;
-                call.ErrorMessage = execResult.Successful ? null : execResult.ErrorMessage;
 
                 if (!execResult.Successful)
                 {
@@ -100,19 +82,18 @@ namespace LagoVista.AI.Services
                         "[AgentToolExecutor_ExecuteServerToolAsync__ToolFailed]",
                         $"Tool '{call.Name}' execution failed: {call.ErrorMessage}");
 
-                    return InvokeResult<AgentToolCall>.FromInvokeResult(execResult.ToInvokeResult());
-                }
+                    call.ErrorMessage = execResult.ErrorMessage;   
 
-                if (tool.IsToolFullyExecutedOnServer)
-                {
-                    call.RequiresClientExecution = false;
+                    return InvokeResult<AgentToolCall>.FromInvokeResult(execResult.ToInvokeResult());
                 }
                 else
                 {
-                    call.RequiresClientExecution = true;
+                    call.ResultJson = execResult.Result;
                 }
 
-                _logger.Trace($"[AgentToolExecutor_ExecuteServerToolAsync] Tool '{call.Name}' Was Successfully Executed, Response\r\n{execResult.Result}\r\n");
+                call.RequiresClientExecution = !tool.IsToolFullyExecutedOnServer;
+             
+                _logger.Trace($"[AgentToolExecutor_ExecuteServerToolAsync] Tool '{call.Name}' Was Successfully Executed in {sw.Elapsed.TotalMilliseconds}ms\r\n");
 
             }
             catch (OperationCanceledException) when (context.CancellationToken.IsCancellationRequested)

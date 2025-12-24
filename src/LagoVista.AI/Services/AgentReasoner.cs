@@ -240,12 +240,6 @@ namespace LagoVista.AI.Services
 
                     var updatedCall = updatedCallResponse.Result;
 
-                    if (updatedCall != null && !updatedCall.IsServerTool)
-                    {
-                        _logger.AddError(
-                            "[AgentReasoner_ExecuteAsync__UnexpectedNonServerToolCall]",
-                            "Tool '" + (updatedCall.Name ?? "<null>") + "' returned IsServerTool=false during server execution.");
-                    }
 
                     if (updatedCall != null && updatedCall.WasExecuted && !updatedCall.RequiresClientExecution)
                     {
@@ -271,8 +265,7 @@ namespace LagoVista.AI.Services
 
                 foreach (var call in executedServerCalls)
                 {
-                    if (!call.IsServerTool ||
-                        !call.WasExecuted ||
+                    if ( !call.WasExecuted ||
                         !string.Equals(call.Name, ModeChangeTool.ToolName, StringComparison.OrdinalIgnoreCase) ||
                         string.IsNullOrWhiteSpace(call.ResultJson))
                     {
@@ -348,7 +341,7 @@ namespace LagoVista.AI.Services
 
                 // Build tool outputs for continuation flow
                 var toolOutputs = executedServerCalls
-                    .Where(c => c.IsServerTool && c.WasExecuted && !string.IsNullOrWhiteSpace(c.CallId))
+                    .Where(c => c.WasExecuted && !string.IsNullOrWhiteSpace(c.CallId))
                     .Select(c => new ResponsesToolOutput
                     {
                         ToolCallId = c.CallId,

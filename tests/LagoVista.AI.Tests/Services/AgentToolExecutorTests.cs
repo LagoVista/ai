@@ -76,7 +76,6 @@ namespace LagoVista.AI.Tests.Services
             Assert.That(result.ErrorMessage, Does.Contain("Tool call name is empty."));
 
             // Call object was mutated
-            Assert.That(call.IsServerTool, Is.False);
             Assert.That(call.WasExecuted, Is.False);
             Assert.That(call.ErrorMessage, Is.EqualTo("Tool call name is empty."));
             Assert.That(call.RequiresClientExecution, Is.False);
@@ -109,7 +108,6 @@ namespace LagoVista.AI.Tests.Services
             Assert.That(result.ErrorMessage, Does.Contain("not registered as a server tool"));
 
             // Call is still marked as client-only / not executed
-            Assert.That(call.IsServerTool, Is.False);
             Assert.That(call.WasExecuted, Is.False);
             Assert.That(call.RequiresClientExecution, Is.False); // NEW
             Assert.That(call.ErrorMessage, Is.Null);             // as today, or set it if you decide to
@@ -143,7 +141,6 @@ namespace LagoVista.AI.Tests.Services
             Assert.That(result.ErrorMessage, Does.Contain("Factory failed"));
 
             // Call flags
-            Assert.That(call.IsServerTool, Is.False);          // no tool instance
             Assert.That(call.WasExecuted, Is.False);
             Assert.That(call.RequiresClientExecution, Is.False); // NEW
             Assert.That(call.ErrorMessage, Is.EqualTo("Factory failed"));
@@ -182,7 +179,6 @@ namespace LagoVista.AI.Tests.Services
             Assert.That(result.Result, Is.SameAs(call));
 
             // Call mutated
-            Assert.That(call.IsServerTool, Is.True);
             Assert.That(call.WasExecuted, Is.True);
             Assert.That(call.RequiresClientExecution, Is.False); // NEW
             Assert.That(call.ErrorMessage, Is.Null);
@@ -227,7 +223,6 @@ namespace LagoVista.AI.Tests.Services
             Assert.That(result.ErrorMessage, Does.Contain("Tool failed"));
 
             // Call mutated
-            Assert.That(call.IsServerTool, Is.True);
             Assert.That(call.WasExecuted, Is.False);
             Assert.That(call.RequiresClientExecution, Is.False); // NEW
             Assert.That(call.ErrorMessage, Is.EqualTo("Tool failed"));
@@ -274,7 +269,6 @@ namespace LagoVista.AI.Tests.Services
             Assert.That(result.Successful, Is.True);
             Assert.That(result.Result, Is.SameAs(call));
 
-            Assert.That(call.IsServerTool, Is.True);
             Assert.That(call.WasExecuted, Is.True);
 
             // NEW invariant:
