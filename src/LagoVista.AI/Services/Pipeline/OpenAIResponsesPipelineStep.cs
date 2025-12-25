@@ -82,7 +82,9 @@ namespace LagoVista.AI.Services
         public async Task<InvokeResult<AgentPipelineContext>> ExecuteAsync(AgentPipelineContext ctx)
         {
             if (ctx == null) { return InvokeResult<AgentPipelineContext>.FromError("AgentPipelineContext cannot be null.", "OPENAI_CLIENT_NULL_CONTEXT"); }
-            
+            var validationResult = ctx.Validate(PipelineSteps.LLMClient);
+            if(!validationResult.Successful) { return InvokeResult<AgentPipelineContext>.FromInvokeResult(validationResult); }
+
             var baseUrl = _openAiSettings.OpenAIUrl;
             if (string.IsNullOrWhiteSpace(baseUrl)) { return InvokeResult<AgentPipelineContext>.FromError("OpenAIUrl is not configured in IOpenAISettings.", "OPENAI_CLIENT_MISSING_OPENAI_URL"); }
             if (string.IsNullOrWhiteSpace(ctx.AgentContext.LlmApiKey)) { return InvokeResult<AgentPipelineContext>.FromError("LlmApiKey is not configured on AgentContext.", "OPENAI_CLIENT_MISSING_API_KEY"); }
