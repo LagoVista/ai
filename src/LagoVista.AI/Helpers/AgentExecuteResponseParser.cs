@@ -7,6 +7,7 @@ using LagoVista.Core.AI.Models;
 using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
 using LagoVista.AI.Interfaces;
+using LagoVista.AI.Models;
 
 namespace LagoVista.AI.Helpers
 {
@@ -43,19 +44,9 @@ namespace LagoVista.AI.Helpers
 
             var response = new AgentExecuteResponse
             {
-                RawResponseJson = rawJson,
                 SessionId = request?.SessionId,
-                ConversationContextId = request?.ConversationContext?.Id,
-                AgentContextId = request?.AgentContext?.Id,
-                Mode = request?.Mode
             };
 
-            // ID + threading
-            response.ResponseContinuationId = root.Value<string>("id");
-            response.TurnId = response.ResponseContinuationId;
-
-            // Model
-            response.ModelId = root.Value<string>("model");
 
             // Usage block – support both old (prompt/completion) and new (input/output) fields
             var usage = root["usage"];
@@ -130,7 +121,7 @@ namespace LagoVista.AI.Helpers
                             {
                                 var agentCall = new AgentToolCall
                                 {
-                                    CallId = call.Value<string>("id"),
+                                    ToolCallId = call.Value<string>("id"),
                                     Name = call.Value<string>("name"),
                                     ArgumentsJson = call["arguments"]?.ToString(Formatting.None)
                                 };
@@ -186,7 +177,7 @@ namespace LagoVista.AI.Helpers
 
                             var agentCall = new AgentToolCall
                             {
-                                CallId = item.Value<string>("call_id"),
+                                ToolCallId = item.Value<string>("call_id"),
                                 Name = item.Value<string>("name"),
                                 ArgumentsJson = argsJson
                             };
@@ -227,7 +218,7 @@ namespace LagoVista.AI.Helpers
                                         {
                                             var agentCall = new AgentToolCall
                                             {
-                                                CallId = call.Value<string>("id"),
+                                                ToolCallId = call.Value<string>("id"),
                                                 Name = call.Value<string>("name"),
                                                 ArgumentsJson = call["arguments"]?.ToString(Formatting.None)
                                             };
@@ -267,35 +258,13 @@ namespace LagoVista.AI.Helpers
             }
 
             // Aggregate text
-            response.Text = textSegments.Count > 0
+            response.PrimaryOutputText = textSegments.Count > 0
                 ? string.Join("\n\n", textSegments)
                 : null;
 
             // Tool calls
-            response.ToolCalls = toolCalls;
+            //response.ToolCalls = toolCalls;
 
-            // Finish reason (use the last one seen if multiple)
-            response.FinishReason = finishReasons.Count > 0
-                ? finishReasons.Last()
-                : null;
-
-            // Classify Kind
-            if (!string.IsNullOrWhiteSpace(response.ErrorCode) || !string.IsNullOrWhiteSpace(response.ErrorMessage))
-            {
-                return InvokeResult<AgentExecuteResponse>.FromError($"{response.ErrorCode} : {response.ErrorMessage}");
-            }
-            else if (response.ToolCalls.Any() && string.IsNullOrWhiteSpace(response.Text))
-            {
-                response.Kind = AgentExecuteResponse.ResponseKindToolsOnly;
-            }
-            else if (string.IsNullOrWhiteSpace(response.Text) && !response.ToolCalls.Any())
-            {
-                return InvokeResult<AgentExecuteResponse>.FromError("[AgentExecuteResponseParser__Parse] - No tool or text response.");
-            }
-            else
-            {
-                response.Kind = AgentExecuteResponse.ResponseKindOk;
-            }
 
             return InvokeResult<AgentExecuteResponse>.Create(response);
         }

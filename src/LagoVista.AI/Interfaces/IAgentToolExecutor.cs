@@ -24,7 +24,7 @@ namespace LagoVista.AI.Interfaces
         /// - If the tool fails to execute:
         ///     IsServerTool = true, WasExecuted = false, ErrorMessage set.
         /// </summary>
-        Task<InvokeResult<AgentToolCall>> ExecuteServerToolAsync(
+        Task<InvokeResult<AgentToolCallResult>> ExecuteServerToolAsync(
             AgentToolCall call,
             AgentPipelineContext context);
     }

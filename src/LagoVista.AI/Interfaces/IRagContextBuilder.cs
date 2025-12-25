@@ -18,6 +18,6 @@ namespace LagoVista.AI.Interfaces
         /// </summary>
         /// <param name="instructions">Instructions / query text to embed and search on.</param>
         /// <param name="ragScopeFilters">Key/value filters applied to the vector search payload.</param>
-        Task<InvokeResult<string>> BuildContextSectionAsync(AgentContext agentContext, string instructions, RagScopeFilter scopeFilter);
+        Task<InvokeResult<string>> BuildContextSectionAsync(AgentContext agentContext, string instructions, RagScope scopeFilter);
     }
 }

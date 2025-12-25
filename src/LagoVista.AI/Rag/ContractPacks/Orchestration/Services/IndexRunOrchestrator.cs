@@ -218,7 +218,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
 
                                 _adminLogger.Trace($"[IndexRunOrchestrator__RunAsync] {result.Payload.SemanticId}");
 
-                                var embedResult = await _embedder.EmbedAsync(System.Text.ASCIIEncoding.ASCII.GetString(result.Contents));
+                                var embedResult = await _embedder.EmbedAsync(System.Text.UTF8Encoding.UTF8.GetString(result.Contents));
                                 result.Vector = embedResult.Result.Vector;
                                 result.Payload.EmbeddingModel = embedResult.Result.EmbeddingModel;
 

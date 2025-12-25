@@ -1,10 +1,12 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Pipeline;
 using LagoVista.AI.Models;
 using LagoVista.Core;
+using LagoVista.Core.Interfaces;
 using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
@@ -58,35 +60,7 @@ namespace LagoVista.AI.Services.Pipeline
                     "AgentPipelineContext cannot be null.",
                     "SESSION_CTX_RESOLVER_NULL_CONTEXT");
             }
-
-            if (ctx.Request == null)
-            {
-                return InvokeResult<AgentPipelineContext>.FromError(
-                    "AgentExecuteRequest is required.",
-                    "SESSION_CTX_RESOLVER_MISSING_REQUEST");
-            }
-
-            if (ctx.Org == null || EntityHeader.IsNullOrEmpty(ctx.Org))
-            {
-                return InvokeResult<AgentPipelineContext>.FromError(
-                    "Org is required.",
-                    "SESSION_CTX_RESOLVER_MISSING_ORG");
-            }
-
-            if (ctx.User == null || EntityHeader.IsNullOrEmpty(ctx.User))
-            {
-                return InvokeResult<AgentPipelineContext>.FromError(
-                    "User is required.",
-                    "SESSION_CTX_RESOLVER_MISSING_USER");
-            }
-
-            if (ctx.Session == null)
-            {
-                return InvokeResult<AgentPipelineContext>.FromError(
-                    "Session is required.",
-                    "SESSION_CTX_RESOLVER_MISSING_SESSION");
-            }
-
+            
             if (ctx.Turn == null)
             {
                 return InvokeResult<AgentPipelineContext>.FromError(
@@ -96,14 +70,13 @@ namespace LagoVista.AI.Services.Pipeline
 
             _adminLogger.Trace("[SessionContextResolverPipelineStep__ExecuteAsync] - Resolving AgentContext and ConversationContext.",
                 (ctx.CorrelationId ?? string.Empty).ToKVP("CorrelationId"),
-                (ctx.Org?.Id ?? string.Empty).ToKVP("TenantId"),
-                (ctx.User?.Id ?? string.Empty).ToKVP("UserId"),
+                (ctx.Envelope.Org?.Id ?? string.Empty).ToKVP("TenantId"),
+                (ctx.Envelope.User?.Id ?? string.Empty).ToKVP("UserId"),
                 (ctx.Session?.Id ?? string.Empty).ToKVP("SessionId"),
-                (ctx.Turn?.Id ?? string.Empty).ToKVP("TurnId"),
-                (ctx.Request?.Mode ?? string.Empty).ToKVP("Mode"));
+                (ctx.Turn?.Id ?? string.Empty).ToKVP("TurnId"));
 
             // 1) Resolve AgentContext: prefer Session.AgentContext, fall back to Request.AgentContext.
-            var agentContextId = ctx.Session?.AgentContext?.Id ?? ctx.Request.AgentContext?.Id;
+            var agentContextId = ctx.Session?.AgentContext?.Id ?? ctx.Envelope.AgentContextId;
             if (string.IsNullOrWhiteSpace(agentContextId))
             {
                 return InvokeResult<AgentPipelineContext>.FromError(
@@ -116,7 +89,7 @@ namespace LagoVista.AI.Services.Pipeline
             // - follow-on used GetAgentContextAsync(...)
             // AGN-032 doesn't specify the secrets policy at this step, so we choose the safer default: non-secrets.
             // If you want secrets here, swap to GetAgentContextWithSecretsAsync and/or branch by request/session.
-            var agentContext = await _contextManager.GetAgentContextAsync(agentContextId, ctx.Org, ctx.User);
+            var agentContext = await _contextManager.GetAgentContextAsync(agentContextId, ctx.Envelope.Org, ctx.Envelope.User);
             if (agentContext == null)
             {
                 return InvokeResult<AgentPipelineContext>.FromError(
@@ -127,18 +100,16 @@ namespace LagoVista.AI.Services.Pipeline
             // Ensure "general" exists as a baseline mode (mirrors orchestrator behavior).
             if (!agentContext.AgentModes.Any(mode => mode.Key == "general"))
             {
-                var addGeneral = await EnsureGeneralModeAsync(agentContext, ctx.Org, ctx.User);
+                var addGeneral = await EnsureGeneralModeAsync(agentContext, ctx.Envelope.Org, ctx.Envelope.User);
                 if (!addGeneral.Successful)
                 {
                     return addGeneral;
                 }
             }
 
-            ctx.AgentContext = agentContext;
-
             // 2) Resolve ConversationContext (optional): prefer Request.ConversationContext, else ctx.Session?.ConversationContext if present.
             // (We don't have Session.ConversationContext in the snippets provided; this keeps logic request-first.)
-            var conversationContextId = ctx.Request.ConversationContext?.Id ?? agentContext.DefaultConversationContext?.Id;
+            var conversationContextId = ctx.Envelope.ConversationContextId ?? agentContext.DefaultConversationContext?.Id;
             if(String.IsNullOrEmpty(conversationContextId) && agentContext.ConversationContexts.Any())
             {
                 conversationContextId = agentContext.ConversationContexts.First().Id;
@@ -160,8 +131,7 @@ namespace LagoVista.AI.Services.Pipeline
                         "ConversationContext not found.",
                         "SESSION_CTX_RESOLVER_CONVERSATION_CONTEXT_NOT_FOUND");
                 }
-
-                ctx.ConversationContext = conversationContext;
+                ctx.AttachAgentContext(agentContext, conversationContext);
             }
 
             if (ctx.CancellationToken.IsCancellationRequested)

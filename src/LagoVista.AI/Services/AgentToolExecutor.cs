@@ -30,21 +30,19 @@ namespace LagoVista.AI.Services
             _toolRegistry = agentToolRegistry ?? throw new ArgumentNullException(nameof(agentToolRegistry));
         }
 
-        public async Task<InvokeResult<AgentToolCall>> ExecuteServerToolAsync(
-            AgentToolCall call,
-            AgentPipelineContext context)
+        public async Task<InvokeResult<AgentToolCallResult>> ExecuteServerToolAsync(AgentToolCall call, AgentPipelineContext context)
         {
             if (call == null)
             {
                 throw new ArgumentNullException(nameof(call));
             }
-
+    
             if (string.IsNullOrWhiteSpace(call.Name))
             {
-                call.ErrorMessage = "Tool call name is empty.";
-                _logger.AddError("[AgentToolExecutor_ExecuteServerToolAsync__EmptyName]", call.ErrorMessage);
+                var errorMessage = "Tool call name is empty.";
+                _logger.AddError("[AgentToolExecutor_ExecuteServerToolAsync__EmptyName]", errorMessage);
 
-                return InvokeResult<AgentToolCall>.FromError($"[AgentToolExecutor_ExecuteServerToolAsync__EmptyName] {call.ErrorMessage}");
+                return InvokeResult<AgentToolCallResult>.FromError($"[AgentToolExecutor_ExecuteServerToolAsync__EmptyName] {errorMessage}");
             }
 
             _logger.Trace($"[AgentToolExecutor_ExecuteServerToolAsync] Tool '{call.Name}' Was Called, Starting Execution with Arguments\r\n{call.ArgumentsJson}\r\n");
@@ -52,21 +50,21 @@ namespace LagoVista.AI.Services
             var toolResult = _toolFactory.GetTool(call.Name);
             if (!toolResult.Successful)
             {
-                call.ErrorMessage = toolResult.ErrorMessage ?? "Failed to resolve server tool.";
+                var errorMessage = toolResult.ErrorMessage ?? "Failed to resolve server tool.";                
                 _logger.AddError(
                     "[AgentToolExecutor_ExecuteServerToolAsync__ResolveFailed]",
-                    $"Tool '{call.Name}' resolve failed: {call.ErrorMessage}");
+                    $"Tool '{call.Name}' resolve failed: {errorMessage}");
 
-                return InvokeResult<AgentToolCall>.FromInvokeResult(toolResult.ToInvokeResult());
+                return InvokeResult<AgentToolCallResult>.FromInvokeResult(toolResult.ToInvokeResult());
             }
 
             var tool = toolResult.Result;
             if (tool == null)
             {
-                call.ErrorMessage = $"Tool '{call.Name}' resolved to null instance.";
-                _logger.AddError("[AgentToolExecutor_ExecuteServerToolAsync__NullInstance]", call.ErrorMessage);
+                var errorMessage = $"Tool '{call.Name}' resolved to null instance.";
+                _logger.AddError("[AgentToolExecutor_ExecuteServerToolAsync__NullInstance]", errorMessage);
 
-                return InvokeResult<AgentToolCall>.FromError($"[AgentToolExecutor_ExecuteServerToolAsync__NullInstance] {call.ErrorMessage}");
+                return InvokeResult<AgentToolCallResult>.FromError($"[AgentToolExecutor_ExecuteServerToolAsync__NullInstance] {errorMessage}");
             }
 
             try
@@ -74,51 +72,51 @@ namespace LagoVista.AI.Services
                 var sw = Stopwatch.StartNew();
                 var execResult = await tool.ExecuteAsync(call.ArgumentsJson, context);
 
-                call.WasExecuted = execResult.Successful;
+                var result = new AgentToolCallResult();
+                result.WasExecuted = execResult.Successful;
 
                 if (!execResult.Successful)
                 {
+                    var errorMessage = execResult.ErrorMessage;
+
                     _logger.AddError(
                         "[AgentToolExecutor_ExecuteServerToolAsync__ToolFailed]",
-                        $"Tool '{call.Name}' execution failed: {call.ErrorMessage}");
+                        $"Tool '{call.Name}' execution failed: {errorMessage}");
 
-                    call.ErrorMessage = execResult.ErrorMessage;   
 
-                    return InvokeResult<AgentToolCall>.FromInvokeResult(execResult.ToInvokeResult());
+                    return InvokeResult<AgentToolCallResult>.FromInvokeResult(execResult.ToInvokeResult());
                 }
                 else
                 {
-                    call.ResultJson = execResult.Result;
+                    result.ExecutionMs = Convert.ToInt32(sw.Elapsed.TotalMilliseconds);
+                    result.ResultJson = execResult.Result;
                 }
 
-                call.RequiresClientExecution = !tool.IsToolFullyExecutedOnServer;
+                result.RequiresClientExecution = !tool.IsToolFullyExecutedOnServer;
              
                 _logger.Trace($"[AgentToolExecutor_ExecuteServerToolAsync] Tool '{call.Name}' Was Successfully Executed in {sw.Elapsed.TotalMilliseconds}ms\r\n");
 
+                return InvokeResult<AgentToolCallResult>.Create(result);
             }
             catch (OperationCanceledException) when (context.CancellationToken.IsCancellationRequested)
             {
-                call.WasExecuted = false;
-                call.ErrorMessage = $"Tool '{call.Name}' execution was cancelled.";
+                var errorMessage = $"Tool '{call.Name}' execution was cancelled.";
 
                 _logger.AddError(
                     "[AgentToolExecutor_ExecuteServerToolAsync__Cancelled]",
-                    call.ErrorMessage);
+                    errorMessage);
 
-                return InvokeResult<AgentToolCall>.FromError($"[AgentToolExecutor_ExecuteServerToolAsync__Cancelled] {call.ErrorMessage}");
+                return InvokeResult<AgentToolCallResult>.FromError($"[AgentToolExecutor_ExecuteServerToolAsync__Cancelled] {errorMessage}");
             }
             catch (Exception ex)
             {
-                call.WasExecuted = false;
-                call.ErrorMessage = $"Tool '{call.Name}' threw an exception: {ex.Message}";
+                var errorMessage = $"Tool '{call.Name}' threw an exception: {ex.Message}";
 
                 _logger.AddException("[AgentToolExecutor_ExecuteServerToolAsync__Exception]", ex);
 
 
-                return InvokeResult<AgentToolCall>.FromError($"[AgentToolExecutor_ExecuteServerToolAsync__Cancelled] {call.ErrorMessage}");
+                return InvokeResult<AgentToolCallResult>.FromError($"[AgentToolExecutor_ExecuteServerToolAsync__Cancelled] errorMessage");
             }
-
-            return InvokeResult<AgentToolCall>.Create(call);
         }
     }
 }

@@ -10,6 +10,12 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="DocumentTemplateManager.cs" />
+    <Compile Remove="Services\AgentExecutionServiceTests.cs" />
+    <Compile Remove="Services\AgentOrchestratorTests.cs" />
+    <Compile Remove="Services\AgentReasonerTests.cs" />
+    <Compile Remove="Services\AgentRequestHandlerTests.cs" />
+    <Compile Remove="Services\AgentToolExecutorTests.cs" />
+    <Compile Remove="Services\AgentTurnExecutorTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="resnet50-v2-7.onnx" />
@@ -23,7 +29,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="LagoVista.Core.TestBase" Version="3.0.3142.1641" />
+    <PackageReference Include="LagoVista.Core.TestBase" Version="3.0.3143.1517" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.22.1" />
   </ItemGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'net461' ">

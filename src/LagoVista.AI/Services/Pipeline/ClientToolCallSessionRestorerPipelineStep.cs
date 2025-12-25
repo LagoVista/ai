@@ -89,7 +89,7 @@ namespace LagoVista.AI.Services.Pipeline
                     "CLIENT_TOOL_SESSION_RESTORE_MISSING_SESSION_ID");
             }
 
-            if (string.IsNullOrWhiteSpace(ctx.Request.Instruction) && ctx.Request.ActiveFiles?.Count == 0)
+            if (string.IsNullOrWhiteSpace(ctx.Request.Instruction) && ctx.Request.InputArtifacts?.Count == 0)
             {
                 return InvokeResult<AgentPipelineContext>.FromError(
                     "Instruction is required when no active files are present.",
@@ -101,7 +101,7 @@ namespace LagoVista.AI.Services.Pipeline
                 (ctx.Org?.Id ?? string.Empty).ToKVP("TenantId"),
                 (ctx.User?.Id ?? string.Empty).ToKVP("UserId"),
                 (ctx.Request.SessionId ?? string.Empty).ToKVP("SessionId"),
-                (ctx.Request.PreviousTurnId ?? string.Empty).ToKVP("PreviousTurnId"));
+                (ctx.Request.TurnId ?? string.Empty).ToKVP("PreviousTurnId"));
 
             var session = await _sessionManager.GetAgentSessionAsync(ctx.Request.SessionId, ctx.Org, ctx.User);
             if (session == null)
@@ -111,24 +111,10 @@ namespace LagoVista.AI.Services.Pipeline
                     "CLIENT_TOOL_SESSION_RESTORE_SESSION_NOT_FOUND");
             }
 
+
+
             ctx.Session = session;
 
-            // Client tool continuation resumes an existing turn; no new turn is created.
-            var turn = ctx.Session.Turns.FirstOrDefault(t => t.Id == ctx.Request.PreviousTurnId);
-            if (turn == null)
-            {
-                return InvokeResult<AgentPipelineContext>.FromError(
-                    "Previous turn not found for this session.",
-                    "CLIENT_TOOL_SESSION_RESTORE_NO_PREVIOUS_TURN");
-            }
-
-            // Normalize continuation metadata for downstream execution.
-            turn.SequenceNumber = session.Turns.Count + 1;
-            turn.SessionId = session.Id;
-            turn.PreviousOpenAIResponseId = turn.OpenAIResponseId;
-
-            ctx.Turn = turn;
-            ctx.Request.CurrentTurnId = turn.Id;
 
             if (ctx.CancellationToken.IsCancellationRequested)
             {

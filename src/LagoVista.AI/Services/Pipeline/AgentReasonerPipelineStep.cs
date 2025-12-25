@@ -34,7 +34,7 @@ namespace LagoVista.AI.Services
      
         private const int MaxReasoningIterations = 4;
 
-        public AgentReasonerPipelineStep(ILLMClient llmClient, IAgentToolExecutor toolExecutor, IAdminLogger logger, IAgentStreamingContext agentStreamingContext, IModeEntryBootstrapService modeEntryBootstrapService)
+        public AgentReasonerPipelineStep(ILLMClient llmClient, IAgentToolExecutor toolExecutor, IAdminLogger logger, IAgentStreamingContext agentStreamingContext)
         {
             _llmClient = llmClient ?? throw new ArgumentNullException(nameof(llmClient));
             _toolExecutor = toolExecutor ?? throw new ArgumentNullException(nameof(toolExecutor));
@@ -46,134 +46,48 @@ namespace LagoVista.AI.Services
         {
             var validation = ValidateInputs(ctx);
             if (!validation.Successful) { return validation; }
-          
             
-            var llmResult = await _llmClient.ExecuteAsync(ctx);
-            if (!llmResult.Successful) { return llmResult; }
-
-            if (llmResult.Result.Response.Kind == AgentExecuteResponse.ResponseKindOk)
-                return llmResult;
-
             for (var iteration = 0; iteration < MaxReasoningIterations; iteration++)
             {
                 if (ctx.CancellationToken.IsCancellationRequested) { return InvokeResult<AgentPipelineContext>.Abort(); }
 
-                _logger.Trace("[AgentReasoner_ExecuteAsync] Iteration " + (iteration + 1) + " starting. " + "sessionId=" + ctx.SessionId + ", mode=" + ctx.Request.Mode);
+                _logger.Trace("[AgentReasoner_ExecuteAsync] Iteration " + (iteration + 1) + " starting. " + "sessionId=" + ctx.SessionId + ", mode=" + ctx.Session.Mode);
 
-                llmResult = await _llmClient.ExecuteAsync(ctx);
+                var llmResult = await _llmClient.ExecuteAsync(ctx);
                 if (!llmResult.Successful) { return llmResult; }
 
-                if (llmResult.Result.Response.Kind == AgentExecuteResponse.ResponseKindOk)
+                if (llmResult.Result.Response.Kind == AgentExecuteResponseKind.Final)
                     return llmResult;
 
-                var executedServerCalls = new List<AgentToolCall>();
-                var pendingClientCalls = new List<AgentToolCall>();
+                var pendingClientCalls = new List<ClientToolCall>();
 
-                var execResult = await ExecuteToolBatchAsync(ctx, executedServerCalls, pendingClientCalls, ctx.CancellationToken);
-                if (!execResult.Successful) { return execResult; }
+                foreach (var toolCall in ctx.ToolCalls)
+                {
+                    await _agentStreamingContext.AddWorkflowAsync("calling tool " + toolCall.Name + "...", ctx.CancellationToken);
+                    var sw = Stopwatch.StartNew();
 
-                var toolOutputs = executedServerCalls.Where(c => c.WasExecuted && !string.IsNullOrWhiteSpace(c.CallId))
-                    .Select(c => new ResponsesToolOutput { 
-                        ToolCallId = c.CallId, 
-                        Output = string.IsNullOrWhiteSpace(c.ResultJson) ? "{}" : c.ResultJson }
-                    ).ToList();
+                    var callResponse = await _toolExecutor.ExecuteServerToolAsync(toolCall, ctx);
 
-                ctx.Request.ToolResultsJson = JsonConvert.SerializeObject(toolOutputs);
+                    await _agentStreamingContext.AddWorkflowAsync((callResponse.Successful ? "success" : "failed") + " calling tool " + toolCall.Name + (callResponse.Successful ? "" : ", err: " + callResponse.ErrorMessage) + " in " + sw.Elapsed.TotalMilliseconds.ToString("0.0") + "ms...", ctx.CancellationToken);
+
+                    if (ctx.CancellationToken.IsCancellationRequested) { return InvokeResult<AgentPipelineContext>.Abort(); }
+                    if (!callResponse.Successful) { return InvokeResult<AgentPipelineContext>.FromInvokeResult(callResponse.ToInvokeResult()); }
+
+                    var result = callResponse.Result;
+
+                    if (result.RequiresClientExecution) { pendingClientCalls.Add(new ClientToolCall() {Name = toolCall.Name, ToolCallId = toolCall.ToolCallId, ArgumentsJson = toolCall.ArgumentsJson }); }
+                }
 
                 if (pendingClientCalls.Count > 0)
                 {
-                    MergeCallsForClientToolContinuation(ctx.Response, executedServerCalls, pendingClientCalls);
+                    ctx.Response.ToolCalls.AddRange(pendingClientCalls);
                     return InvokeResult<AgentPipelineContext>.Create(ctx);
                 }
-
-                if (executedServerCalls.Count == 0)
-                {
-                    return InvokeResult<AgentPipelineContext>.Create(ctx);
-                }
-
-                try
-                {
-                    ctx.Request.ToolResults = executedServerCalls;
-                    ctx.Request.ToolResultsJson = JsonConvert.SerializeObject(executedServerCalls);
-                }
-                catch (Exception ex)
-                {
-                    _logger.AddException("[AgentReasoner_ExecuteAsync__ToolResultsSerializeException]", ex);
-                    return InvokeResult<AgentPipelineContext>.FromError("Failed to serialize tool results for LLM follow-up call: " + ex.Message, "AGENT_REASONER_TOOL_RESULTS_SERIALIZE_FAILED");
-                }
-
-                ctx.Request.ResponseContinuationId = null;
             }
 
             return InvokeResult<AgentPipelineContext>.FromError("Maximum reasoning iterations exceeded.", "AGENT_REASONER_MAX_ITERATIONS_EXCEEDED");
         }
 
-        private InvokeResult<AgentPipelineContext> ValidateInputs(AgentPipelineContext ctx)
-        {
-            if (ctx == null) { return InvokeResult<AgentPipelineContext>.FromError("AgentPipelineContext cannot be null.", "AGENT_REASONER_NULL_CONTEXT"); }
-            if (ctx.AgentContext == null) { return InvokeResult<AgentPipelineContext>.FromError("AgentContext is required.", "AGENT_REASONER_MISSING_AGENT_CONTEXT"); }
-            if (ctx.ConversationContext == null) { return InvokeResult<AgentPipelineContext>.FromError("ConversationContext is required.", "AGENT_REASONER_MISSING_CONVERSATION_CONTEXT"); }
-            if (ctx.Request == null) { return InvokeResult<AgentPipelineContext>.FromError("AgentExecuteRequest is required.", "AGENT_REASONER_MISSING_REQUEST"); }
-            if (ctx.Org == null || EntityHeader.IsNullOrEmpty(ctx.Org)) { return InvokeResult<AgentPipelineContext>.FromError("Org is required.", "AGENT_REASONER_MISSING_ORG"); }
-            if (ctx.User == null || EntityHeader.IsNullOrEmpty(ctx.User)) { return InvokeResult<AgentPipelineContext>.FromError("User is required.", "AGENT_REASONER_MISSING_USER"); }
-            if (string.IsNullOrWhiteSpace(ctx.SessionId)) { return InvokeResult<AgentPipelineContext>.FromError("ConversationId (session id) is required.", "AGENT_REASONER_MISSING_CONVERSATION_ID"); }
-
-            var turnId = ResolveCurrentTurnId(ctx);
-            if (string.IsNullOrWhiteSpace(turnId)) { return InvokeResult<AgentPipelineContext>.FromError("CurrentTurnId is required.", "AGENT_REASONER_MISSING_CURRENT_TURN_ID"); }
-
-            return InvokeResult<AgentPipelineContext>.Create(ctx);
-        }
-
-        private string ResolveCurrentTurnId(AgentPipelineContext ctx)
-        {
-            var currentTurnId = string.Empty;
-            try { currentTurnId = ctx.Request?.CurrentTurnId; } catch { }
-
-            if (string.IsNullOrWhiteSpace(currentTurnId) && ctx.Turn != null) { currentTurnId = ctx.Turn.Id; }
-            return currentTurnId;
-        }
-
-        private async Task<InvokeResult<AgentPipelineContext>> ExecuteToolBatchAsync(AgentPipelineContext ctx, List<AgentToolCall> executedServerCalls, List<AgentToolCall> pendingClientCalls, CancellationToken cancellationToken)
-        {
-            foreach (var toolCall in ctx.Response.ToolCalls)
-            {
-                await _agentStreamingContext.AddWorkflowAsync("calling tool " + toolCall.Name + "...", cancellationToken);
-                var sw = Stopwatch.StartNew();
-
-                var callResponse = await _toolExecutor.ExecuteServerToolAsync(toolCall, ctx);
-
-                await _agentStreamingContext.AddWorkflowAsync((callResponse.Successful ? "success" : "failed") + " calling tool " + toolCall.Name + (callResponse.Successful ? "" : ", err: " + callResponse.ErrorMessage) + " in " + sw.Elapsed.TotalMilliseconds.ToString("0.0") + "ms...", cancellationToken);
-
-                if (cancellationToken.IsCancellationRequested) { return InvokeResult<AgentPipelineContext>.Abort(); }
-                if (!callResponse.Successful) { return InvokeResult<AgentPipelineContext>.FromInvokeResult(callResponse.ToInvokeResult()); }
-
-                var updatedCall = callResponse.Result;
-                if (updatedCall == null) { continue; }
-           
-                if (updatedCall.WasExecuted && !updatedCall.RequiresClientExecution) { executedServerCalls.Add(updatedCall); }
-                else if (updatedCall.WasExecuted && updatedCall.RequiresClientExecution) { pendingClientCalls.Add(updatedCall); }
-                else { executedServerCalls.Add(updatedCall); }
-            }
-
-            return InvokeResult<AgentPipelineContext>.Create(ctx);
-        }
-
-        private void MergeCallsForClientToolContinuation(AgentExecuteResponse response, List<AgentToolCall> executedServerCalls, List<AgentToolCall> pendingClientCalls)
-        {
-            var mergedCalls = new List<AgentToolCall>();
-            mergedCalls.AddRange(executedServerCalls);
-            mergedCalls.AddRange(pendingClientCalls);
-            response.ToolCalls = mergedCalls;
-        }
-
-     
-        private sealed class ResponsesToolOutput
-        {
-            [JsonProperty("tool_call_id")]
-            public string ToolCallId { get; set; }
-
-            [JsonProperty("output")]
-            public string Output { get; set; }
-        }
+      
     }
 }

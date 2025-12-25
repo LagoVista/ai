@@ -67,7 +67,7 @@ namespace LagoVista.AI.Services.Pipeline
                 return InvokeResult<AgentPipelineContext>.FromError(msg, "AGENT_SESSION_CREATE_NULL_REQUEST");
             }
 
-            if (string.IsNullOrWhiteSpace(ctx.Request.Instruction) && ctx.Request.ActiveFiles?.Count == 0)
+            if (string.IsNullOrWhiteSpace(ctx.Request.Instruction) && ctx.Request.InputArtifacts?.Count == 0)
             {
                 return InvokeResult<AgentPipelineContext>.FromError(
                     "Instruction is required.",
@@ -84,7 +84,8 @@ namespace LagoVista.AI.Services.Pipeline
 
             ctx.Session = session;
             ctx.Turn = turn;
-            ctx.Request.CurrentTurnId = turn.Id;
+            ctx.Request.SessionId = session.Id;
+            ctx.Request.TurnId = turn.Id;
 
             if (ctx.CancellationToken.IsCancellationRequested)
             {

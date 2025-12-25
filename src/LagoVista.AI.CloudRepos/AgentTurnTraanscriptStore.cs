@@ -32,7 +32,7 @@ namespace LagoVista.AI.CloudRepos
             var path = BuildPath("request", orgId, sessionId, turnId);
             var containerName = GetContainerName(orgId);
             var buffer = await GetFileAsync(containerName, path);
-            return InvokeResult<string>.Create(System.Text.ASCIIEncoding.ASCII.GetString(buffer.Result));
+            return InvokeResult<string>.Create(System.Text.UTF8Encoding.UTF8.GetString(buffer.Result));
         }
 
         public async Task<InvokeResult<string>> LoadTurnResponseAsync(string orgId, string sessionId, string turnId, CancellationToken cancellationToken = default)
@@ -40,7 +40,7 @@ namespace LagoVista.AI.CloudRepos
             var path = BuildPath("response", orgId, sessionId, turnId);
             var containerName = GetContainerName(orgId);
             var buffer = await GetFileAsync(containerName, path);
-            return InvokeResult<string>.Create(System.Text.ASCIIEncoding.ASCII.GetString(buffer.Result));
+            return InvokeResult<string>.Create(System.Text.UTF8Encoding.UTF8.GetString(buffer.Result));
         }
 
         public async Task<InvokeResult<System.Uri>> SaveTurnRequestAsync(string orgId, string sessionId, string turnId, string requestJson, CancellationToken cancellationToken = default)

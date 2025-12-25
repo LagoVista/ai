@@ -55,7 +55,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
 
             if (ctx.Contents == null)
             {
-                ctx.Contents = System.Text.ASCIIEncoding.ASCII.GetBytes(fileText);
+                ctx.Contents = System.Text.UTF8Encoding.UTF8.GetBytes(fileText);
             }
 
             if (ctx.RelativePath.StartsWith("ddrs") && (!subTypeFilter.HasValue || subTypeFilter == SubtypeKind.Ddr))
@@ -75,7 +75,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
             }
             else
             {
-                var fullFileSourceCode = System.Text.ASCIIEncoding.ASCII.GetString(ctx.Contents);
+                var fullFileSourceCode = System.Text.UTF8Encoding.UTF8.GetString(ctx.Contents);
 
                 var symbolSplitsResult = SplitSymbols(fullFileSourceCode);
                 if (!symbolSplitsResult.Successful) return InvokeResult<ProcessedFileResults>.FromInvokeResult(symbolSplitsResult.ToInvokeResult());
@@ -198,7 +198,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
             //foreach(var pt in result.Result.RagPoints)
             //{
             //    _adminLogger.Trace($"{pt.Payload.Subtype} - {pt.Payload.Title} {pt.Payload.BlobUri}");
-            //    _adminLogger.Trace(System.Text.ASCIIEncoding.ASCII.GetString(pt.Contents));
+            //    _adminLogger.Trace(System.Text.UTF8Encoding.UTF8.GetString(pt.Contents));
             //    _adminLogger.Trace(new String('-',80));
             //}
 

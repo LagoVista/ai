@@ -128,7 +128,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                 PointId = Guid.NewGuid().ToString(),
                 Payload = payload,
                 Vector = Vector,
-                Contents = System.Text.ASCIIEncoding.ASCII.GetBytes(Text)
+                Contents = System.Text.UTF8Encoding.UTF8.GetBytes(Text)
             };
 
             return new List<InvokeResult<IRagPoint>>() { InvokeResult<IRagPoint>.Create(ragPoint) };

@@ -70,7 +70,7 @@ namespace LagoVista.AI.Models.Context
         /// <summary>
         /// Clears all items for all Consumable registers.
         /// </summary>
-        public void ClearConsumable()
+        public void ClearConsumables()
         {
             foreach (var reg in _registers.Values.Where(r => r.Classification == ContextClassification.Consumable))
             {

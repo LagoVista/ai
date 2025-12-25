@@ -35,8 +35,6 @@ namespace LagoVista.AI.Services
                 CreationDate = now,
                 LastUpdatedBy = user,
                 LastUpdatedDate = now,
-                AgentContext = request.AgentContext,
-                ConversationContext = request.ConversationContext,
                 OperationKind = EntityHeader<OperationKinds>.Create(kind),
                 WorkspaceId = request.WorkspaceId,
                 Repo = request.Repo,
@@ -76,7 +74,6 @@ namespace LagoVista.AI.Services
                 CreatedByUser = user,
                 CreationDate = now,
                 StatusTimeStamp = now,
-                Mode = request.Mode,
                 InstructionSummary = BuildInstructionSummary(request.Instruction),
                 SessionId = Guid.NewGuid().ToId()
             };

@@ -14,6 +14,5 @@ namespace LagoVista.AI.Interfaces
     /// </summary>
     public interface ILLMClient : IAgentPipelineStep
     {
-        bool UseStreaming { get; set; }
     }
 }

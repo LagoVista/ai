@@ -60,7 +60,7 @@ namespace LagoVista.AI.CloudRepos
             var blobName = GetBlobName(path, fileName);
             var containerName = GetContainerName(vectorDb.OwnerOrganization.Id);
             var result = await GetFileAsync(containerName, blobName);
-            return InvokeResult<string>.Create(System.Text.ASCIIEncoding.ASCII.GetString(result.Result));
+            return InvokeResult<string>.Create(System.Text.UTF8Encoding.UTF8.GetString(result.Result));
         }
 
         private const int BlobMaxLength = 1024;
@@ -113,7 +113,7 @@ namespace LagoVista.AI.CloudRepos
                 return InvokeResult<string>.FromInvokeResult(result.ToInvokeResult());
             }
 
-            var content = System.Text.ASCIIEncoding.ASCII.GetString(result.Result);
+            var content = System.Text.UTF8Encoding.UTF8.GetString(result.Result);
             return InvokeResult<string>.Create(content);
         }
     }

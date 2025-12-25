@@ -36,7 +36,7 @@ namespace LagoVista.AI.CloudRepos
 
         public Task<InvokeResult> AddContentAsync(string blobName, byte[] content)
         {
-            return AddContntAsync(blobName, System.Text.ASCIIEncoding.ASCII.GetString(content));
+            return AddContntAsync(blobName, System.Text.UTF8Encoding.UTF8.GetString(content));
         }
     }
 }

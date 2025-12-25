@@ -48,7 +48,7 @@ namespace LagoVista.AI.Services
         /// <inheritdoc />
         public async Task<InvokeResult<string>> BuildContextSectionAsync(AgentContext agentContext,
             string instructions,
-            RagScopeFilter filter)
+            RagScope filter)
         {
             if (string.IsNullOrWhiteSpace(instructions))
             {
