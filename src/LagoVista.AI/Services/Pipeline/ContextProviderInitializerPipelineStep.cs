@@ -28,58 +28,22 @@ namespace LagoVista.AI.Services.Pipeline
     /// Next:
     /// - ClientToolContinuationResolver OR AgentReasoner
     /// </summary>
-    public sealed class ContextProviderInitializerPipelineStep : IContextProviderInitializerPipelineStep
+    public sealed class ContextProviderInitializerPipelineStep : PipelineStep, IContextProviderInitializerPipelineStep
     {
-        private readonly IClientToolContinuationResolverPipelineStep _clientToolContinuationResolver;
-        private readonly IAgentReasonerPipelineStep _agentReasoner;
         private readonly IAdminLogger _adminLogger;
 
         public ContextProviderInitializerPipelineStep(
-            IClientToolContinuationResolverPipelineStep clientToolContinuationResolver,
-            IAgentReasonerPipelineStep agentReasoner,
-            IAdminLogger adminLogger)
+            IAgentReasonerPipelineStep next,
+            IAdminLogger adminLogger) : base(next, adminLogger)
         {
-            _clientToolContinuationResolver = clientToolContinuationResolver ?? throw new ArgumentNullException(nameof(clientToolContinuationResolver));
-            _agentReasoner = agentReasoner ?? throw new ArgumentNullException(nameof(agentReasoner));
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
         }
 
-        public async Task<InvokeResult<AgentPipelineContext>> ExecuteAsync(AgentPipelineContext ctx)
+        protected override PipelineSteps StepType => PipelineSteps.PromptContentProvider;
+
+        protected override async Task<InvokeResult<AgentPipelineContext>> ExecuteStepAsync(AgentPipelineContext ctx)
         {
-            var validation = AgentPipelineContext.ValidateInputs(ctx, PipelineSteps.ContextProviderInitializer);
-
-
-            _adminLogger.Trace("[ContextProviderInitializerPipelineStep__ExecuteAsync] - Initializing context providers.",
-                (ctx.CorrelationId ?? string.Empty).ToKVP("CorrelationId"),
-                (ctx.Org?.Id ?? string.Empty).ToKVP("TenantId"),
-                (ctx.User?.Id ?? string.Empty).ToKVP("UserId"),
-                (ctx.Session?.Id ?? string.Empty).ToKVP("SessionId"),
-                (ctx.Turn?.Id ?? string.Empty).ToKVP("TurnId"),
-                (ctx.Type.ToString()).ToKVP("PipelineContextType"));
-
-            // Stub: "meat" (provider initialization) will be added later.
-
-            if (ctx.CancellationToken.IsCancellationRequested)
-            {
-                return InvokeResult<AgentPipelineContext>.Abort();
-            }
-
-            if (ctx.Type == AgentPipelineContextTypes.ClientToolCallContinuation)
-            {
-                _adminLogger.Trace("[ContextProviderInitializerPipelineStep__ExecuteAsync] - Routing: client tool continuation resolver.",
-                    (ctx.CorrelationId ?? string.Empty).ToKVP("CorrelationId"),
-                    (ctx.Session?.Id ?? string.Empty).ToKVP("SessionId"),
-                    (ctx.Turn?.Id ?? string.Empty).ToKVP("TurnId"));
-
-                return await _clientToolContinuationResolver.ExecuteAsync(ctx);
-            }
-
-            _adminLogger.Trace("[ContextProviderInitializerPipelineStep__ExecuteAsync] - Routing: agent reasoner.",
-                (ctx.CorrelationId ?? string.Empty).ToKVP("CorrelationId"),
-                (ctx.Session?.Id ?? string.Empty).ToKVP("SessionId"),
-                (ctx.Turn?.Id ?? string.Empty).ToKVP("TurnId"));
-
-            return await _agentReasoner.ExecuteAsync(ctx);
+            return InvokeResult<AgentPipelineContext>.Create(ctx);
         }
     }
 }

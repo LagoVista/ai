@@ -1,8 +1,10 @@
 using System;
+using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
+using LagoVista.Core;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json;
@@ -63,11 +65,17 @@ namespace LagoVista.AI.Services.Tools
             public string Reason { get; set; }
         }
 
-        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
-        public async Task<InvokeResult<string>> ExecuteAsync(
+
+        public Task<InvokeResult<string>> ExecuteAsync(
             string argumentsJson,
             AgentToolExecutionContext context,
             CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentPipelineContext ctx)
+
         {
             Console.WriteLine($"----\r\n{argumentsJson}\r\n---");
 
@@ -75,21 +83,7 @@ namespace LagoVista.AI.Services.Tools
             {
                 return InvokeResult<string>.FromError("ModeChangeTool requires a non-empty arguments object.");
             }
-
-            if (context == null)
-            {
-                return InvokeResult<string>.FromError("ModeChangeTool requires a valid execution context.");
-            }
-
-            if (string.IsNullOrWhiteSpace(context.SessionId))
-            {
-                _logger.AddError("[ModeChangeTool_ExecuteAsync__MissingSessionId]",
-                    "ModeChangeTool cannot change mode because SessionId is missing on the execution context.");
-
-                return InvokeResult<string>.FromError(
-                    "ModeChangeTool cannot change mode because the session id is missing.");
-            }
-
+          
             try
             {
                 var args = JsonConvert.DeserializeObject<ModeChangeArgs>(argumentsJson) ?? new ModeChangeArgs();
@@ -112,17 +106,20 @@ namespace LagoVista.AI.Services.Tools
                         "ModeChangeTool requires a non-empty 'reason' string explaining why the mode change is needed.");
                 }
 
-                var setSessionModeResult = await _sessionManager.SetSessionModeAsync(
-                    context.SessionId,
-                    args.Mode,
-                    args.Reason,
-                    context.Org,
-                    context.User);
+                var previousMode = ctx.Session.Mode;
 
-                if (!setSessionModeResult.Successful)
+                ctx.Session.ModeHistory.Add(new ModeHistory()
                 {
-                    return InvokeResult<string>.FromInvokeResult(setSessionModeResult);
-                }
+                    PreviousMode = previousMode,
+                    NewMode = args.Mode,
+                    Reason = args.Reason,
+                    TimeStamp = ctx.TimeStamp,
+                });
+
+                ctx.Session.Mode = args.Mode;
+                ctx.Session.ModeReason = args.Reason;
+                ctx.Session.ModeSetTimestamp = ctx.TimeStamp;
+                ctx.Session.LastUpdatedDate = ctx.TimeStamp;
 
                 var result = new ModeChangeResult
                 {
@@ -132,7 +129,7 @@ namespace LagoVista.AI.Services.Tools
                     Reason = args.Reason
                 };
 
-                _logger.Trace($"[ModeChangeTool_ExecuteAsync] - Changed mode via tool from {context.Request.Mode} to {args.Mode}"); 
+                _logger.Trace($"[ModeChangeTool_ExecuteAsync] - Changed mode via tool from {previousMode} to {args.Mode}"); 
 
                 var json = JsonConvert.SerializeObject(result);
                 return InvokeResult<string>.Create(json);

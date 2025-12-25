@@ -161,15 +161,9 @@ namespace LagoVista.AI
             services.AddScoped<IEmbedder, OpenAIEmbedder>();
             services.AddScoped<IAgentContextManager, AgentContextManager>();
             services.AddScoped<IAgentSessionManager, AgentSessionManager>();
-            services.AddScoped<IAgentExecutionService, AgentExecutionService>();
-            services.AddScoped<ILLMClient, OpenAIResponsesClient>();
             services.AddScoped<IAiConversationManager, AiConversationManager>();
-            services.AddScoped<IAgentOrchestrator, AgentOrchestrator>();
             services.AddScoped<IAgentSessionFactory, AgentSessionFactory>();
             services.AddScoped<IRagContextBuilder, QdrantRagContextBuilder>();
-            services.AddScoped<IAgentTurnExecutor, AgentTurnExecutor>();
-            services.AddScoped<IAgentRequestHandler, AgentRequestHandler>();
-            services.AddScoped<IAgentReasoner, AgentReasoner>();
             services.AddScoped<IAgentToolExecutor, AgentToolExecutor>();
             services.AddScoped<IServerToolSchemaProvider, DefaultServerToolSchemaProvider>();
             services.AddScoped<IAgentSessionNamingService, OpenAISessionNamingService>();

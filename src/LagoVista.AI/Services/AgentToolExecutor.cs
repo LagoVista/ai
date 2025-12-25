@@ -73,7 +73,6 @@ namespace LagoVista.AI.Services
                 var execResult = await tool.ExecuteAsync(call.ArgumentsJson, context);
 
                 var result = new AgentToolCallResult();
-                result.WasExecuted = execResult.Successful;
 
                 if (!execResult.Successful)
                 {

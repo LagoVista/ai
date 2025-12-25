@@ -21,6 +21,7 @@ namespace LagoVista.AI.Models
         AgentSessionCreator,
         AgentContextLoader,
         ContextProviderInitializer,
+        PromptContentProvider,
         Reasoner,
         LLMClient
     }
@@ -42,7 +43,7 @@ namespace LagoVista.AI.Models
             if(user == null) throw new ArgumentNullException(nameof(user));
 
             Envelope = new Envelope(request.AgentContextId, request.ConversationContextId, request.SessionId, request.TurnId, request.Instruction, 
-                request.ToolResults, request.ClipboardImages, request.InputArtifacts, request.RagScope, org, user);
+                request.Streaming, request.ToolResults, request.ClipboardImages, request.InputArtifacts, request.RagScope, org, user);
 
             if (String.IsNullOrEmpty(request.SessionId) && String.IsNullOrEmpty(request.TurnId) && !request.ToolResults.Any())
             {
@@ -61,9 +62,12 @@ namespace LagoVista.AI.Models
 
             CancellationToken = token;
             CorrelationId = Guid.NewGuid().ToId();
+            TimeStamp = DateTime.UtcNow.ToJSONString();
         }
 
         public AgentPipelineContextTypes Type { get; }
+
+        public string TimeStamp { get; } 
 
         // Identity / correlation
         public string CorrelationId { get; }
@@ -158,7 +162,7 @@ namespace LagoVista.AI.Models
             var existing = Envelope;
 
             Envelope = new Envelope(AgentContext?.Id ?? existing.AgentContextId, ConversationContext?.Id ?? existing.ConversationContextId , Session?.Id ?? existing.SessionId, 
-                                    Turn?.Id ?? existing.TurnId, existing.Instructions, existing.ToolResults, existing.ClipBoardImages,
+                                    Turn?.Id ?? existing.TurnId, existing.Instructions, existing.Stream, existing.ToolResults, existing.ClipBoardImages,
                                     existing.InputArtifacts, existing.RagScope, existing.Org, existing.User);
         }
 
@@ -218,7 +222,7 @@ namespace LagoVista.AI.Models
 
     public class Envelope
     {
-        public Envelope(string agentContextId, string conversationContextId, string sessionId, string turnId, string instructions,
+        public Envelope(string agentContextId, string conversationContextId, string sessionId, string turnId, string instructions, bool stream,
                         IEnumerable<ToolResultSubmission> toolResults, IEnumerable<ClipboardImage> clipboardImages, IEnumerable<InputArtifact> inputArtifacts,
                         RagScope ragScope, EntityHeader org, EntityHeader user)
         {
@@ -233,6 +237,7 @@ namespace LagoVista.AI.Models
             InputArtifacts = inputArtifacts?.ToList() ?? new List<InputArtifact>();
             Instructions = instructions;
             RagScope = ragScope ?? new RagScope();
+            Stream = stream;
         }
 
         public RagScope RagScope { get; }

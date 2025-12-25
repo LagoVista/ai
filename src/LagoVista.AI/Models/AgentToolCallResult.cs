@@ -8,6 +8,7 @@ namespace LagoVista.AI.Models
     public class AgentToolCallResult
     {
         public string ToolCallId { get; set; }
+        public bool RequiresClientExecution { get; set; }
         public string Name { get; set; }
         public int ExecutionMs { get; set; }
         public string ResultJson { get; set; }

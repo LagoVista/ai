@@ -40,7 +40,7 @@ namespace LagoVista.AI.Helpers
             {
                 Model = ctx.ConversationContext.ModelName,
                 Temperature = ctx.ConversationContext.Temperature,
-                Stream = ctx.Request.Streaming,
+                Stream = ctx.Envelope.Stream,
             };
 
 

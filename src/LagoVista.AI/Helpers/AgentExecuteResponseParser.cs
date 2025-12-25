@@ -8,6 +8,7 @@ using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
+using System.Threading.Tasks;
 
 namespace LagoVista.AI.Helpers
 {
@@ -24,11 +25,11 @@ namespace LagoVista.AI.Helpers
         /// <param name="rawJson">Raw JSON from the /responses call.</param>
         /// <param name="request">The AgentExecuteRequest used to initiate this call.</param>
         /// <returns>Populated AgentExecuteResponse.</returns>
-        public InvokeResult<AgentExecuteResponse> Parse(string rawJson, AgentExecuteRequest request)
+        public  Task<InvokeResult<AgentPipelineContext>> ParseAsync(AgentPipelineContext ctx, string rawJson)
         {
             if (string.IsNullOrWhiteSpace(rawJson))
             {
-                return InvokeResult<AgentExecuteResponse>.FromError("[AgentExecuteResponseParser__Parse] Empty or null JSON payload.");
+                return Task.FromResult(InvokeResult<AgentPipelineContext>.FromError("[AgentExecuteResponseParser__Parse] Empty or null JSON payload."));
             }
 
             JObject root;
@@ -39,12 +40,12 @@ namespace LagoVista.AI.Helpers
             catch (Exception ex)
             {
                 Console.WriteLine(rawJson);
-                return InvokeResult<AgentExecuteResponse>.FromError($"[AgentExecuteResponseParser__Parse] {ex.Message}");
+                return Task.FromResult(InvokeResult<AgentPipelineContext>.FromError($"[AgentExecuteResponseParser__Parse] {ex.Message}"));
             }
 
-            var response = new AgentExecuteResponse
+            var response = new ResponsePayload
             {
-                SessionId = request?.SessionId,
+
             };
 
 
@@ -83,7 +84,7 @@ namespace LagoVista.AI.Helpers
 
             if (outputArray == null)
             {
-                return InvokeResult<AgentExecuteResponse>.FromError("[AgentExecuteResponseParser__Parse] Missing [output] Node.");
+                return Task.FromResult(InvokeResult<AgentPipelineContext>.FromError("[AgentExecuteResponseParser__Parse] Missing [output] Node."));
             }
 
             var textSegments = new List<string>();
@@ -257,16 +258,13 @@ namespace LagoVista.AI.Helpers
                 }
             }
 
-            // Aggregate text
             response.PrimaryOutputText = textSegments.Count > 0
                 ? string.Join("\n\n", textSegments)
                 : null;
 
-            // Tool calls
-            //response.ToolCalls = toolCalls;
+            ctx.PromptContentProvider.ToolCallManifest.ToolCalls = toolCalls;
 
-
-            return InvokeResult<AgentExecuteResponse>.Create(response);
+            return Task.FromResult(InvokeResult<AgentPipelineContext>.Create(ctx));
         }
     }
 }
