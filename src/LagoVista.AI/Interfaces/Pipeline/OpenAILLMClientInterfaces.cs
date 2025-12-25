@@ -4,6 +4,7 @@
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using LagoVista.AI.Models;
 using LagoVista.Core.Validation;
 
 namespace LagoVista.AI.Interfaces
@@ -17,15 +18,16 @@ namespace LagoVista.AI.Interfaces
     }
 
     /// <summary>
-    /// Handles low-level HTTP invocation of OpenAI /v1/responses.
+    /// Handles low-level HTTP invocation of OpenAI /v1/responses, including
+    /// logging and converting non-2xx HTTP responses into InvokeResult errors.
     /// </summary>
     public interface IOpenAIResponsesInvoker
     {
         /// <summary>
-        /// Sends the request JSON to /v1/responses and returns the raw HttpResponseMessage.
-        /// Caller is responsible for disposing the returned HttpResponseMessage.
+        /// On success: returns the open HttpResponseMessage (caller disposes).
+        /// On failure: returns InvokeResult error (and disposes any response internally).
         /// </summary>
-        Task<HttpResponseMessage> InvokeAsync(string baseUrl, string apiKey, string requestJson, CancellationToken cancellationToken = default);
+        Task<InvokeResult<HttpResponseMessage>> InvokeAsync(string baseUrl, string apiKey, string requestJson, CancellationToken cancellationToken = default);
     }
 
     /// <summary>
@@ -37,12 +39,29 @@ namespace LagoVista.AI.Interfaces
     }
 
     /// <summary>
+    /// Reads the final /responses JSON to parse, using streaming vs non-streaming based on ctx.Envelope.Stream.
+    /// Does NOT parse into AgentPipelineContext; it only produces the JSON string (or an error/abort).
+    /// </summary>
+    public interface IOpenAIResponseJsonProvider
+    {
+        Task<InvokeResult<string>> GetFinalJsonAsync(AgentPipelineContext ctx, HttpResponseMessage httpResponse, CancellationToken cancellationToken = default);
+    }
+
+    /// <summary>
     /// Reads a streaming /responses HTTP response (SSE) and returns the final completed response JSON to parse.
     /// </summary>
     public interface IOpenAIStreamingResponseReader
     {
         Task<InvokeResult<string>> ReadAsync(HttpResponseMessage httpResponse, string sessionId, CancellationToken cancellationToken = default);
     }
+
+    public interface ILLMWorkflowNarrator
+    {
+        Task ConnectingAsync(CancellationToken cancellationToken);
+        Task ThinkingAsync(CancellationToken cancellationToken);
+        Task SummarizingAsync(CancellationToken cancellationToken);
+    }
+
 
     /// <summary>
     /// Emits workflow/partial updates to whatever streaming UI context you maintain.
