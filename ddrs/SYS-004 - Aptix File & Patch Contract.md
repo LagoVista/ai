@@ -77,6 +77,14 @@ When the user requests **"aptix file bundle"**, the agent MUST emit a JSON objec
 - For backend repos, MUST be "." unless explicitly overridden
 - All paths MUST be relative to `root`
 
+### 3.1.1 Root selection rules
+
+- Default: For backend repos, `root` MUST be `"."`.
+- Agents MAY use `root: "./src"` ONLY when **all** file paths in the bundle are under `src/`.
+- If **any** file path is under `tests/` (or the bundle mixes `src/` and `tests/`), `root` MUST be `"."`.
+- If the user explicitly requests a different root, the agent MUST comply ONLY if all paths remain valid under SYS-004 path rules (no `../`, no `./` prefixes).
+
+
 ### 3.2 `files[]` rules
 
 Each `files[]` entry MUST contain:
@@ -163,6 +171,8 @@ Agents MUST:
 - Avoid `./` prefixes
 - Avoid `../` traversal
 - Keep all paths relative to `root`
+- Agents MUST NOT choose a `root` that would require any file path to use `../` to reach its target directory.
+
 
 ### 5.3 Selecting paths under `src` and `tests`
 
@@ -186,6 +196,7 @@ Tests SHOULD go under:
 
 - Markdown DDRs → `ddrs/{ID} - {Title}.md`
 - LLM-optimized JSONL → `ddrs/jsonl/{ID}.jsonl`
+- MUST NOT place DDR assets under src/ (e.g., src/ddrs/...).
 
 ### 5.5 Partial classes
 
@@ -314,8 +325,9 @@ Agents MUST refuse to emit patches when:
 
 ### Step 3 — Build operations & paths
 
-- Determine correct path via namespace or sibling inference
-- Use partial-class splitting for large C# files
+- Choose `root`:
+  - If bundle touches `tests/` OR mixes `src/` and `tests/` → `root: "."`
+  - Else (src-only) → `root: "./src"` MAY be used if desired
 
 ### Step 4 — Construct JSON bundle object
 

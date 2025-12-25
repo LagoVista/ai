@@ -12,10 +12,14 @@ using System.Threading.Tasks;
 namespace LagoVista.AI.Services
 {
     /// <summary>
-    /// Reads a streaming /responses response (SSE) and returns the completed response JSON
-    /// (inner 'response' object).
+    /// Reads a streaming /responses SSE stream and returns the completed response JSON
+    /// (the inner "response" object).
     ///
-    /// Minimal + testable. Hardening comes via tests.
+    /// The reader is a small state machine:
+    /// - buffer data lines
+    /// - flush on boundaries (blank line, new event, [DONE], EOF)
+    /// - capture deltas as they arrive
+    /// - capture the completed payload once
     /// </summary>
     public sealed class OpenAIStreamingResponseReader : IOpenAIStreamingResponseReader
     {
@@ -30,13 +34,19 @@ namespace LagoVista.AI.Services
             _streamingUi = streamingUi ?? throw new ArgumentNullException(nameof(streamingUi));
         }
 
-        public async Task<InvokeResult<string>> ReadAsync(HttpResponseMessage httpResponse, string sessionId, CancellationToken cancellationToken = default)
+        public async Task<InvokeResult<string>> ReadAsync(
+            HttpResponseMessage httpResponse,
+            string sessionId,
+            CancellationToken cancellationToken = default)
         {
+            // Streaming reader assumes a successful HTTP response;
+            // higher layers are responsible for status handling.
             if (httpResponse == null)
             {
                 return InvokeResult<string>.FromError("HttpResponseMessage is null.", "OPENAI_STREAM_NULL_RESPONSE");
             }
 
+            // Session id is required so deltas can be correlated and published.
             if (string.IsNullOrWhiteSpace(sessionId))
             {
                 return InvokeResult<string>.FromError("sessionId is required for streaming reader.", "OPENAI_STREAM_MISSING_SESSION");
@@ -47,33 +57,10 @@ namespace LagoVista.AI.Services
                 using (var stream = await httpResponse.Content.ReadAsStreamAsync())
                 using (var reader = new StreamReader(stream))
                 {
-                    string completedEventJson = null;
-                    string currentEvent = null;
-                    var dataBuilder = new StringBuilder();
+                    // Accumulates state for the *current* SSE event.
+                    var acc = new SseAccumulator();
 
-                    async Task ProcessBufferedEventAsync()
-                    {
-                        if (dataBuilder.Length == 0) return;
-
-                        var dataJson = dataBuilder.ToString();
-                        var analyzed = OpenAiStreamingEventHelper.AnalyzeEventPayload(currentEvent, dataJson);
-
-                        if (!string.IsNullOrEmpty(analyzed.DeltaText))
-                        {
-                            await _events.PublishAsync(sessionId, "LLMDelta", "in-progress", analyzed.DeltaText, null, cancellationToken);
-                            await _streamingUi.AddPartialAsync(analyzed.DeltaText, cancellationToken);
-                        }
-
-                        if (string.Equals(analyzed.EventType, "response.completed", StringComparison.OrdinalIgnoreCase) ||
-                            string.Equals(currentEvent, "response.completed", StringComparison.OrdinalIgnoreCase))
-                        {
-                            completedEventJson = dataJson;
-                        }
-
-                        dataBuilder.Clear();
-                        currentEvent = null;
-                    }
-
+                    // Read the SSE stream line-by-line.
                     while (!reader.EndOfStream)
                     {
                         if (cancellationToken.IsCancellationRequested)
@@ -82,44 +69,65 @@ namespace LagoVista.AI.Services
                         }
 
                         var line = await reader.ReadLineAsync();
-                        if (line == null) break;
+                        if (line == null)
+                        {
+                            break;
+                        }
 
+                        // Blank line = end of current SSE event.
                         if (string.IsNullOrWhiteSpace(line))
                         {
-                            await ProcessBufferedEventAsync();
+                            await FlushAsync(acc, sessionId, cancellationToken);
                             continue;
                         }
 
+                        // New event header = boundary for previous buffered data.
                         if (line.StartsWith("event:", StringComparison.OrdinalIgnoreCase))
                         {
-                            currentEvent = line.Substring("event:".Length).Trim();
+                            // Some servers omit the blank line; treat this as a hard boundary.
+                            await FlushAsync(acc, sessionId, cancellationToken);
+
+                            acc.CurrentEvent = line.Substring("event:".Length).Trim();
                             continue;
                         }
 
+                        // Data lines carry JSON payload fragments.
                         if (line.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
                         {
                             var dataPart = line.Substring("data:".Length).Trim();
+
+                            // [DONE] explicitly terminates the stream.
                             if (string.Equals(dataPart, "[DONE]", StringComparison.Ordinal))
                             {
-                                // IMPORTANT: flush last buffered event before finishing.
-                                await ProcessBufferedEventAsync();
+                                await FlushAsync(acc, sessionId, cancellationToken);
                                 break;
                             }
 
-                            dataBuilder.AppendLine(dataPart);
+                            acc.Data.AppendLine(dataPart);
+                            continue;
                         }
+
+                        // All other SSE lines (comments, extensions) are ignored.
                     }
 
-                    // IMPORTANT: flush any trailing buffered event if stream ended without a blank line.
-                    await ProcessBufferedEventAsync();
+                    // If the stream ends without a trailing blank line,
+                    // flush any buffered event one last time.
+                    await FlushAsync(acc, sessionId, cancellationToken);
 
-                    if (string.IsNullOrWhiteSpace(completedEventJson))
+                    // A valid streaming response must contain a completed event.
+                    if (string.IsNullOrWhiteSpace(acc.CompletedEventJson))
                     {
-                        _logger.AddError("[OpenAIStreamingResponseReader_ReadAsync__Finalize]", "Empty Completed Event JSON");
-                        return InvokeResult<string>.FromError("Empty response from Streaming OpenAI Client", "OPENAI_STREAM_EMPTY_COMPLETED");
+                        _logger.AddError(
+                            "[OpenAIStreamingResponseReader_ReadAsync__Finalize]",
+                            "Empty Completed Event JSON");
+
+                        return InvokeResult<string>.FromError(
+                            "Empty response from Streaming OpenAI Client",
+                            "OPENAI_STREAM_EMPTY_COMPLETED");
                     }
 
-                    var finalResponse = OpenAiStreamingEventHelper.ExtractCompletedResponseJson(completedEventJson);
+                    // Extract the inner 'response' object from the completed event.
+                    var finalResponse = OpenAiStreamingEventHelper.ExtractCompletedResponseJson(acc.CompletedEventJson);
                     if (!finalResponse.Successful)
                     {
                         return InvokeResult<string>.FromInvokeResult(finalResponse.ToInvokeResult());
@@ -135,8 +143,52 @@ namespace LagoVista.AI.Services
             catch (Exception ex)
             {
                 _logger.AddException("[OpenAIStreamingResponseReader_ReadAsync__Exception]", ex);
-                return InvokeResult<string>.FromError("Unexpected exception while reading streaming response.", "OPENAI_STREAM_EXCEPTION");
+                return InvokeResult<string>.FromError(
+                    "Unexpected exception while reading streaming response.",
+                    "OPENAI_STREAM_EXCEPTION");
             }
+        }
+
+        /// <summary>
+        /// Processes the buffered SSE event:
+        /// - publishes any delta text
+        /// - captures completed response payload
+        /// - clears accumulator state
+        /// </summary>
+        private async Task FlushAsync(SseAccumulator acc, string sessionId, CancellationToken ct)
+        {
+            if (acc.Data.Length == 0)
+            {
+                return;
+            }
+
+            var dataJson = acc.Data.ToString();
+            var analyzed = OpenAiStreamingEventHelper.AnalyzeEventPayload(acc.CurrentEvent, dataJson);
+
+            // Delta text is streamed immediately to UI + diagnostics.
+            if (!string.IsNullOrEmpty(analyzed.DeltaText))
+            {
+                await _streamingUi.AddPartialAsync(analyzed.DeltaText, ct);
+            }
+
+            // Completed event carries the final response payload.
+            if (string.Equals(analyzed.EventType, "response.completed", StringComparison.OrdinalIgnoreCase))
+            {
+                acc.CompletedEventJson = dataJson;
+            }
+
+            acc.Data.Clear();
+            acc.CurrentEvent = null;
+        }
+
+        /// <summary>
+        /// Holds state for the currently buffered SSE event.
+        /// </summary>
+        private sealed class SseAccumulator
+        {
+            public string CurrentEvent { get; set; }
+            public StringBuilder Data { get; } = new StringBuilder();
+            public string CompletedEventJson { get; set; }
         }
     }
 }

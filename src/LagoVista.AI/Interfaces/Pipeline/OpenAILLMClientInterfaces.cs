@@ -57,14 +57,4 @@ namespace LagoVista.AI.Interfaces
     {
         Task<string> FormatAsync(HttpResponseMessage httpResponse);
     }
-
-    /// <summary>
-    /// Emits workflow/partial updates to whatever streaming UI context you maintain.
-    /// This keeps OpenAIResponsesClientPipelineStap from knowing how the UX is implemented.
-    /// </summary>
-    public interface IAgentStreamingNotifier
-    {
-        Task AddWorkflowAsync(string message, CancellationToken cancellationToken = default);
-        Task AddPartialAsync(string deltaText, CancellationToken cancellationToken = default);
-    }
 }
