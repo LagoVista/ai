@@ -4,7 +4,7 @@ using LagoVista.Core.Validation;
 
 namespace LagoVista.AI.Interfaces.Pipeline
 {
-    public interface ISessionContextResolverPipelineStep : IAgentPipelineStep
+    public interface IAgentContextResolverPipelineStep : IAgentPipelineStep
     {
         new Task<InvokeResult<AgentPipelineContext>> ExecuteAsync(AgentPipelineContext ctx);
     }

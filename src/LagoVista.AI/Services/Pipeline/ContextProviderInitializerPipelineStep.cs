@@ -46,60 +46,8 @@ namespace LagoVista.AI.Services.Pipeline
 
         public async Task<InvokeResult<AgentPipelineContext>> ExecuteAsync(AgentPipelineContext ctx)
         {
-            if (ctx == null)
-            {
-                _adminLogger.AddError("[ContextProviderInitializerPipelineStep__ExecuteAsync]", "AgentPipelineContext cannot be null.");
-                return InvokeResult<AgentPipelineContext>.FromError("AgentPipelineContext cannot be null.", "CTX_PROVIDER_INIT_NULL_CONTEXT");
-            }
+            var validation = AgentPipelineContext.ValidateInputs(ctx, PipelineSteps.ContextProviderInitializer);
 
-            if (ctx.Request == null)
-            {
-                const string msg = "AgentExecuteRequest is required.";
-                _adminLogger.AddError("[ContextProviderInitializerPipelineStep__ExecuteAsync__Validate]", msg);
-                return InvokeResult<AgentPipelineContext>.FromError(msg, "CTX_PROVIDER_INIT_MISSING_REQUEST");
-            }
-
-            if (ctx.Org == null || EntityHeader.IsNullOrEmpty(ctx.Org))
-            {
-                const string msg = "Org is required.";
-                _adminLogger.AddError("[ContextProviderInitializerPipelineStep__ExecuteAsync__Validate]", msg);
-                return InvokeResult<AgentPipelineContext>.FromError(msg, "CTX_PROVIDER_INIT_MISSING_ORG");
-            }
-
-            if (ctx.User == null || EntityHeader.IsNullOrEmpty(ctx.User))
-            {
-                const string msg = "User is required.";
-                _adminLogger.AddError("[ContextProviderInitializerPipelineStep__ExecuteAsync__Validate]", msg);
-                return InvokeResult<AgentPipelineContext>.FromError(msg, "CTX_PROVIDER_INIT_MISSING_USER");
-            }
-
-            if (ctx.Session == null)
-            {
-                const string msg = "Session is required.";
-                _adminLogger.AddError("[ContextProviderInitializerPipelineStep__ExecuteAsync__Validate]", msg);
-                return InvokeResult<AgentPipelineContext>.FromError(msg, "CTX_PROVIDER_INIT_MISSING_SESSION");
-            }
-
-            if (ctx.Turn == null)
-            {
-                const string msg = "Turn is required.";
-                _adminLogger.AddError("[ContextProviderInitializerPipelineStep__ExecuteAsync__Validate]", msg);
-                return InvokeResult<AgentPipelineContext>.FromError(msg, "CTX_PROVIDER_INIT_MISSING_TURN");
-            }
-
-            if (ctx.AgentContext == null)
-            {
-                const string msg = "AgentContext is required.";
-                _adminLogger.AddError("[ContextProviderInitializerPipelineStep__ExecuteAsync__Validate]", msg);
-                return InvokeResult<AgentPipelineContext>.FromError(msg, "CTX_PROVIDER_INIT_MISSING_AGENT_CONTEXT");
-            }
-
-            if (ctx.ConversationContext == null)
-            {
-                const string msg = "AgentContext is required.";
-                _adminLogger.AddError("[ContextProviderInitializerPipelineStep__ExecuteAsync__Validate]", msg);
-                return InvokeResult<AgentPipelineContext>.FromError(msg, "CTX_PROVIDER_INIT_MISSING_AGENT_CONTEXT");
-            }
 
             _adminLogger.Trace("[ContextProviderInitializerPipelineStep__ExecuteAsync] - Initializing context providers.",
                 (ctx.CorrelationId ?? string.Empty).ToKVP("CorrelationId"),

@@ -199,6 +199,11 @@ namespace LagoVista.AI.Models
             FieldType: FieldTypes.Decimal, IsRequired: true, ResourceType: typeof(AIResources))]
         public float Temperature { get; set; } = 0.5f;
 
+        public EntityHeader ToEntityHeader()
+        {
+            return EntityHeader.Create(Id, Name);
+        }
+
         public List<string> GetFormFields()
         {
             return new List<string>()

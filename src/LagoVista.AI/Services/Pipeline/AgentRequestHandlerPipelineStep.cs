@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
@@ -56,106 +57,46 @@ namespace LagoVista.AI.Services.Pipeline
             _agentStreamingContext = agentStreamingContext ?? throw new ArgumentNullException(nameof(agentStreamingContext));
         }
 
-        public async Task<InvokeResult<AgentExecuteResponse>> HandleAsync(
-            AgentExecuteRequest request,
-            EntityHeader org,
-            EntityHeader user,
-            CancellationToken cancellationToken = default)
+        public async Task<InvokeResult<AgentExecuteResponse>> HandleAsync(AgentExecuteRequest request, EntityHeader org, EntityHeader user, CancellationToken cancellationToken = default)
         {
-            if (request == null)
-            {
-                const string msg = "AgentExecuteRequest cannot be null.";
-                _adminLogger.AddError("[AgentRequestHandlerPipelineStep__ExecuteAsync__ValidateRequest]", msg);
-                return InvokeResult<AgentExecuteResponse>.FromError(msg, "AGENT_REQ_NULL_REQUEST");
-            }
+            var ctx = new AgentPipelineContext(request, org, user, cancellationToken);
 
-            if (org == null || EntityHeader.IsNullOrEmpty(org))
-            {
-                const string msg = "Org identity is required.";
-                _adminLogger.AddError("[AgentRequestHandlerPipelineStep__ExecuteAsync__ValidateRequest]", msg);
-                return InvokeResult<AgentExecuteResponse>.FromError(msg, "AGENT_REQ_MISSING_ORG");
-            }
+            var validationResult = ctx.Validate(PipelineSteps.RequestHandler);
+            if(!validationResult.Successful) return InvokeResult<AgentExecuteResponse>.FromInvokeResult(validationResult.ToInvokeResult());
 
-            if (user == null || EntityHeader.IsNullOrEmpty(user))
-            {
-                const string msg = "User identity is required.";
-                _adminLogger.AddError("[AgentRequestHandlerPipelineStep__ExecuteAsync__ValidateRequest]", msg);
-                return InvokeResult<AgentExecuteResponse>.FromError(msg, "AGENT_REQ_MISSING_USER");
-            }
-
-            if (string.IsNullOrWhiteSpace(request.Instruction))
-            {
-                const string msg = "Instruction is required.";
-                _adminLogger.AddError("[AgentRequestHandlerPipelineStep__ExecuteAsync__ValidateRequest]", msg);
-                return InvokeResult<AgentExecuteResponse>.FromError(msg, "AGENT_REQ_MISSING_INSTRUCTION");
-            }
-
-            var ctx = new AgentPipelineContext
-            {
-                CorrelationId = Guid.NewGuid().ToId(),
-                Org = org,
-                User = user,
-                Request = request,
-                CancellationToken = cancellationToken
-            };
-
-            _adminLogger.Trace("[AgentRequestHandlerPipelineStep__ExecuteAsync] - Handling agent request.",
-                (ctx.CorrelationId ?? string.Empty).ToKVP("CorrelationId"),
-                (org?.Id ?? string.Empty).ToKVP("TenantId"),
-                (user?.Id ?? string.Empty).ToKVP("UserId"),
-                (request?.SessionId ?? string.Empty).ToKVP("SessionId"));
-
-            // Transition table (user-provided):
-            // - ToolResults has values => ClientToolCallSessionRestorer
-            // - SessionId empty => AgentSessionCreator
-            // - Otherwise => AgentSessionRestorer
+            var sw = Stopwatch.StartNew();
+            ctx.LogDetails(_adminLogger, PipelineSteps.RequestHandler);
 
             InvokeResult<AgentPipelineContext> result = null;
 
-            var isNewSession = string.IsNullOrWhiteSpace(request.SessionId);
-            if (isNewSession)
+            switch (ctx.Type)
             {
-                _adminLogger.Trace("[AgentRequestHandlerPipelineStep__ExecuteAsync__NewSession] - Routing: new session.",
-                    (ctx.CorrelationId ?? string.Empty).ToKVP("CorrelationId"),
-                    (org?.Id ?? string.Empty).ToKVP("TenantId"),
-                    (user?.Id ?? string.Empty).ToKVP("UserId"));
-
-                await _agentStreamingContext.AddWorkflowAsync("Welcome to Aptix, Finding the next available agent...please wait...", cancellationToken);
-
-                result = await _sessionCreator.ExecuteAsync(ctx);
+                case AgentPipelineContextTypes.Initial:
+                    await _agentStreamingContext.AddWorkflowAsync("Welcome to Aptix, Finding the next available agent...please wait...", cancellationToken);
+                    result = await _sessionCreator.ExecuteAsync(ctx);
+                    break;
+                case AgentPipelineContextTypes.FollowOn:
+                    await _agentStreamingContext.AddWorkflowAsync("Welcome Back to Aptix, let's get started...", cancellationToken);
+                    result = await _sessionRestorer.ExecuteAsync(ctx);
+                    break;
+                case AgentPipelineContextTypes.ClientToolCallContinuation:
+                    await _agentStreamingContext.AddWorkflowAsync("Welcome Back to Aptix, resuming tool execution...", cancellationToken);
+                    result = await _toolSessionRestorer.ExecuteAsync(ctx);
+                    break;
             }
+            
+            await _agentSessionManager.UpdateSessionAsync(result.Result.Session, org, user);
 
-            var isToolContinuation = request.ToolResults != null && request.ToolResults.Count > 0;
-            if (isToolContinuation)
+            if (result.Successful)
             {
-                _adminLogger.Trace("[AgentRequestHandlerPipelineStep__ExecuteAsync__ToolContinuation] - Routing: client tool continuation.",
-                    (ctx.CorrelationId ?? string.Empty).ToKVP("CorrelationId"),
-                    (request.SessionId ?? string.Empty).ToKVP("SessionId"));
-
-                await _agentStreamingContext.AddWorkflowAsync("Welcome Back to Aptix, resuming tool execution...", cancellationToken);
-
-
-                result = await _toolSessionRestorer.ExecuteAsync(ctx);
+                ctx.LogDetails(_adminLogger, PipelineSteps.RequestHandler, sw.Elapsed); 
+                return InvokeResult<AgentExecuteResponse>.Create(result.Result.CreateResponse());
             }
-
-            if (!String.IsNullOrEmpty(request.SessionId) && !isToolContinuation)
-            {
-                _adminLogger.Trace("[AgentRequestHandlerPipelineStep__ExecuteAsync__FollowOn] - Routing: follow-on session.",
-                (ctx.CorrelationId ?? string.Empty).ToKVP("CorrelationId"),
-                (org?.Id ?? string.Empty).ToKVP("TenantId"),
-                (user?.Id ?? string.Empty).ToKVP("UserId"),
-                (request.SessionId ?? string.Empty).ToKVP("SessionId"));
-
-                await _agentStreamingContext.AddWorkflowAsync("Welcome Back to Aptix, let's get started...", cancellationToken);
-                result = await _sessionRestorer.ExecuteAsync(ctx);
-            }
-
-            await _agentSessionManager.UpdateSessionAsync(ctx.Session, org, user);
-
-            if(result.Successful)
-                return InvokeResult<AgentExecuteResponse>.Create(ctx.Response);
             else
+            {
+                ctx.LogStepErrorDetails(_adminLogger, PipelineSteps.RequestHandler, result.ToInvokeResult(), sw.Elapsed);
                 return InvokeResult<AgentExecuteResponse>.FromInvokeResult(result.ToInvokeResult());
+            }
         }
     }
 }

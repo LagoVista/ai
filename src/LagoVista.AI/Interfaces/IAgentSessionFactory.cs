@@ -8,12 +8,10 @@ namespace LagoVista.AI.Interfaces
 {
     public interface IAgentSessionFactory
     {
-        Task<AgentSession> CreateSession(AgentExecuteRequest request, OperationKinds operationKind, EntityHeader org, EntityHeader user);
+        Task<AgentSession> CreateSession(AgentPipelineContext ctx);
 
-        Task<string> GenerateSessionNameAsync(AgentContext context, string instructions, EntityHeader org, EntityHeader user);
+        AgentSessionTurn CreateTurnForNewSession(AgentPipelineContext ctx, AgentSession session);
 
-        AgentSessionTurn CreateTurnForNewSession(AgentSession session, AgentExecuteRequest request, EntityHeader org, EntityHeader user);
-
-        AgentSessionTurn CreateTurnForExistingSession(AgentSession session, AgentExecuteRequest request, EntityHeader org, EntityHeader user);
+        AgentSessionTurn CreateTurnForExistingSession(AgentPipelineContext ctx, AgentSession session);
     }
 }

@@ -1,31 +1,16 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Pipeline;
 using LagoVista.AI.Models;
-using LagoVista.AI.Services.Tools;
-using LagoVista.Core.AI.Models;
-using LagoVista.Core.Models;
+using LagoVista.AI.Services.Pipeline;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
-using Newtonsoft.Json;
 
 namespace LagoVista.AI.Services
 {
-    /// <summary>
-    /// Pipeline step that performs the LLM/tool loop and sets ctx.Response.
-    ///
-    /// Contract notes (AGN-031):
-    /// - The reasoner owns correctness and exit modes.
-    /// - The reasoner may read provider state, but must not mutate providers except clearing turn-scoped registers after they have been emitted by prompt composition.
-    /// - Tool execution is sequential; first failure terminates.
-    /// - Client tool continuation (Exit Mode 2) returns pending client calls for out-of-band execution.
-    /// </summary>
-    public sealed class AgentReasonerPipelineStep : IAgentReasonerPipelineStep
+    public sealed class AgentReasonerPipelineStep : PipelineStep, IAgentReasonerPipelineStep
     {
         private readonly ILLMClient _llmClient;
         private readonly IAgentToolExecutor _toolExecutor;
@@ -34,7 +19,8 @@ namespace LagoVista.AI.Services
      
         private const int MaxReasoningIterations = 4;
 
-        public AgentReasonerPipelineStep(ILLMClient llmClient, IAgentToolExecutor toolExecutor, IAdminLogger logger, IAgentStreamingContext agentStreamingContext)
+        public AgentReasonerPipelineStep(ILLMClient llmClient, IAgentToolExecutor toolExecutor, 
+            IAdminLogger logger, IAgentStreamingContext agentStreamingContext) : base(logger)
         {
             _llmClient = llmClient ?? throw new ArgumentNullException(nameof(llmClient));
             _toolExecutor = toolExecutor ?? throw new ArgumentNullException(nameof(toolExecutor));
@@ -42,26 +28,25 @@ namespace LagoVista.AI.Services
             _agentStreamingContext = agentStreamingContext ?? throw new ArgumentNullException(nameof(agentStreamingContext));
         }
 
-        public async Task<InvokeResult<AgentPipelineContext>> ExecuteAsync(AgentPipelineContext ctx)
+        protected override PipelineSteps StepType => PipelineSteps.Reasoner;
+
+        protected override async Task<InvokeResult<AgentPipelineContext>> ExecuteStepAsync(AgentPipelineContext ctx)
         {
-            var validation = ValidateInputs(ctx);
-            if (!validation.Successful) { return validation; }
-            
             for (var iteration = 0; iteration < MaxReasoningIterations; iteration++)
             {
                 if (ctx.CancellationToken.IsCancellationRequested) { return InvokeResult<AgentPipelineContext>.Abort(); }
 
-                _logger.Trace("[AgentReasoner_ExecuteAsync] Iteration " + (iteration + 1) + " starting. " + "sessionId=" + ctx.SessionId + ", mode=" + ctx.Session.Mode);
+                _logger.Trace("[AgentReasoner_ExecuteAsync] Iteration " + (iteration + 1) + " starting. " + "sessionId=" + ctx.Session.Id + ", mode=" + ctx.Session.Mode);
 
                 var llmResult = await _llmClient.ExecuteAsync(ctx);
                 if (!llmResult.Successful) { return llmResult; }
 
-                if (llmResult.Result.Response.Kind == AgentExecuteResponseKind.Final)
+                if (!llmResult.Result.HasPendingToolCalls)
                     return llmResult;
 
-                var pendingClientCalls = new List<ClientToolCall>();
+                ctx = llmResult.Result;
 
-                foreach (var toolCall in ctx.ToolCalls)
+                foreach (var toolCall in ctx.PromptContentProvider.ToolCallManifest.ToolCalls)
                 {
                     await _agentStreamingContext.AddWorkflowAsync("calling tool " + toolCall.Name + "...", ctx.CancellationToken);
                     var sw = Stopwatch.StartNew();
@@ -74,20 +59,18 @@ namespace LagoVista.AI.Services
                     if (!callResponse.Successful) { return InvokeResult<AgentPipelineContext>.FromInvokeResult(callResponse.ToInvokeResult()); }
 
                     var result = callResponse.Result;
-
-                    if (result.RequiresClientExecution) { pendingClientCalls.Add(new ClientToolCall() {Name = toolCall.Name, ToolCallId = toolCall.ToolCallId, ArgumentsJson = toolCall.ArgumentsJson }); }
+                    ctx.PromptContentProvider.ToolCallManifest.ToolCallResults.Add(result);
                 }
 
-                if (pendingClientCalls.Count > 0)
+                // After processing all our tool calls, if we still have client tool calls, we need to exit to let the client handle them.
+                // upon return we will pickup where we left off.  
+                if (llmResult.Result.HasClientToolCalls)
                 {
-                    ctx.Response.ToolCalls.AddRange(pendingClientCalls);
                     return InvokeResult<AgentPipelineContext>.Create(ctx);
                 }
             }
 
             return InvokeResult<AgentPipelineContext>.FromError("Maximum reasoning iterations exceeded.", "AGENT_REASONER_MAX_ITERATIONS_EXCEEDED");
         }
-
-      
     }
 }

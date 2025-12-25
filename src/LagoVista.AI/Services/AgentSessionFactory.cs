@@ -19,89 +19,70 @@ namespace LagoVista.AI.Services
             _namingService = namingService ?? throw new ArgumentNullException(nameof(namingService));
         }
 
-        public Task<AgentSession> CreateSession(AgentExecuteRequest request, OperationKinds kind, EntityHeader org, EntityHeader user)
+        public async Task<AgentSession> CreateSession(AgentPipelineContext ctx)
         {
+            if (ctx == null) throw new ArgumentNullException(nameof(ctx));
+
             var now = DateTime.UtcNow.ToJSONString();
 
-            if (request == null)
-            {
-                throw new ArgumentNullException(nameof(request));
-            }
+            var potentialName = String.IsNullOrEmpty(ctx.Envelope.Instructions) ? "File Upload" : ctx.Envelope.Instructions;
+            var generatedName = await _namingService.GenerateNameAsync(ctx.AgentContext, potentialName, ctx.CancellationToken);
 
             var session = new AgentSession
             {
-                OwnerOrganization = org,
-                CreatedBy = user,
+                OwnerOrganization = ctx.Envelope.Org,
+                CreatedBy = ctx.Envelope.User,
                 CreationDate = now,
-                LastUpdatedBy = user,
+                LastUpdatedBy = ctx.Envelope.User,
                 LastUpdatedDate = now,
-                OperationKind = EntityHeader<OperationKinds>.Create(kind),
-                WorkspaceId = request.WorkspaceId,
-                Repo = request.Repo,
+                OperationKind = EntityHeader<OperationKinds>.Create(OperationKinds.Code),
                 ModeReason = "initial startup",
                 ModeSetTimestamp = now,
-                Name = "Place Holder",
-                DefaultLanguage = request.Language
+                AgentContext = ctx.AgentContext.ToEntityHeader(),
+                ConversationContext = ctx.ConversationContext.ToEntityHeader(),
+                Name = generatedName,
             };
 
             session.Key = session.Id.ToLower();
-
-            return Task.FromResult(session);
+            return session;
         }
 
-        public async Task<string> GenerateSessionNameAsync(AgentContext context, string instructions, EntityHeader org, EntityHeader user)
-        {
-            return await _namingService.GenerateNameAsync(context, instructions, default);    
-        }
 
-        public AgentSessionTurn CreateTurnForNewSession(AgentSession session, AgentExecuteRequest request, EntityHeader org, EntityHeader user)
+        public AgentSessionTurn CreateTurnForNewSession(AgentPipelineContext ctx, AgentSession session)
         {
-            if (session == null)
-            {
-                throw new ArgumentNullException(nameof(session));
-            }
-
-            if (request == null)
-            {
-                throw new ArgumentNullException(nameof(request));
-            }
+            if (ctx == null) throw new ArgumentNullException(nameof(ctx));
+            if (session == null) throw new ArgumentNullException(nameof(session));
 
             var now = DateTime.UtcNow.ToJSONString();
-
             var turn = new AgentSessionTurn
             {
                 SequenceNumber = 1,
-                CreatedByUser = user,
+                CreatedByUser = ctx.Envelope.User,
                 CreationDate = now,
                 StatusTimeStamp = now,
-                InstructionSummary = BuildInstructionSummary(request.Instruction),
-                SessionId = Guid.NewGuid().ToId()
+                InstructionSummary = BuildInstructionSummary(ctx.Envelope.Instructions),
+                SessionId = session.Id
             };
 
             return turn;
         }
 
-        public AgentSessionTurn CreateTurnForExistingSession(AgentSession session, AgentExecuteRequest request, EntityHeader org, EntityHeader user)
+        public AgentSessionTurn CreateTurnForExistingSession(AgentPipelineContext ctx, AgentSession session)
         {
-            if (session == null)
-            {
-                throw new ArgumentNullException(nameof(session));
-            }
-
-            if (request == null)
-            {
-                throw new ArgumentNullException(nameof(request));
-            }
+            if (ctx == null) throw new ArgumentNullException(nameof(ctx));
+            if (session == null) throw new ArgumentNullException(nameof(session));
 
             var now = DateTime.UtcNow.ToJSONString();
 
             var turn = new AgentSessionTurn
             {
-                CreatedByUser = user,
+                SequenceNumber = session.Turns.Count + 1,
+                CreatedByUser = ctx.Envelope.User,
                 CreationDate = now,
                 StatusTimeStamp = now,
-                Mode = "general",
-                InstructionSummary = BuildInstructionSummary(request.Instruction)
+                Mode = session.Mode,
+                InstructionSummary = BuildInstructionSummary(ctx.Envelope.Instructions),
+                SessionId = session.Id
             };
 
             return turn;
@@ -111,7 +92,7 @@ namespace LagoVista.AI.Services
         {
             if (string.IsNullOrWhiteSpace(instruction))
             {
-                return string.Empty;
+                return "File Uplaod";
             }
 
             if (instruction.Length <= InstructionSummaryMaxLength)

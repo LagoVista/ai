@@ -3,22 +3,26 @@ using LagoVista.Core;
 using LagoVista.Core.AI.Models;
 using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
+using LagoVista.IoT.Logging.Loggers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Policy;
 using System.Threading;
 
 namespace LagoVista.AI.Models
 {
     public enum PipelineSteps
     {
-        RequestHandler = 0,
-        SessionLoader = 10,
-        AgentContextRestorer = 20,
-        ContextProviderInitializer = 30,
-        ClientToolContinuationResolver = 40,
-        Reasoner = 50,
-        LLMClient = 60
+        RequestHandler,
+        SessionRestorer,
+        AgentContextResolver,
+        ClientToolContinuationResolver,
+        AgentSessionCreator,
+        AgentContextLoader,
+        ContextProviderInitializer,
+        Reasoner,
+        LLMClient
     }
 
     public enum AgentPipelineContextTypes
@@ -33,6 +37,10 @@ namespace LagoVista.AI.Models
    
         public AgentPipelineContext(AgentExecuteRequest request, EntityHeader org, EntityHeader user, CancellationToken token = default)
         {
+            if(request == null) throw new ArgumentNullException(nameof(request));
+            if(org == null) throw new ArgumentNullException(nameof(org));
+            if(user == null) throw new ArgumentNullException(nameof(user));
+
             Envelope = new Envelope(request.AgentContextId, request.ConversationContextId, request.SessionId, request.TurnId, request.Instruction, 
                 request.ToolResults, request.ClipboardImages, request.InputArtifacts, request.RagScope, org, user);
 
@@ -69,6 +77,12 @@ namespace LagoVista.AI.Models
             RefreshEnvelope();
         }
 
+        public void AttachToolManifest(ToolCallManifest toolManifest)
+        {
+            if (toolManifest == null) throw new ArgumentNullException(nameof(toolManifest));
+            PromptContentProvider.ToolCallManifest = toolManifest;
+        }
+
         public AgentSessionTurn Turn { get; private set; }
 
 
@@ -87,6 +101,16 @@ namespace LagoVista.AI.Models
         //// Output (set by final step)
         //public AgentExecuteResponse Response { get; set; }
 
+        public bool HasPendingToolCalls
+        {
+            get => PromptContentProvider.ToolCallManifest.ToolCalls.Any();
+        }
+
+        public bool HasClientToolCalls
+        {
+            get => PromptContentProvider.ToolCallManifest.ToolCalls.Where(tc=>tc.RequiresClientExecution).Any();
+        }
+
         public ContentProvider PromptContentProvider { get; } = new ContentProvider();
 
         // Trace (optional)
@@ -94,6 +118,17 @@ namespace LagoVista.AI.Models
 
         public CancellationToken CancellationToken { get; } 
 
+
+        public string ToolManifestId
+        {
+            get
+            {
+                if (Session == null) throw new InvalidOperationException("Attempt to generate tool manifest id, prior to restoring session.");
+                if (Turn == null) throw new InvalidOperationException("Attempt to generate tool manifest id, prior to restoring turn.");
+
+                return $"{Session.Id}.{Turn.Id}";
+            }
+        }
 
         public AgentToolExecutionContext ToToolContext()
         {
@@ -108,6 +143,14 @@ namespace LagoVista.AI.Models
             };
         }
 
+        public AgentExecuteResponse CreateResponse()
+        {
+            return new AgentExecuteResponse()
+            {
+
+            };
+        }
+
         public Envelope Envelope { get; private set; }
 
         private void RefreshEnvelope()
@@ -119,24 +162,57 @@ namespace LagoVista.AI.Models
                                     existing.InputArtifacts, existing.RagScope, existing.Org, existing.User);
         }
 
-        public static InvokeResult<AgentPipelineContext> ValidateInputs(AgentPipelineContext ctx, PipelineSteps step)
+        public InvokeResult Validate(PipelineSteps step)
         {
-            if (ctx == null) { return InvokeResult<AgentPipelineContext>.FromError("AgentPipelineContext cannot be null.", "AgentPipelineContext_Ctx_Is_Missing"); }
+            var result = new InvokeResult();
 
-            
-            if (step > PipelineSteps.SessionLoader)
+            switch (step)
             {
-                if (ctx.Session == null) return InvokeResult<AgentPipelineContext>.FromError($"{nameof(AgentPipelineContext.Session)} is required on {nameof(AgentPipelineContext)} at {step}.", $"{nameof(AgentPipelineContext).ToUpper()}_{nameof(AgentPipelineContext.Session).ToUpper()}_Missing_{step}");
-                if (ctx.Turn == null) return InvokeResult<AgentPipelineContext>.FromError($"{nameof(AgentPipelineContext.Turn)} is required on {nameof(AgentPipelineContext)} at {step}.", $"{nameof(AgentPipelineContext).ToUpper()}_{nameof(AgentPipelineContext.Turn).ToUpper()}_Missing_{step}");
+                case PipelineSteps.RequestHandler:
+                    break;
+                case PipelineSteps.SessionRestorer:
+                    break;
+                case PipelineSteps.AgentContextResolver:
+                    break;
+                case PipelineSteps.ClientToolContinuationResolver:
+                    break;
+                case PipelineSteps.AgentSessionCreator:
+                    break;
+                case PipelineSteps.AgentContextLoader:
+                    break;
+                case PipelineSteps.ContextProviderInitializer:
+                    break;
+                case PipelineSteps.Reasoner:
+                    break;
+                case PipelineSteps.LLMClient:
+                    break;
             }
 
-            if (step > PipelineSteps.AgentContextRestorer)
+            return result;
+        }
+
+        public void LogStepErrorDetails(IAdminLogger logger, PipelineSteps step, string error, TimeSpan ts)
+        {
+
+        }
+
+        public void LogStepErrorDetails(IAdminLogger logger, PipelineSteps step, InvokeResult error, TimeSpan ts)
+        {
+
+        }
+
+        public void LogDetails(IAdminLogger logger, PipelineSteps step, TimeSpan? ts = null)
+        {
+            var kvps = new List<KeyValuePair<string, string>>()
             {
-                if (ctx.AgentContext == null) return InvokeResult<AgentPipelineContext>.FromError($"{nameof(AgentPipelineContext.AgentContext)} is required on {nameof(AgentPipelineContext)} at {step}.", $"{nameof(AgentPipelineContext).ToUpper()}_{nameof(AgentPipelineContext.AgentContext).ToUpper()}_Missing_{step}");
-                if (ctx.ConversationContext == null) return InvokeResult<AgentPipelineContext>.FromError($"{nameof(AgentPipelineContext.ConversationContext)} is required on {nameof(AgentPipelineContext)} at {step}.", $"{nameof(AgentPipelineContext).ToUpper()}_{nameof(AgentPipelineContext.ConversationContext).ToUpper()}_Missing_{step}");
-            }
-          
-            return InvokeResult<AgentPipelineContext>.Create(ctx);
+                CorrelationId.ToKVP("CorrelationId"),
+                (ts.HasValue ? "end" : "start").ToKVP("action"),
+                step.ToString().ToKVP("step"),
+                Envelope.Org.Text.ToKVP("Org"),
+                Envelope.User.Text.ToKVP("User"),
+            };
+
+            logger.Trace("[AgentContextLoaderPipelineStap__ExecuteAsync] - Restoring Agent Context.", kvps.ToArray());          
         }
     }
 

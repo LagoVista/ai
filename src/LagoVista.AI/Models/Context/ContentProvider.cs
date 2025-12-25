@@ -62,10 +62,7 @@ namespace LagoVista.AI.Models.Context
             return _registers.TryGetValue(name, out register!);
         }
 
-        /// <summary>
-        /// Convenience accessor for the ToolCallManifest register (Consumable).
-        /// </summary>
-        public ContentRegister ToolCallManifest => GetOrCreateRegister(ToolCallManifestRegisterName, ContextClassification.Consumable);
+        public ToolCallManifest ToolCallManifest { get; set; } = new ToolCallManifest();
 
         /// <summary>
         /// Clears all items for all Consumable registers.

@@ -1,89 +1,105 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
+using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Pipeline;
 using LagoVista.AI.Models;
-using LagoVista.Core;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 
 namespace LagoVista.AI.Services.Pipeline
 {
-    /// <summary>
-    /// AGN-032 Step: ClientToolContinuationResolver
-    ///
-    /// Expects:
-    /// - ctx.Session and ctx.Turn are present.
-    /// - ctx.Type == AgentPipelineContextTypes.ClientToolCallContinuation.
-    /// - ctx.Request contains client tool results (ToolResults) and any continuation identifiers.
-    ///
-    /// Updates:
-    /// - Restores/normalizes client tool continuation state into the shape expected by downstream
-    ///   execution (AgentReasoner / LLM loop).
-    ///
-    /// Next:
-    /// - AgentReasonerPipelineStep
-    /// </summary>
-    public sealed class ClientToolContinuationResolverPipelineStep : IClientToolContinuationResolverPipelineStep
+    public sealed class ClientToolContinuationResolverPipelineStep : PipelineStep, IClientToolContinuationResolverPipelineStep
     {
-        private readonly IAgentReasonerPipelineStep _next;
-        private readonly IAdminLogger _adminLogger;
+        private readonly IToolCallManifestRepo _repo;
 
         public ClientToolContinuationResolverPipelineStep(
-            IAgentReasonerPipelineStep next,
-            IAdminLogger adminLogger)
+            IContextProviderInitializerPipelineStep next,
+            IToolCallManifestRepo repo,
+            IAdminLogger adminLogger) : base(next, adminLogger)
         {
-            _next = next ?? throw new ArgumentNullException(nameof(next));
-            _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
+            _repo = repo ?? throw new ArgumentNullException(nameof(repo));
         }
 
-        public async Task<InvokeResult<AgentPipelineContext>> ExecuteAsync(AgentPipelineContext ctx)
+        protected override PipelineSteps StepType => PipelineSteps.ClientToolContinuationResolver;
+
+        protected override async Task<InvokeResult<AgentPipelineContext>> ExecuteStepAsync(AgentPipelineContext ctx)
         {
-            if (ctx == null)
+            var manifest = await _repo.GetToolCallManifestAsync(ctx.ToolManifestId, ctx.Envelope.Org.Id);
+            if (manifest == null) return InvokeResult<AgentPipelineContext>.FromError($"Tool Call Manifest with Id {ctx.ToolManifestId} not found.", "CLIENT_TOOL_CONTINUATION_RESOLVER_MANIFEST_NOT_FOUND");
+
+            var reconcileToolResult = new InvokeResult();
+
+            // Detect duplicate ToolCallIds provided by the client
+            var duplicateClientToolCallIds = ctx.Envelope.ToolResults.GroupBy(tr => tr.ToolCallId).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
+
+            foreach (var duplicateToolCallId in duplicateClientToolCallIds)
             {
-                return InvokeResult<AgentPipelineContext>.FromError(
-                    "AgentPipelineContext cannot be null.",
-                    "CLIENT_TOOL_CONTINUATION_NULL_CONTEXT");
+                reconcileToolResult.AddSystemError($"Duplicate ToolCallId {duplicateToolCallId} was provided by the client for Manifest {ctx.ToolManifestId}.");
             }
 
-            if (ctx.Type != AgentPipelineContextTypes.ClientToolCallContinuation)
+            foreach (var toolCall in manifest.ToolCalls)
             {
-                return InvokeResult<AgentPipelineContext>.FromError(
-                    "Client tool continuation resolver requires ctx.Type == ClientToolCallContinuation.",
-                    "CLIENT_TOOL_CONTINUATION_INVALID_CONTEXT_TYPE");
+                var hasResult = manifest.ToolCallResults.Any(tcr => tcr.ToolCallId == toolCall.ToolCallId);
+                if (!hasResult && toolCall.RequiresClientExecution)
+                {
+                    reconcileToolResult.AddSystemError($"Tool Call {toolCall.Name}, with Id {toolCall.ToolCallId} requires execution but no result was provided.");
+                }
             }
 
-            if (ctx.Request == null)
+            if (reconcileToolResult.Successful)
             {
-                return InvokeResult<AgentPipelineContext>.FromError(
-                    "AgentExecuteRequest is required.",
-                    "CLIENT_TOOL_CONTINUATION_MISSING_REQUEST");
+                foreach (var toolResult in ctx.Envelope.ToolResults)
+                {
+                    var pendingCall = manifest.ToolCalls.SingleOrDefault(tc => tc.ToolCallId == toolResult.ToolCallId);
+                    if (pendingCall == null)
+                        reconcileToolResult.AddSystemError($"Tool Call with Id {toolResult.ToolCallId} not found in Manifest {ctx.ToolManifestId}.");
+                    else
+                    {
+                        if (!pendingCall.RequiresClientExecution)
+                            reconcileToolResult.AddSystemError($"Tool Call {pendingCall.Name}, with Id {toolResult.ToolCallId} result was provided, however it was not a client tool type {ctx.ToolManifestId}.");
+                        else
+                        {
+                            var existingResult = manifest.ToolCallResults.SingleOrDefault(tcr => tcr.ToolCallId == toolResult.ToolCallId);
+                            if (existingResult != null)
+                                reconcileToolResult.AddSystemError($"Tool Call {pendingCall.Name}, with Id {toolResult.ToolCallId} already has a result in Manifest {ctx.ToolManifestId}.");
+                            else
+                            {
+                                manifest.ToolCallResults.Add(new AgentToolCallResult()
+                                {
+                                    Name = pendingCall.Name,
+                                    ToolCallId = pendingCall.ToolCallId,
+                                    ErrorMessage = toolResult.ErrorMessage,
+                                    ResultJson = toolResult.ResultJson,
+                                    ExecutionMs = toolResult.ExecutionMs,
+                                });
+                            }
+                        }
+                    }
+                }
+            }            
+
+            var manifestToolCallIds = manifest.ToolCalls.Select(tc => tc.ToolCallId).ToHashSet(StringComparer.Ordinal);
+
+            var extraClientToolCallIds = ctx.Envelope.ToolResults.Select(tr => tr.ToolCallId).Where(toolCallId => !manifestToolCallIds.Contains(toolCallId)).ToList();
+
+            foreach (var extraToolCallId in extraClientToolCallIds)
+            {
+                reconcileToolResult.AddSystemError($"Tool Call with Id {extraToolCallId} was provided by the client but does not exist in Manifest {ctx.ToolManifestId}.");
             }
 
-            if (ctx.Session == null)
-            {
-                return InvokeResult<AgentPipelineContext>.FromError(
-                    "Session is required.",
-                    "CLIENT_TOOL_CONTINUATION_MISSING_SESSION");
-            }
 
-            if (ctx.Turn == null)
-            {
-                return InvokeResult<AgentPipelineContext>.FromError(
-                    "Turn is required.",
-                    "CLIENT_TOOL_CONTINUATION_MISSING_TURN");
-            }
+            if (!reconcileToolResult.Successful)
+                return InvokeResult<AgentPipelineContext>.FromInvokeResult(reconcileToolResult);
 
-            _adminLogger.Trace("[ClientToolContinuationResolverPipelineStep__ExecuteAsync] - Preparing client tool continuation state.",
-                (ctx.CorrelationId ?? string.Empty).ToKVP("CorrelationId"),
-                (ctx.Session?.Id ?? string.Empty).ToKVP("SessionId"),
-                (ctx.Turn?.Id ?? string.Empty).ToKVP("TurnId"));
+            ctx.AttachToolManifest(manifest);
 
-            // TODO (meat later):
-            // - Normalize ctx.Request.ToolResults / ToolResultsJson into the canonical shape used by the reasoner.
-            // - Ensure continuation identifiers are present/consistent (PreviousTurnId, CurrentTurnId, ResponseContinuationId).
-            // - Populate any turn-level "pending tool" state needed by downstream loop.
-
-            return await _next.ExecuteAsync(ctx);
+            // Tool manifests are temporary per-turn state.
+            // If the client posts results multiple times for the same manifest, we treat it as an error.
+            // If we later need an explicit retry mechanism, we can add it; for now, reconcile once and clean up.
+            await _repo.RemoveToolCallManifestAsync(ctx.ToolManifestId, ctx.Envelope.Org.Id);
+                
+            return InvokeResult<AgentPipelineContext>.Create(ctx);
         }
     }
 }
