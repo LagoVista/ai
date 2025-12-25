@@ -136,7 +136,7 @@ namespace LagoVista.AI.Services.Tools
 
                 if (!string.IsNullOrWhiteSpace(modeInstructions))
                 {
-                    ddr.ModeInstructions = modeInstructions;
+                    ddr.AgentInstructions = modeInstructions;
                 }
 
                 await _ddrManager.UpdateDdrAsync(ddr, context.Org, context.User);
@@ -150,7 +150,7 @@ namespace LagoVista.AI.Services.Tools
                         ["title"] = ddr.Name,
                         ["summary"] = ddr.Description,
                         ["notes"] = ddr.Notes,
-                        ["jsonl"] = ddr.ModeInstructions
+                        ["jsonl"] = ddr.AgentInstructions
                     }
                 };
 

@@ -121,7 +121,7 @@ If no such issues are detected, you may proceed strictly according to the provid
                 var ddr = item;
                 var label = ddr?.DdrIdentifier ?? item.Id;
 
-                var llm = ddr.ModeInstructions;
+                var llm = ddr.AgentInstructions;
                 if (string.IsNullOrWhiteSpace(llm))
                 {
                     sb.AppendLine($"\n#### {label}\n(no-llm-summary available)\n");

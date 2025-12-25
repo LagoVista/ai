@@ -76,20 +76,20 @@ if the DDR Type is ambigous or can't be deterined you must stop and confirm the 
 Derived field generation rules:
 
 If type == ""Instruction"":
-- You MUST include: humanSummary, condensedDdrContent, ragIndexCard, modeInstructions
+- You MUST include: humanSummary, condensedDdrContent, ragIndexCard, agentInstructions
 - You MUST NOT include: referentialSummary
 
 If type == ""Referential"":
 - You MUST include: humanSummary, condensedDdrContent, ragIndexCard, referentialSummary
-- You MUST NOT include: modeInstructions
+- You MUST NOT include: AgentInstructions
 
 If type == ""Generation"":
 - You MUST include: humanSummary, condensedDdrContent, ragIndexCard
-- You MUST NOT include: modeInstructions, referentialSummary
+- You MUST NOT include: agentInstructions, referentialSummary
 
 If type == ""Policy / Rules / Governance"":
 - You MUST include: humanSummary, condensedDdrContent, ragIndexCard
-- You MUST NOT include: modeInstructions, referentialSummary
+- You MUST NOT include: agentInstructions, referentialSummary
 - You MUST set needsHumanConfirmation to true
 
 Field constraints:
@@ -119,7 +119,7 @@ referentialSummary (Referential only):
 - Must NOT contain procedural steps
 - Must NOT contain normative keywords (MUST, MUST NOT, SHOULD, MAY)
 
-modeInstructions (Instruction only):
+agentInstructions (Instruction only):
 - Executable procedural rules only
 - Each instruction MUST begin with exactly one normative keyword: MUST, MUST NOT, SHOULD, or MAY
 - Each instruction MUST contain exactly one normative keyword
@@ -142,12 +142,12 @@ You MUST NOT add any other top-level properties.
   ""ragIndexCard"": string|null,
 
   ""referentialSummary"": string|null,
-  ""modeInstructions"": array|null
+  ""agentInstructions"": array|null
 }
 
 Additional rules:
 - For any field that is forbidden for the DDR type, you MUST set it to null.
-- modeInstructions MUST be an array of strings when present.
+- agentInstructions MUST be an array of strings when present.
 - Do not include markdown, headings, or bullet formatting outside of the strings themselves.
 ";
 
@@ -221,7 +221,7 @@ Additional rules:
             /// Required only when Type == 'Instruction'.
             /// Must be null for all other DDR types.
             /// </summary>
-            public string[] ModeInstructions { get; set; }
+            public string[] AgentInstructions { get; set; }
 
             // --- Control flags (tool-side orchestration) ---
 
@@ -304,7 +304,7 @@ Additional rules:
             public string CondensedDdrContent { get; set; }
             public string RagIndexCard { get; set; }
             public string ReferentialSummary { get; set; }
-            public string[] ModeInstructions { get; set; }
+            public string[] AgentInstructions { get; set; }
 
             // Optional: if you want quick operator insight during batch runs
             public string[] ValidationWarnings { get; set; }
@@ -406,9 +406,9 @@ Additional rules:
                 // Type-conditional fields
                 if (string.Equals(type, "Instruction", StringComparison.Ordinal))
                 {
-                    if (args.ModeInstructions == null || args.ModeInstructions.Length == 0)
+                    if (args.AgentInstructions == null || args.AgentInstructions.Length == 0)
                     {
-                        return InvokeResult<string>.FromError("import_ddr did not create 'modeInstructions' for an Instruction DDR.");
+                        return InvokeResult<string>.FromError("import_ddr did not create 'agentInstructions' for an Instruction DDR.");
                     }
 
                     if (!string.IsNullOrWhiteSpace(args.ReferentialSummary))
@@ -423,9 +423,9 @@ Additional rules:
                         return InvokeResult<string>.FromError("import_ddr did not create 'referentialSummary' for a Referential DDR.");
                     }
 
-                    if (args.ModeInstructions != null && args.ModeInstructions.Length > 0)
+                    if (args.AgentInstructions != null && args.AgentInstructions.Length > 0)
                     {
-                        return InvokeResult<string>.FromError("import_ddr must not include 'modeInstructions' for a Referential DDR.");
+                        return InvokeResult<string>.FromError("import_ddr must not include 'agentInstructions' for a Referential DDR.");
                     }
                 }
                 else
@@ -436,9 +436,9 @@ Additional rules:
                         return InvokeResult<string>.FromError($"import_ddr must not include 'referentialSummary' for this DDR type ({args.DdrType}).");
                     }
 
-                    if (args.ModeInstructions != null && args.ModeInstructions.Length > 0)
+                    if (args.AgentInstructions != null && args.AgentInstructions.Length > 0)
                     {
-                        return InvokeResult<string>.FromError($"import_ddr must not include 'modeInstructions' for this DDR type ({args.DdrType}).");
+                        return InvokeResult<string>.FromError($"import_ddr must not include 'agentInstructions' for this DDR type ({args.DdrType}).");
                     }
 
                     if (string.Equals(type, "Policy / Rules / Governance", StringComparison.Ordinal))
@@ -507,7 +507,7 @@ Additional rules:
                     CondensedDdrContent = args.CondensedDdrContent, // add
                     RagIndexCard = args.RagIndexCard, // add (replaces RagSummary)
                     ReferentialSummary = args.ReferentialSummary, // add
-                    ModeInstructions = args.ModeInstructions == null ? null : string.Join("\n", args.ModeInstructions), // keep existing storage as string if needed
+                    AgentInstructions = args.AgentInstructions == null ? null : string.Join("\n", args.AgentInstructions), // keep existing storage as string if needed
 
                     Status = finalStatus,
                     StatusTimestamp = timeStamp,
@@ -558,7 +558,7 @@ Additional rules:
                     CondensedDdrContent = args.CondensedDdrContent,
                     RagIndexCard = args.RagIndexCard,
                     ReferentialSummary = args.ReferentialSummary,
-                    ModeInstructions = args.ModeInstructions
+                    AgentInstructions = args.AgentInstructions
                 };
 
                 return InvokeResult<string>.Create(JsonConvert.SerializeObject(result));

@@ -40,7 +40,7 @@ namespace LagoVista.AI.Models
         public bool NeedsHumanConfirmation { get; set; }
         public string ReferentialSummary { get; set; }
 
-        public string ModeInstructions { get; set; }
+        public string AgentInstructions { get; set; }
 
         public string Status { get; set; }
 
