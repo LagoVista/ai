@@ -21,13 +21,13 @@ namespace LagoVista.AI.Interfaces
     /// Handles low-level HTTP invocation of OpenAI /v1/responses, including
     /// logging and converting non-2xx HTTP responses into InvokeResult errors.
     /// </summary>
-    public interface IOpenAIResponsesInvoker
+    public interface IOpenAIResponsesExecutor
     {
         /// <summary>
         /// On success: returns the open HttpResponseMessage (caller disposes).
         /// On failure: returns InvokeResult error (and disposes any response internally).
         /// </summary>
-        Task<InvokeResult<HttpResponseMessage>> InvokeAsync(string baseUrl, string apiKey, string requestJson, CancellationToken cancellationToken = default);
+        Task<InvokeResult<string>> InvokeAsync(AgentPipelineContext ctx, string requestJson);
     }
 
     /// <summary>
@@ -36,15 +36,6 @@ namespace LagoVista.AI.Interfaces
     public interface IOpenAINonStreamingResponseReader
     {
         Task<InvokeResult<string>> ReadAsync(HttpResponseMessage httpResponse, CancellationToken cancellationToken = default);
-    }
-
-    /// <summary>
-    /// Reads the final /responses JSON to parse, using streaming vs non-streaming based on ctx.Envelope.Stream.
-    /// Does NOT parse into AgentPipelineContext; it only produces the JSON string (or an error/abort).
-    /// </summary>
-    public interface IOpenAIResponseJsonProvider
-    {
-        Task<InvokeResult<string>> GetFinalJsonAsync(AgentPipelineContext ctx, HttpResponseMessage httpResponse, CancellationToken cancellationToken = default);
     }
 
     /// <summary>
@@ -62,6 +53,10 @@ namespace LagoVista.AI.Interfaces
         Task SummarizingAsync(CancellationToken cancellationToken);
     }
 
+    public interface IOpenAIErrorFormatter
+    {
+        Task<string> FormatAsync(HttpResponseMessage httpResponse);
+    }
 
     /// <summary>
     /// Emits workflow/partial updates to whatever streaming UI context you maintain.

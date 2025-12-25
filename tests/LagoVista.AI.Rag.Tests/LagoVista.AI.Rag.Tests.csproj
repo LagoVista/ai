@@ -46,7 +46,7 @@
   </ItemGroup>
  
   <ItemGroup>
-    <PackageReference Include="LagoVista.Core.TestBase" Version="3.0.3144.0551" />
+    <PackageReference Include="LagoVista.Core.TestBase" Version="3.0.3144.1119" />
   </ItemGroup>
 
   <ItemGroup>

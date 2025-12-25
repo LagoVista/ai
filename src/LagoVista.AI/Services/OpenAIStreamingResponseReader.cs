@@ -3,24 +3,27 @@ using LagoVista.AI.Interfaces;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using System.Threading.Tasks;
-using System.Threading;
 using System.Net.Http;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LagoVista.AI.Services
 {
     /// <summary>
-    /// Reads a streaming /responses response (SSE) and returns the completed response JSON (inner 'response' object).\n    /// NOTE: This is intentionally minimal; hardening will come with tests.\n    /// </summary>
+    /// Reads a streaming /responses response (SSE) and returns the completed response JSON
+    /// (inner 'response' object).
+    ///
+    /// Minimal + testable. Hardening comes via tests.
+    /// </summary>
     public sealed class OpenAIStreamingResponseReader : IOpenAIStreamingResponseReader
     {
         private readonly IAdminLogger _logger;
         private readonly ILLMEventPublisher _events;
-        private readonly IAgentStreamingNotifier _streamingUi;
+        private readonly IAgentStreamingContext _streamingUi;
 
-        public OpenAIStreamingResponseReader(IAdminLogger logger, ILLMEventPublisher events, IAgentStreamingNotifier streamingUi)
+        public OpenAIStreamingResponseReader(IAdminLogger logger, ILLMEventPublisher events, IAgentStreamingContext streamingUi)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _events = events ?? throw new ArgumentNullException(nameof(events));
@@ -44,49 +47,46 @@ namespace LagoVista.AI.Services
                 using (var stream = await httpResponse.Content.ReadAsStreamAsync())
                 using (var reader = new StreamReader(stream))
                 {
-                    var completedEventJson = (string)null;
-
+                    string completedEventJson = null;
                     string currentEvent = null;
                     var dataBuilder = new StringBuilder();
+
+                    async Task ProcessBufferedEventAsync()
+                    {
+                        if (dataBuilder.Length == 0) return;
+
+                        var dataJson = dataBuilder.ToString();
+                        var analyzed = OpenAiStreamingEventHelper.AnalyzeEventPayload(currentEvent, dataJson);
+
+                        if (!string.IsNullOrEmpty(analyzed.DeltaText))
+                        {
+                            await _events.PublishAsync(sessionId, "LLMDelta", "in-progress", analyzed.DeltaText, null, cancellationToken);
+                            await _streamingUi.AddPartialAsync(analyzed.DeltaText, cancellationToken);
+                        }
+
+                        if (string.Equals(analyzed.EventType, "response.completed", StringComparison.OrdinalIgnoreCase) ||
+                            string.Equals(currentEvent, "response.completed", StringComparison.OrdinalIgnoreCase))
+                        {
+                            completedEventJson = dataJson;
+                        }
+
+                        dataBuilder.Clear();
+                        currentEvent = null;
+                    }
 
                     while (!reader.EndOfStream)
                     {
                         if (cancellationToken.IsCancellationRequested)
                         {
-                            return InvokeResult<string>.FromError("Streaming read cancelled.", "OPENAI_STREAM_CANCELLED");
+                            return InvokeResult<string>.Abort();
                         }
 
                         var line = await reader.ReadLineAsync();
-                        if (line == null)
-                        {
-                            break;
-                        }
+                        if (line == null) break;
 
                         if (string.IsNullOrWhiteSpace(line))
                         {
-                            if (dataBuilder.Length > 0)
-                            {
-                                var dataJson = dataBuilder.ToString();
-                                var analyzed = OpenAiStreamingEventHelper.AnalyzeEventPayload(currentEvent, dataJson);
-
-                                // Push deltas to UI + diagnostics.
-                                if (!string.IsNullOrEmpty(analyzed.DeltaText))
-                                {
-                                    await _events.PublishAsync(sessionId, "LLMDelta", "in-progress", analyzed.DeltaText, null, cancellationToken);
-                                    await _streamingUi.AddPartialAsync(analyzed.DeltaText, cancellationToken);
-                                }
-
-                                // Current implementation only recognizes completed. We'll harden in tests.
-                                if (string.Equals(analyzed.EventType, "response.completed", StringComparison.OrdinalIgnoreCase) ||
-                                    string.Equals(currentEvent, "response.completed", StringComparison.OrdinalIgnoreCase))
-                                {
-                                    completedEventJson = dataJson;
-                                }
-
-                                dataBuilder.Clear();
-                                currentEvent = null;
-                            }
-
+                            await ProcessBufferedEventAsync();
                             continue;
                         }
 
@@ -101,12 +101,17 @@ namespace LagoVista.AI.Services
                             var dataPart = line.Substring("data:".Length).Trim();
                             if (string.Equals(dataPart, "[DONE]", StringComparison.Ordinal))
                             {
+                                // IMPORTANT: flush last buffered event before finishing.
+                                await ProcessBufferedEventAsync();
                                 break;
                             }
 
                             dataBuilder.AppendLine(dataPart);
                         }
                     }
+
+                    // IMPORTANT: flush any trailing buffered event if stream ended without a blank line.
+                    await ProcessBufferedEventAsync();
 
                     if (string.IsNullOrWhiteSpace(completedEventJson))
                     {
@@ -122,6 +127,10 @@ namespace LagoVista.AI.Services
 
                     return InvokeResult<string>.Create(finalResponse.Result);
                 }
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                return InvokeResult<string>.Abort();
             }
             catch (Exception ex)
             {
