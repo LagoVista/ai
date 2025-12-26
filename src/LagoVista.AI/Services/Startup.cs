@@ -1,4 +1,5 @@
-﻿using LagoVista.AI.Interfaces;
+﻿using LagoVista.AI.Helpers;
+using LagoVista.AI.Interfaces;
 using LagoVista.AI.Services.Hashing;
 using LagoVista.Core.Interfaces;
 using LagoVista.IoT.Logging.Loggers;
@@ -16,7 +17,10 @@ namespace LagoVista.AI.Services
             services.AddScoped<IServerToolSchemaProvider, DefaultServerToolSchemaProvider>();
             services.AddScoped<IServerToolUsageMetadataProvider, DefaultServerToolUsageMetadataProvider>();
             services.AddScoped<IContentHashService, DefaultContentHashService>();
-
+            services.AddScoped<ILLMEventPublisher, LlmEventPublisher>();
+            services.AddScoped<IAgentExecuteResponseBuilder, AgentExecuteResponseBuilder>();
+            services.AddScoped<ILLMWorkflowNarrator, LlmWorkflowNarrator>();
+            Pipeline.Startup.ConfigureServices(services, adminLogger);
         }
     }
 }

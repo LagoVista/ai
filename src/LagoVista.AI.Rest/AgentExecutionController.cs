@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
+using LagoVista.AI.Interfaces.Pipeline;
 using LagoVista.AI.Models;
 using LagoVista.Core.AI.Models;
 using LagoVista.Core.Exceptions;
@@ -25,11 +26,11 @@ namespace LagoVista.AI.Rest
     [Authorize()]
     public class AgentExecutionController : LagoVistaBaseController
     {
-        private readonly IAgentRequestHandler _agentRequestHandler;
+        private readonly IAgentRequestHandlerStep _agentRequestHandler;
         private readonly IAgentSessionManager _sessionManager;
         private readonly IAdminLogger _adminLogger;
 
-        public AgentExecutionController(IAgentRequestHandler agentRequestHandler, IAgentSessionManager sessionManager, UserManager<AppUser> userManager, IAdminLogger logger)
+        public AgentExecutionController(IAgentRequestHandlerStep agentRequestHandler, IAgentSessionManager sessionManager, UserManager<AppUser> userManager, IAdminLogger logger)
             : base(userManager, logger)
         {
             _agentRequestHandler = agentRequestHandler;

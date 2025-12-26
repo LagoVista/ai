@@ -34,7 +34,7 @@ namespace LagoVista.AI.Services.Pipeline
     /// Next:
     /// - ClientToolContinuationResolver OR AgentReasoner
     /// </summary>
-    public sealed class PromptKnowledgeProviderInitializerPipelineStep : PipelineStep, IContextProviderInitializerPipelineStep
+    public sealed class PromptKnowledgeProviderInitializerPipelineStep : PipelineStep, IPromptKnowledgeProviderInitializerPipelineStep
     {
         private readonly IAdminLogger _adminLogger;
         private readonly IAgentKnowledgePackService _apkProvider;
@@ -92,18 +92,11 @@ namespace LagoVista.AI.Services.Pipeline
                 }
             }
 
-            var currentBranch = String.IsNullOrEmpty(ctx.Session.CurrentBranch) ? "main" : ctx.Session.CurrentBranch;
+            var currentBranch = String.IsNullOrEmpty(ctx.Session.CurrentBranch) ? AgentSession.DefaultBranch : ctx.Session.CurrentBranch;
 
-            var branchKfrs = ctx.Session.Kfrs[ctx.Session.CurrentBranch];
-            
-            foreach (var toolName in apk.EnabledToolNames)
+            if (!ctx.Session.Kfrs.ContainsKey(currentBranch))
             {
-                var schema = _toolSchemaProvider.GetToolSchema(toolName);
-
-                ctx.PromptKnowledgeProvider.AvailableToolSchemas.Add(toolName, schema);
-            }
-
-            var kfrBlock = @$"
+                var kfrBlock = @$"
 ## BEGIN Known Facts Registry (KFR) — Active Working Memory
 
 These entries are authoritative for near-term correctness.
@@ -112,7 +105,46 @@ They may be replaced or removed at any time.
 Do not infer or assume facts outside this registry.
 
 ### Goal (single)
-{BuildKfrSection(branchKfrs.Where(kfr=>kfr.Kind == KfrKind.Goal && kfr.IsActive))}
+ - empty
+
+### Plan (single)
+ - empty
+
+### ActiveContracts
+ - empty
+
+### Constraints
+ - empty
+
+### OpenQuestions (RequiresResolution)
+ - empty
+
+## END Known Facts Registry (KFR) — Active Working Memory
+";
+                var kfrRegister = ctx.PromptKnowledgeProvider.GetOrCreateRegister("kfr", Models.Context.ContextClassification.Session);
+                kfrRegister.Add(kfrBlock);
+            }
+            else
+            {
+                var branchKfrs = ctx.Session.Kfrs[ctx.Session.CurrentBranch];
+
+                foreach (var toolName in apk.EnabledToolNames)
+                {
+                    var schema = _toolSchemaProvider.GetToolSchema(toolName);
+
+                    ctx.PromptKnowledgeProvider.AvailableToolSchemas.Add(toolName, schema);
+                }
+
+                var kfrBlock = @$"
+## BEGIN Known Facts Registry (KFR) — Active Working Memory
+
+These entries are authoritative for near-term correctness.
+They may be replaced or removed at any time.
+
+Do not infer or assume facts outside this registry.
+
+### Goal (single)
+{BuildKfrSection(branchKfrs.Where(kfr => kfr.Kind == KfrKind.Goal && kfr.IsActive))}
 
 ### Plan (single)
 {BuildKfrSection(branchKfrs.Where(kfr => kfr.Kind == KfrKind.Plan && kfr.IsActive))}
@@ -128,9 +160,9 @@ Do not infer or assume facts outside this registry.
 
 ## END Known Facts Registry (KFR) — Active Working Memory
 ";
-            var kfrRegister = ctx.PromptKnowledgeProvider.GetOrCreateRegister("kfr", Models.Context.ContextClassification.Session);
-            kfrRegister.Add(kfrBlock);
-
+                var kfrRegister = ctx.PromptKnowledgeProvider.GetOrCreateRegister("kfr", Models.Context.ContextClassification.Session);
+                kfrRegister.Add(kfrBlock);
+            }
             return InvokeResult<IAgentPipelineContext>.Create(ctx);
         }
 

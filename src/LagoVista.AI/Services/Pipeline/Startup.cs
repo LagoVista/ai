@@ -20,7 +20,7 @@ namespace LagoVista.AI.Services.Pipeline
             services.AddScoped<IClientToolCallSessionRestorerPipelineStep, ClientToolCallSessionRestorerPipelineStep>();
             services.AddScoped<IClientToolContinuationResolverPipelineStep, ClientToolContinuationResolverPipelineStep>();
             services.AddScoped<IAgentPipelineContextValidator, AgentPipelineContextValidator>();
-            services.AddScoped<IContextProviderInitializerPipelineStep, PromptKnowledgeProviderInitializerPipelineStep>();
+            services.AddScoped<IPromptKnowledgeProviderInitializerPipelineStep, PromptKnowledgeProviderInitializerPipelineStep>();
         }
     }
 }

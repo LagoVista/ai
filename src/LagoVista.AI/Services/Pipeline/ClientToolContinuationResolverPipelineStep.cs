@@ -15,7 +15,7 @@ namespace LagoVista.AI.Services.Pipeline
         private readonly IToolCallManifestRepo _repo;
 
         public ClientToolContinuationResolverPipelineStep(
-            IContextProviderInitializerPipelineStep next,
+            IPromptKnowledgeProviderInitializerPipelineStep next,
             IAgentPipelineContextValidator validator,
             IToolCallManifestRepo repo,
             IAdminLogger adminLogger) : base(next, validator, adminLogger)

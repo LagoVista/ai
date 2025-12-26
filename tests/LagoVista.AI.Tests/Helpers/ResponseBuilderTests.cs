@@ -73,6 +73,11 @@ namespace LagoVista.AI.Tests.Helpers
             public void LogStepErrorDetails(IAdminLogger logger, PipelineSteps step, string error, TimeSpan ts) { }
             public void LogStepErrorDetails(IAdminLogger logger, PipelineSteps step, InvokeResult error, TimeSpan ts) { }
             public void LogDetails(IAdminLogger logger, PipelineSteps step, TimeSpan? ts = null) { }
+
+            public void SetResponsePayload(ResponsePayload payload)
+            {
+                ResponsePayload = payload;
+            }
         }
 
         private static AgentContext CreateAgentContextWithMode(string modeKey, string displayName)
@@ -154,19 +159,19 @@ namespace LagoVista.AI.Tests.Helpers
             var validator = new Mock<IAgentPipelineContextValidator>();
             if (isValid)
             {
-                validator.Setup(val => val.ValidateCore(It.IsAny<IAgentPipelineContext>())).Returns(InvokeResult.Success);
+                validator.Setup(val => val.ValidateCore(It.IsAny<IAgentPipelineContext>(), It.IsAny<PipelineSteps>())).Returns(InvokeResult.Success);
                 validator.Setup(val => val.ValidatePostStep(It.IsAny<IAgentPipelineContext>(), It.IsAny<PipelineSteps>())).Returns(InvokeResult.Success);
                 validator.Setup(val => val.ValidatePreStep(It.IsAny<IAgentPipelineContext>(), It.IsAny<PipelineSteps>())).Returns(InvokeResult.Success);
                 validator.Setup(val => val.ValidateToolCallManifest(It.IsAny<ToolCallManifest>())).Returns(InvokeResult.Success);
             }
             else
             {
-                validator.Setup(val => val.ValidateCore(It.IsAny<IAgentPipelineContext>())).Returns(InvokeResult.FromError("error"));
+                validator.Setup(val => val.ValidateCore(It.IsAny<IAgentPipelineContext>(), It.IsAny<PipelineSteps>())).Returns(InvokeResult.FromError("error"));
                 validator.Setup(val => val.ValidatePostStep(It.IsAny<IAgentPipelineContext>(), It.IsAny<PipelineSteps>())).Returns(InvokeResult.FromError("error"));
                 validator.Setup(val => val.ValidatePreStep(It.IsAny<IAgentPipelineContext>(), It.IsAny<PipelineSteps>())).Returns(InvokeResult.FromError("error"));
                 validator.Setup(val => val.ValidateToolCallManifest(It.IsAny<ToolCallManifest>())).Returns(InvokeResult.FromError("error"));
             }
-            var builder = new ResponseBuilder(validator.Object);
+            var builder = new AgentExecuteResponseBuilder(validator.Object);
 
             return builder;
         }

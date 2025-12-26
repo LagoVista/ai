@@ -16,11 +16,11 @@ namespace LagoVista.AI.Helpers
     /// - ToolCallManifest is NOT exposed on IAgentPipelineContext, so client-tool-continuation payloads
     ///   cannot be constructed without additional contract surface.
     /// </summary>
-    public sealed class ResponseBuilder : IAgentExecuteResponseBuilder
+    public sealed class AgentExecuteResponseBuilder : IAgentExecuteResponseBuilder
     {
         private readonly IAgentPipelineContextValidator _validator;
 
-        public ResponseBuilder(IAgentPipelineContextValidator validator)
+        public AgentExecuteResponseBuilder(IAgentPipelineContextValidator validator)
         {
             _validator = validator ?? throw new ArgumentNullException(nameof(validator));
         }

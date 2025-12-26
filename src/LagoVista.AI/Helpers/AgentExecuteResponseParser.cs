@@ -264,6 +264,8 @@ namespace LagoVista.AI.Helpers
 
             ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCalls = toolCalls;
 
+            ctx.SetResponsePayload(response);
+
             return Task.FromResult(InvokeResult<IAgentPipelineContext>.Create(ctx));
         }
     }

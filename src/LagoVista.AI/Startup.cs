@@ -101,6 +101,8 @@ namespace LagoVista.AI
             services.AddSingleton<IDomainDescriptorUpdateService, DomainDescriptorUpdateService>();
             services.AddSingleton<IDomainCatalogService, DomainCatalogService>();
 
+            services.AddSingleton<IAgentExecuteResponseParser, AgentExecuteResponseParser>();
+
             services.AddSingleton<ITitleDescriptionRefinementCatalogStore, JsonTitleDescriptionRefinementCatalogStore>();
             services.AddSingleton<IDomainMetadataSource, RoslynDomainMetadataSource>();
             services.AddSingleton<ITitleDescriptionLlmClient, HttpLlmTitleDescriptionClient>();

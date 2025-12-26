@@ -14,7 +14,7 @@ namespace LagoVista.AI.Services.Pipeline
         private readonly IAgentContextManager _contextManager;
      
         public AgentContextLoaderPipelineStap(
-            IContextProviderInitializerPipelineStep next,
+            IPromptKnowledgeProviderInitializerPipelineStep next,
             IAgentPipelineContextValidator validator,
             IAgentContextManager contextManager,
             IAdminLogger adminLogger) : base(next, validator, adminLogger)
@@ -26,7 +26,7 @@ namespace LagoVista.AI.Services.Pipeline
 
         protected override async Task<InvokeResult<IAgentPipelineContext>> ExecuteStepAsync(IAgentPipelineContext ctx)
         {
-            var agentContext = await _contextManager.GetAgentContextAsync(ctx.Session.AgentContext.Id, ctx.Envelope.Org, ctx.Envelope.User);
+            var agentContext = await _contextManager.GetAgentContextWithSecretsAsync(ctx.Session.AgentContext.Id, ctx.Envelope.Org, ctx.Envelope.User);
 
             var conversationContext = agentContext.ConversationContexts.SingleOrDefault(cc => cc.Id == ctx.Session.ConversationContext.Id);
             if(conversationContext == null)

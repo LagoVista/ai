@@ -44,7 +44,7 @@ namespace LagoVista.AI.Services.Pipeline
                 agentContextId = org.DefaultAgentContext.Id;
             }
 
-            var agentContext = await _contextManager.GetAgentContextAsync(agentContextId, ctx.Envelope.Org, ctx.Envelope.User);
+            var agentContext = await _contextManager.GetAgentContextWithSecretsAsync(agentContextId, ctx.Envelope.Org, ctx.Envelope.User);
 
             var conversationContextId = ctx.Envelope.ConversationContextId ?? agentContext.DefaultConversationContext?.Id;
             if(String.IsNullOrEmpty(conversationContextId) && agentContext.ConversationContexts.Any())

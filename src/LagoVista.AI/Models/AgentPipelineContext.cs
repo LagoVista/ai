@@ -5,6 +5,7 @@ using LagoVista.Core.AI.Models;
 using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
+using RingCentral;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -186,12 +187,20 @@ namespace LagoVista.AI.Models
 
         public void LogStepErrorDetails(IAdminLogger logger, PipelineSteps step, string error, TimeSpan ts)
         {
-
+            logger.AddError($"[AgentPipelineContext__LogStepErrorDetails] - {step} Error restoring Agent Context.", error,
+                CorrelationId.ToKVP("CorrelationId"),
+                step.ToString().ToKVP("step"),
+                Envelope.Org.Text.ToKVP("Org"),
+                Envelope.User.Text.ToKVP("User"));
         }
 
         public void LogStepErrorDetails(IAdminLogger logger, PipelineSteps step, InvokeResult error, TimeSpan ts)
         {
-
+            logger.AddError($"[AgentPipelineContext__LogStepErrorDetails] - {step} Error restoring Agent Context.", error.ErrorMessage,
+                CorrelationId.ToKVP("CorrelationId"),
+                step.ToString().ToKVP("step"),
+                Envelope.Org.Text.ToKVP("Org"),
+                Envelope.User.Text.ToKVP("User"));
         }
 
         public void LogDetails(IAdminLogger logger, PipelineSteps step, TimeSpan? ts = null)
@@ -205,7 +214,7 @@ namespace LagoVista.AI.Models
                 Envelope.User.Text.ToKVP("User"),
             };
 
-            logger.Trace("[AgentContextLoaderPipelineStap__ExecuteAsync] - Restoring Agent Context.", kvps.ToArray());          
+            logger.Trace($"[AgentPipelineContext__LogDetails] - {step}.", kvps.ToArray());          
         }
     }
 

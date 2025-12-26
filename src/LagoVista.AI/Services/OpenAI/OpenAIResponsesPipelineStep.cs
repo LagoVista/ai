@@ -54,11 +54,13 @@ namespace LagoVista.AI.Services.OpenAI
 
             sw.Stop();
 
+
+
             var postValidation = _validator.ValidatePreStep(ctx, PipelineSteps.LLMClient);
             if (!postValidation.Successful) return InvokeResult<IAgentPipelineContext>.FromInvokeResult(postValidation);
 
             await _events.PublishAsync(ctx.Session.Id, "LLMCompleted", "completed", "Model response received.", sw.Elapsed.TotalMilliseconds, ctx.CancellationToken);
-             return parsed;
+            return parsed;
         }
 
         private async Task<InvokeResult<IAgentPipelineContext>> FailAsync(string sid, InvokeResult err, string fallbackMsg, CancellationToken ct)

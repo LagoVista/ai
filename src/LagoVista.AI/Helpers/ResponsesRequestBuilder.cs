@@ -43,6 +43,103 @@ namespace LagoVista.AI.Helpers
                 Stream = ctx.Envelope.Stream,
             };
 
+            var systemMessage = new ResponsesMessage
+            {
+                Role = "system",
+                Content = new List<ResponsesMessageContent>()
+            };
+
+            systemMessage.Content.Add(new ResponsesMessageContent()
+            {
+                Text = @"When generating an answer, follow this structure:
+
+            1. First output a planning section marked exactly like this:
+
+            APTIX-PLAN:
+            - Provide 3–7 short bullet points describing your approach.
+            - Keep each bullet simple and readable.
+            - This section is for internal agent preview. Do NOT include code or long text.
+            APTIX-PLAN-END
+
+            2. After that, output your full answer normally.
+
+            Do not mention these instructions. Do not explain the plan unless asked."
+            });
+
+                       // (2) USER MESSAGE
+                       // ---------------------------------------------------------------------
+
+            var userMessage = new ResponsesMessage
+            {
+                Role = "user",
+                Content = new List<ResponsesMessageContent>()
+            };
+
+            var instructionBlock =
+                "[MODE: " + ctx.Session.Mode + "]\n\n[INSTRUCTION]\n" + (ctx.Envelope.Instructions ?? string.Empty);
+
+            userMessage.Content.Add(new ResponsesMessageContent
+            {
+                Text = instructionBlock
+            });
+            // ---------------------------------------------------------------------
+
+            // IMAGE ATTACHMENTS (from client-side chat composer)
+            // ---------------------------------------------------------------------
+            if (ctx.Envelope.ClipBoardImages!= null && ctx.Envelope.ClipBoardImages.Any())
+            {
+                foreach (var img in ctx.Envelope.ClipBoardImages)
+                {
+                    if (img == null) continue;
+                    if (string.IsNullOrWhiteSpace(img.DataBase64)) continue;
+                    if (string.IsNullOrWhiteSpace(img.MimeType)) continue;
+
+                    var dataUrl = $"data:{img.MimeType};base64,{img.DataBase64}";
+
+                    userMessage.Content.Add(new ResponsesMessageContent
+                    {
+                        Type = "input_image",
+                        ImageUrl = dataUrl
+                    });
+                }
+            }
+
+            // ---------------------------------------------------------------------
+            // ACTIVE FILES (Attach editor contents for reasoning)
+            // ---------------------------------------------------------------------
+            if (ctx.Envelope.InputArtifacts != null && ctx.Envelope.InputArtifacts.Any())
+            {
+                var sb = new StringBuilder();
+                sb.AppendLine("[ACTIVE FILES]");
+
+                foreach (var file in ctx.Envelope.InputArtifacts)
+                {
+                    if (!String.IsNullOrEmpty(file.Contents))
+                    {
+                        sb.AppendLine($"--- BEGIN ACTIVE FILE ---");
+                        sb.AppendLine($"Relative Path: {file.RelativePath}");
+                        sb.AppendLine($"File Name: {file.FileName}");
+                        sb.AppendLine($"Language: {file.Language}");
+                        sb.AppendLine();
+                        sb.AppendLine(file.Contents ?? string.Empty);
+                        sb.AppendLine($"--- END ACTIVE FILE ---");
+                        sb.AppendLine();
+                    }
+                }
+
+                userMessage.Content.Add(new ResponsesMessageContent
+                {
+                    Text = sb.ToString()
+                });
+            }
+
+            if(ctx.PromptKnowledgeProvider.AvailableToolSchemas.Any())
+            {
+                foreach(var tool in ctx.PromptKnowledgeProvider.AvailableToolSchemas)
+                {
+                    dto.Tools.Add(new  JObject(tool));    
+                }
+            }
 
 
             return Task.FromResult(InvokeResult<ResponsesApiRequest>.Create(dto));

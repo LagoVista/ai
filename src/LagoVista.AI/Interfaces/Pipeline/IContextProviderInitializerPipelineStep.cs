@@ -4,7 +4,7 @@ using LagoVista.Core.Validation;
 
 namespace LagoVista.AI.Interfaces.Pipeline
 {
-    public interface IContextProviderInitializerPipelineStep : IAgentPipelineStep
+    public interface IPromptKnowledgeProviderInitializerPipelineStep : IAgentPipelineStep
     {
     }
 }

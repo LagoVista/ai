@@ -66,6 +66,11 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             public void LogStepErrorDetails(LagoVista.IoT.Logging.Loggers.IAdminLogger logger, PipelineSteps step, string error, TimeSpan ts) { }
             public void LogStepErrorDetails(LagoVista.IoT.Logging.Loggers.IAdminLogger logger, PipelineSteps step, InvokeResult error, TimeSpan ts) { }
             public void LogDetails(LagoVista.IoT.Logging.Loggers.IAdminLogger logger, PipelineSteps step, TimeSpan? ts = null) { }
+
+            public void SetResponsePayload(ResponsePayload payload)
+            {
+                ResponsePayload = payload;
+            }
         }
 
         private static Envelope NewEnvelope(string agentContextId = null, string conversationContextId = null, string sessionId = null, string turnId = null, bool stream = false, IEnumerable<ToolResultSubmission> toolResults = null)
@@ -92,7 +97,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
         public void ValidateCore_NullCtx_ReturnsFailure()
         {
             var sut = new AgentPipelineContextValidator();
-            var result = sut.ValidateCore(null);
+            var result = sut.ValidateCore(null, PipelineSteps.ResponseBuilder);
             Assert.That(result.Successful, Is.False);
         }
 
@@ -109,7 +114,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
                 Envelope = null
             };
 
-            var result = sut.ValidateCore(ctx);
+            var result = sut.ValidateCore(ctx, PipelineSteps.RequestHandler);
             Assert.That(result.Successful, Is.False);
         }
 
@@ -131,7 +136,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
                 Envelope = env
             };
 
-            var result = sut.ValidateCore(ctx);
+            var result = sut.ValidateCore(ctx, PipelineSteps.RequestHandler);
             Assert.That(result.Successful, Is.False);
         }
 

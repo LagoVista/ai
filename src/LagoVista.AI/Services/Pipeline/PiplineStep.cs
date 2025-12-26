@@ -30,40 +30,58 @@ namespace LagoVista.AI.Services.Pipeline
 
         public async Task<InvokeResult<IAgentPipelineContext>> ExecuteAsync(IAgentPipelineContext ctx)
         {
-            if (ctx == null) throw new ArgumentNullException(nameof(ctx));
-            var preValidation = _validator.ValidatePreStep(ctx, StepType);
-            if (!preValidation.Successful)
-                return InvokeResult<IAgentPipelineContext>.FromInvokeResult(preValidation);
+            _adminLogger.Trace($"[PipelineStep__ExecuteAsync] - Start {StepType}");
 
-            var sw = LogStart(ctx);
-
-            if (ctx.CancellationToken.IsCancellationRequested) return InvokeResult<IAgentPipelineContext>.Abort();
-
-            var result = await ExecuteStepAsync(ctx); 
-
-            if (ctx.CancellationToken.IsCancellationRequested) return InvokeResult<IAgentPipelineContext>.Abort();
-
-            if (!result.Successful)
+            try
             {
-                LogFailure(ctx, result, sw.Elapsed);
-                return result;
-            }
+                if (ctx == null) throw new ArgumentNullException(nameof(ctx));
+                var preValidation = _validator.ValidatePreStep(ctx, StepType);
+                if (!preValidation.Successful)
+                    return InvokeResult<IAgentPipelineContext>.FromInvokeResult(preValidation);
 
-            var postvalidation = _validator.ValidatePostStep(result.Result, StepType);
-            if (!postvalidation.Successful)
+                var sw = LogStart(ctx);
+
+                if (ctx.CancellationToken.IsCancellationRequested) return InvokeResult<IAgentPipelineContext>.Abort();
+
+                var result = await ExecuteStepAsync(ctx);
+                _adminLogger.Trace($"[PipelineStep__ExecuteAsync] - Completed {StepType}");
+
+                if (ctx.CancellationToken.IsCancellationRequested) return InvokeResult<IAgentPipelineContext>.Abort();
+
+                if (!result.Successful)
+                {
+                    _adminLogger.Trace($"[PipelineStep__ExecuteAsync] - Failed {StepType} - {result.ErrorMessage}");
+
+                    LogFailure(ctx, result, sw.Elapsed);
+                    return result;
+                }
+             
+                var postvalidation = _validator.ValidatePostStep(result.Result, StepType);
+                if (!postvalidation.Successful)
+                {
+                    _adminLogger.Trace($"[PipelineStep__ExecuteAsync] - Failed validation {StepType} {postvalidation.ErrorMessage}");
+
+                    LogContractViolation(ctx, postvalidation.ErrorMessage, sw.Elapsed);
+                    return InvokeResult<IAgentPipelineContext>.FromInvokeResult(preValidation);
+                }
+
+                _adminLogger.Trace($"[PipelineStep__ExecuteAsync] - Success {StepType} {sw.Elapsed.TotalMilliseconds}ms");
+
+
+                LogSuccess(ctx, sw.Elapsed);
+
+                if (_next == null)
+                {
+                    return result;
+                }
+
+                return await _next.ExecuteAsync(result.Result);
+            }
+            catch(Exception ex)
             {
-                LogContractViolation(ctx, postvalidation.ErrorMessage, sw.Elapsed);
-                return InvokeResult<IAgentPipelineContext>.FromInvokeResult(preValidation);
+                _adminLogger.AddException($"[PipelineStep__ExecuteAsync] - Exception in {StepType}", ex);
+                throw;
             }
-
-            LogSuccess(ctx, sw.Elapsed);
-
-            if (_next == null)
-            {
-                return result;
-            }
-
-            return await _next.ExecuteAsync(result.Result);
          }
 
         protected abstract PipelineSteps StepType { get; }
