@@ -42,7 +42,7 @@ namespace LagoVista.AI.Interfaces
 
         Task<InvokeResult<string>> ExecuteAsync(
             string argumentsJson,
-            AgentPipelineContext context);
+            IAgentPipelineContext context);
 
     }
 }

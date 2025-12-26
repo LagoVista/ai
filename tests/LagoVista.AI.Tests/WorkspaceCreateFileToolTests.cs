@@ -89,7 +89,6 @@ namespace LagoVista.AI.Tests
             Assert.That((string)payload.ToolName, Is.EqualTo(WorkspaceCreateFileTool.ToolName));
             Assert.That((bool)payload.IsClientExecutedOnly, Is.True);
             Assert.That((string)payload.SessionId, Is.EqualTo("session-123"));
-            Assert.That((string)payload.SessionId, Is.EqualTo("conv-456"));
         }
     }
 }

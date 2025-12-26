@@ -74,7 +74,7 @@ namespace LagoVista.AI.Services.Tools
             throw new NotImplementedException();
         }
 
-        public async Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentPipelineContext ctx)
+        public async Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext ctx)
 
         {
             Console.WriteLine($"----\r\n{argumentsJson}\r\n---");

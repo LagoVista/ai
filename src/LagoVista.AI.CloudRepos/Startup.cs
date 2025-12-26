@@ -34,6 +34,7 @@ namespace LagoVista.AI.CloudRepos
             services.AddSingleton<ITlaCatalogRepo, TlaCatalogRepo>();
             services.AddSingleton<IContentStorage, ContentStorage>();
             services.AddSingleton<IResourceUsageTableWriter, ResourceUsageTableWriter>();
+            services.AddSingleton<IDdrConsumptionFieldProvider, DdrRepo>();
         }
     }
 }

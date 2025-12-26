@@ -159,7 +159,7 @@ Some content.";
 
                 // Keep this aligned with your updated implementation.
                 // If your implementation still accepts ModeInstructionDdrs as a string, pass a string.
-                ModeInstructions = new string[]
+                AgentInstructions = new string[]
                     { "MUST do X.","MUST NOT do Y." },
 
                 DryRun = false,

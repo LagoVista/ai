@@ -16,7 +16,7 @@ namespace LagoVista.AI.Services.Tools
     public sealed class UpdateAgentModeTool : IAgentTool
     {
         private readonly IAgentContextManager _agentContextManager;
-        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
+        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
 
         public UpdateAgentModeTool(IAgentContextManager agentContextManager)
         {

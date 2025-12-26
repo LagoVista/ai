@@ -87,7 +87,7 @@ When to use:
 - When validating that a RAG chunk or DDR section matches the current repo content.
 - When comparing Active File content with cloud or indexed copies.
 ";
-        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
+        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
 
         public async Task<InvokeResult<string>> ExecuteAsync(
             string argumentsJson,

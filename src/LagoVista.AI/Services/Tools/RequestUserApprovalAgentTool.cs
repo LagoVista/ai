@@ -86,7 +86,7 @@ namespace LagoVista.AI.Services.Tools
             return schema;
         }
 
-        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
+        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
         /// <inheritdoc />
         public Task<InvokeResult<string>> ExecuteAsync(
             string argumentsJson,

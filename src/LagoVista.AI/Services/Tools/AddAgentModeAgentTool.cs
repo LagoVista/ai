@@ -4,9 +4,7 @@ using Newtonsoft.Json.Linq;
 using System.Threading.Tasks;
 using System.Threading;
 using System;
-using System.Collections.Generic;
 using LagoVista.Core.Validation;
-using System.Linq;
 using LagoVista.Core;
 
 namespace LagoVista.AI.Services.Tools
@@ -165,7 +163,7 @@ namespace LagoVista.AI.Services.Tools
         }
 
 
-        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
+        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
 
         public async Task<InvokeResult<string>> ExecuteAsync(
                string argumentsJson,

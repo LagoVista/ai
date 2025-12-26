@@ -1,4 +1,5 @@
-﻿using LagoVista.AI.Models.Context;
+﻿using LagoVista.AI.Interfaces;
+using LagoVista.AI.Models.Context;
 using LagoVista.Core;
 using LagoVista.Core.AI.Models;
 using LagoVista.Core.Models;
@@ -33,7 +34,7 @@ namespace LagoVista.AI.Models
         ClientToolCallContinuation
     }
 
-    public sealed class AgentPipelineContext
+    public sealed class AgentPipelineContext : IAgentPipelineContext
     {
    
         public AgentPipelineContext(AgentExecuteRequest request, EntityHeader org, EntityHeader user, CancellationToken token = default)
