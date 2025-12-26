@@ -67,8 +67,8 @@ namespace LagoVista.AI.Services.Pipeline
         {
             var ctx = new AgentPipelineContext(request, org, user, cancellationToken);
 
-            var validationResult = ctx.Validate(PipelineSteps.RequestHandler);
-            if(!validationResult.Successful) return InvokeResult<AgentExecuteResponse>.FromInvokeResult(validationResult.ToInvokeResult());
+            var preValidation = _validator.ValidatePreStep(ctx, PipelineSteps.RequestHandler);
+            if(!preValidation.Successful) return InvokeResult<AgentExecuteResponse>.FromInvokeResult(preValidation.ToInvokeResult());
 
             var sw = Stopwatch.StartNew();
             ctx.LogDetails(_adminLogger, PipelineSteps.RequestHandler);
@@ -100,6 +100,10 @@ namespace LagoVista.AI.Services.Pipeline
             {
                 await _agentSessionManager.UpdateSessionAsync(result.Result.Session, org, user);
                 ctx.LogDetails(_adminLogger, PipelineSteps.RequestHandler, sw.Elapsed);
+
+                var postValidation = _validator.ValidatePostStep(result.Result, PipelineSteps.RequestHandler);
+                if(!postValidation.Successful) return InvokeResult<AgentExecuteResponse>.FromInvokeResult(postValidation.ToInvokeResult());
+
                 var response = await _responseBuilder.BuildAsync(result.Result);
                 return response;
             }
