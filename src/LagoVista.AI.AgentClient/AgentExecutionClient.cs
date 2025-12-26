@@ -38,8 +38,7 @@ namespace LagoVista.AI.AgentClient
 
             _adminLogger?.Trace("[AgentExecutionClient_ExecuteAsync] Sending execute request.",
                 correlationId.ToKVP("correlationId"),
-                (request.Mode ?? string.Empty).ToKVP("mode"),
-                (request.AgentContext?.Id ?? string.Empty).ToKVP("agentContextId"));
+                (request.AgentContextId ?? string.Empty).ToKVP("agentContextId"));
 
             var response = await _httpClient.PostAsJsonAsync("/api/ai/agent/execute", request, cancellationToken);
 
@@ -63,7 +62,7 @@ namespace LagoVista.AI.AgentClient
 
                 return new AgentExecuteResponse
                 {
-                    Kind = "error",
+                    Kind = AgentExecuteResponseKind.Error,
                     ErrorCode = "HTTP_ERROR",
                     ErrorMessage = String.IsNullOrWhiteSpace(errorBody)
                         ? $"HTTP error calling /api/ai/agent/execute: {response.StatusCode}"
@@ -82,7 +81,7 @@ namespace LagoVista.AI.AgentClient
 
                 return new AgentExecuteResponse
                 {
-                    Kind = "error",
+                    Kind = AgentExecuteResponseKind.Error,
                     ErrorCode = "DESERIALIZATION_ERROR",
                     ErrorMessage = "Unable to parse agent execution response JSON, NULL response String"
                 };
@@ -99,7 +98,7 @@ namespace LagoVista.AI.AgentClient
 
                 return new AgentExecuteResponse
                 {
-                    Kind = "error",
+                    Kind = AgentExecuteResponseKind.Error,
                     ErrorCode = "EMPTY_RESPONSE",
                     ErrorMessage = "Empty or invalid response from agent execution endpoint."
                 };
@@ -115,7 +114,7 @@ namespace LagoVista.AI.AgentClient
 
                 return new AgentExecuteResponse
                 {
-                    Kind = "error",
+                    Kind = AgentExecuteResponseKind.Error,
                     ErrorCode = "SERVER_ERROR",
                     ErrorMessage = invokeResult.ErrorMessage
                 };
@@ -130,7 +129,7 @@ namespace LagoVista.AI.AgentClient
 
                 return new AgentExecuteResponse
                 {
-                    Kind = "error",
+                    Kind = AgentExecuteResponseKind.Error,
                     ErrorCode = "MISSING_RESULT",
                     ErrorMessage = "Agent execution completed but did not return a result payload."
                 };
@@ -138,15 +137,14 @@ namespace LagoVista.AI.AgentClient
 
             _adminLogger?.Trace(
                 "[AgentExecutionClient_ExecuteAsync] Execute request completed successfully.",
-                correlationId.ToKVP("correlationId"),
-                (invokeResult.Result.Kind ?? string.Empty).ToKVP("resultKind"));
+                correlationId.ToKVP("correlationId"));
 
             return invokeResult.Result;
         }
 
         public Task<AgentExecuteResponse> AskAsync(EntityHeader agentContext, EntityHeader conversationContext,
             string instruction, string? SessionId = null, string? workspaceId = null, string? repo = null,
-            string? language = null, string? ragScope = null, IEnumerable<ActiveFile>? activeFiles = null,
+            string? language = null, string? ragScope = null, IEnumerable<InputArtifact>? activeFiles = null,
             CancellationToken cancellationToken = default)
         {
             if (agentContext == null || EntityHeader.IsNullOrEmpty(agentContext))
@@ -161,24 +159,23 @@ namespace LagoVista.AI.AgentClient
 
             var request = new AgentExecuteRequest
             {
-                AgentContext = agentContext,
-                ConversationContext = conversationContext,
-                Mode = "general",
+                AgentContextId = agentContext.Id,
+                ConversationContextId = conversationContext.Id,
                 Instruction = instruction,
                 WorkspaceId = workspaceId,
                 Repo = repo,
                 Language = language,
                 SessionId = SessionId,
-                ActiveFiles = activeFiles != null
-                    ? new List<ActiveFile>(activeFiles)
-                    : new List<ActiveFile>()
+                InputArtifacts = activeFiles != null
+                    ? new List<InputArtifact>(activeFiles)
+                    : new List<InputArtifact>()
             };
 
             return ExecuteAsync(request, cancellationToken);
         }
 
         public Task<AgentExecuteResponse> EditAsync(EntityHeader agentContext, EntityHeader conversationContext,
-            string instruction, IEnumerable<ActiveFile> activeFiles, string? SessionId = null,
+            string instruction, IEnumerable<InputArtifact> activeFiles, string? SessionId = null,
             string? workspaceId = null, string? repo = null, string? language = null, string? ragScope = null,
             CancellationToken cancellationToken = default)
         {
@@ -199,15 +196,14 @@ namespace LagoVista.AI.AgentClient
 
             var request = new AgentExecuteRequest
             {
-                AgentContext = agentContext,
-                ConversationContext = conversationContext,
+                AgentContextId = agentContext.Id,
+                ConversationContextId = conversationContext.Id,
                 SessionId = SessionId,
-                Mode = "general",
                 Instruction = instruction,
                 WorkspaceId = workspaceId,
                 Repo = repo,
                 Language = language,
-                ActiveFiles = new List<ActiveFile>(activeFiles)
+                InputArtifacts = new List<InputArtifact>(activeFiles)
             };
 
             return ExecuteAsync(request, cancellationToken);

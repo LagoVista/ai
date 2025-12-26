@@ -48,7 +48,7 @@ namespace LagoVista.AI.Rest
         {
             var requestJson = JsonConvert.SerializeObject(request);
             var sw = Stopwatch.StartNew();
-            Console.WriteLine($">>>> Received AgentExecuteRequest: {request.ResponseContinuationId}, size {(requestJson.Length / 1024.0).ToString("0.00")}kb \r\n{requestJson}\r\n");
+            Console.WriteLine($">>>> Received AgentExecuteRequest, size {(requestJson.Length / 1024.0).ToString("0.00")}kb \r\n{requestJson}\r\n");
 
             var cancellationToken = HttpContext?.RequestAborted ?? CancellationToken.None;
 
@@ -81,9 +81,6 @@ namespace LagoVista.AI.Rest
                         var result = await _agentRequestHandler.HandleAsync(request, OrgEntityHeader, UserEntityHeader, cancellationToken);
                         if (streamingContext.Current != null)
                         {
-                            if(result.Successful)
-                                result.Result.RawResponseJson = null;
-
                             await streamingContext.Current(new AgentStreamEvent
                             {
                                 Kind = "final",
@@ -98,13 +95,12 @@ namespace LagoVista.AI.Rest
                     var result = await _agentRequestHandler.HandleAsync(request, OrgEntityHeader, UserEntityHeader, cancellationToken);
                     if (result.Successful)
                     {
-                        result.Result.RawResponseJson = null;
                         var responseJSON = JsonConvert.SerializeObject(result.Result);
-                        Console.WriteLine($">>>> Handeed AgentExecuteRequest: {request.ResponseContinuationId} => {result.Result.ResponseContinuationId} in {sw.Elapsed.TotalSeconds.ToString("0.00")} seconds, response size:  {(responseJSON.Length / 1024.0).ToString("0.00")}kb\r\n====\r\n{responseJSON}\r\n");
+                        Console.WriteLine($">>>> Handeed AgentExecuteReques in {sw.Elapsed.TotalSeconds.ToString("0.00")} seconds, response size:  {(responseJSON.Length / 1024.0).ToString("0.00")}kb\r\n====\r\n{responseJSON}\r\n");
 
                     }
                     else
-                        Console.WriteLine($">>>> Handeed AgentExecuteRequest: {request.ResponseContinuationId} => FAILED: {result.Errors[0].Message}\r\n====\r\n");
+                        Console.WriteLine($">>>> Handeed AgentExecuteRequest => FAILED: {result.Errors[0].Message}\r\n====\r\n");
 
                         return new JsonResult(result);
                     }           
