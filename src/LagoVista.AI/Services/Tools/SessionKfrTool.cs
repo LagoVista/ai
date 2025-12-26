@@ -193,7 +193,7 @@ Conflict Handling:
                         return InvokeResult<string>.FromError("session_kfr session has no KFR store initialized.");
 
                     if (string.IsNullOrWhiteSpace(session.CurrentBranch))
-                        session.CurrentBranch = "main";
+                        session.CurrentBranch = AgentSession.DefaultBranch;
 
                     if (!session.Kfrs.TryGetValue(session.CurrentBranch, out var list) || list == null)
                     {

@@ -24,5 +24,7 @@ namespace LagoVista.AI.Interfaces
         /// registered tools.
         /// </returns>
         string GetToolUsageMetadata(string[] toolIds);
+
+        string GetToolUsageMetadata(string toolName);
     }
 }

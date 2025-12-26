@@ -20,9 +20,6 @@ namespace LagoVista.AI.Models
         public string ConversationWelcomeMessage { get; set; }
         public string ModeWelcomeMessage { get; set; }
 
-        // Lanes (always present)
-        public KnowledgeLane SessionKnowledge { get; set; } = new KnowledgeLane();
-        public KnowledgeLane ConsumableKnowledge { get; set; } = new KnowledgeLane();
 
         // Kind catalog used by PKP to render blocks generically.
         public Dictionary<KnowledgeKind, KnowledgeKindDescriptor> KindCatalog { get; set; }

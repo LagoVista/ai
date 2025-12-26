@@ -16,16 +16,18 @@ namespace LagoVista.AI.Tests.Services
     public class AgentKnowledgePackServiceTests
     {
         private Mock<IDdrConsumptionFieldProvider> _ddr;
+        private Mock<IServerToolUsageMetadataProvider> _usageProvider;
 
         private AgentKnowledgePackService CreateSut()
         {
-            return new AgentKnowledgePackService(_ddr.Object);
+            return new AgentKnowledgePackService(_ddr.Object, _usageProvider.Object);
         }
 
         [SetUp]
         public void SetUp()
         {
             _ddr = new Mock<IDdrConsumptionFieldProvider>(MockBehavior.Strict);
+            _usageProvider = new Mock<IServerToolUsageMetadataProvider>(MockBehavior.Strict);
         }
 
         [Test]
@@ -36,6 +38,8 @@ namespace LagoVista.AI.Tests.Services
             var result = await sut.CreateAsync(null, BuildAgentContext(), "cc1", "General", CancellationToken.None);
 
             Assert.That(result.Successful, Is.False);
+            _ddr.VerifyNoOtherCalls();
+            _usageProvider.VerifyNoOtherCalls();
         }
 
         [Test]
@@ -46,6 +50,8 @@ namespace LagoVista.AI.Tests.Services
             var result = await sut.CreateAsync("org", null, "cc1", "General", CancellationToken.None);
 
             Assert.That(result.Successful, Is.False);
+            _ddr.VerifyNoOtherCalls();
+            _usageProvider.VerifyNoOtherCalls();
         }
 
         [Test]
@@ -56,6 +62,8 @@ namespace LagoVista.AI.Tests.Services
             var result = await sut.CreateAsync("org", BuildAgentContext(), "cc1", null, CancellationToken.None);
 
             Assert.That(result.Successful, Is.False);
+            _ddr.VerifyNoOtherCalls();
+            _usageProvider.VerifyNoOtherCalls();
         }
 
         [Test]
@@ -71,6 +79,7 @@ namespace LagoVista.AI.Tests.Services
 
             Assert.That(result.Successful, Is.False);
             _ddr.VerifyNoOtherCalls();
+            _usageProvider.VerifyNoOtherCalls();
         }
 
         [Test]
@@ -86,6 +95,7 @@ namespace LagoVista.AI.Tests.Services
 
             Assert.That(result.Successful, Is.False);
             _ddr.VerifyNoOtherCalls();
+            _usageProvider.VerifyNoOtherCalls();
         }
 
         [Test]
@@ -113,6 +123,7 @@ namespace LagoVista.AI.Tests.Services
                 Times.Once);
 
             _ddr.VerifyNoOtherCalls();
+            _usageProvider.VerifyNoOtherCalls();
         }
 
         [Test]
@@ -150,10 +161,11 @@ namespace LagoVista.AI.Tests.Services
                 Times.Once);
 
             _ddr.VerifyNoOtherCalls();
+            _usageProvider.VerifyNoOtherCalls();
         }
 
         [Test]
-        public async Task CreateAsync_HappyPath_AssemblesAndDedupes_InPrecedenceOrder()
+        public async Task CreateAsync_HappyPath_AssemblesAndDedupes_InPrecedenceOrder_AndAddsToolUsage()
         {
             // Agent: A,B + tools t1,t2
             // Conversation: B,C + tools t2,t3
@@ -186,7 +198,7 @@ namespace LagoVista.AI.Tests.Services
                 .Setup(m => m.GetAgentInstructionsAsync("org", It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((string org, IEnumerable<string> ids, CancellationToken ct) =>
                 {
-                    var dict = ids.ToDictionary(id => id, id => $"I:{id}", StringComparer.OrdinalIgnoreCase);
+                    var dict = ids.ToDictionary(id => id, id => "I:" + id, StringComparer.OrdinalIgnoreCase);
                     return InvokeResult<IDictionary<string, string>>.Create(dict);
                 });
 
@@ -194,9 +206,15 @@ namespace LagoVista.AI.Tests.Services
                 .Setup(m => m.GetReferentialSummariesAsync("org", It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((string org, IEnumerable<string> ids, CancellationToken ct) =>
                 {
-                    var dict = ids.ToDictionary(id => id, id => $"R:{id}", StringComparer.OrdinalIgnoreCase);
+                    var dict = ids.ToDictionary(id => id, id => "R:" + id, StringComparer.OrdinalIgnoreCase);
                     return InvokeResult<IDictionary<string, string>>.Create(dict);
                 });
+
+            // Tool usage metadata (strict mock: must be set up for all tools)
+            _usageProvider.Setup(m => m.GetToolUsageMetadata("t1")).Returns("U:t1");
+            _usageProvider.Setup(m => m.GetToolUsageMetadata("t2")).Returns("U:t2");
+            _usageProvider.Setup(m => m.GetToolUsageMetadata("t3")).Returns("U:t3");
+            _usageProvider.Setup(m => m.GetToolUsageMetadata("t4")).Returns("U:t4");
 
             var sut = CreateSut();
 
@@ -213,21 +231,26 @@ namespace LagoVista.AI.Tests.Services
 
             Assert.That(pack.EnabledToolNames, Is.EqualTo(new[] { "t1", "t2", "t3", "t4" }));
 
-            var instructionItems = pack.SessionKnowledge.Items.Where(i => i.Kind == KnowledgeKind.Instruction).ToList();
-            var referenceItems = pack.SessionKnowledge.Items.Where(i => i.Kind == KnowledgeKind.Reference).ToList();
-            var toolItems = pack.SessionKnowledge.Items.Where(i => i.Kind == KnowledgeKind.Tool).ToList();
-
-            Assert.That(instructionItems.Select(i => i.Id).ToArray(), Is.EqualTo(new[] { "A", "B", "C", "D" }));
-            Assert.That(instructionItems.Select(i => i.Content).All(c => c.StartsWith("I:")), Is.True);
-
-            Assert.That(referenceItems.Select(i => i.Id).ToArray(), Is.EqualTo(new[] { "R1", "R2", "R3" }));
-            Assert.That(referenceItems.Select(i => i.Content).All(c => c.StartsWith("R:")), Is.True);
-
-            Assert.That(toolItems.Select(i => i.Id).ToArray(), Is.EqualTo(new[] { "t1", "t2", "t3", "t4" }));
-
             Assert.That(pack.KindCatalog.ContainsKey(KnowledgeKind.Instruction), Is.True);
             Assert.That(pack.KindCatalog.ContainsKey(KnowledgeKind.Reference), Is.True);
             Assert.That(pack.KindCatalog.ContainsKey(KnowledgeKind.Tool), Is.True);
+
+            var instructionLane = pack.KindCatalog[KnowledgeKind.Instruction].SessionKnowledge;
+            var referenceLane = pack.KindCatalog[KnowledgeKind.Reference].SessionKnowledge;
+            var toolLane = pack.KindCatalog[KnowledgeKind.Tool].SessionKnowledge;
+
+            var instructionItems = instructionLane.Items.Where(i => i.Kind == KnowledgeKind.Instruction).ToList();
+            var referenceItems = referenceLane.Items.Where(i => i.Kind == KnowledgeKind.Reference).ToList();
+            var toolItems = toolLane.Items.Where(i => i.Kind == KnowledgeKind.Tool).ToList();
+
+            Assert.That(instructionItems.Select(i => i.Id).ToArray(), Is.EqualTo(new[] { "A", "B", "C", "D" }));
+            Assert.That(instructionItems.Select(i => i.Content).All(c => c.StartsWith("I:", StringComparison.Ordinal)), Is.True);
+
+            Assert.That(referenceItems.Select(i => i.Id).ToArray(), Is.EqualTo(new[] { "R1", "R2", "R3" }));
+            Assert.That(referenceItems.Select(i => i.Content).All(c => c.StartsWith("R:", StringComparison.Ordinal)), Is.True);
+
+            Assert.That(toolItems.Select(i => i.Id).ToArray(), Is.EqualTo(new[] { "t1", "t2", "t3", "t4" }));
+            Assert.That(toolItems.Select(i => i.Content).ToArray(), Is.EqualTo(new[] { "U:t1", "U:t2", "U:t3", "U:t4" }));
 
             _ddr.Verify(m => m.GetAgentInstructionsAsync(
                     "org",
@@ -241,7 +264,13 @@ namespace LagoVista.AI.Tests.Services
                     It.IsAny<CancellationToken>()),
                 Times.Once);
 
+            _usageProvider.Verify(m => m.GetToolUsageMetadata("t1"), Times.Once);
+            _usageProvider.Verify(m => m.GetToolUsageMetadata("t2"), Times.Once);
+            _usageProvider.Verify(m => m.GetToolUsageMetadata("t3"), Times.Once);
+            _usageProvider.Verify(m => m.GetToolUsageMetadata("t4"), Times.Once);
+
             _ddr.VerifyNoOtherCalls();
+            _usageProvider.VerifyNoOtherCalls();
         }
 
         [Test]
@@ -257,7 +286,7 @@ namespace LagoVista.AI.Tests.Services
                 .Setup(m => m.GetAgentInstructionsAsync("org", It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((string org, IEnumerable<string> ids, CancellationToken ct) =>
                 {
-                    var dict = ids.ToDictionary(id => id, id => $"I:{id}", StringComparer.OrdinalIgnoreCase);
+                    var dict = ids.ToDictionary(id => id, id => "I:" + id, StringComparer.OrdinalIgnoreCase);
                     return InvokeResult<IDictionary<string, string>>.Create(dict);
                 });
 
@@ -270,7 +299,10 @@ namespace LagoVista.AI.Tests.Services
             var result = await sut.CreateAsync("org", agentContext, null, "General", CancellationToken.None);
 
             Assert.That(result.Successful, Is.True);
-            Assert.That(result.Result.SessionKnowledge.Items.Any(i => i.Kind == KnowledgeKind.Instruction && i.Id == "X"), Is.True);
+
+            var instructionLane = result.Result.KindCatalog[KnowledgeKind.Instruction].SessionKnowledge;
+
+            Assert.That(instructionLane.Items.Any(i => i.Kind == KnowledgeKind.Instruction && i.Id == "X"), Is.True);
 
             _ddr.Verify(m => m.GetAgentInstructionsAsync(
                     "org",
@@ -285,6 +317,7 @@ namespace LagoVista.AI.Tests.Services
                 Times.Once);
 
             _ddr.VerifyNoOtherCalls();
+            _usageProvider.VerifyNoOtherCalls();
         }
 
         private static AgentContext BuildAgentContext(
@@ -302,9 +335,11 @@ namespace LagoVista.AI.Tests.Services
                 AgentInstructionDdrs = (agentInstructionDdrs ?? Array.Empty<string>()).ToArray(),
                 ReferenceDdrs = (referenceDdrs ?? Array.Empty<string>()).ToArray(),
                 AssociatedToolIds = (toolIds ?? Array.Empty<string>()).ToArray(),
-                ConversationContexts = conversationContexts?.ToList() ?? new List<ConversationContext>(),
-                AgentModes = modes?.ToList() ?? new List<AgentMode>(),
-                DefaultConversationContext = defaultConversationId == null ? null : LagoVista.Core.Models.EntityHeader.Create(defaultConversationId, defaultConversationId)
+                ConversationContexts = conversationContexts == null ? new List<ConversationContext>() : conversationContexts.ToList(),
+                AgentModes = modes == null ? new List<AgentMode>() : modes.ToList(),
+                DefaultConversationContext = defaultConversationId == null
+                    ? null
+                    : LagoVista.Core.Models.EntityHeader.Create(defaultConversationId, defaultConversationId)
             };
         }
 

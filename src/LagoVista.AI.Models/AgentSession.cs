@@ -68,6 +68,9 @@ namespace LagoVista.AI.Models
         public const string OperationKind_Text = "text";
         public const string OperationKind_Domain = "domain";
 
+        public const string DefaultBranch = "main";
+        public const string DefaultMode = "general";
+
         public EntityHeader AgentContext { get; set; }
 
         public EntityHeader ConversationContext { get; set; }
@@ -78,9 +81,9 @@ namespace LagoVista.AI.Models
 
         public string Repo { get; set; }
 
-        public string Mode { get; set; } = "general";
+        public string Mode { get; set; } = AgentSession.DefaultMode;
 
-        public string CurrentBranch { get; set; } = "main";
+        public string CurrentBranch { get; set; } = AgentSession.DefaultBranch;
 
         public string ModeSetTimestamp { get; set; }
 

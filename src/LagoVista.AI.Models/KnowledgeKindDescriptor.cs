@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace LagoVista.AI.Models
 {
     /// <summary>
@@ -22,6 +24,9 @@ namespace LagoVista.AI.Models
         /// Marker indicating the end of the rendered block (optional).
         /// </summary>
         public string EndMarker { get; set; }
+        // Lanes (always present)
+        public KnowledgeLane SessionKnowledge { get; set; } = new KnowledgeLane();
+        public KnowledgeLane ConsumableKnowledge { get; set; } = new KnowledgeLane();
 
         /// <summary>
         /// One-line instruction explaining what this block is and how to use it (optional).

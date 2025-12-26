@@ -77,7 +77,7 @@ namespace LagoVista.AI.Managers
             await AuthorizeAsync(agentContext, AuthorizeResult.AuthorizeActions.Read, user, org);
 
             // Ensure "general" exists as a baseline mode (mirrors orchestrator behavior).
-            if (!agentContext.AgentModes.Any(mode => mode.Key == "general"))
+            if (!agentContext.AgentModes.Any(mode => mode.Key == AgentSession.DefaultMode))
             {
                 AddGeneralMode(agentContext, org, user);
                 await UpdateAgentContextAsync(agentContext, org, user);

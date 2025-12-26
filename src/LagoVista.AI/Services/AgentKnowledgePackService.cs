@@ -27,10 +27,12 @@ namespace LagoVista.AI.Services
     public sealed class AgentKnowledgePackService : IAgentKnowledgePackService
     {
         private readonly IDdrConsumptionFieldProvider _ddrConsumption;
+        private readonly IServerToolUsageMetadataProvider _toolUsageMetaData;
 
-        public AgentKnowledgePackService(IDdrConsumptionFieldProvider ddrConsumption)
+        public AgentKnowledgePackService(IDdrConsumptionFieldProvider ddrConsumption, IServerToolUsageMetadataProvider toolUsageMetaData)
         {
             _ddrConsumption = ddrConsumption ?? throw new ArgumentNullException(nameof(ddrConsumption));
+            _toolUsageMetaData = toolUsageMetaData ?? throw new ArgumentNullException(nameof(toolUsageMetaData));
         }
 
         public async Task<InvokeResult<AgentKnowledgePack>> CreateAsync(
@@ -141,9 +143,9 @@ namespace LagoVista.AI.Services
 
             // Populate SessionKnowledge lane as the primary lane in V1.
             // Consumers can migrate items to ConsumableKnowledge as turn-scoped patterns mature.
-            AddDdrItems(pack.SessionKnowledge, KnowledgeKind.Instruction, instructionIds, resolvedInstructions.Result);
-            AddDdrItems(pack.SessionKnowledge, KnowledgeKind.Reference, referenceIds, resolvedReferences.Result);
-            AddToolItems(pack.SessionKnowledge, toolNames);
+            AddDdrItems(pack.KindCatalog[KnowledgeKind.Instruction].SessionKnowledge, KnowledgeKind.Instruction, instructionIds, resolvedInstructions.Result);
+            AddDdrItems(pack.KindCatalog[KnowledgeKind.Reference].SessionKnowledge, KnowledgeKind.Reference, referenceIds, resolvedReferences.Result);
+            AddToolItems(pack.KindCatalog[KnowledgeKind.Tool].SessionKnowledge, toolNames);
 
             return InvokeResult<AgentKnowledgePack>.Create(pack);
         }
@@ -211,7 +213,7 @@ namespace LagoVista.AI.Services
             }
         }
 
-        private static void AddToolItems(KnowledgeLane lane, IEnumerable<string> toolNames)
+        private void AddToolItems(KnowledgeLane lane, IEnumerable<string> toolNames)
         {
             if (lane == null) throw new ArgumentNullException(nameof(lane));
             if (toolNames == null) return;
@@ -219,12 +221,13 @@ namespace LagoVista.AI.Services
             foreach (var toolName in toolNames)
             {
                 if (string.IsNullOrWhiteSpace(toolName)) continue;
+                var toolUsage = _toolUsageMetaData.GetToolUsageMetadata(toolName);
 
                 lane.Items.Add(new KnowledgeItem
                 {
                     Kind = KnowledgeKind.Tool,
                     Id = toolName,
-                    Content = null
+                    Content = toolUsage
                 });
             }
         }

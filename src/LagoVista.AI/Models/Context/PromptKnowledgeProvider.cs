@@ -57,6 +57,8 @@ namespace LagoVista.AI.Models.Context
             return created;
         }
 
+        public Dictionary<string, object> AvailableToolSchemas { get; } = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+
         public PromptKnowledgeProviderStates State { get; set; } = PromptKnowledgeProviderStates.NotSet;
 
         /// <summary>

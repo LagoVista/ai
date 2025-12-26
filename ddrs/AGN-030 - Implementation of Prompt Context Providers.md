@@ -3,6 +3,7 @@
 **ID:** AGN-030  
 **Title:** Implementation of Prompt Context Providers  
 **Status:** Approved
+**DDR Type:** Referential  
 
 ## Approval Metadata
 - **Approved By:** Kevin Wolf  

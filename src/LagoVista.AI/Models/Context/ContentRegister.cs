@@ -37,18 +37,18 @@ namespace LagoVista.AI.Models.Context
         /// Ordered line items stored in this register.
         /// </summary>
         [JsonProperty("items")]
-        public List<object> Items { get; } = new List<object>();
+        public List<string> Items { get; } = new List<string>();
 
         /// <summary>
         /// Read-only view of items.
         /// </summary>
         [JsonIgnore]
-        public IReadOnlyList<object> ReadOnlyItems => new ReadOnlyCollection<object>(Items);
+        public IReadOnlyList<string> ReadOnlyItems => new ReadOnlyCollection<string>(Items);
 
         /// <summary>
         /// Adds a line item to the register.
         /// </summary>
-        public void Add(object item)
+        public void Add(string item)
         {
             if (item == null) throw new ArgumentNullException(nameof(item));
             Items.Add(item);

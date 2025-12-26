@@ -40,7 +40,7 @@ namespace LagoVista.AI.Services
             if (org == null) throw new ArgumentNullException(nameof(org));
             if (user == null) throw new ArgumentNullException(nameof(user));
 
-            var modeKey = NormalizeModeKey(mode.Key ?? session.Mode ?? "general");
+            var modeKey = NormalizeModeKey(mode.Key ?? session.Mode ?? AgentSession.DefaultMode);
 
             if (session.DdrCache == null)
             {

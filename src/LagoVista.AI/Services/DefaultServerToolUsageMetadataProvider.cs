@@ -5,6 +5,7 @@ using System.Text;
 using LagoVista.AI.Interfaces;
 using LagoVista.Core.AI.Models;
 using LagoVista.IoT.Logging.Loggers;
+using static LagoVista.AI.Managers.OpenAIManager;
 
 namespace LagoVista.AI.Services
 {
@@ -24,6 +25,60 @@ namespace LagoVista.AI.Services
         {
             _toolRegistry = toolRegistry ?? throw new ArgumentNullException(nameof(toolRegistry));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
+
+        public string GetToolUsageMetadata(string toolName)
+        {
+            var registered = _toolRegistry.GetRegisteredTools();
+            var sb = new StringBuilder();
+            try
+            {
+                var toolType = registered[toolName];
+                var usageField = toolType.GetField(
+                    "ToolUsageMetadata",
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy);
+
+                // This should already be enforced by AgentToolRegistry.RegisterTool,
+                // but we keep a defensive check and log if it is not.
+                if (usageField == null ||
+                    usageField.FieldType != typeof(string) ||
+                    usageField.IsLiteral == false)
+                {
+                    _logger.AddError(
+                        "[DefaultServerToolUsageMetadataProvider_GetToolUsageMetadata__MissingUsageField]",
+                        "Tool '" + toolType.FullName + "' registered as '" + toolName +
+                        "' does not expose a valid public const string ToolUsageMetadata.");
+
+                    return String.Empty;
+                }
+
+                var usageMetadata = usageField.GetRawConstantValue() as string;
+
+                if (string.IsNullOrWhiteSpace(usageMetadata))
+                {
+                    _logger.AddError(
+                        "[DefaultServerToolUsageMetadataProvider_GetToolUsageMetadata__EmptyUsageMetadata]",
+                        "Tool '" + toolType.FullName + "' registered as '" + toolName +
+                        "' exposes an empty ToolUsageMetadata constant.");
+
+                    return String.Empty;
+                }
+
+                // Delimited block for this specific tool.
+                sb.AppendLine("<<<APTIX_TOOL_USAGE_BEGIN name='" + toolName + "'>>>");
+                sb.AppendLine(usageMetadata.Trim());
+                sb.AppendLine("<<<APTIX_TOOL_USAGE_END name='" + toolName + "'>>>");
+                sb.AppendLine();
+                return sb.ToString();
+            }
+            catch (Exception ex)
+            {
+                _logger.AddException(
+                    "[DefaultServerToolUsageMetadataProvider_GetToolUsageMetadata__Exception]",
+                    ex);
+
+                return string.Empty;
+            }
         }
 
         public string GetToolUsageMetadata(string[] toolIds)

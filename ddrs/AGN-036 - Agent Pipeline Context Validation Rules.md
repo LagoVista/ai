@@ -2,8 +2,8 @@
 
 **ID:** AGN-036  
 **Title:** Agent Pipeline Context Validation Rules  
-**Status:** Draft  
-**DDR Type:** Agent
+**Status:** Approved  
+**DDR Type:** Policy / Rules / Governance
 
 ## Approval Metadata
 - **Approved By:** _TBD_  
