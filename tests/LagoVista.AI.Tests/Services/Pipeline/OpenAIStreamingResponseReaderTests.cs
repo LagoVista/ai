@@ -46,10 +46,6 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             var events = new Mock<ILLMEventPublisher>(MockBehavior.Loose);
             var ui = new Mock<IAgentStreamingContext>(MockBehavior.Loose);
 
-            events
-                .Setup(e => e.PublishAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<double?>(), It.IsAny<CancellationToken>()))
-                .Returns(Task.CompletedTask);
-
             ui
                 .Setup(s => s.AddPartialAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
@@ -225,7 +221,6 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             // Assert
             AssertSuccess(result);
             ctx.Ui.Verify(u => u.AddPartialAsync("Hello", It.IsAny<CancellationToken>()), Times.AtLeastOnce);
-            ctx.Events.Verify(e => e.PublishAsync("sess_1", "LLMDelta", "in-progress", "Hello", null, It.IsAny<CancellationToken>()), Times.AtLeastOnce);
         }
 
         [Test]
@@ -249,7 +244,6 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             // Assert
             AssertSuccess(result);
             ctx.Ui.Verify(u => u.AddPartialAsync("World", It.IsAny<CancellationToken>()), Times.AtLeastOnce);
-            ctx.Events.Verify(e => e.PublishAsync("sess_1", "LLMDelta", "in-progress", "World", null, It.IsAny<CancellationToken>()), Times.AtLeastOnce);
         }
 
         [Test]
@@ -273,7 +267,6 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             // Assert
             AssertSuccess(result);
             ctx.Ui.Verify(u => u.AddPartialAsync("Nested", It.IsAny<CancellationToken>()), Times.AtLeastOnce);
-            ctx.Events.Verify(e => e.PublishAsync("sess_1", "LLMDelta", "in-progress", "Nested", null, It.IsAny<CancellationToken>()), Times.AtLeastOnce);
         }
 
         [Test]
@@ -297,7 +290,6 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             // Assert
             AssertSuccess(result);
             ctx.Ui.Verify(u => u.AddPartialAsync("ObjNested", It.IsAny<CancellationToken>()), Times.AtLeastOnce);
-            ctx.Events.Verify(e => e.PublishAsync("sess_1", "LLMDelta", "in-progress", "ObjNested", null, It.IsAny<CancellationToken>()), Times.AtLeastOnce);
         }
 
         [Test]

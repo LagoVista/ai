@@ -207,7 +207,7 @@ namespace LagoVista.AI.Tests.Services
                 };
             }
 
-            public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
+            public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
 
             public Task<InvokeResult<string>> ExecuteAsync(
                 string argumentsJson,
@@ -235,7 +235,7 @@ namespace LagoVista.AI.Tests.Services
                     parameters = new { type = "object" }
                 };
             }
-            public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
+            public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
 
             public Task<InvokeResult<string>> ExecuteAsync(
                 string argumentsJson,
@@ -251,7 +251,7 @@ namespace LagoVista.AI.Tests.Services
             // No ToolName const on purpose
             public string Name => "tests.no_const";
 
-            public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
+            public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
 
             public bool IsToolFullyExecutedOnServer => true;
             public Task<InvokeResult<string>> ExecuteAsync(
@@ -275,7 +275,7 @@ namespace LagoVista.AI.Tests.Services
             {
                 return new { type = "function", name = ToolName };
             }
-            public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
+            public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
 
             public Task<InvokeResult<string>> ExecuteAsync(
                 string argumentsJson,
@@ -294,7 +294,7 @@ namespace LagoVista.AI.Tests.Services
             public string Name => ToolName;
 
             // Intentionally no GetSchema()
-            public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
+            public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
 
             public Task<InvokeResult<string>> ExecuteAsync(
                 string argumentsJson,
@@ -316,7 +316,7 @@ namespace LagoVista.AI.Tests.Services
             {
                 return "{}";
             }
-            public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
+            public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
 
             public Task<InvokeResult<string>> ExecuteAsync(
                 string argumentsJson,
@@ -338,7 +338,7 @@ namespace LagoVista.AI.Tests.Services
             {
                 return new { type = "function", name = ToolName };
             }
-            public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
+            public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
 
             public Task<InvokeResult<string>> ExecuteAsync(
                 string argumentsJson,
@@ -362,7 +362,7 @@ namespace LagoVista.AI.Tests.Services
                 // Schema shape doesn't matter here; we never get this far.
                 return new { };
             }
-            public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
+            public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
 
             public Task<InvokeResult<string>> ExecuteAsync(
                 string argumentsJson,

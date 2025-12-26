@@ -40,12 +40,14 @@ namespace LagoVista.AI.Services.Pipeline
         private readonly IAgentSessionManager _agentSessionManager;
         private readonly IAdminLogger _adminLogger;
         private readonly IAgentStreamingContext _agentStreamingContext;
+        private readonly IAgentExecuteResponseBuilder _responseBuilder; 
 
         public AgentRequestHandlerPipelineStep(
             IAgentSessionCreatorPipelineStep sessionCreator,
             IAgentSessionRestorerPipelineStep sessionRestorer,
             IClientToolCallSessionRestorerPipelineStep toolSessionRestorer,
             IAdminLogger adminLogger,
+            IAgentExecuteResponseBuilder responseBuilder,
             IAgentSessionManager agentSessionManager,
             IAgentStreamingContext agentStreamingContext)
         {
@@ -55,6 +57,7 @@ namespace LagoVista.AI.Services.Pipeline
             _agentSessionManager = agentSessionManager ?? throw new ArgumentNullException(nameof(agentSessionManager));
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
             _agentStreamingContext = agentStreamingContext ?? throw new ArgumentNullException(nameof(agentStreamingContext));
+            _responseBuilder = responseBuilder ?? throw new ArgumentNullException(nameof(responseBuilder));
         }
 
         public async Task<InvokeResult<AgentExecuteResponse>> HandleAsync(AgentExecuteRequest request, EntityHeader org, EntityHeader user, CancellationToken cancellationToken = default)
@@ -89,8 +92,9 @@ namespace LagoVista.AI.Services.Pipeline
 
             if (result.Successful)
             {
-                ctx.LogDetails(_adminLogger, PipelineSteps.RequestHandler, sw.Elapsed); 
-                return InvokeResult<AgentExecuteResponse>.Create(result.Result.CreateResponse());
+                ctx.LogDetails(_adminLogger, PipelineSteps.RequestHandler, sw.Elapsed);
+                var response = await _responseBuilder.BuildAsync(result.Result);
+                return response;
             }
             else
             {

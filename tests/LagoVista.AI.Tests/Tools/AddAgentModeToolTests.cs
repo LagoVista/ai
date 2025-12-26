@@ -46,7 +46,7 @@ namespace LagoVista.AI.Tests.Tools
                 description = "Helps author and refine DDR specs.",
                 when_to_use = "Use when working on DDRs.",
                 welcome_message = "You are now in DDR Authoring mode.",
-                mode_instructions = new[] { "Prefer structured DDR sections.", "Highlight missing fields." },
+                agent_instructions = new[] { "Prefer structured DDR sections.", "Highlight missing fields." },
                 behavior_hints = new[] { "preferStructuredOutput" },
                 human_role_hints = new[] { "The human is the DDR owner." },
                 associated_tool_ids = new[] { "tul-001.code_search", "tul-002.ddr_lookup" },
