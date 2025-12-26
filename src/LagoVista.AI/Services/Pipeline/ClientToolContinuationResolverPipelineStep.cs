@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
@@ -30,6 +31,8 @@ namespace LagoVista.AI.Services.Pipeline
 
             var reconcileToolResult = new InvokeResult();
 
+            var missingIdsAlreadyReported = new HashSet<string>(StringComparer.Ordinal);
+
             // Detect duplicate ToolCallIds provided by the client
             var duplicateClientToolCallIds = ctx.Envelope.ToolResults.GroupBy(tr => tr.ToolCallId).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
 
@@ -53,7 +56,10 @@ namespace LagoVista.AI.Services.Pipeline
                 {
                     var pendingCall = manifest.ToolCalls.SingleOrDefault(tc => tc.ToolCallId == toolResult.ToolCallId);
                     if (pendingCall == null)
+                    {
+                        missingIdsAlreadyReported.Add(toolResult.ToolCallId);
                         reconcileToolResult.AddSystemError($"Tool Call with Id {toolResult.ToolCallId} not found in Manifest {ctx.ToolManifestId}.");
+                    }
                     else
                     {
                         if (!pendingCall.RequiresClientExecution)
@@ -62,17 +68,40 @@ namespace LagoVista.AI.Services.Pipeline
                         {
                             var existingResult = manifest.ToolCallResults.SingleOrDefault(tcr => tcr.ToolCallId == toolResult.ToolCallId);
                             if (existingResult != null)
-                                reconcileToolResult.AddSystemError($"Tool Call {pendingCall.Name}, with Id {toolResult.ToolCallId} already has a result in Manifest {ctx.ToolManifestId}.");
+                            {
+                                var canApply = true;
+
+                                if (!existingResult.RequiresClientExecution)
+                                {
+                                    reconcileToolResult.AddSystemError(
+                                        $"Tool Call {pendingCall.Name}, with Id {toolResult.ToolCallId} was provided from client, however call request was not marked as requiring client execution.  In Manifest {ctx.ToolManifestId}.");
+                                    canApply = false;
+                                }
+
+                                if (!String.IsNullOrEmpty(existingResult.ErrorMessage))
+                                {
+                                    reconcileToolResult.AddSystemError(
+                                        $"Tool Call {pendingCall.Name}, with Id {toolResult.ToolCallId} was provided from client, however error message was already set.  In Manifest {ctx.ToolManifestId}.");
+                                    canApply = false;
+                                }
+
+                                if (!String.IsNullOrEmpty(existingResult.ResultJson))
+                                {
+                                    reconcileToolResult.AddSystemError(
+                                        $"Tool Call {pendingCall.Name}, with Id {toolResult.ToolCallId} was provided from client, however results json was already set.  In Manifest {ctx.ToolManifestId}.");
+                                    canApply = false;
+                                }
+
+                                if (canApply)
+                                {
+                                    existingResult.ErrorMessage = toolResult.ErrorMessage;
+                                    existingResult.ResultJson = toolResult.ResultJson;
+                                }
+                            }
                             else
                             {
-                                manifest.ToolCallResults.Add(new AgentToolCallResult()
-                                {
-                                    Name = pendingCall.Name,
-                                    ToolCallId = pendingCall.ToolCallId,
-                                    ErrorMessage = toolResult.ErrorMessage,
-                                    ResultJson = toolResult.ResultJson,
-                                    ExecutionMs = toolResult.ExecutionMs,
-                                });
+                                reconcileToolResult.AddSystemError(
+                                    $"Tool Call {pendingCall.Name}, with Id {toolResult.ToolCallId} was not found in Manifest {ctx.ToolManifestId}.");
                             }
                         }
                     }
@@ -85,6 +114,11 @@ namespace LagoVista.AI.Services.Pipeline
 
             foreach (var extraToolCallId in extraClientToolCallIds)
             {
+                if (missingIdsAlreadyReported.Contains(extraToolCallId))
+                {
+                    continue;
+                }
+
                 reconcileToolResult.AddSystemError($"Tool Call with Id {extraToolCallId} was provided by the client but does not exist in Manifest {ctx.ToolManifestId}.");
             }
 
