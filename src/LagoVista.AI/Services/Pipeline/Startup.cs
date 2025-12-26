@@ -1,3 +1,4 @@
+using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Pipeline;
 using LagoVista.AI.Services.OpenAI;
 using LagoVista.Core.Interfaces;
@@ -18,7 +19,8 @@ namespace LagoVista.AI.Services.Pipeline
             services.AddScoped<IAgentSessionRestorerPipelineStep, AgentSessionRestorerPipelineStep>();
             services.AddScoped<IClientToolCallSessionRestorerPipelineStep, ClientToolCallSessionRestorerPipelineStep>();
             services.AddScoped<IClientToolContinuationResolverPipelineStep, ClientToolContinuationResolverPipelineStep>();
-            services.AddScoped<IContextProviderInitializerPipelineStep, ContextProviderInitializerPipelineStep>();
+            services.AddScoped<IAgentPipelineContextValidator, AgentPipelineContextValidator>();
+            services.AddScoped<IContextProviderInitializerPipelineStep, PromptKnowledgeProviderInitializerPipelineStep>();
         }
     }
 }

@@ -19,8 +19,9 @@ namespace LagoVista.AI.Services
      
         private const int MaxReasoningIterations = 4;
 
-        public AgentReasonerPipelineStep(ILLMClient llmClient, IAgentToolExecutor toolExecutor, 
-            IAdminLogger logger, IAgentStreamingContext agentStreamingContext) : base(logger)
+        public AgentReasonerPipelineStep(ILLMClient llmClient, IAgentToolExecutor toolExecutor,
+            IAgentPipelineContextValidator validator,
+            IAdminLogger logger, IAgentStreamingContext agentStreamingContext) : base(validator, logger)
         {
             _llmClient = llmClient ?? throw new ArgumentNullException(nameof(llmClient));
             _toolExecutor = toolExecutor ?? throw new ArgumentNullException(nameof(toolExecutor));
@@ -46,7 +47,7 @@ namespace LagoVista.AI.Services
 
                 ctx = llmResult.Result;
 
-                foreach (var toolCall in ctx.PromptContentProvider.ToolCallManifest.ToolCalls)
+                foreach (var toolCall in ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCalls)
                 {
                     await _agentStreamingContext.AddWorkflowAsync("calling tool " + toolCall.Name + "...", ctx.CancellationToken);
                     var sw = Stopwatch.StartNew();
@@ -59,7 +60,7 @@ namespace LagoVista.AI.Services
                     if (!callResponse.Successful) { return InvokeResult<IAgentPipelineContext>.FromInvokeResult(callResponse.ToInvokeResult()); }
 
                     var result = callResponse.Result;
-                    ctx.PromptContentProvider.ToolCallManifest.ToolCallResults.Add(result);
+                    ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCallResults.Add(result);
                 }
 
                 // After processing all our tool calls, if we still have client tool calls, we need to exit to let the client handle them.

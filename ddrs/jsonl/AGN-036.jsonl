@@ -1,0 +1,1 @@
+{"id":"AGN-036","title":"Agent Pipeline Context Validation Rules","type":"agent","status":"approved","summary":"Defines authoritative, stateless validation rules for IAgentPipelineContext across all Aptix agent pipeline steps, including core invariants, step-specific PRE/POST rules, and locked ToolCallManifest validity semantics."}

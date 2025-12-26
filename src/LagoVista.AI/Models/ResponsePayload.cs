@@ -8,6 +8,7 @@ namespace LagoVista.AI.Models
     public class ResponsePayload
     {
         public string PrimaryOutputText { get; set; }
+        public List<FileRef> Files { get; set; }
         public LlmUsage Usage { get; set; }
     }
 }

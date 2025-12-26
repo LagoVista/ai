@@ -200,7 +200,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         public string Name { get; set; }
 
         /// <summary>
-        /// Logical source of the parameter: Route, Query, Header, Unknown.
+        /// Logical source of the parameter: Route, Query, Header, NotReady.
         /// </summary>
         public EndpointParameterSource Source { get; set; } = EndpointParameterSource.Unknown;
 

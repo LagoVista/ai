@@ -262,7 +262,7 @@ namespace LagoVista.AI.Helpers
                 ? string.Join("\n\n", textSegments)
                 : null;
 
-            ctx.PromptContentProvider.ToolCallManifest.ToolCalls = toolCalls;
+            ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCalls = toolCalls;
 
             return Task.FromResult(InvokeResult<IAgentPipelineContext>.Create(ctx));
         }

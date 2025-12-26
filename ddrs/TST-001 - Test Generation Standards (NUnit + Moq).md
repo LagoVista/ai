@@ -69,7 +69,12 @@ This DDR governs how tests are written, not what production code does.
 
 ---
 
-## 4. Brittleness Guardrails
+## 4. Test Generation
+ - MAY look at existing usage for types you do not now about to identify properties and methods  
+ - MUST NEVER guess or infer on properties, methods or class names you do do not have access to or examples usage in provided code.
+ - MUST NEVER use refection, method invoke or similar in tests.  If you need to do this, please abort and present problem to HUMAN
+
+## 5. Brittleness Guardrails
 
 Generated tests:
 - MUST NOT assert timestamps or non-deterministic values
@@ -78,7 +83,7 @@ Generated tests:
 
 ---
 
-## 5. Related DDRs
+## 6. Related DDRs
 
 - **TST-002 — Canonical Test Patterns & Examples** (DDR Type: Referential)
 
@@ -86,7 +91,7 @@ TST-002 provides non-normative examples and templates and is referenced for guid
 
 ---
 
-## 6. Relationship to SYS-001
+## 7. Relationship to SYS-001
 
 TST-001 follows the SYS-001 Aptix Development Workflow and is enforced as an Instruction DDR. Deviations require explicit human approval.
 

@@ -17,8 +17,9 @@ namespace LagoVista.AI.Services.Pipeline
         public AgentSessionRestorerPipelineStep(
             IAgentContextLoaderPipelineStap next,
             IAgentSessionManager sessionManager,
+            IAgentPipelineContextValidator validator,
             IAgentSessionFactory sessionFactory,
-            IAdminLogger adminLogger) : base(next, adminLogger)
+            IAdminLogger adminLogger) : base(next, validator, adminLogger)
         {
             _sessionManager = sessionManager ?? throw new ArgumentNullException(nameof(sessionManager));
             _sessionFactory = sessionFactory ?? throw new ArgumentNullException(nameof(sessionFactory));

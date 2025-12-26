@@ -153,6 +153,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             var responseBuilder = new Mock<IAgentExecuteResponseBuilder>(MockBehavior.Loose);
             var sessionManager = new Mock<IAgentSessionManager>(MockBehavior.Loose);
             var streamingContext = new Mock<IAgentStreamingContext>(MockBehavior.Loose);
+            var validator = new Mock<IAgentPipelineContextValidator>(MockBehavior.Loose);
 
             var pipelineCtx = CreatePipelineContextWithSession();
             contextProvider
@@ -175,6 +176,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
                 sessionRestorer.Object,
                 toolSessionRestorer.Object,
                 logger,
+                validator.Object,
                 responseBuilder.Object,
                 sessionManager.Object,
                 streamingContext.Object);
@@ -214,6 +216,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             var responseBuilder = new Mock<IAgentExecuteResponseBuilder>(MockBehavior.Loose);
             var sessionManager = new Mock<IAgentSessionManager>(MockBehavior.Loose);
             var streamingContext = new Mock<IAgentStreamingContext>(MockBehavior.Loose);
+            var validator = new Mock<IAgentPipelineContextValidator>(MockBehavior.Loose);
 
             // Return a failure with no Result.
             contextProvider
@@ -229,6 +232,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
                 sessionRestorer.Object,
                 toolSessionRestorer.Object,
                 logger,
+                validator.Object,
                 responseBuilder.Object,
                 sessionManager.Object,
                 streamingContext.Object);
@@ -270,12 +274,15 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             var responseBuilder = new Mock<IAgentExecuteResponseBuilder>(MockBehavior.Loose);
             var sessionManager = new Mock<IAgentSessionManager>(MockBehavior.Loose);
             var streamingContext = new Mock<IAgentStreamingContext>(MockBehavior.Loose);
+            var validator = new Mock<IAgentPipelineContextValidator>(MockBehavior.Loose);
+
 
             var sut = new AgentRequestHandlerPipelineStep(
                 contextProvider.Object,
                 sessionRestorer.Object,
                 toolSessionRestorer.Object,
                 logger,
+                validator.Object,
                 responseBuilder.Object,
                 sessionManager.Object,
                 streamingContext.Object);
@@ -318,6 +325,8 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             var responseBuilder = new Mock<IAgentExecuteResponseBuilder>(MockBehavior.Loose);
             var sessionManager = new Mock<IAgentSessionManager>(MockBehavior.Loose);
             var streamingContext = new Mock<IAgentStreamingContext>(MockBehavior.Loose);
+            var validator = new Mock<IAgentPipelineContextValidator>(MockBehavior.Loose);
+
 
             var pipelineCtx = CreatePipelineContextWithSession();
             contextProvider
@@ -337,6 +346,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
                 sessionRestorer.Object,
                 toolSessionRestorer.Object,
                 logger,
+                validator.Object,
                 responseBuilder.Object,
                 sessionManager.Object,
                 streamingContext.Object);

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -24,25 +25,24 @@ namespace LagoVista.AI.Tests.Services.Pipeline
     {
         private static ClientToolContinuationResolverPipelineStep CreateSut(
             Mock<IContextProviderInitializerPipelineStep> next,
+            Mock<IAgentPipelineContextValidator> validator,
             Mock<IToolCallManifestRepo> repo)
         {
             var logger = new AdminLogger(new ConsoleLogWriter());
-            return new ClientToolContinuationResolverPipelineStep(next.Object, repo.Object, logger);
+
+            validator.Setup(val => val.ValidateCore(It.IsAny<IAgentPipelineContext>())).Returns(InvokeResult.Success);
+            validator.Setup(val => val.ValidatePostStep(It.IsAny<IAgentPipelineContext>(), It.IsAny<PipelineSteps>())).Returns(InvokeResult.Success);
+            validator.Setup(val => val.ValidatePreStep(It.IsAny<IAgentPipelineContext>(), It.IsAny<PipelineSteps>())).Returns(InvokeResult.Success);
+            validator.Setup(val => val.ValidateToolCallManifest(It.IsAny<ToolCallManifest>())).Returns(InvokeResult.Success);
+
+            return new ClientToolContinuationResolverPipelineStep(next.Object, validator.Object, repo.Object, logger);
         }
 
         private static async Task<InvokeResult<IAgentPipelineContext>> InvokeExecuteStepAsync(
             ClientToolContinuationResolverPipelineStep sut,
             IAgentPipelineContext ctx)
         {
-            var mi = typeof(ClientToolContinuationResolverPipelineStep)
-                .GetMethod("ExecuteStepAsync", BindingFlags.Instance | BindingFlags.NonPublic);
-
-            Assert.That(mi, Is.Not.Null);
-
-            var task = (Task<InvokeResult<IAgentPipelineContext>>)mi.Invoke(sut, new object[] { ctx });
-            Assert.That(task, Is.Not.Null);
-
-            return await task;
+            return await sut.ExecuteAsync(ctx);
         }
 
         private static void AssertSuccess(InvokeResult<IAgentPipelineContext> result)
@@ -147,11 +147,12 @@ namespace LagoVista.AI.Tests.Services.Pipeline
 
             var envelope = CreateEnvelope(org, user, toolResults: Array.Empty<ToolResultSubmission>());
             var ctxMock = CreateContextMock("sess_1.turn_1", envelope);
+            var valiator = new Mock<IAgentPipelineContextValidator>(MockBehavior.Loose);
 
             repo.Setup(r => r.GetToolCallManifestAsync("sess_1.turn_1", "org-1"))
                 .ReturnsAsync((ToolCallManifest)null);
 
-            var sut = CreateSut(next, repo);
+            var sut = CreateSut(next, valiator, repo);
 
             // Act
             var result = await InvokeExecuteStepAsync(sut, ctxMock.Object);
@@ -172,6 +173,8 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             // Arrange
             var next = new Mock<IContextProviderInitializerPipelineStep>(MockBehavior.Loose);
             var repo = new Mock<IToolCallManifestRepo>(MockBehavior.Loose);
+            var valiator = new Mock<IAgentPipelineContextValidator>(MockBehavior.Loose);
+
 
             var org = EntityHeader.Create("org-1", "Org One");
             var user = EntityHeader.Create("user-1", "User One");
@@ -192,7 +195,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             repo.Setup(r => r.GetToolCallManifestAsync("sess_1.turn_1", "org-1"))
                 .ReturnsAsync(manifest);
 
-            var sut = CreateSut(next, repo);
+            var sut = CreateSut(next, valiator, repo);
 
             // Act
             var result = await InvokeExecuteStepAsync(sut, ctxMock.Object);
@@ -212,6 +215,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             // Arrange
             var next = new Mock<IContextProviderInitializerPipelineStep>(MockBehavior.Loose);
             var repo = new Mock<IToolCallManifestRepo>(MockBehavior.Loose);
+            var valiator = new Mock<IAgentPipelineContextValidator>(MockBehavior.Loose);
 
             var org = EntityHeader.Create("org-1", "Org One");
             var user = EntityHeader.Create("user-1", "User One");
@@ -226,7 +230,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             repo.Setup(r => r.GetToolCallManifestAsync("sess_1.turn_1", "org-1"))
                 .ReturnsAsync(manifest);
 
-            var sut = CreateSut(next, repo);
+            var sut = CreateSut(next,valiator, repo);
 
             // Act
             var result = await InvokeExecuteStepAsync(sut, ctxMock.Object);
@@ -246,6 +250,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             // Arrange
             var next = new Mock<IContextProviderInitializerPipelineStep>(MockBehavior.Loose);
             var repo = new Mock<IToolCallManifestRepo>(MockBehavior.Loose);
+            var valiator = new Mock<IAgentPipelineContextValidator>(MockBehavior.Loose);
 
             var org = EntityHeader.Create("org-1", "Org One");
             var user = EntityHeader.Create("user-1", "User One");
@@ -265,7 +270,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             repo.Setup(r => r.GetToolCallManifestAsync("sess_1.turn_1", "org-1"))
                 .ReturnsAsync(manifest);
 
-            var sut = CreateSut(next, repo);
+            var sut = CreateSut(next,valiator, repo);
 
             // Act
             var result = await InvokeExecuteStepAsync(sut, ctxMock.Object);
@@ -285,6 +290,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             // Arrange
             var next = new Mock<IContextProviderInitializerPipelineStep>(MockBehavior.Loose);
             var repo = new Mock<IToolCallManifestRepo>(MockBehavior.Loose);
+            var valiator = new Mock<IAgentPipelineContextValidator>(MockBehavior.Loose);
 
             var org = EntityHeader.Create("org-1", "Org One");
             var user = EntityHeader.Create("user-1", "User One");
@@ -304,7 +310,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             repo.Setup(r => r.GetToolCallManifestAsync("sess_1.turn_1", "org-1"))
                 .ReturnsAsync(manifest);
 
-            var sut = CreateSut(next, repo);
+            var sut = CreateSut(next, valiator, repo);
 
             // Act
             var result = await InvokeExecuteStepAsync(sut, ctxMock.Object);
@@ -324,6 +330,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             // Arrange
             var next = new Mock<IContextProviderInitializerPipelineStep>(MockBehavior.Loose);
             var repo = new Mock<IToolCallManifestRepo>(MockBehavior.Loose);
+            var valiator = new Mock<IAgentPipelineContextValidator>(MockBehavior.Loose);
 
             var org = EntityHeader.Create("org-1", "Org One");
             var user = EntityHeader.Create("user-1", "User One");
@@ -343,7 +350,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             repo.Setup(r => r.GetToolCallManifestAsync("sess_1.turn_1", "org-1"))
                 .ReturnsAsync(manifest);
 
-            var sut = CreateSut(next, repo);
+            var sut = CreateSut(next, valiator, repo);
 
             // Act
             var result = await InvokeExecuteStepAsync(sut, ctxMock.Object);
@@ -365,7 +372,8 @@ namespace LagoVista.AI.Tests.Services.Pipeline
 
             // Arrange
             var next = new Mock<IContextProviderInitializerPipelineStep>(MockBehavior.Loose);
-            var repo = new Mock<IToolCallManifestRepo>(MockBehavior.Loose);
+            var repo = new Mock<IToolCallManifestRepo>(MockBehavior.Loose);            
+            var validator = new Mock<IAgentPipelineContextValidator>(MockBehavior.Loose);
 
             var org = EntityHeader.Create("org-1", "Org One");
             var user = EntityHeader.Create("user-1", "User One");
@@ -384,9 +392,9 @@ namespace LagoVista.AI.Tests.Services.Pipeline
                 toolCallResults: new[] { new { ToolCallId = "tc_1", RequiresClientExecution = false, ErrorMessage = (string)null, ResultJson = (string)null } });
 
             repo.Setup(r => r.GetToolCallManifestAsync("sess_1.turn_1", "org-1"))
-                .ReturnsAsync(manifest);
+            .ReturnsAsync(manifest);
 
-            var sut = CreateSut(next, repo);
+            var sut = CreateSut(next, validator, repo);
 
             // Act
             var result = await InvokeExecuteStepAsync(sut, ctxMock.Object);
@@ -406,6 +414,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             // Arrange
             var next = new Mock<IContextProviderInitializerPipelineStep>(MockBehavior.Loose);
             var repo = new Mock<IToolCallManifestRepo>(MockBehavior.Loose);
+            var validator = new Mock<IAgentPipelineContextValidator>(MockBehavior.Loose);
 
             var org = EntityHeader.Create("org-1", "Org One");
             var user = EntityHeader.Create("user-1", "User One");
@@ -425,7 +434,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             repo.Setup(r => r.GetToolCallManifestAsync("sess_1.turn_1", "org-1"))
                 .ReturnsAsync(manifest);
 
-            var sut = CreateSut(next, repo);
+            var sut = CreateSut(next, validator, repo);
 
             // Act
             var result = await InvokeExecuteStepAsync(sut, ctxMock.Object);
@@ -445,6 +454,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             // Arrange
             var next = new Mock<IContextProviderInitializerPipelineStep>(MockBehavior.Loose);
             var repo = new Mock<IToolCallManifestRepo>(MockBehavior.Loose);
+            var validator = new Mock<IAgentPipelineContextValidator>(MockBehavior.Loose);
 
             var org = EntityHeader.Create("org-1", "Org One");
             var user = EntityHeader.Create("user-1", "User One");
@@ -464,7 +474,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             repo.Setup(r => r.GetToolCallManifestAsync("sess_1.turn_1", "org-1"))
                 .ReturnsAsync(manifest);
 
-            var sut = CreateSut(next, repo);
+            var sut = CreateSut(next, validator, repo);
 
             // Act
             var result = await InvokeExecuteStepAsync(sut, ctxMock.Object);
@@ -484,6 +494,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             // Arrange
             var next = new Mock<IContextProviderInitializerPipelineStep>(MockBehavior.Loose);
             var repo = new Mock<IToolCallManifestRepo>(MockBehavior.Loose);
+            var validator = new Mock<IAgentPipelineContextValidator>(MockBehavior.Loose);
 
             var org = EntityHeader.Create("org-1", "Org One");
             var user = EntityHeader.Create("user-1", "User One");
@@ -514,7 +525,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             repo.Setup(r => r.GetToolCallManifestAsync("sess_1.turn_1", "org-1"))
                 .ReturnsAsync(manifest);
 
-            var sut = CreateSut(next, repo);
+            var sut = CreateSut(next, validator, repo);
 
             // Act
             var result = await InvokeExecuteStepAsync(sut, ctxMock.Object);
@@ -538,6 +549,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             // Arrange
             var next = new Mock<IContextProviderInitializerPipelineStep>(MockBehavior.Loose);
             var repo = new Mock<IToolCallManifestRepo>(MockBehavior.Loose);
+            var validator = new Mock<IAgentPipelineContextValidator>(MockBehavior.Loose);
 
             var org = EntityHeader.Create("org-1", "Org One");
             var user = EntityHeader.Create("user-1", "User One");
@@ -572,7 +584,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             repo.Setup(r => r.GetToolCallManifestAsync("sess_1.turn_1", "org-1"))
                 .ReturnsAsync(manifest);
 
-            var sut = CreateSut(next, repo);
+            var sut = CreateSut(next, validator, repo);
 
             // Act
             var result = await InvokeExecuteStepAsync(sut, ctxMock.Object);
@@ -596,6 +608,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             // Arrange
             var next = new Mock<IContextProviderInitializerPipelineStep>(MockBehavior.Loose);
             var repo = new Mock<IToolCallManifestRepo>(MockBehavior.Loose);
+            var validator = new Mock<IAgentPipelineContextValidator>(MockBehavior.Loose);
 
             var org = EntityHeader.Create("org-1", "Org One");
             var user = EntityHeader.Create("user-1", "User One");
@@ -619,7 +632,10 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             repo.Setup(r => r.RemoveToolCallManifestAsync("sess_1.turn_1", "org-1"))
                 .Returns(Task.CompletedTask);
 
-            var sut = CreateSut(next, repo);
+            var sut = CreateSut(next, validator, repo);
+
+            next.Setup(nxt => nxt.ExecuteAsync(It.IsAny<IAgentPipelineContext>())).ReturnsAsync(InvokeResult<IAgentPipelineContext>.Create(ctxMock.Object));
+
 
             // Act
             var result = await InvokeExecuteStepAsync(sut, ctxMock.Object);

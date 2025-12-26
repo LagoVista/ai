@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 namespace LagoVista.AI.Models.Context
 {
     /// <summary>
-    /// AGN-030: A named container within the ContentProvider that holds an ordered set of line items.
+    /// AGN-030: A named container within the PromptKnowledgeProvider that holds an ordered set of line items.
     ///
     /// Notes:
     /// - A register declares exactly one ContextClassification (Session or Consumable).

@@ -17,7 +17,8 @@ namespace LagoVista.AI.Services.Pipeline
             IClientToolContinuationResolverPipelineStep next,
             IAgentSessionManager sessionManager,
             IToolCallManifestRepo repo,
-            IAdminLogger adminLogger) : base(next, adminLogger)
+            IAgentPipelineContextValidator validator,
+            IAdminLogger adminLogger) : base(next, validator, adminLogger)
         {
             _sessionManager = sessionManager ?? throw new ArgumentNullException(nameof(sessionManager));
         }

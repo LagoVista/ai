@@ -15,8 +15,9 @@ namespace LagoVista.AI.Services.Pipeline
      
         public AgentContextLoaderPipelineStap(
             IContextProviderInitializerPipelineStep next,
+            IAgentPipelineContextValidator validator,
             IAgentContextManager contextManager,
-            IAdminLogger adminLogger) : base(next, adminLogger)
+            IAdminLogger adminLogger) : base(next, validator, adminLogger)
         {
             _contextManager = contextManager ?? throw new ArgumentNullException(nameof(contextManager));
         }

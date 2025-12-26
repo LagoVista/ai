@@ -28,6 +28,13 @@ namespace LagoVista.AI.Interfaces
         AgentToolExecutionContext ToToolContext();
     }
 
+    public enum ResponseTypes
+    {
+        NotReady,
+        Final,
+        ToolContinuation,
+    }
+
     public interface IAgentPipelineContext : IHasSession, IHasTimeStamp, IHasEnvelope, IToolContextSource
     {
         AgentPipelineContextTypes Type { get; }
@@ -36,11 +43,15 @@ namespace LagoVista.AI.Interfaces
 
         AgentSessionTurn Turn { get; }
 
+        ResponsePayload ResponsePayload { get; }
+
         AgentContext AgentContext { get; }
         ConversationContext ConversationContext { get; }
 
-        ContentProvider PromptContentProvider { get; }
+        PromptKnowledgeProvider PromptKnowledgeProvider { get; }
         CompositionTrace Trace { get; }
+
+        ResponseTypes ResponseType { get; }
 
         bool HasPendingToolCalls { get; }
         bool HasClientToolCalls { get; }

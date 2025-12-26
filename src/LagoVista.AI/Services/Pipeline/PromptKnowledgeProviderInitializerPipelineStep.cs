@@ -29,18 +29,19 @@ namespace LagoVista.AI.Services.Pipeline
     /// Next:
     /// - ClientToolContinuationResolver OR AgentReasoner
     /// </summary>
-    public sealed class ContextProviderInitializerPipelineStep : PipelineStep, IContextProviderInitializerPipelineStep
+    public sealed class PromptKnowledgeProviderInitializerPipelineStep : PipelineStep, IContextProviderInitializerPipelineStep
     {
         private readonly IAdminLogger _adminLogger;
 
-        public ContextProviderInitializerPipelineStep(
+        public PromptKnowledgeProviderInitializerPipelineStep(
             IAgentReasonerPipelineStep next,
-            IAdminLogger adminLogger) : base(next, adminLogger)
+            IAgentPipelineContextValidator validator,
+            IAdminLogger adminLogger) : base(next, validator, adminLogger)
         {
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
         }
 
-        protected override PipelineSteps StepType => PipelineSteps.PromptContentProvider;
+        protected override PipelineSteps StepType => PipelineSteps.PromptKnowledgeProviderInitializer;
 
         protected override async Task<InvokeResult<IAgentPipelineContext>> ExecuteStepAsync(IAgentPipelineContext ctx)
         {

@@ -12,25 +12,28 @@ namespace LagoVista.AI.Services.Pipeline
     {
         private readonly IAgentPipelineStep _next;
         private readonly IAdminLogger _adminLogger;
+        private readonly IAgentPipelineContextValidator _validator;
 
-        public PipelineStep(IAgentPipelineStep next, IAdminLogger adminLogger)
+        public PipelineStep(IAgentPipelineStep next, IAgentPipelineContextValidator validator, IAdminLogger adminLogger)
         {
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
+            _validator = validator ?? throw new ArgumentNullException(nameof(validator));
             _next = next ?? throw new ArgumentNullException(nameof(next));
         }
 
-        public PipelineStep(IAdminLogger adminLogger)
+        public PipelineStep(IAgentPipelineContextValidator validator, IAdminLogger adminLogger) 
         {
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
+            _validator = validator ?? throw new ArgumentNullException(nameof(validator));
             _next = null;
         }
 
         public async Task<InvokeResult<IAgentPipelineContext>> ExecuteAsync(IAgentPipelineContext ctx)
         {
             if (ctx == null) throw new ArgumentNullException(nameof(ctx));
-            var validationResult = ctx.Validate(StepType);
-            if (!validationResult.Successful)
-                return InvokeResult<IAgentPipelineContext>.FromInvokeResult(validationResult);
+            var preValidation = _validator.ValidatePreStep(ctx, StepType);
+            if (!preValidation.Successful)
+                return InvokeResult<IAgentPipelineContext>.FromInvokeResult(preValidation);
 
             var sw = LogStart(ctx);
 
@@ -46,6 +49,13 @@ namespace LagoVista.AI.Services.Pipeline
                 return result;
             }
            
+            if(!_validator.ValidatePostStep(result.Result, StepType).Successful)
+            {
+                var contractViolation = _validator.ValidatePostStep(result.Result, StepType);
+                LogContractViolation(ctx, contractViolation.ErrorMessage, sw.Elapsed);
+                return InvokeResult<IAgentPipelineContext>.FromInvokeResult(contractViolation);
+            }
+
             LogSuccess(ctx, sw.Elapsed);
 
             if (_next == null)

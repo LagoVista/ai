@@ -15,7 +15,8 @@ namespace LagoVista.AI.Services.Pipeline
         public AgentSessionCreatorPipelineStep(
             IContextProviderInitializerPipelineStep next,
             IAgentSessionFactory sessionFactory,
-            IAdminLogger adminLogger) : base(next, adminLogger)
+            IAgentPipelineContextValidator validator,
+            IAdminLogger adminLogger) : base(next, validator, adminLogger)
         {
             _sessionFactory = sessionFactory ?? throw new ArgumentNullException(nameof(sessionFactory));
         }

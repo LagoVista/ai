@@ -21,10 +21,10 @@ namespace LagoVista.AI.Models
         ClientToolContinuationResolver = 40,
         AgentSessionCreator = 50,
         AgentContextLoader = 60,
-        ContextProviderInitializer = 70,
-        PromptContentProvider = 80,
-        Reasoner = 90,
-        LLMClient = 100
+        PromptKnowledgeProviderInitializer = 70,
+        Reasoner = 80,
+        LLMClient = 90,
+        ResponseBuilder = 100
     }
 
     public enum AgentPipelineContextTypes
@@ -77,6 +77,13 @@ namespace LagoVista.AI.Models
 
         public AgentSession Session { get; private set; }
 
+        public void SetResponsePayload(ResponsePayload payload)
+        {
+            ResponsePayload = payload ?? throw new ArgumentNullException(nameof(payload));
+        }
+
+        public ResponsePayload ResponsePayload { get; private set; }
+
         public void AttachSession(AgentSession session, AgentSessionTurn turn)
         {
             Session = session ?? throw new ArgumentNullException(nameof(session));
@@ -87,7 +94,7 @@ namespace LagoVista.AI.Models
         public void AttachToolManifest(ToolCallManifest toolManifest)
         {
             if (toolManifest == null) throw new ArgumentNullException(nameof(toolManifest));
-            PromptContentProvider.ToolCallManifest = toolManifest;
+            PromptKnowledgeProvider.ToolCallManifest = toolManifest;
         }
 
         public AgentSessionTurn Turn { get; private set; }
@@ -108,15 +115,15 @@ namespace LagoVista.AI.Models
     
         public bool HasPendingToolCalls
         {
-            get => PromptContentProvider.ToolCallManifest.ToolCalls.Any();
+            get => PromptKnowledgeProvider.ToolCallManifest.ToolCalls.Any();
         }
 
         public bool HasClientToolCalls
         {
-            get => PromptContentProvider.ToolCallManifest.ToolCalls.Where(tc=>tc.RequiresClientExecution).Any();
+            get => PromptKnowledgeProvider.ToolCallManifest.ToolCalls.Where(tc=>tc.RequiresClientExecution).Any();
         }
 
-        public ContentProvider PromptContentProvider { get; } = new ContentProvider();
+        public PromptKnowledgeProvider PromptKnowledgeProvider { get; } = new PromptKnowledgeProvider();
 
         // Trace (optional)
         public CompositionTrace Trace { get; } = new CompositionTrace();
@@ -149,6 +156,24 @@ namespace LagoVista.AI.Models
         }
 
         public Envelope Envelope { get; private set; }
+
+        public ResponseTypes ResponseType
+        {
+            get
+            {
+                if (ResponsePayload != null)
+                {
+                    return ResponseTypes.Final;
+                }
+
+                if(HasClientToolCalls)
+                {
+                    return ResponseTypes.ToolContinuation;
+                }
+
+                return ResponseTypes.NotReady;
+            }
+        } 
 
         private void RefreshEnvelope()
         {
@@ -222,24 +247,7 @@ namespace LagoVista.AI.Models
                     break;
             }
 
-            if (!result.Successful) return result;
-
-            // 3) Step-specific rules (only when that step runs)
-            switch (step)
-            {
-                case PipelineSteps.SessionRestorer:
-                    // likely require SessionId/TurnId in envelope (already covered by Type), nothing else
-                    break;
-
-                case PipelineSteps.AgentContextLoader:
-                    // require AgentContextId / ConversationContextId once you decide that’s mandatory
-                    break;
-
-                case PipelineSteps.PromptContentProvider:
-                    // require ToolCallManifest, etc. once attached
-                    break;
-            }
-
+            
             return result;
         }
 

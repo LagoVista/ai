@@ -16,8 +16,9 @@ namespace LagoVista.AI.Services.Pipeline
 
         public ClientToolContinuationResolverPipelineStep(
             IContextProviderInitializerPipelineStep next,
+            IAgentPipelineContextValidator validator,
             IToolCallManifestRepo repo,
-            IAdminLogger adminLogger) : base(next, adminLogger)
+            IAdminLogger adminLogger) : base(next, validator, adminLogger)
         {
             _repo = repo ?? throw new ArgumentNullException(nameof(repo));
         }

@@ -19,8 +19,9 @@ namespace LagoVista.AI.Services.Pipeline
         public AgentContextResolverPipelineStep(
             IAgentSessionCreatorPipelineStep next,
             IAgentContextManager contextManager,
+            IAgentPipelineContextValidator validator,
             IOrganizationManager orgManager,
-            IAdminLogger adminLogger) : base(next, adminLogger)
+            IAdminLogger adminLogger) : base(next, validator, adminLogger)
         {
             _contextManager = contextManager ?? throw new ArgumentNullException(nameof(contextManager));
             _orgManager = orgManager ?? throw new ArgumentNullException(nameof(orgManager));

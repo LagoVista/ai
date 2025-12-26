@@ -149,7 +149,7 @@ namespace LagoVista.AI.Models
                 Assert.That(summary.Title, Is.EqualTo("Experimental"));
                 Assert.That(summary.DomainKey, Is.EqualTo("Experimental"));
 
-                // DomainType is not set in the initializer, so extractor defaults to Unknown
+                // DomainType is not set in the initializer, so extractor defaults to NotReady
                 Assert.That(summary.DomainType, Is.EqualTo(DomainDescription.DomainTypes.BusinessObject));
             });
 

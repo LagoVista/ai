@@ -40,13 +40,15 @@ namespace LagoVista.AI.Services.Pipeline
         private readonly IAgentSessionManager _agentSessionManager;
         private readonly IAdminLogger _adminLogger;
         private readonly IAgentStreamingContext _agentStreamingContext;
-        private readonly IAgentExecuteResponseBuilder _responseBuilder; 
+        private readonly IAgentExecuteResponseBuilder _responseBuilder;
+        private readonly IAgentPipelineContextValidator _validator;
 
         public AgentRequestHandlerPipelineStep(
             IAgentContextResolverPipelineStep sessionCreator,
             IAgentSessionRestorerPipelineStep sessionRestorer,
             IClientToolCallSessionRestorerPipelineStep toolSessionRestorer,
             IAdminLogger adminLogger,
+            IAgentPipelineContextValidator validator,
             IAgentExecuteResponseBuilder responseBuilder,
             IAgentSessionManager agentSessionManager,
             IAgentStreamingContext agentStreamingContext)
@@ -58,6 +60,7 @@ namespace LagoVista.AI.Services.Pipeline
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
             _agentStreamingContext = agentStreamingContext ?? throw new ArgumentNullException(nameof(agentStreamingContext));
             _responseBuilder = responseBuilder ?? throw new ArgumentNullException(nameof(responseBuilder));
+            _validator = validator ?? throw new ArgumentNullException(nameof(validator));
         }
 
         public async Task<InvokeResult<AgentExecuteResponse>> HandleAsync(AgentExecuteRequest request, EntityHeader org, EntityHeader user, CancellationToken cancellationToken = default)

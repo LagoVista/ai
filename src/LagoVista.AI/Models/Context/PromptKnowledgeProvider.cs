@@ -5,16 +5,25 @@ using Newtonsoft.Json;
 
 namespace LagoVista.AI.Models.Context
 {
+
+    public enum PromptKnowledgeProviderStates
+    {
+        NotSet,
+        Ready,
+        Error
+    }
+
     /// <summary>
-    /// AGN-030: ContentProvider ("File Cabinet") for prompt-relevant context.
+    /// AGN-030: PromptKnowledgeProvider ("File Cabinet") for prompt-relevant context.
     ///
-    /// - The ContentProvider contains multiple registers (drawers).
+    /// - The PromptKnowledgeProvider contains multiple registers (drawers).
     /// - Each register declares exactly one classification: Session or Consumable.
     /// - Line items are stored in-register in insertion order.
     /// - Business logic for assembling prompts or orchestrating tools does not belong here.
     /// </summary>
-    public sealed class ContentProvider
+    public sealed class PromptKnowledgeProvider
     {
+
         public const string ToolCallManifestRegisterName = "ToolCallManifest";
 
         [JsonProperty("registers")]
@@ -47,6 +56,8 @@ namespace LagoVista.AI.Models.Context
             _registers[name] = created;
             return created;
         }
+
+        public PromptKnowledgeProviderStates State { get; set; } = PromptKnowledgeProviderStates.NotSet;
 
         /// <summary>
         /// Try get register by name.
