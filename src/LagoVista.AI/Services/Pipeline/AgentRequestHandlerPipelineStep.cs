@@ -86,18 +86,25 @@ namespace LagoVista.AI.Services.Pipeline
                     await _agentStreamingContext.AddWorkflowAsync("Welcome Back to Aptix, resuming tool execution...", cancellationToken);
                     result = await _toolSessionRestorer.ExecuteAsync(ctx);
                     break;
+                default:
+                    return InvokeResult<AgentExecuteResponse>.FromError($"don't know how to handle {ctx.Type}.");
             }
             
-            await _agentSessionManager.UpdateSessionAsync(result.Result.Session, org, user);
+            if(result == null)
+                return InvokeResult<AgentExecuteResponse>.FromError("null result from next");
 
             if (result.Successful)
             {
+                await _agentSessionManager.UpdateSessionAsync(result.Result.Session, org, user);
                 ctx.LogDetails(_adminLogger, PipelineSteps.RequestHandler, sw.Elapsed);
                 var response = await _responseBuilder.BuildAsync(result.Result);
                 return response;
             }
             else
             {
+                if (ctx.Session != null) // failed path will check to see if we have a session, if we do, save it for diagnostics
+                    await _agentSessionManager.UpdateSessionAsync(ctx.Session, org, user);
+
                 ctx.LogStepErrorDetails(_adminLogger, PipelineSteps.RequestHandler, result.ToInvokeResult(), sw.Elapsed);
                 return InvokeResult<AgentExecuteResponse>.FromInvokeResult(result.ToInvokeResult());
             }
