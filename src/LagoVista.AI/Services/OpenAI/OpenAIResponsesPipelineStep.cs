@@ -30,12 +30,12 @@ namespace LagoVista.AI.Services.OpenAI
             _invoker = invoker ?? throw new ArgumentNullException(nameof(invoker));
         }
 
-        public async Task<InvokeResult<AgentPipelineContext>> ExecuteAsync(AgentPipelineContext ctx)
+        public async Task<InvokeResult<IAgentPipelineContext>> ExecuteAsync(IAgentPipelineContext ctx)
         {
-            if (ctx == null) return InvokeResult<AgentPipelineContext>.FromError("AgentPipelineContext cannot be null.", "OPENAI_CLIENT_NULL_CONTEXT");
+            if (ctx == null) return InvokeResult<IAgentPipelineContext>.FromError("AgentPipelineContext cannot be null.", "OPENAI_CLIENT_NULL_CONTEXT");
 
             var vr = ctx.Validate(PipelineSteps.LLMClient);
-            if (!vr.Successful) return InvokeResult<AgentPipelineContext>.FromInvokeResult(vr);
+            if (!vr.Successful) return InvokeResult<IAgentPipelineContext>.FromInvokeResult(vr);
 
             try
             {
@@ -60,14 +60,14 @@ namespace LagoVista.AI.Services.OpenAI
             {
                 _log.AddException("[OpenAIResponsesClient_ExecuteAsync__Exception]", ex);
                 await _events.PublishAsync(ctx.Session.Id, "LLMFailed", "failed", "Unexpected exception during LLM call.", null, CancellationToken.None);
-                return InvokeResult<AgentPipelineContext>.FromError("Unexpected exception during LLM call.", "OPENAI_CLIENT_EXCEPTION");
+                return InvokeResult<IAgentPipelineContext>.FromError("Unexpected exception during LLM call.", "OPENAI_CLIENT_EXCEPTION");
             }
         }
 
-        private async Task<InvokeResult<AgentPipelineContext>> FailAsync(string sid, InvokeResult err, string fallbackMsg, CancellationToken ct)
+        private async Task<InvokeResult<IAgentPipelineContext>> FailAsync(string sid, InvokeResult err, string fallbackMsg, CancellationToken ct)
         {
             await _events.PublishAsync(sid, "LLMFailed", "failed", err?.ErrorMessage ?? fallbackMsg, null, ct);
-            return InvokeResult<AgentPipelineContext>.FromInvokeResult(err);
+            return InvokeResult<IAgentPipelineContext>.FromInvokeResult(err);
         }
     }
 }

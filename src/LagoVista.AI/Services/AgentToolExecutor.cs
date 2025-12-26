@@ -30,7 +30,7 @@ namespace LagoVista.AI.Services
             _toolRegistry = agentToolRegistry ?? throw new ArgumentNullException(nameof(agentToolRegistry));
         }
 
-        public async Task<InvokeResult<AgentToolCallResult>> ExecuteServerToolAsync(AgentToolCall call, AgentPipelineContext context)
+        public async Task<InvokeResult<AgentToolCallResult>> ExecuteServerToolAsync(AgentToolCall call, IAgentPipelineContext context)
         {
             if (call == null)
             {

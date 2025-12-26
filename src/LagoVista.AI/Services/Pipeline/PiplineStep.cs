@@ -25,20 +25,20 @@ namespace LagoVista.AI.Services.Pipeline
             _next = null;
         }
 
-        public async Task<InvokeResult<AgentPipelineContext>> ExecuteAsync(AgentPipelineContext ctx)
+        public async Task<InvokeResult<IAgentPipelineContext>> ExecuteAsync(IAgentPipelineContext ctx)
         {
             if (ctx == null) throw new ArgumentNullException(nameof(ctx));
             var validationResult = ctx.Validate(StepType);
             if (!validationResult.Successful)
-                return InvokeResult<AgentPipelineContext>.FromInvokeResult(validationResult);
+                return InvokeResult<IAgentPipelineContext>.FromInvokeResult(validationResult);
 
             var sw = LogStart(ctx);
 
-            if (ctx.CancellationToken.IsCancellationRequested) return InvokeResult<AgentPipelineContext>.Abort();
+            if (ctx.CancellationToken.IsCancellationRequested) return InvokeResult<IAgentPipelineContext>.Abort();
 
             var result = await ExecuteStepAsync(ctx); 
 
-            if (ctx.CancellationToken.IsCancellationRequested) return InvokeResult<AgentPipelineContext>.Abort();
+            if (ctx.CancellationToken.IsCancellationRequested) return InvokeResult<IAgentPipelineContext>.Abort();
 
             if (!result.Successful)
             {
@@ -58,24 +58,24 @@ namespace LagoVista.AI.Services.Pipeline
 
         protected abstract PipelineSteps StepType { get; }
 
-        protected abstract Task<InvokeResult<AgentPipelineContext>> ExecuteStepAsync(AgentPipelineContext ctx);
+        protected abstract Task<InvokeResult<IAgentPipelineContext>> ExecuteStepAsync(IAgentPipelineContext ctx);
 
-        protected virtual Stopwatch LogStart(AgentPipelineContext ctx)
+        protected virtual Stopwatch LogStart(IAgentPipelineContext ctx)
         {
             ctx.LogDetails(_adminLogger, StepType);
             return Stopwatch.StartNew();
         }
 
-        protected virtual void LogSuccess(AgentPipelineContext ctx, TimeSpan elapsed) =>
+        protected virtual void LogSuccess(IAgentPipelineContext ctx, TimeSpan elapsed) =>
             ctx.LogDetails(_adminLogger, StepType, elapsed);
 
-        protected virtual void LogFailure(AgentPipelineContext ctx, InvokeResult<AgentPipelineContext> result, TimeSpan elapsed) =>
+        protected virtual void LogFailure(IAgentPipelineContext ctx, InvokeResult<IAgentPipelineContext> result, TimeSpan elapsed) =>
             ctx.LogStepErrorDetails(_adminLogger, StepType, result.ErrorMessage, elapsed);
 
-        protected virtual void LogException(AgentPipelineContext ctx, Exception ex, TimeSpan elapsed) =>
+        protected virtual void LogException(IAgentPipelineContext ctx, Exception ex, TimeSpan elapsed) =>
             ctx.LogStepErrorDetails(_adminLogger, StepType, ex.Message, elapsed);
 
-        protected virtual void LogContractViolation(AgentPipelineContext ctx, string message, TimeSpan elapsed) =>
+        protected virtual void LogContractViolation(IAgentPipelineContext ctx, string message, TimeSpan elapsed) =>
             ctx.LogStepErrorDetails(_adminLogger, StepType, message, elapsed);
     }
 }

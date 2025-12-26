@@ -27,7 +27,7 @@ namespace LagoVista.AI.Interfaces
         /// On success: returns the open HttpResponseMessage (caller disposes).
         /// On failure: returns InvokeResult error (and disposes any response internally).
         /// </summary>
-        Task<InvokeResult<string>> InvokeAsync(AgentPipelineContext ctx, string requestJson);
+        Task<InvokeResult<string>> InvokeAsync(IAgentPipelineContext ctx, string requestJson);
     }
 
     /// <summary>

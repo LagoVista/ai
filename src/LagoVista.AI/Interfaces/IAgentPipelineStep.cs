@@ -7,7 +7,7 @@ namespace LagoVista.AI.Interfaces
 {
     public interface IAgentPipelineStep
     {
-        Task<InvokeResult<AgentPipelineContext>> ExecuteAsync(AgentPipelineContext ctx);
+        Task<InvokeResult<IAgentPipelineContext>> ExecuteAsync(IAgentPipelineContext ctx);
     }
 
 }

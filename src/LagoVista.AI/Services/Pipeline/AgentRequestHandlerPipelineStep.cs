@@ -67,7 +67,7 @@ namespace LagoVista.AI.Services.Pipeline
             var sw = Stopwatch.StartNew();
             ctx.LogDetails(_adminLogger, PipelineSteps.RequestHandler);
 
-            InvokeResult<AgentPipelineContext> result = null;
+            InvokeResult<IAgentPipelineContext> result = null;
 
             switch (ctx.Type)
             {

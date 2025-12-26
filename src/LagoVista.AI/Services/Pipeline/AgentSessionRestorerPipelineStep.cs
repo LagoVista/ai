@@ -26,24 +26,24 @@ namespace LagoVista.AI.Services.Pipeline
 
         protected override PipelineSteps StepType => PipelineSteps.SessionRestorer;
 
-        protected override async Task<InvokeResult<AgentPipelineContext>> ExecuteStepAsync(AgentPipelineContext ctx)
+        protected override async Task<InvokeResult<IAgentPipelineContext>> ExecuteStepAsync(IAgentPipelineContext ctx)
         {
             // throws record not found exception if session is not available.
             var session = await _sessionManager.GetAgentSessionAsync(ctx.Envelope.SessionId, ctx.Envelope.Org, ctx.Envelope.User);
 
             var previousTurn = session.Turns.FirstOrDefault(t => t.Id == ctx.Envelope.TurnId);
             if (previousTurn == null)
-                return InvokeResult<AgentPipelineContext>.FromError("Turn Id not found in Previous Turns", "AGENT_SESSION_RESTORE_NO_PREVIOUS_TURN");
+                return InvokeResult<IAgentPipelineContext>.FromError("Turn Id not found in Previous Turns", "AGENT_SESSION_RESTORE_NO_PREVIOUS_TURN");
          
             var turn = _sessionFactory.CreateTurnForExistingSession(ctx, session);
             if(String.IsNullOrEmpty(previousTurn.OpenAIResponseId))
-                return InvokeResult<AgentPipelineContext>.FromError("Previous Turn MUST have OpenAIResponseId but is missing", "AGENT_SESSION_RESTORE_NO_PREVIOUS_RESPONSE_ID");
+                return InvokeResult<IAgentPipelineContext>.FromError("Previous Turn MUST have OpenAIResponseId but is missing", "AGENT_SESSION_RESTORE_NO_PREVIOUS_RESPONSE_ID");
 
             turn.PreviousOpenAIResponseId = previousTurn.OpenAIResponseId;
 
             ctx.AttachSession(session, turn);
 
-            return InvokeResult<AgentPipelineContext>.Create(ctx);
+            return InvokeResult<IAgentPipelineContext>.Create(ctx);
         }
     }
 }

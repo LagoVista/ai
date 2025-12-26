@@ -6,6 +6,5 @@ namespace LagoVista.AI.Interfaces.Pipeline
 {
     public interface IClientToolContinuationResolverPipelineStep : IAgentPipelineStep
     {
-        new Task<InvokeResult<AgentPipelineContext>> ExecuteAsync(AgentPipelineContext ctx);
     }
 }

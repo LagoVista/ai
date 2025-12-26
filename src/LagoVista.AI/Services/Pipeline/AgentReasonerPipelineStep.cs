@@ -30,11 +30,11 @@ namespace LagoVista.AI.Services
 
         protected override PipelineSteps StepType => PipelineSteps.Reasoner;
 
-        protected override async Task<InvokeResult<AgentPipelineContext>> ExecuteStepAsync(AgentPipelineContext ctx)
+        protected override async Task<InvokeResult<IAgentPipelineContext>> ExecuteStepAsync(IAgentPipelineContext ctx)
         {
             for (var iteration = 0; iteration < MaxReasoningIterations; iteration++)
             {
-                if (ctx.CancellationToken.IsCancellationRequested) { return InvokeResult<AgentPipelineContext>.Abort(); }
+                if (ctx.CancellationToken.IsCancellationRequested) { return InvokeResult<IAgentPipelineContext>.Abort(); }
 
                 _logger.Trace("[AgentReasoner_ExecuteAsync] Iteration " + (iteration + 1) + " starting. " + "sessionId=" + ctx.Session.Id + ", mode=" + ctx.Session.Mode);
 
@@ -55,8 +55,8 @@ namespace LagoVista.AI.Services
 
                     await _agentStreamingContext.AddWorkflowAsync((callResponse.Successful ? "success" : "failed") + " calling tool " + toolCall.Name + (callResponse.Successful ? "" : ", err: " + callResponse.ErrorMessage) + " in " + sw.Elapsed.TotalMilliseconds.ToString("0.0") + "ms...", ctx.CancellationToken);
 
-                    if (ctx.CancellationToken.IsCancellationRequested) { return InvokeResult<AgentPipelineContext>.Abort(); }
-                    if (!callResponse.Successful) { return InvokeResult<AgentPipelineContext>.FromInvokeResult(callResponse.ToInvokeResult()); }
+                    if (ctx.CancellationToken.IsCancellationRequested) { return InvokeResult<IAgentPipelineContext>.Abort(); }
+                    if (!callResponse.Successful) { return InvokeResult<IAgentPipelineContext>.FromInvokeResult(callResponse.ToInvokeResult()); }
 
                     var result = callResponse.Result;
                     ctx.PromptContentProvider.ToolCallManifest.ToolCallResults.Add(result);
@@ -66,11 +66,11 @@ namespace LagoVista.AI.Services
                 // upon return we will pickup where we left off.  
                 if (llmResult.Result.HasClientToolCalls)
                 {
-                    return InvokeResult<AgentPipelineContext>.Create(ctx);
+                    return InvokeResult<IAgentPipelineContext>.Create(ctx);
                 }
             }
 
-            return InvokeResult<AgentPipelineContext>.FromError("Maximum reasoning iterations exceeded.", "AGENT_REASONER_MAX_ITERATIONS_EXCEEDED");
+            return InvokeResult<IAgentPipelineContext>.FromError("Maximum reasoning iterations exceeded.", "AGENT_REASONER_MAX_ITERATIONS_EXCEEDED");
         }
     }
 }

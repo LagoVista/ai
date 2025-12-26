@@ -25,11 +25,11 @@ namespace LagoVista.AI.Helpers
         /// <param name="rawJson">Raw JSON from the /responses call.</param>
         /// <param name="request">The AgentExecuteRequest used to initiate this call.</param>
         /// <returns>Populated AgentExecuteResponse.</returns>
-        public  Task<InvokeResult<AgentPipelineContext>> ParseAsync(AgentPipelineContext ctx, string rawJson)
+        public  Task<InvokeResult<IAgentPipelineContext>> ParseAsync(IAgentPipelineContext ctx, string rawJson)
         {
             if (string.IsNullOrWhiteSpace(rawJson))
             {
-                return Task.FromResult(InvokeResult<AgentPipelineContext>.FromError("[AgentExecuteResponseParser__Parse] Empty or null JSON payload."));
+                return Task.FromResult(InvokeResult<IAgentPipelineContext>.FromError("[AgentExecuteResponseParser__Parse] Empty or null JSON payload."));
             }
 
             JObject root;
@@ -40,7 +40,7 @@ namespace LagoVista.AI.Helpers
             catch (Exception ex)
             {
                 Console.WriteLine(rawJson);
-                return Task.FromResult(InvokeResult<AgentPipelineContext>.FromError($"[AgentExecuteResponseParser__Parse] {ex.Message}"));
+                return Task.FromResult(InvokeResult<IAgentPipelineContext>.FromError($"[AgentExecuteResponseParser__Parse] {ex.Message}"));
             }
 
             var response = new ResponsePayload
@@ -84,7 +84,7 @@ namespace LagoVista.AI.Helpers
 
             if (outputArray == null)
             {
-                return Task.FromResult(InvokeResult<AgentPipelineContext>.FromError("[AgentExecuteResponseParser__Parse] Missing [output] Node."));
+                return Task.FromResult(InvokeResult<IAgentPipelineContext>.FromError("[AgentExecuteResponseParser__Parse] Missing [output] Node."));
             }
 
             var textSegments = new List<string>();
@@ -264,7 +264,7 @@ namespace LagoVista.AI.Helpers
 
             ctx.PromptContentProvider.ToolCallManifest.ToolCalls = toolCalls;
 
-            return Task.FromResult(InvokeResult<AgentPipelineContext>.Create(ctx));
+            return Task.FromResult(InvokeResult<IAgentPipelineContext>.Create(ctx));
         }
     }
 }

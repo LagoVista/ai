@@ -1,17 +1,14 @@
-using System;
 using System.Threading.Tasks;
 using LagoVista.AI.Models;
-using LagoVista.Core.AI.Models;
-using LagoVista.Core.Models;
 
 namespace LagoVista.AI.Interfaces
 {
     public interface IAgentSessionFactory
     {
-        Task<AgentSession> CreateSession(AgentPipelineContext ctx);
+        Task<AgentSession> CreateSession(IAgentPipelineContext ctx);
 
-        AgentSessionTurn CreateTurnForNewSession(AgentPipelineContext ctx, AgentSession session);
+        AgentSessionTurn CreateTurnForNewSession(IAgentPipelineContext ctx, AgentSession session);
 
-        AgentSessionTurn CreateTurnForExistingSession(AgentPipelineContext ctx, AgentSession session);
+        AgentSessionTurn CreateTurnForExistingSession(IAgentPipelineContext ctx, AgentSession session);
     }
 }

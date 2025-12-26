@@ -10,6 +10,6 @@ namespace LagoVista.AI.Interfaces
 {
     public interface IResponsesRequestBuilder
     {
-        Task<InvokeResult<ResponsesApiRequest>> BuildAsync(AgentPipelineContext ctx);
+        Task<InvokeResult<ResponsesApiRequest>> BuildAsync(IAgentPipelineContext ctx);
     }
 }

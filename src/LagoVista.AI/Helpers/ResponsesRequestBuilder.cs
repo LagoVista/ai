@@ -33,7 +33,7 @@ namespace LagoVista.AI.Helpers
         /// <param name="ragContextBlock">The pre-formatted RAG context block (may be null or empty).</param>
         /// <param name="toolUsageMetadataBlock">LLM-facing usage metadata block containing detailed instructions for all Aptix tools (may be null or empty).</param>
         /// <returns>ResponsesApiRequest representing the body for the /responses call.</returns>
-        public Task<InvokeResult< ResponsesApiRequest>> BuildAsync(AgentPipelineContext ctx) 
+        public Task<InvokeResult< ResponsesApiRequest>> BuildAsync(IAgentPipelineContext ctx) 
         {
 
             var dto = new ResponsesApiRequest

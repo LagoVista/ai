@@ -19,7 +19,7 @@ namespace LagoVista.AI.Services
             _namingService = namingService ?? throw new ArgumentNullException(nameof(namingService));
         }
 
-        public async Task<AgentSession> CreateSession(AgentPipelineContext ctx)
+        public async Task<AgentSession> CreateSession(IAgentPipelineContext ctx)
         {
             if (ctx == null) throw new ArgumentNullException(nameof(ctx));
 
@@ -48,7 +48,7 @@ namespace LagoVista.AI.Services
         }
 
 
-        public AgentSessionTurn CreateTurnForNewSession(AgentPipelineContext ctx, AgentSession session)
+        public AgentSessionTurn CreateTurnForNewSession(IAgentPipelineContext ctx, AgentSession session)
         {
             if (ctx == null) throw new ArgumentNullException(nameof(ctx));
             if (session == null) throw new ArgumentNullException(nameof(session));
@@ -67,7 +67,7 @@ namespace LagoVista.AI.Services
             return turn;
         }
 
-        public AgentSessionTurn CreateTurnForExistingSession(AgentPipelineContext ctx, AgentSession session)
+        public AgentSessionTurn CreateTurnForExistingSession(IAgentPipelineContext ctx, AgentSession session)
         {
             if (ctx == null) throw new ArgumentNullException(nameof(ctx));
             if (session == null) throw new ArgumentNullException(nameof(session));

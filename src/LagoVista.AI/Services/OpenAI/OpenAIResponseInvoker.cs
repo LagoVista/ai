@@ -45,7 +45,7 @@ namespace LagoVista.AI.Services.OpenAI
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task<InvokeResult<string>> InvokeAsync(AgentPipelineContext ctx, string requestJson)
+        public async Task<InvokeResult<string>> InvokeAsync(IAgentPipelineContext ctx, string requestJson)
         {
             var httpClient = _httpFactory.CreateClient();
             var ct = ctx.CancellationToken;

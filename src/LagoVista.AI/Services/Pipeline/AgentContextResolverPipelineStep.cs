@@ -28,7 +28,7 @@ namespace LagoVista.AI.Services.Pipeline
 
         protected override PipelineSteps StepType => PipelineSteps.AgentContextResolver; 
 
-        protected override async Task<InvokeResult<AgentPipelineContext>> ExecuteStepAsync(AgentPipelineContext ctx)
+        protected override async Task<InvokeResult<IAgentPipelineContext>> ExecuteStepAsync(IAgentPipelineContext ctx)
         {
             var agentContextId = ctx.Envelope.AgentContextId;
             if (String.IsNullOrEmpty(agentContextId))
@@ -36,7 +36,7 @@ namespace LagoVista.AI.Services.Pipeline
                 var org = await _orgManager.GetOrganizationAsync(ctx.Envelope.Org.Id, ctx.Envelope.Org, ctx.Envelope.User);
                 if(EntityHeader.IsNullOrEmpty(org.DefaultAgentContext))
                 {
-                    return InvokeResult<AgentPipelineContext>.FromError(
+                    return InvokeResult<IAgentPipelineContext>.FromError(
                     "No AgentContextId provided and organization has no default AgentContext.",
                     "AGENT_CTX_RESOLVER_MISSING_AGENT_CONTEXT_ID_NO_ORG_DEFAULT");
                 }
@@ -53,7 +53,7 @@ namespace LagoVista.AI.Services.Pipeline
 
             if (string.IsNullOrWhiteSpace(conversationContextId))
             {
-                return InvokeResult<AgentPipelineContext>.FromError(
+                return InvokeResult<IAgentPipelineContext>.FromError(
                 "ConversationContextId not found.",
                 "AGENT_CTX_RESOLVER_CONVERSATION_CONTEXT_ID_NOT_AVAILABLE");
             }
@@ -61,13 +61,13 @@ namespace LagoVista.AI.Services.Pipeline
             var conversationContext = agentContext.ConversationContexts.FirstOrDefault(ctx => ctx.Id == conversationContextId); 
             if (conversationContext == null)
             {
-                return InvokeResult<AgentPipelineContext>.FromError(
+                return InvokeResult<IAgentPipelineContext>.FromError(
                     "ConversationContext not found.",
                     "AGENT_CTX_RESOLVER_CONVERSATION_CONTEXT_NOT_FOUND");
             }
             ctx.AttachAgentContext(agentContext, conversationContext);
 
-            return InvokeResult<AgentPipelineContext>.Create(ctx);
+            return InvokeResult<IAgentPipelineContext>.Create(ctx);
         }
     }
 }

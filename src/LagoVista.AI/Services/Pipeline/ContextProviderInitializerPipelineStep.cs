@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Pipeline;
 using LagoVista.AI.Models;
 using LagoVista.Core;
@@ -41,9 +42,9 @@ namespace LagoVista.AI.Services.Pipeline
 
         protected override PipelineSteps StepType => PipelineSteps.PromptContentProvider;
 
-        protected override async Task<InvokeResult<AgentPipelineContext>> ExecuteStepAsync(AgentPipelineContext ctx)
+        protected override async Task<InvokeResult<IAgentPipelineContext>> ExecuteStepAsync(IAgentPipelineContext ctx)
         {
-            return InvokeResult<AgentPipelineContext>.Create(ctx);
+            return InvokeResult<IAgentPipelineContext>.Create(ctx);
         }
     }
 }

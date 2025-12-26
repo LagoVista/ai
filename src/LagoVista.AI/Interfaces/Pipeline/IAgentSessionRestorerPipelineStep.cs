@@ -6,6 +6,6 @@ namespace LagoVista.AI.Interfaces.Pipeline
 {
     public interface IAgentSessionRestorerPipelineStep : IAgentPipelineStep
     {
-        new Task<InvokeResult<AgentPipelineContext>> ExecuteAsync(AgentPipelineContext ctx);
+        new Task<InvokeResult<IAgentPipelineContext>> ExecuteAsync(IAgentPipelineContext ctx);
     }
 }

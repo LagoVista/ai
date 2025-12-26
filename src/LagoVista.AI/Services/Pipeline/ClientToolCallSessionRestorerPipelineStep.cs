@@ -24,18 +24,18 @@ namespace LagoVista.AI.Services.Pipeline
 
         protected override PipelineSteps StepType => PipelineSteps.ClientToolContinuationResolver;
 
-        protected override async Task<InvokeResult<AgentPipelineContext>> ExecuteStepAsync(AgentPipelineContext ctx)
+        protected override async Task<InvokeResult<IAgentPipelineContext>> ExecuteStepAsync(IAgentPipelineContext ctx)
         {        
             var session = await _sessionManager.GetAgentSessionAsync(ctx.Envelope.SessionId, ctx.Envelope.Org, ctx.Envelope.User);
 
             // For Tool Continuations we maintain the same turn as before
             var previousTurn = session.Turns.FirstOrDefault(t => t.Id == ctx.Envelope.TurnId);
             if (previousTurn == null)
-                return InvokeResult<AgentPipelineContext>.FromError("Turn Id not found in Previous Turns", "AGENT_SESSION_RESTORE_NO_PREVIOUS_TURN");
+                return InvokeResult<IAgentPipelineContext>.FromError("Turn Id not found in Previous Turns", "AGENT_SESSION_RESTORE_NO_PREVIOUS_TURN");
 
             ctx.AttachSession(session, previousTurn);
 
-            return InvokeResult<AgentPipelineContext>.Create(ctx);
+            return InvokeResult<IAgentPipelineContext>.Create(ctx);
         }
     }
 }

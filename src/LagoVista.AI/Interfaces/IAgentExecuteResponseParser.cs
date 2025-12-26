@@ -7,6 +7,6 @@ namespace LagoVista.AI.Interfaces
 {
     public interface IAgentExecuteResponseParser
     {
-        Task<InvokeResult<AgentPipelineContext>> ParseAsync(AgentPipelineContext ctx, string rawJson);  
+        Task<InvokeResult<IAgentPipelineContext>> ParseAsync(IAgentPipelineContext ctx, string rawJson);  
     }
 }

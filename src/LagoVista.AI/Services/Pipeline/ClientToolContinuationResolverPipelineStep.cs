@@ -23,10 +23,10 @@ namespace LagoVista.AI.Services.Pipeline
 
         protected override PipelineSteps StepType => PipelineSteps.ClientToolContinuationResolver;
 
-        protected override async Task<InvokeResult<AgentPipelineContext>> ExecuteStepAsync(AgentPipelineContext ctx)
+        protected override async Task<InvokeResult<IAgentPipelineContext>> ExecuteStepAsync(IAgentPipelineContext ctx)
         {
             var manifest = await _repo.GetToolCallManifestAsync(ctx.ToolManifestId, ctx.Envelope.Org.Id);
-            if (manifest == null) return InvokeResult<AgentPipelineContext>.FromError($"Tool Call Manifest with Id {ctx.ToolManifestId} not found.", "CLIENT_TOOL_CONTINUATION_RESOLVER_MANIFEST_NOT_FOUND");
+            if (manifest == null) return InvokeResult<IAgentPipelineContext>.FromError($"Tool Call Manifest with Id {ctx.ToolManifestId} not found.", "CLIENT_TOOL_CONTINUATION_RESOLVER_MANIFEST_NOT_FOUND");
 
             var reconcileToolResult = new InvokeResult();
 
@@ -90,7 +90,7 @@ namespace LagoVista.AI.Services.Pipeline
 
 
             if (!reconcileToolResult.Successful)
-                return InvokeResult<AgentPipelineContext>.FromInvokeResult(reconcileToolResult);
+                return InvokeResult<IAgentPipelineContext>.FromInvokeResult(reconcileToolResult);
 
             ctx.AttachToolManifest(manifest);
 
@@ -99,7 +99,7 @@ namespace LagoVista.AI.Services.Pipeline
             // If we later need an explicit retry mechanism, we can add it; for now, reconcile once and clean up.
             await _repo.RemoveToolCallManifestAsync(ctx.ToolManifestId, ctx.Envelope.Org.Id);
                 
-            return InvokeResult<AgentPipelineContext>.Create(ctx);
+            return InvokeResult<IAgentPipelineContext>.Create(ctx);
         }
     }
 }
