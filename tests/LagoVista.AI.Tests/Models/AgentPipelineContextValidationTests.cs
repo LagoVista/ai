@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
+using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
+using LagoVista.AI.Services.Pipeline;
 using LagoVista.Core.AI.Models;
 using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
@@ -13,6 +15,8 @@ namespace LagoVista.AI.Tests.Models
     [TestFixture]
     public sealed class AgentPipelineContextValidationTests
     {
+        IAgentPipelineContextValidator _validator = new AgentPipelineContextValidator();
+
         private static AgentPipelineContext CreateValidContext()
         {
             var request = new AgentExecuteRequest
@@ -75,7 +79,7 @@ namespace LagoVista.AI.Tests.Models
         {
             var ctx = CreateValidContext();
 
-            var result = ctx.Validate(PipelineSteps.RequestHandler);
+            var result = _validator.ValidatePreStep(ctx, PipelineSteps.RequestHandler);
 
             // TST-001 §3.5: include ErrorMessage in Successful assertions.
             Assert.That(result.Successful, Is.True, result.ErrorMessage);
@@ -89,7 +93,7 @@ namespace LagoVista.AI.Tests.Models
             var ctx = CreateValidContext();
             SetBackingField(ctx, nameof(AgentPipelineContext.Type), (AgentPipelineContextTypes)999);
 
-            var result = ctx.Validate(PipelineSteps.RequestHandler);
+            var result = _validator.ValidatePreStep(ctx, PipelineSteps.RequestHandler);
 
             Assert.That(result.Successful, Is.False, result.ErrorMessage);
             Assert.That(result.ErrorMessage, Is.Not.Null.And.Not.Empty);
@@ -103,7 +107,7 @@ namespace LagoVista.AI.Tests.Models
             var ctx = CreateValidContext();
             SetBackingField(ctx, nameof(AgentPipelineContext.TimeStamp), "");
 
-            var result = ctx.Validate(PipelineSteps.RequestHandler);
+            var result = _validator.ValidatePreStep(ctx, PipelineSteps.RequestHandler);
 
             Assert.That(result.Successful, Is.False, result.ErrorMessage);
             Assert.That(result.ErrorMessage, Is.Not.Null.And.Not.Empty);
@@ -117,7 +121,7 @@ namespace LagoVista.AI.Tests.Models
             var ctx = CreateValidContext();
             SetBackingField(ctx, nameof(AgentPipelineContext.CorrelationId), "");
 
-            var result = ctx.Validate(PipelineSteps.RequestHandler);
+            var result = _validator.ValidatePreStep(ctx, PipelineSteps.RequestHandler);
 
             Assert.That(result.Successful, Is.False, result.ErrorMessage);
             Assert.That(result.ErrorMessage, Is.Not.Null.And.Not.Empty);
@@ -131,7 +135,7 @@ namespace LagoVista.AI.Tests.Models
             var ctx = CreateValidContext();
             SetEnvelopeOrgToNull(ctx);
 
-            var result = ctx.Validate(PipelineSteps.RequestHandler);
+            var result = _validator.ValidatePreStep(ctx, PipelineSteps.RequestHandler);
 
             Assert.That(result.Successful, Is.False, result.ErrorMessage);
             Assert.That(result.ErrorMessage, Is.Not.Null.And.Not.Empty);
@@ -145,7 +149,7 @@ namespace LagoVista.AI.Tests.Models
             var ctx = CreateValidContext();
             SetEnvelopeUserToNull(ctx);
 
-            var result = ctx.Validate(PipelineSteps.RequestHandler);
+            var result = _validator.ValidatePreStep(ctx, PipelineSteps.RequestHandler);
 
             Assert.That(result.Successful, Is.False, result.ErrorMessage);
             Assert.That(result.ErrorMessage, Is.Not.Null.And.Not.Empty);

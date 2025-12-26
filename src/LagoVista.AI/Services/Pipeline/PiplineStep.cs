@@ -48,12 +48,12 @@ namespace LagoVista.AI.Services.Pipeline
                 LogFailure(ctx, result, sw.Elapsed);
                 return result;
             }
-           
-            if(!_validator.ValidatePostStep(result.Result, StepType).Successful)
+
+            var postvalidation = _validator.ValidatePostStep(result.Result, StepType);
+            if (!postvalidation.Successful)
             {
-                var contractViolation = _validator.ValidatePostStep(result.Result, StepType);
-                LogContractViolation(ctx, contractViolation.ErrorMessage, sw.Elapsed);
-                return InvokeResult<IAgentPipelineContext>.FromInvokeResult(contractViolation);
+                LogContractViolation(ctx, postvalidation.ErrorMessage, sw.Elapsed);
+                return InvokeResult<IAgentPipelineContext>.FromInvokeResult(preValidation);
             }
 
             LogSuccess(ctx, sw.Elapsed);

@@ -11,6 +11,7 @@ using LagoVista.AI.Models.Context;
 using LagoVista.Core.AI.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
+using Moq;
 using NUnit.Framework;
 
 namespace LagoVista.AI.Tests.Helpers
@@ -148,10 +149,32 @@ namespace LagoVista.AI.Tests.Helpers
             prop?.SetValue(manifest, message);
         }
 
+        private IAgentExecuteResponseBuilder CreateBuilder(bool isValid = true)
+        {
+            var validator = new Mock<IAgentPipelineContextValidator>();
+            if (isValid)
+            {
+                validator.Setup(val => val.ValidateCore(It.IsAny<IAgentPipelineContext>())).Returns(InvokeResult.Success);
+                validator.Setup(val => val.ValidatePostStep(It.IsAny<IAgentPipelineContext>(), It.IsAny<PipelineSteps>())).Returns(InvokeResult.Success);
+                validator.Setup(val => val.ValidatePreStep(It.IsAny<IAgentPipelineContext>(), It.IsAny<PipelineSteps>())).Returns(InvokeResult.Success);
+                validator.Setup(val => val.ValidateToolCallManifest(It.IsAny<ToolCallManifest>())).Returns(InvokeResult.Success);
+            }
+            else
+            {
+                validator.Setup(val => val.ValidateCore(It.IsAny<IAgentPipelineContext>())).Returns(InvokeResult.FromError("error"));
+                validator.Setup(val => val.ValidatePostStep(It.IsAny<IAgentPipelineContext>(), It.IsAny<PipelineSteps>())).Returns(InvokeResult.FromError("error"));
+                validator.Setup(val => val.ValidatePreStep(It.IsAny<IAgentPipelineContext>(), It.IsAny<PipelineSteps>())).Returns(InvokeResult.FromError("error"));
+                validator.Setup(val => val.ValidateToolCallManifest(It.IsAny<ToolCallManifest>())).Returns(InvokeResult.FromError("error"));
+            }
+            var builder = new ResponseBuilder(validator.Object);
+
+            return builder;
+        }
+
         [Test]
         public async Task BuildAsync_NullContext_ReturnsFailure()
         {
-            var sut = new ResponseBuilder();
+            var sut = CreateBuilder();
             var result = await sut.BuildAsync(null);
 
             Assert.That(result.Successful, Is.False);
@@ -171,7 +194,7 @@ namespace LagoVista.AI.Tests.Helpers
                 ResponsePayload = new ResponsePayload { PrimaryOutputText = "ignored" }
             };
 
-            var sut = new ResponseBuilder();
+            var sut = CreateBuilder();
             var result = await sut.BuildAsync(ctx);
 
             Assert.That(result.Successful, Is.False);
@@ -191,7 +214,7 @@ namespace LagoVista.AI.Tests.Helpers
                 ResponsePayload = new ResponsePayload { PrimaryOutputText = "ignored" }
             };
 
-            var sut = new ResponseBuilder();
+            var sut = CreateBuilder(false);
             var result = await sut.BuildAsync(ctx);
 
             Assert.That(result.Successful, Is.False);
@@ -211,7 +234,7 @@ namespace LagoVista.AI.Tests.Helpers
                 ResponsePayload = new ResponsePayload { PrimaryOutputText = "ignored" }
             };
 
-            var sut = new ResponseBuilder();
+            var sut = CreateBuilder();
             var result = await sut.BuildAsync(ctx);
 
             Assert.That(result.Successful, Is.False);
@@ -236,7 +259,7 @@ namespace LagoVista.AI.Tests.Helpers
                 }
             };
 
-            var sut = new ResponseBuilder();
+            var sut = CreateBuilder();
             var result = await sut.BuildAsync(ctx);
 
             Assert.That(result.Successful, Is.True);
@@ -279,7 +302,8 @@ namespace LagoVista.AI.Tests.Helpers
                 ResponsePayload = new ResponsePayload { PrimaryOutputText = "ignored" }
             };
 
-            var sut = new ResponseBuilder();
+
+            var sut = CreateBuilder();
             var result = await sut.BuildAsync(ctx);
 
             Assert.That(result.Successful, Is.False);
@@ -310,7 +334,7 @@ namespace LagoVista.AI.Tests.Helpers
                 }
             };
 
-            var sut = new ResponseBuilder();
+            var sut = CreateBuilder();
             var result = await sut.BuildAsync(ctx);
 
             Assert.That(result.Successful, Is.True);

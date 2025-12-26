@@ -62,8 +62,7 @@ namespace LagoVista.AI.Interfaces
         void AttachToolManifest(ToolCallManifest toolManifest);
 
         // If you actually use these in steps, keep them. Otherwise, drop.
-        InvokeResult Validate(PipelineSteps step);
-
+      
         void LogStepErrorDetails(IAdminLogger logger, PipelineSteps step, string error, TimeSpan ts);
 
         void LogStepErrorDetails(IAdminLogger logger, PipelineSteps step, InvokeResult error, TimeSpan ts);

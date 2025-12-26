@@ -18,6 +18,13 @@ namespace LagoVista.AI.Helpers
     /// </summary>
     public sealed class ResponseBuilder : IAgentExecuteResponseBuilder
     {
+        private readonly IAgentPipelineContextValidator _validator;
+
+        public ResponseBuilder(IAgentPipelineContextValidator validator)
+        {
+            _validator = validator ?? throw new ArgumentNullException(nameof(validator));
+        }
+
         public Task<InvokeResult<AgentExecuteResponse>> BuildAsync(IAgentPipelineContext ctx)
         {
             if (ctx == null)
@@ -30,7 +37,7 @@ namespace LagoVista.AI.Helpers
                 return Task.FromResult(InvokeResult<AgentExecuteResponse>.FromError("Response not ready."));
             }
 
-            var validationResult = ctx.Validate(PipelineSteps.ResponseBuilder);
+            var validationResult = _validator.ValidatePreStep(ctx, PipelineSteps.ResponseBuilder);
             if(!validationResult.Successful) 
                 return Task.FromResult(InvokeResult<AgentExecuteResponse>.FromInvokeResult(validationResult));
 
