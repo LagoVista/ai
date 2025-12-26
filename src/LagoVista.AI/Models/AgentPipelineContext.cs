@@ -15,16 +15,16 @@ namespace LagoVista.AI.Models
 {
     public enum PipelineSteps
     {
-        RequestHandler,
-        SessionRestorer,
-        AgentContextResolver,
-        ClientToolContinuationResolver,
-        AgentSessionCreator,
-        AgentContextLoader,
-        ContextProviderInitializer,
-        PromptContentProvider,
-        Reasoner,
-        LLMClient
+        RequestHandler = 10,
+        SessionRestorer = 20,
+        AgentContextResolver = 30,
+        ClientToolContinuationResolver = 40,
+        AgentSessionCreator = 50,
+        AgentContextLoader = 60,
+        ContextProviderInitializer = 70,
+        PromptContentProvider = 80,
+        Reasoner = 90,
+        LLMClient = 100
     }
 
     public enum AgentPipelineContextTypes
@@ -43,18 +43,20 @@ namespace LagoVista.AI.Models
             if(org == null) throw new ArgumentNullException(nameof(org));
             if(user == null) throw new ArgumentNullException(nameof(user));
 
+            var hasToolResults = request.ToolResults?.Any() ?? false;
+
             Envelope = new Envelope(request.AgentContextId, request.ConversationContextId, request.SessionId, request.TurnId, request.Instruction, 
                 request.Streaming, request.ToolResults, request.ClipboardImages, request.InputArtifacts, request.RagScope, org, user);
 
-            if (String.IsNullOrEmpty(request.SessionId) && String.IsNullOrEmpty(request.TurnId) && !request.ToolResults.Any())
+            if (String.IsNullOrEmpty(request.SessionId) && String.IsNullOrEmpty(request.TurnId) && !hasToolResults)
             {
                 Type = AgentPipelineContextTypes.Initial;
             }
-            else if (!String.IsNullOrEmpty(request.SessionId) && !String.IsNullOrEmpty(request.TurnId) && !request.ToolResults.Any())
+            else if (!String.IsNullOrEmpty(request.SessionId) && !String.IsNullOrEmpty(request.TurnId) && !hasToolResults)
             {
                 Type = AgentPipelineContextTypes.FollowOn;
             }
-            else if (!String.IsNullOrEmpty(request.SessionId) && !String.IsNullOrEmpty(request.TurnId) && request.ToolResults.Any())
+            else if (!String.IsNullOrEmpty(request.SessionId) && !String.IsNullOrEmpty(request.TurnId) && hasToolResults)
             {
                 Type = AgentPipelineContextTypes.ClientToolCallContinuation;
             }
@@ -103,9 +105,7 @@ namespace LagoVista.AI.Models
  
         public ConversationContext ConversationContext { get; private set; }
 
-        //// Output (set by final step)
-        //public AgentExecuteResponse Response { get; set; }
-
+    
         public bool HasPendingToolCalls
         {
             get => PromptContentProvider.ToolCallManifest.ToolCalls.Any();
@@ -148,14 +148,6 @@ namespace LagoVista.AI.Models
             };
         }
 
-        public AgentExecuteResponse CreateResponse()
-        {
-            return new AgentExecuteResponse()
-            {
-
-            };
-        }
-
         public Envelope Envelope { get; private set; }
 
         private void RefreshEnvelope()
@@ -171,30 +163,86 @@ namespace LagoVista.AI.Models
         {
             var result = new InvokeResult();
 
+            // 1) Core invariants
+            if (!Enum.IsDefined(typeof(AgentPipelineContextTypes), Type))
+                result.Errors.Add(new ErrorMessage("Invalid AgentPipelineContextTypes value."));
+
+            if (String.IsNullOrEmpty(TimeStamp))
+                result.Errors.Add(new ErrorMessage("TimeStamp is required."));
+
+            if (String.IsNullOrEmpty(CorrelationId))
+                result.Errors.Add(new ErrorMessage("CorrelationId is required."));
+
+            if (Envelope?.Org == null)
+                result.Errors.Add(new ErrorMessage("Envelope.Org is required."));
+
+            if (Envelope?.User == null)
+                result.Errors.Add(new ErrorMessage("Envelope.User is required."));
+
+            if (!result.Successful) return result;
+
+            // 2) Type-based envelope rules
+            var hasInstructions = !String.IsNullOrWhiteSpace(Envelope.Instructions);
+            var hasArtifacts = Envelope.InputArtifacts?.Count > 0;
+            var hasClipboard = Envelope.ClipBoardImages?.Count > 0;
+
+            if (Type == AgentPipelineContextTypes.Initial || Type == AgentPipelineContextTypes.FollowOn)
+            {
+                if (!hasInstructions && !hasArtifacts && !hasClipboard)
+                    result.Errors.Add(new ErrorMessage("At least one of Instructions, InputArtifacts, or ClipBoardImages must be provided."));
+            }
+
+            switch (Type)
+            {
+                case AgentPipelineContextTypes.Initial:
+                    if (!String.IsNullOrEmpty(Envelope.ConversationContextId) && String.IsNullOrEmpty(Envelope.AgentContextId))
+                        result.Errors.Add(new ErrorMessage("ConversationContextId must be empty when AgentContextId is not provided."));
+                    if (!String.IsNullOrEmpty(Envelope.SessionId) || !String.IsNullOrEmpty(Envelope.TurnId))
+                        result.Errors.Add(new ErrorMessage("SessionId and TurnId must be empty for Initial requests."));
+                    if (Envelope.ToolResults?.Count > 0)
+                        result.Errors.Add(new ErrorMessage("ToolResults must be empty for Initial requests."));
+                    break;
+
+                case AgentPipelineContextTypes.FollowOn:
+                    if (String.IsNullOrEmpty(Envelope.SessionId))
+                        result.Errors.Add(new ErrorMessage("SessionId is required for FollowOn requests."));
+                    if (String.IsNullOrEmpty(Envelope.TurnId))
+                        result.Errors.Add(new ErrorMessage("TurnId is required for FollowOn requests."));
+                    if (Envelope.ToolResults?.Count > 0)
+                        result.Errors.Add(new ErrorMessage("ToolResults must be empty for FollowOn requests."));
+                    break;
+
+                case AgentPipelineContextTypes.ClientToolCallContinuation:
+                    if (String.IsNullOrEmpty(Envelope.SessionId))
+                        result.Errors.Add(new ErrorMessage("SessionId is required for ClientToolCallContinuation requests."));
+                    if (String.IsNullOrEmpty(Envelope.TurnId))
+                        result.Errors.Add(new ErrorMessage("TurnId is required for ClientToolCallContinuation requests."));
+                    if (Envelope.ToolResults == null || Envelope.ToolResults.Count == 0)
+                        result.Errors.Add(new ErrorMessage("ToolResults must contain at least one row for ClientToolCallContinuation requests."));
+                    break;
+            }
+
+            if (!result.Successful) return result;
+
+            // 3) Step-specific rules (only when that step runs)
             switch (step)
             {
-                case PipelineSteps.RequestHandler:
-                    break;
                 case PipelineSteps.SessionRestorer:
+                    // likely require SessionId/TurnId in envelope (already covered by Type), nothing else
                     break;
-                case PipelineSteps.AgentContextResolver:
-                    break;
-                case PipelineSteps.ClientToolContinuationResolver:
-                    break;
-                case PipelineSteps.AgentSessionCreator:
-                    break;
+
                 case PipelineSteps.AgentContextLoader:
+                    // require AgentContextId / ConversationContextId once you decide that’s mandatory
                     break;
-                case PipelineSteps.ContextProviderInitializer:
-                    break;
-                case PipelineSteps.Reasoner:
-                    break;
-                case PipelineSteps.LLMClient:
+
+                case PipelineSteps.PromptContentProvider:
+                    // require ToolCallManifest, etc. once attached
                     break;
             }
 
             return result;
         }
+
 
         public void LogStepErrorDetails(IAdminLogger logger, PipelineSteps step, string error, TimeSpan ts)
         {

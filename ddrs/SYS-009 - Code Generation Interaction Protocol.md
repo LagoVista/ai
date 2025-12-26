@@ -109,7 +109,13 @@ All other file paths always require human confirmation.
 
 ---
 
-## 7. Non-Goals
+## 7. Guessing or Inferring on types
+
+- When creating code you should not guess on types that you were not supplied to you.  
+- You may infer the shape of classes based on properties that are used in the supplied code.
+- You may not attempt to guess at what other methods, properties or constructors that the class may have if they do not exist in supplied code.
+
+## 8. Non-Goals
 
 This DDR does not define:
 - Coding standards

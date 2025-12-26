@@ -34,7 +34,7 @@ namespace LagoVista.AI.Services.Pipeline
     /// </summary>
     public sealed class AgentRequestHandlerPipelineStep : IAgentRequestHandlerStep
     {
-        private readonly IAgentSessionCreatorPipelineStep _sessionCreator;
+        private readonly IAgentContextResolverPipelineStep _contextResolver;
         private readonly IAgentSessionRestorerPipelineStep _sessionRestorer;
         private readonly IClientToolCallSessionRestorerPipelineStep _toolSessionRestorer;
         private readonly IAgentSessionManager _agentSessionManager;
@@ -43,7 +43,7 @@ namespace LagoVista.AI.Services.Pipeline
         private readonly IAgentExecuteResponseBuilder _responseBuilder; 
 
         public AgentRequestHandlerPipelineStep(
-            IAgentSessionCreatorPipelineStep sessionCreator,
+            IAgentContextResolverPipelineStep sessionCreator,
             IAgentSessionRestorerPipelineStep sessionRestorer,
             IClientToolCallSessionRestorerPipelineStep toolSessionRestorer,
             IAdminLogger adminLogger,
@@ -51,7 +51,7 @@ namespace LagoVista.AI.Services.Pipeline
             IAgentSessionManager agentSessionManager,
             IAgentStreamingContext agentStreamingContext)
         {
-            _sessionCreator = sessionCreator ?? throw new ArgumentNullException(nameof(sessionCreator));
+            _contextResolver = sessionCreator ?? throw new ArgumentNullException(nameof(sessionCreator));
             _sessionRestorer = sessionRestorer ?? throw new ArgumentNullException(nameof(sessionRestorer));
             _toolSessionRestorer = toolSessionRestorer ?? throw new ArgumentNullException(nameof(toolSessionRestorer));
             _agentSessionManager = agentSessionManager ?? throw new ArgumentNullException(nameof(agentSessionManager));
@@ -76,7 +76,7 @@ namespace LagoVista.AI.Services.Pipeline
             {
                 case AgentPipelineContextTypes.Initial:
                     await _agentStreamingContext.AddWorkflowAsync("Welcome to Aptix, Finding the next available agent...please wait...", cancellationToken);
-                    result = await _sessionCreator.ExecuteAsync(ctx);
+                    result = await _contextResolver.ExecuteAsync(ctx);
                     break;
                 case AgentPipelineContextTypes.FollowOn:
                     await _agentStreamingContext.AddWorkflowAsync("Welcome Back to Aptix, let's get started...", cancellationToken);

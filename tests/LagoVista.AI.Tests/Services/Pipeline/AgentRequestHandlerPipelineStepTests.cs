@@ -147,7 +147,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
         {
             var logger = CreateLogger();
 
-            var sessionCreator = new Mock<IAgentSessionCreatorPipelineStep>(MockBehavior.Loose);
+            var contextProvider = new Mock<IAgentContextResolverPipelineStep>(MockBehavior.Loose);
             var sessionRestorer = new Mock<IAgentSessionRestorerPipelineStep>(MockBehavior.Loose);
             var toolSessionRestorer = new Mock<IClientToolCallSessionRestorerPipelineStep>(MockBehavior.Loose);
             var responseBuilder = new Mock<IAgentExecuteResponseBuilder>(MockBehavior.Loose);
@@ -155,7 +155,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             var streamingContext = new Mock<IAgentStreamingContext>(MockBehavior.Loose);
 
             var pipelineCtx = CreatePipelineContextWithSession();
-            sessionCreator
+            contextProvider
                 .Setup(x => x.ExecuteAsync(It.IsAny<AgentPipelineContext>()))
                 .ReturnsAsync(CreateSuccess(pipelineCtx));
 
@@ -171,7 +171,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
 
 
             var sut = new AgentRequestHandlerPipelineStep(
-                sessionCreator.Object,
+                contextProvider.Object,
                 sessionRestorer.Object,
                 toolSessionRestorer.Object,
                 logger,
@@ -180,6 +180,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
                 streamingContext.Object);
 
             var request = CreateRequest();
+            request.Instruction = "Hello Wold";
             var org = CreateOrg();
             var user = CreateUser();
 
@@ -193,7 +194,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             sessionManager.Verify(x => x.UpdateSessionAsync(It.IsAny<AgentSession>(), org, user), Times.Once);
 
             // Routing contract: only creator should be invoked.
-            sessionCreator.Verify(x => x.ExecuteAsync(It.IsAny<AgentPipelineContext>()), Times.Once);
+            contextProvider.Verify(x => x.ExecuteAsync(It.IsAny<AgentPipelineContext>()), Times.Once);
             sessionRestorer.Verify(x => x.ExecuteAsync(It.IsAny<AgentPipelineContext>()), Times.Never);
             toolSessionRestorer.Verify(x => x.ExecuteAsync(It.IsAny<AgentPipelineContext>()), Times.Never);
         }
@@ -207,7 +208,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
 
             var logger = CreateLogger();
 
-            var sessionCreator = new Mock<IAgentSessionCreatorPipelineStep>(MockBehavior.Loose);
+            var contextProvider = new Mock<IAgentContextResolverPipelineStep>(MockBehavior.Loose);
             var sessionRestorer = new Mock<IAgentSessionRestorerPipelineStep>(MockBehavior.Loose);
             var toolSessionRestorer = new Mock<IClientToolCallSessionRestorerPipelineStep>(MockBehavior.Loose);
             var responseBuilder = new Mock<IAgentExecuteResponseBuilder>(MockBehavior.Loose);
@@ -215,7 +216,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             var streamingContext = new Mock<IAgentStreamingContext>(MockBehavior.Loose);
 
             // Return a failure with no Result.
-            sessionCreator
+            contextProvider
                 .Setup(x => x.ExecuteAsync(It.IsAny<AgentPipelineContext>()))
                 .ReturnsAsync(CreateFailure<IAgentPipelineContext>("downstream failed"));
 
@@ -224,7 +225,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
                  .ReturnsAsync(InvokeResult.Success);
 
             var sut = new AgentRequestHandlerPipelineStep(
-                sessionCreator.Object,
+                contextProvider.Object,
                 sessionRestorer.Object,
                 toolSessionRestorer.Object,
                 logger,
@@ -263,7 +264,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
 
             var logger = CreateLogger();
 
-            var sessionCreator = new Mock<IAgentSessionCreatorPipelineStep>(MockBehavior.Loose);
+            var contextProvider = new Mock<IAgentContextResolverPipelineStep>(MockBehavior.Loose);
             var sessionRestorer = new Mock<IAgentSessionRestorerPipelineStep>(MockBehavior.Loose);
             var toolSessionRestorer = new Mock<IClientToolCallSessionRestorerPipelineStep>(MockBehavior.Loose);
             var responseBuilder = new Mock<IAgentExecuteResponseBuilder>(MockBehavior.Loose);
@@ -271,7 +272,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             var streamingContext = new Mock<IAgentStreamingContext>(MockBehavior.Loose);
 
             var sut = new AgentRequestHandlerPipelineStep(
-                sessionCreator.Object,
+                contextProvider.Object,
                 sessionRestorer.Object,
                 toolSessionRestorer.Object,
                 logger,
@@ -311,7 +312,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
 
             var logger = CreateLogger();
 
-            var sessionCreator = new Mock<IAgentSessionCreatorPipelineStep>(MockBehavior.Loose);
+            var contextProvider = new Mock<IAgentContextResolverPipelineStep>(MockBehavior.Loose);
             var sessionRestorer = new Mock<IAgentSessionRestorerPipelineStep>(MockBehavior.Loose);
             var toolSessionRestorer = new Mock<IClientToolCallSessionRestorerPipelineStep>(MockBehavior.Loose);
             var responseBuilder = new Mock<IAgentExecuteResponseBuilder>(MockBehavior.Loose);
@@ -319,7 +320,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             var streamingContext = new Mock<IAgentStreamingContext>(MockBehavior.Loose);
 
             var pipelineCtx = CreatePipelineContextWithSession();
-            sessionCreator
+            contextProvider
                 .Setup(x => x.ExecuteAsync(It.IsAny<AgentPipelineContext>()))
                 .ReturnsAsync(CreateSuccess(pipelineCtx));
 
@@ -332,7 +333,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
                 .ReturnsAsync(InvokeResult.Success);
 
             var sut = new AgentRequestHandlerPipelineStep(
-                sessionCreator.Object,
+                contextProvider.Object,
                 sessionRestorer.Object,
                 toolSessionRestorer.Object,
                 logger,
@@ -341,6 +342,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
                 streamingContext.Object);
 
             var request = CreateRequest();
+            request.Instruction = "Hello World";
             var org = CreateOrg();
             var user = CreateUser();
 
