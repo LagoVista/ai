@@ -187,8 +187,8 @@ namespace LagoVista.AI.Services.Tools
                 ReferenceDdrs =
                     args["references"]?.ToObject<string[]>() ?? Array.Empty<string>(),
 
-                ModeInstructionDdrs =
-                    args["mode_instructions"]?.ToObject<string[]>() ?? Array.Empty<string>(),
+                AgentInstructionDdrs =
+                    args["agent_instructions"]?.ToObject<string[]>() ?? Array.Empty<string>(),
                 BehaviorHints =
                     args["behavior_hints"]?.ToObject<string[]>() ?? Array.Empty<string>(),
                 HumanRoleHints =

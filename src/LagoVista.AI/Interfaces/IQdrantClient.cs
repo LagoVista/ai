@@ -3,7 +3,7 @@
 // IndexVersion: 2
 // --- END CODE INDEX META ---
 using LagoVista.AI.Models;
-using LagoVista.AI.Services;
+using LagoVista.AI.Services.Qdrant;
 using LagoVista.Core.AI.Interfaces;
 using LagoVista.Core.AI.Models;
 using LagoVista.Core.Utils.Types;

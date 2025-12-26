@@ -96,7 +96,7 @@ namespace LagoVista.AI.Managers
                 Description = "General-purpose assistance for everyday Q&A, explanation, and lightweight help.",
                 WhenToUse = "Use this mode for everyday Q&A, explanation, and lightweight assistance.",
                 WelcomeMessage = "You are now in General mode. Use this mode for broad questions and lightweight assistance",
-                ModeInstructionDdrs = new[]
+                AgentInstructionDdrs = new[]
                 {
                     "You are operating in General mode. Provide helpful and accurate responses to a wide range of user queries.",
                     "Focus on clarity and conciseness in your answers.",

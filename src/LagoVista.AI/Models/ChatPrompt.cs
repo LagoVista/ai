@@ -2,7 +2,7 @@
 // ContentHash: 13fd6a7ee515b4668acf4c5cbd9134bb72152644dbfc7f167f6f11aa9041cfd0
 // IndexVersion: 2
 // --- END CODE INDEX META ---
-namespace LagoVista.AI.Services
+namespace LagoVista.AI.Models
 {
     public class ChatPrompt
     {
@@ -13,7 +13,7 @@ namespace LagoVista.AI.Services
             Context = context;
         }
 
-        public string System { get;  }
+        public string System { get; }
         public string User { get; }
         public string Context { get; }
     }

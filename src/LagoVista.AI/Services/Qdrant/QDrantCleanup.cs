@@ -11,7 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LagoVista.AI.Services
+namespace LagoVista.AI.Services.Qdrant
 {
     public static class QdrantCleanup
     {
@@ -132,7 +132,7 @@ namespace LagoVista.AI.Services
         // ---------- helpers ----------
 
         private static object KvMatch(string key, object value)
-            => new { key = key, match = new { value = value } };
+            => new { key, match = new { value } };
 
         private static HttpRequestMessage BuildJsonPost(string url, object body, string apiKey)
         {

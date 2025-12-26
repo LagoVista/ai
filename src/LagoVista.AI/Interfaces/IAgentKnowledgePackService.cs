@@ -14,7 +14,7 @@ namespace LagoVista.AI.Interfaces
     {
         Task<InvokeResult<AgentKnowledgePack>> CreateAsync(
             string orgId,
-            string agentContextId,
+            AgentContext agentContext,
             string conversationContextId,
             string mode,
             CancellationToken cancellationToken = default);

@@ -9,9 +9,8 @@ using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json;
 
-namespace LagoVista.AI.Services
+namespace LagoVista.AI.Services.OpenAI
 {
-    // Target: keep this boring and (roughly) < 100 LOC by delegating all details.
     public sealed class OpenAIResponsesClientPipelineStap : ILLMClient
     {
         private readonly IAdminLogger _log;
@@ -43,9 +42,9 @@ namespace LagoVista.AI.Services
                 var req = await _builder.BuildAsync(ctx);
                 var reqJson = JsonConvert.SerializeObject(req);
                 _log.Trace("[OpenAIResponsesClient__ExecuteAsync] Call LLM with JSON\r\n=====\r\n" + reqJson + "\r\n====");
-    
+
                 await _events.PublishAsync(ctx.Session.Id, "LLMStarted", "in-progress", "Calling OpenAI model...", null, ctx.CancellationToken);
-              
+
                 var sw = Stopwatch.StartNew();
                 var invoke = await _invoker.InvokeAsync(ctx, reqJson);
                 if (!invoke.Successful) return await FailAsync(ctx.Session.Id, invoke.ToInvokeResult(), "LLM invoke failed.", ctx.CancellationToken);

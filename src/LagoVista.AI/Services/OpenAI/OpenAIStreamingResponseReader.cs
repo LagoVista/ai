@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LagoVista.AI.Services
+namespace LagoVista.AI.Services.OpenAI
 {
     /// <summary>
     /// Reads a streaming /responses SSE stream and returns the completed response JSON

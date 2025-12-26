@@ -48,10 +48,15 @@ namespace LagoVista.AI.Models
         public string WelcomeMessage { get; set; }
 
         /// <summary>
+        /// Instructions to be included upon iniital turn or mode change.
+        /// </summary>
+        public string BoolstrapInstructions { get; set; }
+
+        /// <summary>
         /// Mode-specific behavior instructions for the LLM when this
         /// mode is active (go into the Active Mode Behavior Block).
         /// </summary>
-        public string[] ModeInstructionDdrs { get; set; } = Array.Empty<string>();
+        public string[] AgentInstructionDdrs { get; set; } = Array.Empty<string>();
 
         /// <summary>
         /// DDR's that produce patterns, practices and standards that can be used when the LLM reasons.

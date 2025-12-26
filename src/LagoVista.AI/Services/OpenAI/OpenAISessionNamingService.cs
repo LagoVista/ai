@@ -8,7 +8,7 @@ using LagoVista.AI.Models;
 using LagoVista.Core.AI.Models;
 using LagoVista.IoT.Logging.Loggers;
 
-namespace LagoVista.AI.Services
+namespace LagoVista.AI.Services.OpenAI
 {
     /// <summary>
     /// Generates short session names using OpenAI via the existing LLM client.
@@ -21,7 +21,7 @@ namespace LagoVista.AI.Services
         private readonly IAgentStreamingContext _agentStreamingContext;
 
 
-        public OpenAISessionNamingService(ITextLlmService structuredTextLlmService, IAdminLogger adminLogger,IAgentStreamingContext agentStreamingContext)
+        public OpenAISessionNamingService(ITextLlmService structuredTextLlmService, IAdminLogger adminLogger, IAgentStreamingContext agentStreamingContext)
         {
             _textService = structuredTextLlmService ?? throw new ArgumentNullException(nameof(structuredTextLlmService));
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
@@ -37,8 +37,8 @@ namespace LagoVista.AI.Services
             if (instruction == null) instruction = string.Empty;
 
 
-            var conversationCtx = agentContext.DefaultConversationContext == null ? agentContext.ConversationContexts.FirstOrDefault() :  agentContext.ConversationContexts.SingleOrDefault(ctx => ctx.Id == agentContext.DefaultConversationContext.Id);
-            
+            var conversationCtx = agentContext.DefaultConversationContext == null ? agentContext.ConversationContexts.FirstOrDefault() : agentContext.ConversationContexts.SingleOrDefault(ctx => ctx.Id == agentContext.DefaultConversationContext.Id);
+
             if (conversationCtx == null)
             {
                 _adminLogger.AddError(
@@ -66,7 +66,7 @@ namespace LagoVista.AI.Services
 
             if (!result.Successful || result.Result == null)
             {
-                _adminLogger.AddError("[OpenAISessionNamingService_GenerateNameAsync]",$"LLM call failed for naming - {result.ErrorMessage}");
+                _adminLogger.AddError("[OpenAISessionNamingService_GenerateNameAsync]", $"LLM call failed for naming - {result.ErrorMessage}");
 
                 return TruncateFallback(instruction);
             }
@@ -96,7 +96,7 @@ namespace LagoVista.AI.Services
         private static string RemovePunctuation(string input)
         {
             var chars = input.ToCharArray();
-            var buffer = new System.Text.StringBuilder();
+            var buffer = new StringBuilder();
 
             foreach (var c in chars)
             {

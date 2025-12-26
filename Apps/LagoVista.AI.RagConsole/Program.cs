@@ -12,6 +12,7 @@ using LagoVista.AI.Interfaces;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.IoT.Logging.Utils;
 using LagoVista.Core.Interfaces;
+using LagoVista.AI.Services.OpenAI;
 
 namespace LagoVista.AI.RagConsole
 {

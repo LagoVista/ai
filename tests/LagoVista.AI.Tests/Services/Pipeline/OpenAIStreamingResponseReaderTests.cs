@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
-using LagoVista.AI.Services;
+using LagoVista.AI.Services.OpenAI;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging;
 using LagoVista.IoT.Logging.Loggers;

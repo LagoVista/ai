@@ -9,7 +9,7 @@ using LagoVista.AI.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 
-namespace LagoVista.AI.Services
+namespace LagoVista.AI.Services.OpenAI
 {
     /// <summary>
     /// Executes an OpenAI /v1/responses call end-to-end and returns:

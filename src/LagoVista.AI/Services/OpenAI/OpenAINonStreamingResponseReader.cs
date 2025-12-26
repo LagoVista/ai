@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using System.Net.Http;
 
-namespace LagoVista.AI.Services
+namespace LagoVista.AI.Services.OpenAI
 {
 
     /// <summary>

@@ -24,6 +24,8 @@ using LagoVista.AI.Rag.Models;
 using LagoVista.AI.Rag.Services;
 using LagoVista.AI.Services;
 using LagoVista.AI.Services.Hashing;
+using LagoVista.AI.Services.OpenAI;
+using LagoVista.AI.Services.Qdrant;
 using LagoVista.AI.Services.Tools;
 using LagoVista.Core.Interfaces;
 using LagoVista.Core.IOC;
@@ -44,140 +46,32 @@ namespace LagoVista.AI
 
     public static class Startup
     {
-        private static IAgentToolRegistry _agentToolRegistry;
 
         public static void RegisterTool<T>() where T : IAgentTool
         {
-            _agentToolRegistry.RegisterTool<T>();
+           Services.Tools.Startup.RegisterTool<T>();
         } 
 
         public static void ConfigureServices(IServiceCollection services, IAdminLogger adminLogger)
         {
-            var toolRegistry = new AgentToolRegistry(adminLogger);
 
-            _agentToolRegistry = toolRegistry;
+            Services.Tools.Startup.ConfigureServices(services, adminLogger);
+            Services.Startup.ConfigureServices(services, adminLogger);
+            Services.OpenAI.Startup.ConfigureServices(services, adminLogger);
+            Managers.Startup.ConfigureServices(services, adminLogger);
 
-            adminLogger.Trace("[AgentToolRegistry_RegisterTool] - Start Register Server Tools - vvvv");
-
-            ///* define our agent tools here */
-            toolRegistry.RegisterTool<HelloWorldTool>();
-            toolRegistry.RegisterTool<HelloWorldClientTool>();
-            toolRegistry.RegisterTool<PingPongTool>();
-            toolRegistry.RegisterTool<CalculatorTool>();
-            toolRegistry.RegisterTool<DelayTool>();
-            toolRegistry.RegisterTool<FailureInjectionTool>();
-
-            toolRegistry.RegisterTool<FetchWebPageTool>();
-
-            toolRegistry.RegisterTool<AgentListModesTool>();
-            toolRegistry.RegisterTool<ModeChangeTool>();
-            toolRegistry.RegisterTool<RequestUserApprovalAgentTool>();
-
-            toolRegistry.RegisterTool<ReadFileTool>();
-            toolRegistry.RegisterTool<WorkspaceWritePatchTool>();
-            toolRegistry.RegisterTool<CodeHashNormalizedTool>();
-            toolRegistry.RegisterTool<WorkspaceCreateFileTool>();
-
-            /* Mode Authoring */
-            toolRegistry.RegisterTool<AddAgentModeTool>();
-            toolRegistry.RegisterTool<UpdateAgentModeTool>();
-
-            ///* workflow authoring + registry tools */
-            toolRegistry.RegisterTool<ListWorkflowsTool>();
-            toolRegistry.RegisterTool<GetWorkflowManifestTool>();
-            toolRegistry.RegisterTool<MatchWorkflowTool>();
-
-            /* CRUD authoring tools */
-            toolRegistry.RegisterTool<CreateWorkflowTool>();
-            toolRegistry.RegisterTool<UpdateWorkflowTool>();
-            toolRegistry.RegisterTool<DeleteWorkflowTool>();
-
-            // --- DDR / TLA Tools ---
-            toolRegistry.RegisterTool<GetTlaCatalogAgentTool>();
-            toolRegistry.RegisterTool<AddTlaAgentTool>();
-            toolRegistry.RegisterTool<CreateDdrAgentTool>();
-            toolRegistry.RegisterTool<UpdateDdrMetadataAgentTool>();
-            toolRegistry.RegisterTool<MoveDdrTlaAgentTool>();
-
-            // --- Goal Tools ---
-            toolRegistry.RegisterTool<SetGoalAgentTool>();
-            toolRegistry.RegisterTool<ApproveGoalAgentTool>();
-
-            // -- Checkpoint Tools --
-            toolRegistry.RegisterTool<SessionCheckpointListTool>();
-            toolRegistry.RegisterTool<SessionCheckpointRestoreTool>();
-            toolRegistry.RegisterTool<SessionCheckpointSetTool>();
-
-            // -- Session Memory Tools
-            toolRegistry.RegisterTool<SessionMemoryListTool>();
-            toolRegistry.RegisterTool<SessionMemoryRecallTool>();
-            toolRegistry.RegisterTool<SessionMemoryStoreTool>();
-
-            // --- Chapter Tools ---
-            toolRegistry.RegisterTool<AddChapterAgentTool>();
-            toolRegistry.RegisterTool<AddChaptersAgentTool>();
-            toolRegistry.RegisterTool<UpdateChapterSummaryAgentTool>();
-            toolRegistry.RegisterTool<UpdateChapterDetailsAgentTool>();
-            toolRegistry.RegisterTool<ApproveChapterAgentTool>();
-            toolRegistry.RegisterTool<ListChaptersAgentTool>();
-            toolRegistry.RegisterTool<ReorderChaptersAgentTool>();
-            toolRegistry.RegisterTool<DeleteChapterAgentTool>();
-
-            // --- DDR Status & Approval ---
-            toolRegistry.RegisterTool<SetDdrStatusAgentTool>();
-            toolRegistry.RegisterTool<ApproveDdrAgentTool>();
-
-            toolRegistry.RegisterTool<IndexDdrTool>();
-            toolRegistry.RegisterTool<ImportDdrTool>();
-
-            // --- DDR Retrieval ---
-            toolRegistry.RegisterTool<GetDdrAgentTool>();
-            toolRegistry.RegisterTool<ListDdrsAgentTool>();
-            /*--*/
-
-            adminLogger.Trace("[AgentToolRegistry_RegisterTool] - All server tools registered - ^^^");
-
-
-            services.AddTransient<IDdrManager, DdrManager>();
-            services.AddTransient<IWorkflowDefinitionManager, WorkflowDefinitionManager>();
             services.AddSingleton<IHttpClientFactory>(new LagoVistaClientFactory());
-
-            services.AddSingleton<IAgentToolRegistry>(toolRegistry);
-          
-            services.AddTransient<IModelCategoryManager, ModelCategoryManager>();
-            services.AddTransient<IModelManager, ModelManager>();
-            services.AddTransient<IHubManager, HubManager>();
             services.AddTransient<IAgentToolFactory, AgentToolFactory>();
-            services.AddTransient<ITrainingDataSetManager, TrainingDataSetManager>();
-            services.AddTransient<ISampleManager, SampleManager>();
-            services.AddTransient<ILabelManager, LabelManager>();
-            services.AddTransient<IExperimentResultManager, ExperimentResultManager>();
+
 
             services.AddSingleton<IResponsesRequestBuilder, ResponsesRequestBuilder>();
             services.AddSingleton<IResponsesRequestBuilder, ResponsesRequestBuilder>();
-            services.AddScoped<ITextQueryManager, OpenAIManager>();
-            services.AddScoped<IImageGeneratorManager, OpenAIManager>();
-            services.AddScoped<IQdrantClient, QdrantClient>();
-            services.AddScoped<IEmbedder, OpenAIEmbedder>();
-            services.AddScoped<IAgentContextManager, AgentContextManager>();
-            services.AddScoped<IAgentSessionManager, AgentSessionManager>();
-            services.AddScoped<IAiConversationManager, AiConversationManager>();
-            services.AddScoped<IAgentSessionFactory, AgentSessionFactory>();
             services.AddScoped<IRagContextBuilder, QdrantRagContextBuilder>();
-            services.AddScoped<IAgentToolExecutor, AgentToolExecutor>();
-            services.AddScoped<IServerToolSchemaProvider, DefaultServerToolSchemaProvider>();
             services.AddScoped<IAgentSessionNamingService, OpenAISessionNamingService>();
-            services.AddScoped<IServerToolUsageMetadataProvider, DefaultServerToolUsageMetadataProvider>();
-            services.AddScoped<IContentHashService, DefaultContentHashService>();
-            services.AddScoped<IWorkspaceWritePatchOrchestrator, WorkspaceWritePatchOrchestrator>();
-            services.AddScoped<IWorkspacePatchStore, InMemoryWorkspacePatchStore>();
-            services.AddScoped<IWorkspaceWritePatchValidator, WorkspaceWritePatchValidator>();
-            services.AddScoped<IWorkspacePatchBatchFactory, WorkspacePatchBatchFactory>();
             services.AddScoped<IStructuredTextLlmService, HttpStructuredTextLlmService>();
             services.AddScoped<ITextLlmService, HttpTextLlmService>();
             services.AddScoped<IAgentStreamingContext, AgentStreamingContext>();
-            services.AddScoped<IModeEntryBootstrapService, ModeEntryBootstrapService>();
-
+            
             services.AddSingleton<IContentHashService, DefaultContentHashService>();
             services.AddSingleton<IChunkerServices, ChunkerServices>();
             services.AddSingleton<ICodeDescriptionService, CodeDescriptionService>();
@@ -186,8 +80,6 @@ namespace LagoVista.AI
 
             services.AddSingleton<IModelMetadataSource, RoslynModelMetadataSource>();
 
-            services.AddSingleton<IHttpClientFactory>(new LagoVistaClientFactory());
-            services.AddSingleton<IQdrantClient, QdrantClient>();
             services.AddSingleton<IIndexIdServices, IndexIdServices>();
             services.AddSingleton<IIngestionConfigProvider, JsonIngestionConfigProvider>();
             services.AddSingleton<IIndexFileContextBuilder, IndexFileContextBuilder>();

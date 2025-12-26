@@ -2,6 +2,7 @@
 using LagoVista.AI.Models;
 using LagoVista.CloudStorage.DocumentDB;
 using LagoVista.Core.Exceptions;
+using LagoVista.Core.Interfaces;
 using LagoVista.Core.Models;
 using LagoVista.Core.Models.UIMetaData;
 using LagoVista.IoT.Logging.Loggers;
@@ -17,8 +18,8 @@ namespace LagoVista.AI.CloudRepos
     {
         private readonly bool _shouldConsolidateCollections;
         private readonly IAdminLogger _logger;
-        public DdrRepo(IMLRepoSettings settings, IAdminLogger logger) :
-            base(settings.MLDocDbStorage.Uri, settings.MLDocDbStorage.AccessKey, settings.MLDocDbStorage.ResourceName, logger)
+        public DdrRepo(IMLRepoSettings settings, IAdminLogger logger, ICacheProvider cacheProvider) :
+            base(settings.MLDocDbStorage.Uri, settings.MLDocDbStorage.AccessKey, settings.MLDocDbStorage.ResourceName, logger, cacheProvider)
         {
             _logger = logger;
             _shouldConsolidateCollections = settings.ShouldConsolidateCollections;

@@ -98,7 +98,7 @@ namespace LagoVista.AI.Tests.Tools
             Assert.That(capturedMode.Version, Is.EqualTo("v1.0"));
             Assert.That(capturedMode.IsDefault, Is.False);
 
-            Assert.That(capturedMode.ModeInstructionDdrs, Is.EqualTo(new[]
+            Assert.That(capturedMode.AgentInstructionDdrs, Is.EqualTo(new[]
             {
                 "Prefer structured DDR sections.",
                 "Highlight missing fields."
@@ -173,7 +173,7 @@ namespace LagoVista.AI.Tests.Tools
             Assert.That(capturedMode.IsDefault, Is.True);
 
             // Arrays → empty
-            Assert.That(capturedMode.ModeInstructionDdrs, Is.Empty);
+            Assert.That(capturedMode.AgentInstructionDdrs, Is.Empty);
             Assert.That(capturedMode.BehaviorHints, Is.Empty);
             Assert.That(capturedMode.HumanRoleHints, Is.Empty);
             Assert.That(capturedMode.AssociatedToolIds, Is.Empty);

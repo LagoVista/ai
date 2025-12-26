@@ -12,7 +12,7 @@ using LagoVista.Core.Interfaces;
 using LagoVista.Core.AI.Models;
 using LagoVista.IoT.Logging.Loggers;
 
-namespace LagoVista.AI.Services
+namespace LagoVista.AI.Services.Qdrant
 {
     /// <summary>
     /// Default implementation that queries Qdrant and builds an AGN-002 compliant
@@ -100,7 +100,7 @@ namespace LagoVista.AI.Services
             var contextBlock = await BuildContextBlockAsync(agentContext, selected).ConfigureAwait(false);
 
             //TODO: Need to be smarter about doing our RAG query.
-            return InvokeResult<string>.Create(String.Empty);
+            return InvokeResult<string>.Create(string.Empty);
         }
 
         /// <summary>
@@ -125,9 +125,9 @@ namespace LagoVista.AI.Services
 
                 var path = !string.IsNullOrWhiteSpace(payload.Path)
                     ? payload.Path
-                    : (!string.IsNullOrWhiteSpace(payload.FullDocumentBlobUri)
+                    : !string.IsNullOrWhiteSpace(payload.FullDocumentBlobUri)
                         ? payload.FullDocumentBlobUri
-                        : string.Empty);
+                        : string.Empty;
 
                 var sym = payload.Symbol ?? string.Empty;
                 var key = path + "::" + sym;
@@ -177,9 +177,9 @@ namespace LagoVista.AI.Services
 
                 var path = !string.IsNullOrWhiteSpace(payload.Path)
                     ? payload.Path
-                    : (!string.IsNullOrWhiteSpace(payload.FullDocumentBlobUri)
+                    : !string.IsNullOrWhiteSpace(payload.FullDocumentBlobUri)
                         ? payload.FullDocumentBlobUri
-                        : string.Empty);
+                        : string.Empty;
 
                 var startLine = payload.LineStart ?? payload.StartLine ?? 1;
                 var endLine = payload.LineEnd ?? payload.EndLine ?? startLine;
@@ -195,9 +195,9 @@ namespace LagoVista.AI.Services
                 // Resolve blob/file name: prefer BlobUri, then FullDocumentBlobUri, then Path
                 var blobName = !string.IsNullOrWhiteSpace(payload.SourceSliceBlobUri)
                     ? payload.SourceSliceBlobUri
-                    : (!string.IsNullOrWhiteSpace(payload.FullDocumentBlobUri)
+                    : !string.IsNullOrWhiteSpace(payload.FullDocumentBlobUri)
                         ? payload.FullDocumentBlobUri
-                        : payload.Path);
+                        : payload.Path;
 
                 if (string.IsNullOrWhiteSpace(blobName))
                 {

@@ -18,7 +18,7 @@ using System.Runtime;
 using System.Threading.Tasks;
 
 
-namespace LagoVista.AI.Services
+namespace LagoVista.AI.Services.OpenAI
 {
     public class OpenAIEmbedder : IEmbedder
     {
@@ -64,11 +64,11 @@ namespace LagoVista.AI.Services
         }
 
 
-        public async Task<InvokeResult<EmbeddingResult>> EmbedAsync(string text, int? estimatedTokens = null, string embeddingModel= "")
+        public async Task<InvokeResult<EmbeddingResult>> EmbedAsync(string text, int? estimatedTokens = null, string embeddingModel = "")
         {
-            var payload = new { model = String.IsNullOrEmpty(embeddingModel) ? _model : embeddingModel, input = text };
+            var payload = new { model = string.IsNullOrEmpty(embeddingModel) ? _model : embeddingModel, input = text };
 
-            if(estimatedTokens == null)
+            if (estimatedTokens == null)
                 estimatedTokens = TokenEstimator.EstimateTokens(text);
 
             using (var resp = await PostWithRetryAsync("/v1/embeddings", payload, estimatedTokens.Value))
@@ -105,7 +105,7 @@ namespace LagoVista.AI.Services
                         }
                         var errorContent = await resp.Content.ReadAsStringAsync();
 
-                        Console.WriteLine( $"Estimated Tokens: {estimatedTokens} {errorContent} ");
+                        Console.WriteLine($"Estimated Tokens: {estimatedTokens} {errorContent} ");
                         throw new InvalidOperationException($"OpenAI API error {resp.StatusCode}: {errorContent}");
                     }
 

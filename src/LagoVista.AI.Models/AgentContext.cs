@@ -77,6 +77,40 @@ namespace LagoVista.AI.Models
         public int CompletionReservePercent { get; set; } = 15;
 
 
+        /// <summary>
+        /// Optional welcome message shown when entering this mode.
+        /// </summary>
+        public string WelcomeMessage { get; set; }
+
+        /// <summary>
+        /// Instructions to be sent over with the initial turn
+        /// </summary>
+        public string BoolstrapInstructions { get; set; }
+
+        /// <summary>
+        /// Mode-specific behavior instructions for the LLM when this
+        /// mode is active (go into the Active Mode Behavior Block).
+        /// </summary>
+        public string[] AgentInstructionDdrs { get; set; } = Array.Empty<string>();
+
+        /// <summary>
+        /// DDR's that produce patterns, practices and standards that can be used when the LLM reasons.
+        /// </summary>
+        public string[] ReferenceDdrs { get; set; } = Array.Empty<string>();
+
+        /// <summary>
+        /// Tool IDs that are enabled when this mode is active.
+        /// </summary>
+        public string[] AssociatedToolIds { get; set; } = Array.Empty<string>();
+
+        /// <summary>
+        /// Optional grouping hints for UI or LLM reasoning, e.g. "authoring",
+        /// "read-only", "diagnostics".
+        /// </summary>
+        public string[] ToolGroupHints { get; set; } = Array.Empty<string>();
+
+
+
 
         public List<AgentMode> AgentModes { get; set; } = new List<AgentMode>();
 
@@ -198,6 +232,39 @@ namespace LagoVista.AI.Models
         [FormField(LabelResource: AIResources.Names.AgentContext_ConversationContext_Temperature, HelpResource: AIResources.Names.AgentContext_ConversationContext_Temperature_Help,
             FieldType: FieldTypes.Decimal, IsRequired: true, ResourceType: typeof(AIResources))]
         public float Temperature { get; set; } = 0.5f;
+
+        /// <summary>
+        /// Optional welcome message shown when entering this mode.
+        /// </summary>
+        public string WelcomeMessage { get; set; }
+
+        /// <summary>
+        /// Instructions to be sent over with the initial turn
+        /// </summary>
+        public string BoolstrapInstructions { get; set; }
+
+        /// <summary>
+        /// Mode-specific behavior instructions for the LLM when this
+        /// mode is active (go into the Active Mode Behavior Block).
+        /// </summary>
+        public string[] AgentInstructionDdrs { get; set; } = Array.Empty<string>();
+
+        /// <summary>
+        /// DDR's that produce patterns, practices and standards that can be used when the LLM reasons.
+        /// </summary>
+        public string[] ReferenceDdrs { get; set; } = Array.Empty<string>();
+
+        /// <summary>
+        /// Tool IDs that are enabled when this mode is active.
+        /// </summary>
+        public string[] AssociatedToolIds { get; set; } = Array.Empty<string>();
+
+        /// <summary>
+        /// Optional grouping hints for UI or LLM reasoning, e.g. "authoring",
+        /// "read-only", "diagnostics".
+        /// </summary>
+        public string[] ToolGroupHints { get; set; } = Array.Empty<string>();
+
 
         public EntityHeader ToEntityHeader()
         {

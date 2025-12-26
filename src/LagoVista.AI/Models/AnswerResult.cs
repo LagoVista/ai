@@ -5,7 +5,7 @@
 using LagoVista.Core.AI.Models;
 using System.Collections.Generic;
 
-namespace LagoVista.AI.Services
+namespace LagoVista.AI.Models
 {
     public sealed class AnswerResult
     {

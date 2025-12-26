@@ -21,11 +21,11 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LagoVista.AI.Services
+namespace LagoVista.AI.Services.Qdrant
 {
     public partial class QdrantClient : IQdrantClient
     {
-        private  HttpClient _http;
+        private HttpClient _http;
         private IAdminLogger _adminLogger;
         private readonly IQdrantSettings _settings;
 
@@ -221,11 +221,11 @@ namespace LagoVista.AI.Services
 
 
         private static object KvMatch(string key, object value)
-            => new { key = key, match = new { value = value } };
+            => new { key, match = new { value } };
 
         private static HttpRequestMessage BuildJsonPost(string url, object body, string apiKey)
         {
-            var json = Newtonsoft.Json.JsonConvert.SerializeObject(body);
+            var json = JsonConvert.SerializeObject(body);
             var req = new HttpRequestMessage(HttpMethod.Post, url);
             req.Content = new StringContent(json, Encoding.UTF8, "application/json");
             if (!string.IsNullOrWhiteSpace(apiKey))
