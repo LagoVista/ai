@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LagoVista.Core.Models;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -118,6 +119,8 @@ namespace LagoVista.AI.Models
         /// </summary>
         public string[] ExampleUtterances { get; set; } = Array.Empty<string>();
 
+
+        public List<string> Instructions { get; set; } = new List<string>();
         // 3.6 Lifecycle Metadata
 
         /// <summary>
@@ -125,10 +128,7 @@ namespace LagoVista.AI.Models
         /// </summary>
         public string Status { get; set; }
 
-        /// <summary>
-        /// Tools to be ran when entering this mode.
-        /// </summary>
-        public BootStrapTool[] BootStrapTool { get; set; } = Array.Empty<BootStrapTool>();
+        public List<EntityHeader> ToolBoxes { get; set; } = new List<EntityHeader>();
 
         /// <summary>
         /// Simple version string, e.g. "v1", "v1.1".

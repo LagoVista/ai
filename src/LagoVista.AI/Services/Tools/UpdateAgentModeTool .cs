@@ -24,7 +24,7 @@ namespace LagoVista.AI.Services.Tools
         }
 
 
-        public const string ToolSummary = "udpate an agent mode";
+        public const string ToolSummary = "update an agent mode";
 
         public const string ToolName = "update_agent_mode";
 

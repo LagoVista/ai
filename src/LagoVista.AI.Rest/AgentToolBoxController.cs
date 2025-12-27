@@ -44,7 +44,7 @@ namespace LagoVista.AI.Rest
             return result;
         }
 
-        [HttpGet("/api/ai/toolbox")]
+        [HttpGet("/api/ai/toolboxes")]
         public Task<ListResponse<AgentToolBoxSummary>> GetVectorDatabases()
         {
             return _agentToolBoxManager.GetAgentToolBoxesForOrgAsync(OrgEntityHeader, UserEntityHeader, GetListRequestFromHeader());

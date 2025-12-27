@@ -103,6 +103,10 @@ namespace LagoVista.AI.Models
         /// </summary>
         public string[] AssociatedToolIds { get; set; } = Array.Empty<string>();
 
+        public List<EntityHeader> ToolBoxes { get; set; } = new List<EntityHeader>();
+
+        public List<string> Instructions { get; set; }= new List<string>();
+
         /// <summary>
         /// Optional grouping hints for UI or LLM reasoning, e.g. "authoring",
         /// "read-only", "diagnostics".
@@ -265,6 +269,10 @@ namespace LagoVista.AI.Models
         /// </summary>
         public string[] ToolGroupHints { get; set; } = Array.Empty<string>();
 
+
+        public List<string> Instructions { get; set; } = new List<string>();
+
+        public List<EntityHeader> ToolBoxes { get; set; } = new List<EntityHeader>();
 
         public EntityHeader ToEntityHeader()
         {

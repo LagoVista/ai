@@ -86,7 +86,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                     // PrimaryEntity heuristics – prefer return type model over controller name
                     endpoint.PrimaryEntity = DetectPrimaryEntity(controllerName, route, method, semanticModel);
 
-                    // Summary & Description (after PrimaryEntity is established)
+                    // SummaryInstructions & Description (after PrimaryEntity is established)
                     endpoint.Summary = GetXmlSummary(method)
                                        ?? SynthesizeSummary(httpMethods, endpoint.PrimaryEntity, endpoint.ActionName);
 

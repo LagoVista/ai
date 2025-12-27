@@ -21,7 +21,7 @@ namespace LagoVista.AI.Services.Tools
 
         public const string ToolName = "add_agent_mode";
 
-        public const string ToolSummary = "used to create agent modes that inject specific behavior instructions";
+        public const string ToolSummary = "used to create agent modes";
 
         public string Name => ToolName;
 

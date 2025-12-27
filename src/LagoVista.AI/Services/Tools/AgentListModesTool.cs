@@ -28,7 +28,7 @@ namespace LagoVista.AI.Services.Tools
             "Do not call it on every request or as a substitute for the mode-change tool." +
             "When building the results you should return a list that includes the Display Name and the Key in parentheses as well as the description.";
 
-        public const string ToolSummary = "used to list agent modes";
+        public const string ToolSummary = "used to list agent modes that the user can choose from to customzie agent behavior";
 
         public AgentListModesTool(IAdminLogger logger)
         {

@@ -8,7 +8,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
 {
     /// <summary>
     /// Helper for turning IDX-0038 <see cref="ModelMetadataDescription"/> into
-    /// a rich, natural-language summary suitable for use in SubKindDetectionResult.Summary
+    /// a rich, natural-language summary suitable for use in SubKindDetectionResult.SummaryInstructions
     /// and SummarySection content.
     ///
     /// This is intentionally deterministic and template-driven so that the

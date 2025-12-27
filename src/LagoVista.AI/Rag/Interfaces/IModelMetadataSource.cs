@@ -20,7 +20,7 @@ namespace LagoVista.AI.Rag.Interfaces
     }
 
     /// <summary>
-    /// Summary of a single important field/property on a first-class model,
+    /// SummaryInstructions of a single important field/property on a first-class model,
     /// derived from [FormField] attributes.
     /// </summary>
     public class FieldSummary

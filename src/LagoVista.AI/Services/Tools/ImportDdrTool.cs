@@ -26,7 +26,7 @@ namespace LagoVista.AI.Services.Tools
         private readonly IAdminLogger _logger;
         private readonly IDdrManager _ddrManager;
 
-        public const string ToolSummary = "uused to import a ddr";
+        public const string ToolSummary = "used to import a ddr";
 
         public string Name => ToolName;
 
@@ -505,7 +505,7 @@ Additional rules:
                     // New / revised fields (LLM-generated)
                     Type = type, // add this property to DetailedDesignReview
                     NeedsHumanConfirmation = args.NeedsHumanConfirmation == true, // add this property if you want to persist it
-                    HumanSummary = args.HumanSummary, // add if separate from Summary; otherwise map to Summary
+                    HumanSummary = args.HumanSummary, // add if separate from SummaryInstructions; otherwise map to SummaryInstructions
                     CondensedDdrContent = args.CondensedDdrContent, // add
                     RagIndexCard = args.RagIndexCard, // add (replaces RagSummary)
                     ReferentialSummary = args.ReferentialSummary, // add
@@ -605,7 +605,7 @@ Additional rules:
             var status = MatchFirst(markdown, @"(?mi)^\*\*Status:\*\*\s*(?<v>.+?)\s*$");
 
             // Optional summary: not present in TUL-011; keep best-effort.
-            // If you standardize a Summary field later, add it here.
+            // If you standardize a SummaryInstructions field later, add it here.
             var summary = MatchFirst(markdown, @"(?mi)^\*\*Summary:\*\*\s*(?<v>.+?)\s*$");
 
             // Derive TLA + index from identifier
