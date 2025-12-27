@@ -22,9 +22,7 @@ namespace LagoVista.AI.Services.Tools
     {
         private readonly IWorkflowDefinitionManager _workflowManager;
         private readonly IAdminLogger _logger;
-
         public string Name => ToolName;
-
         public bool IsToolFullyExecutedOnServer => true;
 
         public const string ToolUsageMetadata = @"
@@ -33,7 +31,7 @@ namespace LagoVista.AI.Services.Tools
 When you output a workflow proposal in JSON form, you MUST treat that JSON
 as the **active workflow proposal** for the rest of the conversation until:
 
-- The user approves it (“Yes”, “Create it”, “Do it”, “That’s good”, etc.)
+- The user approves it (ï¿½Yesï¿½, ï¿½Create itï¿½, ï¿½Do itï¿½, ï¿½Thatï¿½s goodï¿½, etc.)
 - The user rejects it
 - You replace it with a new proposal
 
@@ -60,36 +58,25 @@ If you previously printed:
 then that **is** the pending workflow proposal. On user confirmation, ALWAYS
 use that object to call the workflow tool.
 
-If you ever say “I don’t have a pending workflow proposal” you have violated
+If you ever say ï¿½I donï¿½t have a pending workflow proposalï¿½ you have violated
 this rule.
 
 ";
-
         public const string ToolSummary = "create a workflow to be used as an instruction";
-
-
         public const string ToolName = "agent_workflow_create";
-
         public CreateWorkflowTool(IWorkflowDefinitionManager workflowManager, IAdminLogger logger)
         {
             _workflowManager = workflowManager ?? throw new ArgumentNullException(nameof(workflowManager));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
+
         public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
-
-        public async Task<InvokeResult<string>> ExecuteAsync(
-            string argumentsJson,
-            AgentToolExecutionContext context,
-            CancellationToken cancellationToken = default)
-
+        public async Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentToolExecutionContext context, CancellationToken cancellationToken = default)
         {
-
-            Console.WriteLine("=====\r\nEXECUTE CREATE WORKFLOW TOOL WITH ARGUMENTS ====>>>\r\n" + argumentsJson + "====\r\n" );
-
+            Console.WriteLine("=====\r\nEXECUTE CREATE WORKFLOW TOOL WITH ARGUMENTS ====>>>\r\n" + argumentsJson + "====\r\n");
             if (string.IsNullOrWhiteSpace(argumentsJson))
             {
-                return InvokeResult<string>.FromError(
-                    "CreateWorkflowTool requires a non-empty arguments object with 'workflow'.");
+                return InvokeResult<string>.FromError("CreateWorkflowTool requires a non-empty arguments object with 'workflow'.");
             }
 
             JObject root;
@@ -104,29 +91,21 @@ this rule.
             }
 
             var errors = new List<WorkflowAuthoringError>();
-
             var workflowToken = root["workflow"] ?? root["Workflow"];
             if (workflowToken == null || workflowToken.Type != JTokenType.Object)
             {
-                errors.Add(new WorkflowAuthoringError
-                {
-                    Field = "workflow",
-                    Message = "workflow object is required."
-                });
-
+                errors.Add(new WorkflowAuthoringError { Field = "workflow", Message = "workflow object is required." });
                 var errorResponse = new WorkflowAuthoringResponse
                 {
                     Ok = false,
                     Workflow = null,
                     Errors = errors
                 };
-
                 var errorJson = JsonConvert.SerializeObject(errorResponse);
                 return InvokeResult<string>.Create(errorJson);
             }
 
             var wfObj = (JObject)workflowToken;
-
             // Manually map into WorkflowDefinition to be resilient to casing and extra fields.
             var wf = new WorkflowDefinition
             {
@@ -137,7 +116,6 @@ this rule.
                 InstructionText = (string)wfObj["instructionText"] ?? (string)wfObj["InstructionText"],
                 Notes = (string)wfObj["notes"] ?? (string)wfObj["Notes"]
             };
-
             // Optional: status (string or int)
             var statusToken = wfObj["status"] ?? wfObj["Status"];
             if (statusToken != null && statusToken.Type != JTokenType.Null)
@@ -158,7 +136,7 @@ this rule.
                 }
                 catch
                 {
-                    // Ignore and leave default
+                // Ignore and leave default
                 }
             }
 
@@ -182,11 +160,11 @@ this rule.
                 }
                 catch
                 {
-                    // Ignore and leave default
+                // Ignore and leave default
                 }
             }
 
-            // Optional arrays – for now we treat them as best-effort; if the LLM sends
+            // Optional arrays ï¿½ for now we treat them as best-effort; if the LLM sends
             // weird shapes here we just skip rather than throw.
             try
             {
@@ -238,36 +216,24 @@ this rule.
             catch (Exception ex)
             {
                 _logger.AddException("[CreateWorkflowTool_ExecuteAsync__ArrayMappingException]", ex);
-                // We'll continue with whatever we successfully mapped; array issues
-                // should not kill the whole request.
+            // We'll continue with whatever we successfully mapped; array issues
+            // should not kill the whole request.
             }
 
-            // Validation – same as before.
+            // Validation ï¿½ same as before.
             if (string.IsNullOrWhiteSpace(wf.Id))
             {
-                errors.Add(new WorkflowAuthoringError
-                {
-                    Field = "id",
-                    Message = "Workflow Id is required."
-                });
+                errors.Add(new WorkflowAuthoringError { Field = "id", Message = "Workflow Id is required." });
             }
 
             if (string.IsNullOrWhiteSpace(wf.Name))
             {
-                errors.Add(new WorkflowAuthoringError
-                {
-                    Field = "name",
-                    Message = "Workflow Name is required."
-                });
+                errors.Add(new WorkflowAuthoringError { Field = "name", Message = "Workflow Name is required." });
             }
 
             if (string.IsNullOrWhiteSpace(wf.Description))
             {
-                errors.Add(new WorkflowAuthoringError
-                {
-                    Field = "description",
-                    Message = "Workflow Description is required."
-                });
+                errors.Add(new WorkflowAuthoringError { Field = "description", Message = "Workflow Description is required." });
             }
 
             // Ensure the Id is unique before attempting to create.
@@ -278,21 +244,13 @@ this rule.
                     var inUse = await _workflowManager.QueryWorkflowIdInUseAsync(wf.Id, context?.Org);
                     if (inUse)
                     {
-                        errors.Add(new WorkflowAuthoringError
-                        {
-                            Field = "id",
-                            Message = $"Workflow Id '{wf.Id}' is already in use."
-                        });
+                        errors.Add(new WorkflowAuthoringError { Field = "id", Message = $"Workflow Id '{wf.Id}' is already in use." });
                     }
                 }
                 catch (Exception ex)
                 {
                     _logger.AddException("[CreateWorkflowTool_ExecuteAsync__QueryIdException]", ex);
-                    errors.Add(new WorkflowAuthoringError
-                    {
-                        Field = "id",
-                        Message = "Unable to verify whether the workflow Id is already in use."
-                    });
+                    errors.Add(new WorkflowAuthoringError { Field = "id", Message = "Unable to verify whether the workflow Id is already in use." });
                 }
             }
 
@@ -304,7 +262,6 @@ this rule.
                     Workflow = wf,
                     Errors = errors
                 };
-
                 var validationJson = JsonConvert.SerializeObject(validationResponse);
                 return InvokeResult<string>.Create(validationJson);
             }
@@ -312,22 +269,16 @@ this rule.
             try
             {
                 var result = await _workflowManager.AddWorkflowDefinitionAsync(wf, context?.Org, context?.User);
-
                 var response = new WorkflowAuthoringResponse
                 {
                     Ok = result.Successful,
                     Workflow = wf
                 };
-
                 if (!result.Successful)
                 {
                     foreach (var err in result.Errors)
                     {
-                        response.Errors.Add(new WorkflowAuthoringError
-                        {
-                            Field = err.ErrorCode,
-                            Message = err.Message
-                        });
+                        response.Errors.Add(new WorkflowAuthoringError { Field = err.ErrorCode, Message = err.Message });
                     }
                 }
                 else
@@ -345,33 +296,12 @@ this rule.
             }
         }
 
-        public static object GetSchema()
+        public static OpenAiToolDefinition GetSchema()
         {
-            var schema = new
+            return ToolSchema.Function(ToolName, "Create a new workflow definition. The input workflow object is validated and persisted; " + "the response contains ok/messages/errors and the resulting workflow.", p =>
             {
-                type = "function",
-                name = ToolName,
-                description =
-                    "Create a new workflow definition. The input workflow object is validated and persisted; " +
-                    "the response contains ok/messages/errors and the resulting workflow.",
-                parameters = new
-                {
-                    type = "object",
-                    properties = new
-                    {
-                        workflow = new
-                        {
-                            type = "object",
-                            description =
-                                "Workflow definition to create. At minimum, id, name, and description are required. " +
-                                "Other fields mirror the WorkflowDefinition model."
-                        }
-                    },
-                    required = new[] { "workflow" }
-                }
-            };
-
-            return schema;
+                p.Any("workflow", "object", "Workflow definition to create. At minimum, id, name, and description are required. " + "Other fields mirror the WorkflowDefinition model.", required: true);
+            });
         }
     }
 }

@@ -18,70 +18,33 @@ namespace LagoVista.AI.Services.Tools
     public class ReorderChaptersAgentTool : DdrAgentToolBase
     {
         public const string ToolName = "reorder_chapters";
-
-        public ReorderChaptersAgentTool(IDdrManager ddrManager, IAdminLogger adminLogger)
-            : base(ddrManager, adminLogger)
+        public ReorderChaptersAgentTool(IDdrManager ddrManager, IAdminLogger adminLogger) : base(ddrManager, adminLogger)
         {
         }
 
         public const string ToolSummary = "reorder the chapters in a ddr";
-
-
         public override string Name => ToolName;
 
-        public const string ToolUsageMetadata =
-    "Changes the chapter ordering within a DDR. Use when restructuring the narrative or improving document flow.";
-
-
+        public const string ToolUsageMetadata = "Changes the chapter ordering within a DDR. Use when restructuring the narrative or improving document flow.";
         protected override string Tag => "[ReorderChaptersAgentTool]";
 
         /// <summary>
         /// Returns the OpenAI tool schema definition for this tool.
         /// </summary>
-        public static object GetSchema()
+        public static OpenAiToolDefinition GetSchema()
         {
-            var schema = new
+            return ToolSchema.Function(ToolName, "Reorder all chapters for a DDR. The provided chapter_ids must match the existing chapter IDs exactly.", p =>
             {
-                type = "function",
-                name = ToolName,
-                description = "Reorder all chapters for a DDR. The provided chapter_ids must match the existing chapter IDs exactly.",
-                parameters = new
-                {
-                    type = "object",
-                    properties = new
-                    {
-                        identifier = new
-                        {
-                            type = "string",
-                            description = "DDR identifier in TLA-### format, for example 'SYS-001'."
-                        },
-                        chapter_ids = new
-                        {
-                            type = "array",
-                            description = "New ordered list of chapter IDs. Must contain exactly the same IDs as the current chapters.",
-                            items = new
-                            {
-                                type = "string"
-                            }
-                        }
-                    },
-                    required = new[] { "identifier", "chapter_ids" }
-                }
-            };
-
-            return schema;
+                p.String("identifier", "DDR identifier in TLA-### format, for example 'SYS-001'.", required: true);
+                p.Any("chapter_ids", "array", "New ordered list of chapter IDs. Must contain exactly the same IDs as the current chapters.", required: true);
+            });
         }
 
-        protected override async Task<InvokeResult<string>> ExecuteCoreAsync(
-            JObject payload,
-            AgentToolExecutionContext context,
-            CancellationToken cancellationToken)
+        protected override async Task<InvokeResult<string>> ExecuteCoreAsync(JObject payload, AgentToolExecutionContext context, CancellationToken cancellationToken)
         {
             const string baseTag = "[ReorderChaptersAgentTool__Execute]";
-
             var identifier = payload.Value<string>("identifier")?.Trim();
             var idsArray = payload["chapter_ids"] as JArray;
-
             if (string.IsNullOrWhiteSpace(identifier))
             {
                 return FromError("identifier is required.");
@@ -93,24 +56,17 @@ namespace LagoVista.AI.Services.Tools
             }
 
             var newOrderIds = idsArray.Values<string>().ToList();
-
             try
             {
-                var ddr = await _ddrManager.GetDdrByTlaIdentiferAsync(
-                    identifier,
-                    context.Org,
-                    context.User);
-
+                var ddr = await _ddrManager.GetDdrByTlaIdentiferAsync(identifier, context.Org, context.User);
                 if (ddr == null)
                 {
                     return FromError($"DDR '{identifier}' not found.");
                 }
 
                 var chapters = ddr.Chapters ?? new List<DdrChapter>();
-
                 var existingIds = new HashSet<string>(chapters.Select(c => c.Id));
                 var requestedIds = new HashSet<string>(newOrderIds);
-
                 if (!existingIds.SetEquals(requestedIds))
                 {
                     return FromError("chapter_ids must match existing chapter IDs exactly.");
@@ -124,9 +80,7 @@ namespace LagoVista.AI.Services.Tools
                 }
 
                 ddr.Chapters = reordered;
-
                 await _ddrManager.UpdateDdrAsync(ddr, context.Org, context.User);
-
                 var envelope = new JObject
                 {
                     ["ok"] = true,
@@ -136,7 +90,6 @@ namespace LagoVista.AI.Services.Tools
                         ["chapter_ids"] = new JArray(newOrderIds)
                     }
                 };
-
                 return FromEnvelope(envelope);
             }
             catch (Exception ex)

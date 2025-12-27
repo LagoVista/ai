@@ -20,18 +20,12 @@ namespace LagoVista.AI.Services.Tools
     {
         private readonly IAdminLogger _logger;
         private readonly IAgentSessionManager _sessions;
-
         public string Name => ToolName;
-
         public bool IsToolFullyExecutedOnServer => true;
 
         public const string ToolName = "session_checkpoint_restore";
-
         public const string ToolUsageMetadata = "Restore a checkpoint by branching the session to the checkpoint's turn. Use when the user asks to restore a checkpoint to reset context. Returns the new SessionId plus restore info for the client.";
-
         public const string ToolSummary = "restore a session to a known check point";
-
-
         public SessionCheckpointRestoreTool(IAdminLogger logger, IAgentSessionManager sessions)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -57,26 +51,28 @@ namespace LagoVista.AI.Services.Tools
             public string SessionId { get; set; }
             public string Message { get; set; }
         }
+
         public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
         public async Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentToolExecutionContext context, CancellationToken cancellationToken = default)
         {
-            if (string.IsNullOrWhiteSpace(argumentsJson)) return InvokeResult<string>.FromError("session_checkpoint_restore requires a non-empty arguments object.");
-            if (context == null) return InvokeResult<string>.FromError("session_checkpoint_restore requires a valid execution context.");
-            if (string.IsNullOrWhiteSpace(context.SessionId)) return InvokeResult<string>.FromError("session_checkpoint_restore requires a sessionId in the execution context.");
-
+            if (string.IsNullOrWhiteSpace(argumentsJson))
+                return InvokeResult<string>.FromError("session_checkpoint_restore requires a non-empty arguments object.");
+            if (context == null)
+                return InvokeResult<string>.FromError("session_checkpoint_restore requires a valid execution context.");
+            if (string.IsNullOrWhiteSpace(context.SessionId))
+                return InvokeResult<string>.FromError("session_checkpoint_restore requires a sessionId in the execution context.");
             try
             {
                 var args = JsonConvert.DeserializeObject<Args>(argumentsJson) ?? new Args();
-                if (string.IsNullOrWhiteSpace(args.CheckpointId)) return InvokeResult<string>.FromError("session_checkpoint_restore requires 'checkpointId'.");
-
+                if (string.IsNullOrWhiteSpace(args.CheckpointId))
+                    return InvokeResult<string>.FromError("session_checkpoint_restore requires 'checkpointId'.");
                 var sourceSessionId = context.SessionId;
-
                 var restored = await _sessions.RestoreSessionCheckpointAsync(sourceSessionId, args.CheckpointId.Trim(), context.Org, context.User);
-                if (!restored.Successful) return InvokeResult<string>.FromInvokeResult(restored.ToInvokeResult());
-
+                if (!restored.Successful)
+                    return InvokeResult<string>.FromInvokeResult(restored.ToInvokeResult());
                 var newSession = restored.Result;
-                if (newSession == null || string.IsNullOrWhiteSpace(newSession.Id)) return InvokeResult<string>.FromError("session_checkpoint_restore did not return a new session.");
-
+                if (newSession == null || string.IsNullOrWhiteSpace(newSession.Id))
+                    return InvokeResult<string>.FromError("session_checkpoint_restore did not return a new session.");
                 var payload = new Result
                 {
                     Kind = "checkpoint_restore",
@@ -88,9 +84,7 @@ namespace LagoVista.AI.Services.Tools
                     RestoreOperationId = newSession.RestoreOperationId,
                     RestoredOnUtc = newSession.RestoredOnUtc,
                     SessionId = context?.Request?.SessionId,
-                    Message = $"Restored checkpoint {args.CheckpointId.Trim()} into a new branched session."
-                };
-
+                    Message = $"Restored checkpoint {args.CheckpointId.Trim()} into a new branched session."};
                 return InvokeResult<string>.Create(JsonConvert.SerializeObject(payload));
             }
             catch (Exception ex)
@@ -100,24 +94,13 @@ namespace LagoVista.AI.Services.Tools
             }
         }
 
-        public static object GetSchema()
+        public static OpenAiToolDefinition GetSchema()
         {
-            return new
+            return ToolSchema.Function(ToolName, "Restore a checkpoint by branching the current session from the checkpoint's turn (hard restore).", p =>
             {
-                type = "function",
-                name = ToolName,
-                description = "Restore a checkpoint by branching the current session from the checkpoint's turn (hard restore).",
-                parameters = new
-                {
-                    type = "object",
-                    properties = new
-                    {
-                        checkpointId = new { type = "string", description = "CheckpointId to restore (e.g., CP-0007)." },
-                        notes = new { type = "string", description = "Optional reason/notes for the restore." }
-                    },
-                    required = new[] { "checkpointId" }
-                }
-            };
+                p.String("checkpointId", "CheckpointId to restore (e.g., CP-0007).", required: true);
+                p.String("notes", "Optional reason/notes for the restore.");
+            });
         }
     }
 }

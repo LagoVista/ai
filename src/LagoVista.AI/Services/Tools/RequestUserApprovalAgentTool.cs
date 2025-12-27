@@ -17,101 +17,48 @@ namespace LagoVista.AI.Services.Tools
     public class RequestUserApprovalAgentTool : IAgentTool
     {
         public const string ToolName = "request_user_approval";
-
         private readonly IAdminLogger _adminLogger;
-
-        public const string ToolUsageMetadata =
-    "Client-side tool used to prompt the user for explicit approval before performing a server-side DDR modification. The server never executes this action directly.";
-
+        public const string ToolUsageMetadata = "Client-side tool used to prompt the user for explicit approval before performing a server-side DDR modification. The server never executes this action directly.";
         public const string ToolSummary = "used to call a client side tool to request human approval";
-
         public RequestUserApprovalAgentTool(IAdminLogger adminLogger)
         {
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
         }
 
-        /// <inheritdoc />
+        /// <inheritdoc/>
         public bool IsToolFullyExecutedOnServer => false;
-
-        /// <inheritdoc />
+        /// <inheritdoc/>
         public string Name => ToolName;
 
         /// <summary>
         /// Returns the OpenAI tool schema definition for this tool.
         /// </summary>
-        public static object GetSchema()
+        public static OpenAiToolDefinition GetSchema()
         {
-            var schema = new
+            return ToolSchema.Function(ToolName, "Client-side tool that asks the user to approve a proposed DDR action before the LLM performs a server-side change.", p =>
             {
-                type = "function",
-                name = ToolName,
-                description = "Client-side tool that asks the user to approve a proposed DDR action before the LLM performs a server-side change.",
-                parameters = new
-                {
-                    type = "object",
-                    properties = new
-                    {
-                        prompt = new
-                        {
-                            type = "string",
-                            description = "Human-readable text explaining exactly what the user is being asked to approve."
-                        },
-                        context = new
-                        {
-                            type = "object",
-                            description = "Optional metadata to correlate this approval to a DDR, chapter, or follow-up action.",
-                            properties = new
-                            {
-                                ddr_identifier = new
-                                {
-                                    type = "string",
-                                    description = "Optional DDR identifier in TLA-### format related to this approval."
-                                },
-                                chapter_id = new
-                                {
-                                    type = "string",
-                                    description = "Optional chapter identifier related to this approval."
-                                },
-                                action = new
-                                {
-                                    type = "string",
-                                    description = "Optional description of the concrete server-side action that will occur if Approved."
-                                }
-                            },
-                            required = Array.Empty<string>()
-                        }
-                    },
-                    required = new[] { "prompt" }
-                }
-            };
-
-            return schema;
+                p.String("prompt", "Human-readable text explaining exactly what the user is being asked to approve.", required: true);
+                p.Any("context", "object", "Optional metadata to correlate this approval to a DDR, chapter, or follow-up action.");
+            });
         }
 
         public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
-        /// <inheritdoc />
-        public Task<InvokeResult<string>> ExecuteAsync(
-            string argumentsJson,
-            AgentToolExecutionContext context,
-            CancellationToken cancellationToken = default)
+        /// <inheritdoc/>
+        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentToolExecutionContext context, CancellationToken cancellationToken = default)
         {
             const string tag = "[RequestUserApprovalAgentTool__Execute]";
-
             if (string.IsNullOrWhiteSpace(argumentsJson))
             {
-                return Task.FromResult(
-                    InvokeResult<string>.FromError("argumentsJson must not be empty for request_user_approval."));
+                return Task.FromResult(InvokeResult<string>.FromError("argumentsJson must not be empty for request_user_approval."));
             }
 
             try
             {
                 var payload = JObject.Parse(argumentsJson);
                 var prompt = payload.Value<string>("prompt")?.Trim();
-
                 if (string.IsNullOrWhiteSpace(prompt))
                 {
-                    return Task.FromResult(
-                        InvokeResult<string>.FromError("prompt is required for request_user_approval."));
+                    return Task.FromResult(InvokeResult<string>.FromError("prompt is required for request_user_approval."));
                 }
 
                 // This is a client-side tool. On the server we never actually
@@ -126,7 +73,6 @@ namespace LagoVista.AI.Services.Tools
                         ["message"] = "request_user_approval is a client-side tool and must be executed by the hosting client."
                     }
                 };
-
                 return Task.FromResult(InvokeResult<string>.Create(envelope.ToString()));
             }
             catch (Exception ex)

@@ -19,66 +19,33 @@ namespace LagoVista.AI.Services.Tools
     public class SetDdrStatusAgentTool : DdrAgentToolBase
     {
         public const string ToolName = "set_ddr_status";
-
-        public SetDdrStatusAgentTool(IDdrManager ddrManager, IAdminLogger adminLogger)
-            : base(ddrManager, adminLogger)
+        public SetDdrStatusAgentTool(IDdrManager ddrManager, IAdminLogger adminLogger) : base(ddrManager, adminLogger)
         {
         }
 
-        public const string ToolUsageMetadata =
-    "Updates the DDR’s lifecycle status (Draft, InProgress, ReadyForApproval, Approved, Rejected, Tabled). Use to reflect progress or workflow transitions.";
-
-
+        public const string ToolUsageMetadata = "Updates the DDRï¿½s lifecycle status (Draft, InProgress, ReadyForApproval, Approved, Rejected, Tabled). Use to reflect progress or workflow transitions.";
         public override string Name => ToolName;
 
         public const string ToolSummary = "set status of a ddr";
-
-
         protected override string Tag => "[SetDdrStatusAgentTool]";
 
         /// <summary>
         /// Returns the OpenAI tool schema definition for this tool.
         /// </summary>
-        public static object GetSchema()
+        public static OpenAiToolDefinition GetSchema()
         {
-            var schema = new
+            return ToolSchema.Function(ToolName, "Set the workflow status for a DDR (e.g. Draft, InProgress, ReadyForApproval, Approved, Rejected, ResearchDraft).", p =>
             {
-                type = "function",
-                name = ToolName,
-                description = "Set the workflow status for a DDR (e.g. Draft, InProgress, ReadyForApproval, Approved, Rejected, ResearchDraft).",
-                parameters = new
-                {
-                    type = "object",
-                    properties = new
-                    {
-                        identifier = new
-                        {
-                            type = "string",
-                            description = "DDR identifier in TLA-### format, for example 'SYS-001'."
-                        },
-                        status = new
-                        {
-                            type = "string",
-                            description = "New DDR status. Allowed values: Draft, InProgress, ReadyForApproval, Approved, Rejected, ResearchDraft. Case-insensitive."
-                        }
-                    },
-                    required = new[] { "identifier", "status" }
-                }
-            };
-
-            return schema;
+                p.String("identifier", "DDR identifier in TLA-### format, for example 'SYS-001'.", required: true);
+                p.String("status", "New DDR status. Allowed values: Draft, InProgress, ReadyForApproval, Approved, Rejected, ResearchDraft. Case-insensitive.", required: true);
+            });
         }
 
-        protected override async Task<InvokeResult<string>> ExecuteCoreAsync(
-            JObject payload,
-            AgentToolExecutionContext context,
-            CancellationToken cancellationToken)
+        protected override async Task<InvokeResult<string>> ExecuteCoreAsync(JObject payload, AgentToolExecutionContext context, CancellationToken cancellationToken)
         {
             const string baseTag = "[SetDdrStatusAgentTool__Execute]";
-
             var identifier = payload.Value<string>("identifier")?.Trim();
             var status = payload.Value<string>("status")?.Trim();
-
             if (string.IsNullOrWhiteSpace(identifier))
             {
                 return FromError("identifier is required.");
@@ -99,10 +66,7 @@ namespace LagoVista.AI.Services.Tools
                 "Tabled",
                 "ResearchDraft"
             };
-
-            var canonical = allowed.FirstOrDefault(
-                s => string.Equals(s, status, StringComparison.OrdinalIgnoreCase));
-
+            var canonical = allowed.FirstOrDefault(s => string.Equals(s, status, StringComparison.OrdinalIgnoreCase));
             if (canonical == null)
             {
                 return FromError($"Invalid status '{status}'.");
@@ -110,11 +74,7 @@ namespace LagoVista.AI.Services.Tools
 
             try
             {
-                var ddr = await _ddrManager.GetDdrByTlaIdentiferAsync(
-                    identifier,
-                    context.Org,
-                    context.User);
-
+                var ddr = await _ddrManager.GetDdrByTlaIdentiferAsync(identifier, context.Org, context.User);
                 if (ddr == null)
                 {
                     return FromError($"DDR '{identifier}' not found.");
@@ -122,9 +82,7 @@ namespace LagoVista.AI.Services.Tools
 
                 ddr.Status = canonical;
                 ddr.StatusTimestamp = DateTime.UtcNow.ToJSONString();
-
                 await _ddrManager.UpdateDdrAsync(ddr, context.Org, context.User);
-
                 var envelope = new JObject
                 {
                     ["ok"] = true,
@@ -134,7 +92,6 @@ namespace LagoVista.AI.Services.Tools
                         ["status"] = canonical
                     }
                 };
-
                 return FromEnvelope(envelope);
             }
             catch (Exception ex)

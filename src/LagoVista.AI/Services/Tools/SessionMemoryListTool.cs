@@ -18,17 +18,12 @@ namespace LagoVista.AI.Services.Tools
     {
         private readonly IAdminLogger _logger;
         private readonly IAgentSessionManager _agentSessionManager;
-
         public string Name => ToolName;
-
         public bool IsToolFullyExecutedOnServer => true;
 
         public const string ToolUsageMetadata = "List durable session memory notes (IDs, titles, summaries). Use when the user asks what was saved or before wrap-up.";
-
         public const string ToolName = "session_memory_list";
-
         public const string ToolSummary = "list all memory notes in the system";
-
         public SessionMemoryListTool(IAdminLogger logger, IAgentSessionManager agentSessionManager)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -60,8 +55,8 @@ namespace LagoVista.AI.Services.Tools
             public string SessionId { get; set; }
             public int Count { get; set; }
         }
-        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
 
+        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
         public async Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentToolExecutionContext context, CancellationToken cancellationToken = default)
         {
             if (context == null)
@@ -77,41 +72,20 @@ namespace LagoVista.AI.Services.Tools
             try
             {
                 var args = string.IsNullOrWhiteSpace(argumentsJson) ? new ListArgs() : (JsonConvert.DeserializeObject<ListArgs>(argumentsJson) ?? new ListArgs());
-
                 var limit = args.Limit.HasValue && args.Limit.Value > 0 ? args.Limit.Value : 50;
-
-                var list = await _agentSessionManager.ListSessionMemoryNotesAsync(
-                    context.SessionId,
-                    string.IsNullOrWhiteSpace(args.Tag) ? null : args.Tag.Trim(),
-                    string.IsNullOrWhiteSpace(args.Kind) ? null : args.Kind.Trim(),
-                    string.IsNullOrWhiteSpace(args.ImportanceMin) ? null : args.ImportanceMin.Trim(),
-                    limit,
-                    context.Org,
-                    context.User);
-
+                var list = await _agentSessionManager.ListSessionMemoryNotesAsync(context.SessionId, string.IsNullOrWhiteSpace(args.Tag) ? null : args.Tag.Trim(), string.IsNullOrWhiteSpace(args.Kind) ? null : args.Kind.Trim(), string.IsNullOrWhiteSpace(args.ImportanceMin) ? null : args.ImportanceMin.Trim(), limit, context.Org, context.User);
                 if (!list.Successful)
                 {
                     return InvokeResult<string>.FromInvokeResult(list);
                 }
 
-                var items = (list.Model ?? new List<AgentSessionMemoryNote>()).Select(n => new ListItem
-                {
-                    MemoryId = n.MemoryId,
-                    Title = n.Title,
-                    Summary = n.Summary,
-                    Kind = n.Kind?.Value.ToString(),
-                    Importance = n.Importance?.Value.ToString(),
-                    Tags = n.Tags ?? new List<string>(),
-                    CreationDate = n.CreationDate
-                }).ToList();
-
+                var items = (list.Model ?? new List<AgentSessionMemoryNote>()).Select(n => new ListItem { MemoryId = n.MemoryId, Title = n.Title, Summary = n.Summary, Kind = n.Kind?.Value.ToString(), Importance = n.Importance?.Value.ToString(), Tags = n.Tags ?? new List<string>(), CreationDate = n.CreationDate }).ToList();
                 var payload = new ListResult
                 {
                     Items = items,
                     SessionId = context?.Request?.SessionId,
                     Count = items.Count
                 };
-
                 return InvokeResult<string>.Create(JsonConvert.SerializeObject(payload));
             }
             catch (Exception ex)
@@ -121,26 +95,15 @@ namespace LagoVista.AI.Services.Tools
             }
         }
 
-        public static object GetSchema()
+        public static OpenAiToolDefinition GetSchema()
         {
-            return new
+            return ToolSchema.Function(ToolName, "List memory notes stored on the current agent session (IDs, titles, summaries).", p =>
             {
-                type = "function",
-                name = ToolName,
-                description = "List memory notes stored on the current agent session (IDs, titles, summaries).",
-                parameters = new
-                {
-                    type = "object",
-                    properties = new
-                    {
-                        tag = new { type = "string", description = "Optional tag filter." },
-                        kind = new { type = "string", description = "Optional kind filter: invariant|decision|constraint|fact|todo|gotcha." },
-                        importanceMin = new { type = "string", description = "Optional minimum importance: low|normal|high|critical." },
-                        limit = new { type = "integer", description = "Optional max items to return (default 50)." }
-                    },
-                    required = new string[] { }
-                }
-            };
+                p.String("tag", "Optional tag filter.");
+                p.String("kind", "Optional kind filter: invariant|decision|constraint|fact|todo|gotcha.");
+                p.String("importanceMin", "Optional minimum importance: low|normal|high|critical.");
+                p.Integer("limit", "Optional max items to return (default 50).");
+            });
         }
     }
 }

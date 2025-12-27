@@ -18,25 +18,15 @@ namespace LagoVista.AI.Services.Tools
     public sealed class AgentListModesTool : IAgentTool
     {
         private readonly IAdminLogger _logger;
-
         public const string ToolName = "agent_list_modes";
-
-        public const string ToolUsageMetadata =
-            "Use this tool to list the available agent modes and their high-level descriptions. " +
-            "Call it when the user asks what modes are supported, wants help choosing a mode, " +
-            "or when you need to present mode options before proposing a mode change. " +
-            "Do not call it on every request or as a substitute for the mode-change tool." +
-            "When building the results you should return a list that includes the Display Name and the Key in parentheses as well as the description.";
-
+        public const string ToolUsageMetadata = "Use this tool to list the available agent modes and their high-level descriptions. " + "Call it when the user asks what modes are supported, wants help choosing a mode, " + "or when you need to present mode options before proposing a mode change. " + "Do not call it on every request or as a substitute for the mode-change tool." + "When building the results you should return a list that includes the Display Name and the Key in parentheses as well as the description.";
         public const string ToolSummary = "used to list agent modes that the user can choose from to customzie agent behavior";
-
         public AgentListModesTool(IAdminLogger logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public string Name => ToolName;
-
         public bool IsToolFullyExecutedOnServer => true;
 
         private sealed class ListModesArgs
@@ -82,18 +72,13 @@ namespace LagoVista.AI.Services.Tools
         {
             try
             {
-                var args = string.IsNullOrWhiteSpace(argumentsJson)
-                    ? new ListModesArgs()
-                    : JsonConvert.DeserializeObject<ListModesArgs>(argumentsJson) ?? new ListModesArgs();
-
+                var args = string.IsNullOrWhiteSpace(argumentsJson) ? new ListModesArgs() : JsonConvert.DeserializeObject<ListModesArgs>(argumentsJson) ?? new ListModesArgs();
                 var includeExamples = args.IncludeExamples.GetValueOrDefault(false);
-                
                 var result = new ListModesResult
                 {
                     Modes = new List<ModeDescriptor>()
                 };
-
-                foreach (var mode in context.AgentContext.AgentModes.Select(md=>md.CreateSummary()))
+                foreach (var mode in context.AgentContext.AgentModes.Select(md => md.CreateSummary()))
                 {
                     if (mode == null)
                     {
@@ -109,11 +94,8 @@ namespace LagoVista.AI.Services.Tools
                         SystemPromptSummary = mode.SystemPromptSummary ?? string.Empty,
                         IsDefault = mode.IsDefault,
                         HumanRoleHints = mode.HumanRoleHints ?? Array.Empty<string>(),
-                        ExampleUtterances = includeExamples
-                            ? (mode.ExampleUtterances ?? Array.Empty<string>())
-                            : Array.Empty<string>()
+                        ExampleUtterances = includeExamples ? (mode.ExampleUtterances ?? Array.Empty<string>()) : Array.Empty<string>()
                     };
-
                     result.Modes.Add(descriptor);
                 }
 
@@ -127,33 +109,12 @@ namespace LagoVista.AI.Services.Tools
             }
         }
 
-        public static object GetSchema()
+        public static OpenAiToolDefinition GetSchema()
         {
-            var schema = new
+            return ToolSchema.Function(ToolName, "List the available agent modes and their high-level descriptions. " + "Use this to explain mode options to the user or decide which mode might be appropriate.", p =>
             {
-                type = "function",
-                name = ToolName,
-                description =
-                    "List the available agent modes and their high-level descriptions. " +
-                    "Use this to explain mode options to the user or decide which mode might be appropriate.",
-                parameters = new
-                {
-                    type = "object",
-                    properties = new
-                    {
-                        includeExamples = new
-                        {
-                            type = "boolean",
-                            description =
-                                "If true, include example user utterances for each mode when available. " +
-                                "If false or omitted, examples may be omitted."
-                        }
-                    },
-                    required = Array.Empty<string>()
-                }
-            };
-
-            return schema;
+                p.Boolean("includeExamples", "If true, include example user utterances for each mode when available. " + "If false or omitted, examples may be omitted.");
+            });
         }
     }
 }

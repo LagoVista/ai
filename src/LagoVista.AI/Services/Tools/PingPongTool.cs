@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
@@ -23,7 +23,6 @@ namespace LagoVista.AI.Services.Tools
     public sealed class PingPongTool : IAgentTool
     {
         private readonly IAdminLogger _logger;
-
         public string Name => PingPongTool.ToolName;
 
         public PingPongTool(IAdminLogger logger)
@@ -34,10 +33,7 @@ namespace LagoVista.AI.Services.Tools
         public bool IsToolFullyExecutedOnServer => true;
 
         public const string ToolSummary = "use to test agent calls by sending a ping and expecting a pong";
-
-
         public const string ToolUsageMetadata = "This tool is used for testing the system only and should not be used unless explicitly asked for. Send a ping, expect a pong!";
-
         private sealed class PingPongArgs
         {
             public string Message { get; set; }
@@ -50,76 +46,44 @@ namespace LagoVista.AI.Services.Tools
             public int Count { get; set; }
             public string SessionId { get; set; }
         }
-        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
 
-        public Task<InvokeResult<string>> ExecuteAsync(
-            string argumentsJson,
-            AgentToolExecutionContext context,
-            CancellationToken cancellationToken = default)
+        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
+        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentToolExecutionContext context, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(argumentsJson))
             {
-                return Task.FromResult(
-                    InvokeResult<string>.FromError("PingPongTool requires a non-empty arguments object."));
+                return Task.FromResult(InvokeResult<string>.FromError("PingPongTool requires a non-empty arguments object."));
             }
 
             try
             {
                 var args = JsonConvert.DeserializeObject<PingPongArgs>(argumentsJson) ?? new PingPongArgs();
-
                 var count = args.Count.GetValueOrDefault(0) + 1;
                 var message = string.IsNullOrWhiteSpace(args.Message) ? "ping" : args.Message;
-
                 var result = new PingPongResult
                 {
                     Reply = $"pong: {message}",
                     Count = count,
                     SessionId = context?.Request?.SessionId,
-                 };
-
+                };
                 var resultJson = JsonConvert.SerializeObject(result);
-
                 return Task.FromResult(InvokeResult<string>.Create(resultJson));
             }
             catch (Exception ex)
             {
                 _logger.AddException("[PingPongTool_ExecuteAsync__Exception]", ex);
-
-                return Task.FromResult(
-                    InvokeResult<string>.FromError("PingPongTool failed to process arguments."));
+                return Task.FromResult(InvokeResult<string>.FromError("PingPongTool failed to process arguments."));
             }
         }
 
-        public const string ToolName = "testing_ping_pong";    
-
-        public static object GetSchema()
+        public const string ToolName = "testing_ping_pong";
+        public static OpenAiToolDefinition GetSchema()
         {
-            var pingPongTool = new
+            return ToolSchema.Function(PingPongTool.ToolName, "Simple ping-pong test tool that echoes a message and increments a counter.", p =>
             {
-                type = "function",
-                name = PingPongTool.ToolName,
-                description = "Simple ping-pong test tool that echoes a message and increments a counter.",
-                parameters = new
-                {
-                    type = "object",
-                    properties = new
-                    {
-                        message = new
-                        {
-                            type = "string",
-                            description = "Optional message to echo back with a 'pong' prefix."
-                        },
-                        count = new
-                        {
-                            type = "integer",
-                            description = "How many times this tool has been called in this chain; the tool will increment it."
-                        }
-                    },
-                    required = Array.Empty<string>()
-                }
-            };
-
-            return pingPongTool;
+                p.String("message", "Optional message to echo back with a 'pong' prefix.");
+                p.Integer("count", "How many times this tool has been called in this chain; the tool will increment it.");
+            });
         }
     }
 }

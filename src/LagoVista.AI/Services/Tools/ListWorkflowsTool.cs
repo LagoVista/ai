@@ -20,18 +20,12 @@ namespace LagoVista.AI.Services.Tools
     {
         private readonly IWorkflowDefinitionManager _workflowManager;
         private readonly IAdminLogger _logger;
-
         public string Name => ToolName;
-
         public bool IsToolFullyExecutedOnServer => true;
 
         public const string ToolUsageMetadata = "Use this tool when you need a list of available workflows. It returns a catalog of workflows (id, name, description, status, visibility, version) for the LLM to choose from. This tool never executes workflows directly.";
-
         public const string ToolName = "agent_workflows_list";
-
-
         public const string ToolSummary = "list all workflows";
-
         public ListWorkflowsTool(IWorkflowDefinitionManager workflowManager, IAdminLogger logger)
         {
             _workflowManager = workflowManager ?? throw new ArgumentNullException(nameof(workflowManager));
@@ -40,15 +34,11 @@ namespace LagoVista.AI.Services.Tools
 
         private sealed class ListWorkflowsArgs
         {
-            // Reserved for future filters (status, visibility, etc.).
+        // Reserved for future filters (status, visibility, etc.).
         }
 
         public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
-
-        public async Task<InvokeResult<string>> ExecuteAsync(
-            string argumentsJson,
-            AgentToolExecutionContext context,
-            CancellationToken cancellationToken = default)
+        public async Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentToolExecutionContext context, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -63,28 +53,13 @@ namespace LagoVista.AI.Services.Tools
                     PageIndex = 0,
                     PageSize = 200
                 };
-
                 // Org/user can be threaded from context later; for now null is acceptable.
                 var defs = await _workflowManager.GetWorkflowDefinitionsAsync(listRequest, context.Org, context.User);
-
-                var items = defs.Model
-                    .Where(wf => wf.Status != WorkflowStatus.Disabled)
-                    .Select(wf => new WorkflowCatalogItem
-                    {
-                        WorkflowId = wf.Id,
-                        Title = wf.Name,
-                        Description = wf.Description,
-                        Status = wf.Status,
-                        Visibility = wf.Visibility,
-                        Version = wf.Version
-                    })
-                    .ToList();
-
+                var items = defs.Model.Where(wf => wf.Status != WorkflowStatus.Disabled).Select(wf => new WorkflowCatalogItem { WorkflowId = wf.Id, Title = wf.Name, Description = wf.Description, Status = wf.Status, Visibility = wf.Visibility, Version = wf.Version }).ToList();
                 var response = new WorkflowRegistryCatalogResponse
                 {
                     Workflows = items
                 };
-
                 var json = JsonConvert.SerializeObject(response);
                 return InvokeResult<string>.Create(json);
             }
@@ -95,22 +70,11 @@ namespace LagoVista.AI.Services.Tools
             }
         }
 
-        public static object GetSchema()
+        public static OpenAiToolDefinition GetSchema()
         {
-            var schema = new
+            return ToolSchema.Function(ToolName, "List all available workflows for the agent, excluding disabled ones. Returns a catalog for the LLM to choose from.", p =>
             {
-                type = "function",
-                name = ToolName,
-                description = "List all available workflows for the agent, excluding disabled ones. Returns a catalog for the LLM to choose from.",
-                parameters = new
-                {
-                    type = "object",
-                    properties = new { },
-                    required = new string[] { }
-                }
-            };
-
-            return schema;
+            });
         }
     }
 }

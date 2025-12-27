@@ -18,16 +18,13 @@ namespace LagoVista.AI.Services.Tools
     public sealed class CodeHashNormalizedTool : IAgentTool
     {
         public const string ToolName = "code_hash_normalized";
-
         public string Name => ToolName;
 
         public const string ToolSummary = "normalize text and then calculate a hash";
-
         public bool IsToolFullyExecutedOnServer => true;
 
         private readonly IContentHashService _contentHashService;
         private readonly IAdminLogger _logger;
-
         public CodeHashNormalizedTool(IContentHashService contentHashService, IAdminLogger logger)
         {
             _contentHashService = contentHashService ?? throw new ArgumentNullException(nameof(contentHashService));
@@ -37,37 +34,14 @@ namespace LagoVista.AI.Services.Tools
         /// <summary>
         /// JSON schema used when registering this tool with the LLM.
         /// </summary>
-        public static object GetSchema()
+        public static OpenAiToolDefinition GetSchema()
         {
-            return new
+            return ToolSchema.Function(ToolName, "Compute a normalized content hash (SHA-256) for arbitrary text using the canonical LagoVista normalization rules.", p =>
             {
-                type = "function",
-                name = ToolName,
-                description = "Compute a normalized content hash (SHA-256) for arbitrary text using the canonical LagoVista normalization rules.",
-                parameters = new
-                {
-                    type = "object",
-                    properties = new
-                    {
-                        content = new
-                        {
-                            type = "string",
-                            description = "Raw text to hash. Normalization (line endings, whitespace, etc.) is applied before hashing."
-                        },
-                        docPath = new
-                        {
-                            type = "string",
-                            description = "Optional canonical document path used only for logging and correlation."
-                        },
-                        label = new
-                        {
-                            type = "string",
-                            description = "Optional label for this hash (e.g., 'pre-patch', 'post-patch', 'index-chunk')."
-                        }
-                    },
-                    required = new[] { "content" }
-                }
-            };
+                p.String("content", "Raw text to hash. Normalization (line endings, whitespace, etc.) is applied before hashing.", required: true);
+                p.String("docPath", "Optional canonical document path used only for logging and correlation.");
+                p.String("label", "Optional label for this hash (e.g., 'pre-patch', 'post-patch', 'index-chunk').");
+            });
         }
 
         /// <summary>
@@ -90,41 +64,17 @@ When to use:
 - When comparing Active File content with cloud or indexed copies.
 ";
         public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
-
-        public async Task<InvokeResult<string>> ExecuteAsync(
-            string argumentsJson,
-            AgentToolExecutionContext context,
-            CancellationToken cancellationToken = default)
+        public async Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentToolExecutionContext context, CancellationToken cancellationToken = default)
         {
             if (cancellationToken.IsCancellationRequested)
             {
-                var cancelledPayload = JsonConvert.SerializeObject(new CodeHashNormalizedResponse
-                {
-                    Success = false,
-                    ErrorCode = "CANCELLED",
-                    ErrorMessage = "code_hash_normalized execution was cancelled before processing.",
-                    DocPath = null,
-                    Label = null,
-                    Hash = null,
-                    ContentLength = 0
-                });
-
+                var cancelledPayload = JsonConvert.SerializeObject(new CodeHashNormalizedResponse { Success = false, ErrorCode = "CANCELLED", ErrorMessage = "code_hash_normalized execution was cancelled before processing.", DocPath = null, Label = null, Hash = null, ContentLength = 0 });
                 return InvokeResult<string>.Create(cancelledPayload);
             }
 
             if (string.IsNullOrWhiteSpace(argumentsJson))
             {
-                var missingArgsPayload = JsonConvert.SerializeObject(new CodeHashNormalizedResponse
-                {
-                    Success = false,
-                    ErrorCode = "MISSING_ARGUMENTS",
-                    ErrorMessage = "code_hash_normalized requires a non-empty JSON arguments payload.",
-                    DocPath = null,
-                    Label = null,
-                    Hash = null,
-                    ContentLength = 0
-                });
-
+                var missingArgsPayload = JsonConvert.SerializeObject(new CodeHashNormalizedResponse { Success = false, ErrorCode = "MISSING_ARGUMENTS", ErrorMessage = "code_hash_normalized requires a non-empty JSON arguments payload.", DocPath = null, Label = null, Hash = null, ContentLength = 0 });
                 return InvokeResult<string>.Create(missingArgsPayload);
             }
 
@@ -136,34 +86,13 @@ When to use:
             catch (Exception ex)
             {
                 _logger.AddException("[code_hash_normalized_Deserialize]", ex);
-
-                var errorPayload = JsonConvert.SerializeObject(new CodeHashNormalizedResponse
-                {
-                    Success = false,
-                    ErrorCode = "DESERIALIZATION_ERROR",
-                    ErrorMessage = "Unable to deserialize code_hash_normalized arguments.",
-                    DocPath = null,
-                    Label = null,
-                    Hash = null,
-                    ContentLength = 0
-                });
-
+                var errorPayload = JsonConvert.SerializeObject(new CodeHashNormalizedResponse { Success = false, ErrorCode = "DESERIALIZATION_ERROR", ErrorMessage = "Unable to deserialize code_hash_normalized arguments.", DocPath = null, Label = null, Hash = null, ContentLength = 0 });
                 return InvokeResult<string>.Create(errorPayload);
             }
 
             if (args.Content == null)
             {
-                var validationPayload = JsonConvert.SerializeObject(new CodeHashNormalizedResponse
-                {
-                    Success = false,
-                    ErrorCode = "MISSING_CONTENT",
-                    ErrorMessage = "code_hash_normalized requires a 'content' field. The field may be an empty string but it must be present.",
-                    DocPath = args.DocPath,
-                    Label = args.Label,
-                    Hash = null,
-                    ContentLength = 0
-                });
-
+                var validationPayload = JsonConvert.SerializeObject(new CodeHashNormalizedResponse { Success = false, ErrorCode = "MISSING_CONTENT", ErrorMessage = "code_hash_normalized requires a 'content' field. The field may be an empty string but it must be present.", DocPath = args.DocPath, Label = args.Label, Hash = null, ContentLength = 0 });
                 return InvokeResult<string>.Create(validationPayload);
             }
 
@@ -171,10 +100,8 @@ When to use:
             {
                 // Compute byte length of the original (pre-normalization) content
                 var contentByteLength = Encoding.UTF8.GetByteCount(args.Content);
-
                 // Delegate hashing to the canonical content hash service
                 var hash = _contentHashService.ComputeTextHash(args.Content);
-
                 var response = new CodeHashNormalizedResponse
                 {
                     Success = true,
@@ -185,25 +112,13 @@ When to use:
                     DocPath = args.DocPath,
                     Label = args.Label
                 };
-
                 var json = JsonConvert.SerializeObject(response);
                 return InvokeResult<string>.Create(json);
             }
             catch (Exception ex)
             {
                 _logger.AddException("[code_hash_normalized_Execute]", ex);
-
-                var errorPayload = JsonConvert.SerializeObject(new CodeHashNormalizedResponse
-                {
-                    Success = false,
-                    ErrorCode = "UNEXPECTED_ERROR",
-                    ErrorMessage = "code_hash_normalized failed to process arguments.",
-                    DocPath = args.DocPath,
-                    Label = args.Label,
-                    Hash = null,
-                    ContentLength = 0
-                });
-
+                var errorPayload = JsonConvert.SerializeObject(new CodeHashNormalizedResponse { Success = false, ErrorCode = "UNEXPECTED_ERROR", ErrorMessage = "code_hash_normalized failed to process arguments.", DocPath = args.DocPath, Label = args.Label, Hash = null, ContentLength = 0 });
                 return InvokeResult<string>.Create(errorPayload);
             }
         }

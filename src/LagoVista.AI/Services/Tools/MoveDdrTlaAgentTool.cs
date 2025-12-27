@@ -18,65 +18,32 @@ namespace LagoVista.AI.Services.Tools
     public class MoveDdrTlaAgentTool : DdrAgentToolBase
     {
         public const string ToolName = "move_ddr_tla";
-
-        public MoveDdrTlaAgentTool(IDdrManager ddrManager, IAdminLogger adminLogger)
-            : base(ddrManager, adminLogger)
+        public MoveDdrTlaAgentTool(IDdrManager ddrManager, IAdminLogger adminLogger) : base(ddrManager, adminLogger)
         {
         }
 
-        public const string ToolUsageMetadata =
-    "Moves a DDR from one TLA domain to another, assigning a new index. Use only when the DDR was misclassified or organizational boundaries change.";
-
+        public const string ToolUsageMetadata = "Moves a DDR from one TLA domain to another, assigning a new index. Use only when the DDR was misclassified or organizational boundaries change.";
         public const string ToolSummary = "use to reassign tla id on a ddr";
-
-
         public override string Name => ToolName;
-
         protected override string Tag => "[MoveDdrTlaAgentTool]";
 
         /// <summary>
         /// Returns the OpenAI tool schema definition for this tool.
         /// </summary>
-        public static object GetSchema()
+        public static OpenAiToolDefinition GetSchema()
         {
-            var schema = new
+            return ToolSchema.Function(ToolName, "Move a DDR to a new TLA domain, allocating a new index and identifier.", p =>
             {
-                type = "function",
-                name = ToolName,
-                description = "Move a DDR to a new TLA domain, allocating a new index and identifier.",
-                parameters = new
-                {
-                    type = "object",
-                    properties = new
-                    {
-                        identifier = new
-                        {
-                            type = "string",
-                            description = "Existing DDR identifier in TLA-### format, for example 'SYS-001'."
-                        },
-                        new_tla = new
-                        {
-                            type = "string",
-                            description = "Target TLA to move the DDR into, e.g. 'AGN' or 'TUL'. Must already exist in the TLA catalog."
-                        }
-                    },
-                    required = new[] { "identifier", "new_tla" }
-                }
-            };
-
-            return schema;
+                p.String("identifier", "Existing DDR identifier in TLA-### format, for example 'SYS-001'.", required: true);
+                p.String("new_tla", "Target TLA to move the DDR into, e.g. 'AGN' or 'TUL'. Must already exist in the TLA catalog.", required: true);
+            });
         }
 
-        protected override async Task<InvokeResult<string>> ExecuteCoreAsync(
-            JObject payload,
-            AgentToolExecutionContext context,
-            CancellationToken cancellationToken)
+        protected override async Task<InvokeResult<string>> ExecuteCoreAsync(JObject payload, AgentToolExecutionContext context, CancellationToken cancellationToken)
         {
             const string baseTag = "[MoveDdrTlaAgentTool__Execute]";
-
             var identifier = payload.Value<string>("identifier")?.Trim();
             var newTla = payload.Value<string>("new_tla")?.Trim();
-
             if (string.IsNullOrWhiteSpace(identifier))
             {
                 return FromError("identifier is required.");
@@ -88,29 +55,21 @@ namespace LagoVista.AI.Services.Tools
             }
 
             newTla = newTla.ToUpperInvariant();
-
             try
             {
-                var catalog = await _ddrManager.GetTlaCatalogAsync(context.Org, context.User)
-                              ?? new List<DdrTla>();
-
+                var catalog = await _ddrManager.GetTlaCatalogAsync(context.Org, context.User) ?? new List<DdrTla>();
                 if (!catalog.Any(t => string.Equals(t.Tla, newTla, StringComparison.OrdinalIgnoreCase)))
                 {
                     return FromError($"Unknown TLA '{newTla}'.");
                 }
 
-                var ddr = await _ddrManager.GetDdrByTlaIdentiferAsync(
-                    identifier,
-                    context.Org,
-                    context.User);
-
+                var ddr = await _ddrManager.GetDdrByTlaIdentiferAsync(identifier, context.Org, context.User);
                 if (ddr == null)
                 {
                     return FromError($"DDR '{identifier}' not found.");
                 }
 
                 var oldIdentifier = $"{ddr.Tla}-{ddr.Index:D3}";
-
                 if (string.Equals(ddr.Tla, newTla, StringComparison.OrdinalIgnoreCase))
                 {
                     var noOpEnvelope = new JObject
@@ -123,7 +82,6 @@ namespace LagoVista.AI.Services.Tools
                             ["tla"] = ddr.Tla
                         }
                     };
-
                     return FromEnvelope(noOpEnvelope);
                 }
 
@@ -135,14 +93,10 @@ namespace LagoVista.AI.Services.Tools
                 }
 
                 var newIndex = newIndexResult.Result;
-
                 ddr.Tla = newTla;
                 ddr.Index = newIndex;
-
                 await _ddrManager.UpdateDdrAsync(ddr, context.Org, context.User);
-
                 var newIdentifier = $"{newTla}-{newIndex:D3}";
-
                 var envelope = new JObject
                 {
                     ["ok"] = true,
@@ -153,7 +107,6 @@ namespace LagoVista.AI.Services.Tools
                         ["tla"] = newTla
                     }
                 };
-
                 return FromEnvelope(envelope);
             }
             catch (Exception ex)

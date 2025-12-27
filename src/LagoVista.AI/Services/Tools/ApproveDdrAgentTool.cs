@@ -18,58 +18,30 @@ namespace LagoVista.AI.Services.Tools
     public class ApproveDdrAgentTool : DdrAgentToolBase
     {
         public const string ToolName = "approve_ddr";
-
-        public ApproveDdrAgentTool(IDdrManager ddrManager, IAdminLogger adminLogger)
-            : base(ddrManager, adminLogger)
+        public ApproveDdrAgentTool(IDdrManager ddrManager, IAdminLogger adminLogger) : base(ddrManager, adminLogger)
         {
         }
 
-        public const string ToolUsageMetadata =
-    "Approves the entire DDR after its goal and chapters are approved. Finalizes the DDR. Requires explicit user approval.";
-
+        public const string ToolUsageMetadata = "Approves the entire DDR after its goal and chapters are approved. Finalizes the DDR. Requires explicit user approval.";
         public const string ToolSummary = "approve a ddr";
-
         public override string Name => ToolName;
-
         protected override string Tag => "[ApproveDdrAgentTool]";
 
         /// <summary>
         /// Returns the OpenAI tool schema definition for this tool.
         /// </summary>
-        public static object GetSchema()
+        public static OpenAiToolDefinition GetSchema()
         {
-            var schema = new
+            return ToolSchema.Function(ToolName, "Approve a DDR after its goal has been approved, recording approver and timestamps.", p =>
             {
-                type = "function",
-                name = ToolName,
-                description = "Approve a DDR after its goal has been approved, recording approver and timestamps.",
-                parameters = new
-                {
-                    type = "object",
-                    properties = new
-                    {
-                        identifier = new
-                        {
-                            type = "string",
-                            description = "DDR identifier in TLA-### format, for example 'SYS-001'."
-                        }
-                    },
-                    required = new[] { "identifier" }
-                }
-            };
-
-            return schema;
+                p.String("identifier", "DDR identifier in TLA-### format, for example 'SYS-001'.", required: true);
+            });
         }
 
-        protected override async Task<InvokeResult<string>> ExecuteCoreAsync(
-            JObject payload,
-            AgentToolExecutionContext context,
-            CancellationToken cancellationToken)
+        protected override async Task<InvokeResult<string>> ExecuteCoreAsync(JObject payload, AgentToolExecutionContext context, CancellationToken cancellationToken)
         {
             const string baseTag = "[ApproveDdrAgentTool__Execute]";
-
             var identifier = payload.Value<string>("identifier")?.Trim();
-
             if (string.IsNullOrWhiteSpace(identifier))
             {
                 return FromError("identifier is required.");
@@ -77,11 +49,7 @@ namespace LagoVista.AI.Services.Tools
 
             try
             {
-                var ddr = await _ddrManager.GetDdrByTlaIdentiferAsync(
-                    identifier,
-                    context.Org,
-                    context.User);
-
+                var ddr = await _ddrManager.GetDdrByTlaIdentiferAsync(identifier, context.Org, context.User);
                 if (ddr == null)
                 {
                     return FromError($"DDR '{identifier}' not found.");
@@ -93,14 +61,11 @@ namespace LagoVista.AI.Services.Tools
                 }
 
                 var now = DateTime.UtcNow.ToJSONString();
-
                 ddr.ApprovedBy = context.User;
                 ddr.ApprovedTimestamp = now;
                 ddr.Status = "Approved";
                 ddr.StatusTimestamp = now;
-
                 await _ddrManager.UpdateDdrAsync(ddr, context.Org, context.User);
-
                 var envelope = new JObject
                 {
                     ["ok"] = true,
@@ -116,7 +81,6 @@ namespace LagoVista.AI.Services.Tools
                         ["approved_timestamp"] = now
                     }
                 };
-
                 return FromEnvelope(envelope);
             }
             catch (Exception ex)

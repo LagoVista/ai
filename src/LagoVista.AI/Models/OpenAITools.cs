@@ -21,7 +21,7 @@ namespace LagoVista.AI
         public string Name { get; set; } = default!;
 
         [JsonProperty("description")]
-        public string? Description { get; set; }
+        public string Description { get; set; }
 
         [JsonProperty("parameters")]
         public JsonSchemaObject Parameters { get; set; } = default!;
@@ -36,7 +36,7 @@ namespace LagoVista.AI
         public Dictionary<string, JsonSchemaProperty> Properties { get; set; } = new Dictionary<string, JsonSchemaProperty>();
 
         [JsonProperty("required")]
-        public IReadOnlyList<string>? Required { get; set; }
+        public IReadOnlyList<string> Required { get; set; }
 
         [JsonProperty("additionalProperties")]
         public bool AdditionalProperties { get; set; } = false;
@@ -48,10 +48,10 @@ namespace LagoVista.AI
         public string Type { get; set; } = default!;
 
         [JsonProperty("description")]
-        public string? Description { get; set; }
+        public string Description { get; set; }
 
         [JsonProperty("enum")]
-        public IReadOnlyList<string>? Enum { get; set; }
+        public IReadOnlyList<string> Enum { get; set; }
     }
 
 
@@ -136,6 +136,22 @@ namespace LagoVista.AI
             if (required)
                 schema.Require(name);
         }
+
+        public static void Number(
+            this JsonSchemaObject schema,
+            string name,
+            string description,
+            bool required = false)
+                {
+                    schema.Properties[name] = new JsonSchemaProperty
+                    {
+                        Type = "number",
+                        Description = description
+                    };
+
+                    if (required)
+                        schema.Require(name);
+                }
 
         public static void Boolean(
             this JsonSchemaObject schema,

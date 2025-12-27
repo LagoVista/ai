@@ -20,18 +20,12 @@ namespace LagoVista.AI.Services.Tools
     {
         private readonly IWorkflowDefinitionManager _workflowManager;
         private readonly IAdminLogger _logger;
-
         public string Name => ToolName;
-
         public bool IsToolFullyExecutedOnServer => true;
 
         public const string ToolUsageMetadata = "Use this tool after you have selected a specific workflow and need its full manifest. Supply the workflow id and this tool returns the detailed WorkflowDefinition used to drive execution.";
-
         public const string ToolName = "agent_workflow_manifest_get";
-
-
         public const string ToolSummary = "read a full workflow manifest";
-
         public GetWorkflowManifestTool(IWorkflowDefinitionManager workflowManager, IAdminLogger logger)
         {
             _workflowManager = workflowManager ?? throw new ArgumentNullException(nameof(workflowManager));
@@ -42,17 +36,13 @@ namespace LagoVista.AI.Services.Tools
         {
             public string WorkflowId { get; set; }
         }
-        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
 
-        public async Task<InvokeResult<string>> ExecuteAsync(
-            string argumentsJson,
-            AgentToolExecutionContext context,
-            CancellationToken cancellationToken = default)
+        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
+        public async Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentToolExecutionContext context, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(argumentsJson))
             {
-                return InvokeResult<string>.FromError(
-                    "GetWorkflowManifestTool requires a non-empty arguments object with 'workflowId'.");
+                return InvokeResult<string>.FromError("GetWorkflowManifestTool requires a non-empty arguments object with 'workflowId'.");
             }
 
             GetWorkflowManifestArgs args;
@@ -68,8 +58,7 @@ namespace LagoVista.AI.Services.Tools
 
             if (string.IsNullOrWhiteSpace(args.WorkflowId))
             {
-                return InvokeResult<string>.FromError(
-                    "GetWorkflowManifestTool requires 'workflowId'.");
+                return InvokeResult<string>.FromError("GetWorkflowManifestTool requires 'workflowId'.");
             }
 
             try
@@ -89,7 +78,6 @@ namespace LagoVista.AI.Services.Tools
                 {
                     Workflow = definition
                 };
-
                 var json = JsonConvert.SerializeObject(response);
                 return InvokeResult<string>.Create(json);
             }
@@ -100,29 +88,12 @@ namespace LagoVista.AI.Services.Tools
             }
         }
 
-        public static object GetSchema()
+        public static OpenAiToolDefinition GetSchema()
         {
-            var schema = new
+            return ToolSchema.Function(ToolName, "Get the full manifest for a single workflow by id, including instruction text, required inputs, permitted tools, and completion criteria.", p =>
             {
-                type = "function",
-                name = ToolName,
-                description = "Get the full manifest for a single workflow by id, including instruction text, required inputs, permitted tools, and completion criteria.",
-                parameters = new
-                {
-                    type = "object",
-                    properties = new
-                    {
-                        workflowId = new
-                        {
-                            type = "string",
-                            description = "Identifier of the workflow to retrieve. This is the Id of the WorkflowDefinition."
-                        }
-                    },
-                    required = new[] { "workflowId" }
-                }
-            };
-
-            return schema;
+                p.String("workflowId", "Identifier of the workflow to retrieve. This is the Id of the WorkflowDefinition.", required: true);
+            });
         }
     }
 }

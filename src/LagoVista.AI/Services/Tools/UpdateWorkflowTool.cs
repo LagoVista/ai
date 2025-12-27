@@ -21,39 +21,29 @@ namespace LagoVista.AI.Services.Tools
     {
         private readonly IWorkflowDefinitionManager _workflowManager;
         private readonly IAdminLogger _logger;
-
         public string Name => ToolName;
-
         public bool IsToolFullyExecutedOnServer => true;
 
         public const string ToolUsageMetadata = "Use this tool to update an existing workflow definition. Supply a 'workflow' object including its Id. The tool validates and persists the change, returning ok/messages/errors.";
-
         public const string ToolName = "agent_workflow_update";
-
         public const string ToolSummary = "udpate a workflow";
-
         private sealed class UpdateWorkflowArgs
         {
             public WorkflowDefinition Workflow { get; set; }
         }
 
         public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
-
         public UpdateWorkflowTool(IWorkflowDefinitionManager workflowManager, IAdminLogger logger)
         {
             _workflowManager = workflowManager ?? throw new ArgumentNullException(nameof(workflowManager));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task<InvokeResult<string>> ExecuteAsync(
-            string argumentsJson,
-            AgentToolExecutionContext context,
-            CancellationToken cancellationToken = default)
+        public async Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentToolExecutionContext context, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(argumentsJson))
             {
-                return InvokeResult<string>.FromError(
-                    "UpdateWorkflowTool requires a non-empty arguments object with 'workflow'.");
+                return InvokeResult<string>.FromError("UpdateWorkflowTool requires a non-empty arguments object with 'workflow'.");
             }
 
             UpdateWorkflowArgs args;
@@ -68,53 +58,33 @@ namespace LagoVista.AI.Services.Tools
             }
 
             var errors = new List<WorkflowAuthoringError>();
-
             if (args.Workflow == null)
             {
-                errors.Add(new WorkflowAuthoringError
-                {
-                    Field = "workflow",
-                    Message = "workflow is required."
-                });
-
+                errors.Add(new WorkflowAuthoringError { Field = "workflow", Message = "workflow is required." });
                 var errorResponse = new WorkflowAuthoringResponse
                 {
                     Ok = false,
                     Workflow = null,
                     Errors = errors
                 };
-
                 var errorJson = JsonConvert.SerializeObject(errorResponse);
                 return InvokeResult<string>.Create(errorJson);
             }
 
             var wf = args.Workflow;
-
             if (string.IsNullOrWhiteSpace(wf.Id))
             {
-                errors.Add(new WorkflowAuthoringError
-                {
-                    Field = "id",
-                    Message = "Workflow Id is required for update."
-                });
+                errors.Add(new WorkflowAuthoringError { Field = "id", Message = "Workflow Id is required for update." });
             }
 
             if (string.IsNullOrWhiteSpace(wf.Name))
             {
-                errors.Add(new WorkflowAuthoringError
-                {
-                    Field = "name",
-                    Message = "Workflow Name is required."
-                });
+                errors.Add(new WorkflowAuthoringError { Field = "name", Message = "Workflow Name is required." });
             }
 
             if (string.IsNullOrWhiteSpace(wf.Description))
             {
-                errors.Add(new WorkflowAuthoringError
-                {
-                    Field = "description",
-                    Message = "Workflow Description is required."
-                });
+                errors.Add(new WorkflowAuthoringError { Field = "description", Message = "Workflow Description is required." });
             }
 
             if (errors.Count > 0)
@@ -125,7 +95,6 @@ namespace LagoVista.AI.Services.Tools
                     Workflow = wf,
                     Errors = errors
                 };
-
                 var validationJson = JsonConvert.SerializeObject(validationResponse);
                 return InvokeResult<string>.Create(validationJson);
             }
@@ -133,22 +102,16 @@ namespace LagoVista.AI.Services.Tools
             try
             {
                 var result = await _workflowManager.UpdateWorkflowDefinitionAsync(wf, context?.Org, context?.User);
-
                 var response = new WorkflowAuthoringResponse
                 {
                     Ok = result.Successful,
                     Workflow = wf
                 };
-
                 if (!result.Successful)
                 {
                     foreach (var err in result.Errors)
                     {
-                        response.Errors.Add(new WorkflowAuthoringError
-                        {
-                            Field = err.ErrorCode,
-                            Message = err.Message
-                        });
+                        response.Errors.Add(new WorkflowAuthoringError { Field = err.ErrorCode, Message = err.Message });
                     }
                 }
                 else
@@ -166,29 +129,12 @@ namespace LagoVista.AI.Services.Tools
             }
         }
 
-        public static object GetSchema()
+        public static OpenAiToolDefinition GetSchema()
         {
-            var schema = new
+            return ToolSchema.Function(ToolName, "Update an existing workflow definition. The input workflow object must include its Id; the response contains ok/messages/errors and the updated workflow payload.", p =>
             {
-                type = "function",
-                name = ToolName,
-                description = "Update an existing workflow definition. The input workflow object must include its Id; the response contains ok/messages/errors and the updated workflow payload.",
-                parameters = new
-                {
-                    type = "object",
-                    properties = new
-                    {
-                        workflow = new
-                        {
-                            type = "object",
-                            description = "Workflow definition to update. Must include id, and should include name/description and other fields to persist."
-                        }
-                    },
-                    required = new[] { "workflow" }
-                }
-            };
-
-            return schema;
+                p.Any("workflow", "object", "Workflow definition to update. Must include id, and should include name/description and other fields to persist.", required: true);
+            });
         }
     }
 }

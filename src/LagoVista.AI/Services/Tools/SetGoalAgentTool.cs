@@ -17,64 +17,33 @@ namespace LagoVista.AI.Services.Tools
     public class SetGoalAgentTool : DdrAgentToolBase
     {
         public const string ToolName = "set_goal";
-
-        public SetGoalAgentTool(IDdrManager ddrManager, IAdminLogger adminLogger)
-            : base(ddrManager, adminLogger)
+        public SetGoalAgentTool(IDdrManager ddrManager, IAdminLogger adminLogger) : base(ddrManager, adminLogger)
         {
         }
 
-        public const string ToolUsageMetadata =
-    "Sets or revises the goal statement for a DDR. Used early in the DDR lifecycle before the goal has been approved.";
-
+        public const string ToolUsageMetadata = "Sets or revises the goal statement for a DDR. Used early in the DDR lifecycle before the goal has been approved.";
         public override string Name => ToolName;
 
         public const string ToolSummary = "set the goal of a ddr";
-
         protected override string Tag => "[SetGoalAgentTool]";
 
         /// <summary>
         /// Returns the OpenAI tool schema definition for this tool.
         /// </summary>
-        public static object GetSchema()
+        public static OpenAiToolDefinition GetSchema()
         {
-            var schema = new
+            return ToolSchema.Function(ToolName, "Set or update the goal statement for a DDR before it is approved.", p =>
             {
-                type = "function",
-                name = ToolName,
-                description = "Set or update the goal statement for a DDR before it is approved.",
-                parameters = new
-                {
-                    type = "object",
-                    properties = new
-                    {
-                        identifier = new
-                        {
-                            type = "string",
-                            description = "DDR identifier in TLA-### format, for example 'SYS-001'."
-                        },
-                        goal = new
-                        {
-                            type = "string",
-                            description = "Concise statement of the DDR goal and what success looks like."
-                        }
-                    },
-                    required = new[] { "identifier", "goal" }
-                }
-            };
-
-            return schema;
+                p.String("identifier", "DDR identifier in TLA-### format, for example 'SYS-001'.", required: true);
+                p.String("goal", "Concise statement of the DDR goal and what success looks like.", required: true);
+            });
         }
 
-        protected override async Task<InvokeResult<string>> ExecuteCoreAsync(
-            JObject payload,
-            AgentToolExecutionContext context,
-            CancellationToken cancellationToken)
+        protected override async Task<InvokeResult<string>> ExecuteCoreAsync(JObject payload, AgentToolExecutionContext context, CancellationToken cancellationToken)
         {
             const string baseTag = "[SetGoalAgentTool__Execute]";
-
             var identifier = payload.Value<string>("identifier")?.Trim();
             var goal = payload.Value<string>("goal")?.Trim();
-
             if (string.IsNullOrWhiteSpace(identifier))
             {
                 return FromError("identifier is required.");
@@ -87,11 +56,7 @@ namespace LagoVista.AI.Services.Tools
 
             try
             {
-                var ddr = await _ddrManager.GetDdrByTlaIdentiferAsync(
-                    identifier,
-                    context.Org,
-                    context.User);
-
+                var ddr = await _ddrManager.GetDdrByTlaIdentiferAsync(identifier, context.Org, context.User);
                 if (ddr == null)
                 {
                     return FromError($"DDR '{identifier}' not found.");
@@ -103,9 +68,7 @@ namespace LagoVista.AI.Services.Tools
                 }
 
                 ddr.Goal = goal;
-
                 await _ddrManager.UpdateDdrAsync(ddr, context.Org, context.User);
-
                 var envelope = new JObject
                 {
                     ["ok"] = true,
@@ -116,7 +79,6 @@ namespace LagoVista.AI.Services.Tools
                         ["is_approved"] = false
                     }
                 };
-
                 return FromEnvelope(envelope);
             }
             catch (Exception ex)

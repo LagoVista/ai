@@ -21,18 +21,12 @@ namespace LagoVista.AI.Services.Tools
     {
         private readonly IWorkflowDefinitionManager _workflowManager;
         private readonly IAdminLogger _logger;
-
         public string Name => ToolName;
-
         public bool IsToolFullyExecutedOnServer => true;
 
         public const string ToolUsageMetadata = "Use this tool to delete an existing workflow definition by id. The response indicates whether the delete succeeded and returns messages/errors.";
-
         public const string ToolName = "agent_workflow_delete";
-
         public const string ToolSummary = "delete a workflow";
-
-
         private sealed class DeleteWorkflowArgs
         {
             public string WorkflowId { get; set; }
@@ -45,16 +39,11 @@ namespace LagoVista.AI.Services.Tools
         }
 
         public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
-
-        public async Task<InvokeResult<string>> ExecuteAsync(
-            string argumentsJson,
-            AgentToolExecutionContext context,
-            CancellationToken cancellationToken = default)
+        public async Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentToolExecutionContext context, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(argumentsJson))
             {
-                return InvokeResult<string>.FromError(
-                    "DeleteWorkflowTool requires a non-empty arguments object with 'workflowId'.");
+                return InvokeResult<string>.FromError("DeleteWorkflowTool requires a non-empty arguments object with 'workflowId'.");
             }
 
             DeleteWorkflowArgs args;
@@ -69,21 +58,14 @@ namespace LagoVista.AI.Services.Tools
             }
 
             var errors = new List<WorkflowAuthoringError>();
-
             if (string.IsNullOrWhiteSpace(args.WorkflowId))
             {
-                errors.Add(new WorkflowAuthoringError
-                {
-                    Field = "workflowId",
-                    Message = "workflowId is required."
-                });
-
+                errors.Add(new WorkflowAuthoringError { Field = "workflowId", Message = "workflowId is required." });
                 var errorResponse = new WorkflowAuthoringResponse
                 {
                     Ok = false,
                     Errors = errors
                 };
-
                 var errorJson = JsonConvert.SerializeObject(errorResponse);
                 return InvokeResult<string>.Create(errorJson);
             }
@@ -91,21 +73,15 @@ namespace LagoVista.AI.Services.Tools
             try
             {
                 var result = await _workflowManager.DeleteWorkflowDefinitionAsync(args.WorkflowId, context?.Org, context?.User);
-
                 var response = new WorkflowAuthoringResponse
                 {
                     Ok = result.Successful
                 };
-
                 if (!result.Successful)
                 {
                     foreach (var err in result.Errors)
                     {
-                        response.Errors.Add(new WorkflowAuthoringError
-                        {
-                            Field = err.ErrorCode,
-                            Message = err.Message
-                        });
+                        response.Errors.Add(new WorkflowAuthoringError { Field = err.ErrorCode, Message = err.Message });
                     }
                 }
                 else
@@ -123,29 +99,12 @@ namespace LagoVista.AI.Services.Tools
             }
         }
 
-        public static object GetSchema()
+        public static OpenAiToolDefinition GetSchema()
         {
-            var schema = new
+            return ToolSchema.Function(ToolName, "Delete an existing workflow definition by id. The response indicates success and includes messages/errors.", p =>
             {
-                type = "function",
-                name = ToolName,
-                description = "Delete an existing workflow definition by id. The response indicates success and includes messages/errors.",
-                parameters = new
-                {
-                    type = "object",
-                    properties = new
-                    {
-                        workflowId = new
-                        {
-                            type = "string",
-                            description = "Identifier (Id) of the workflow to delete."
-                        }
-                    },
-                    required = new[] { "workflowId" }
-                }
-            };
-
-            return schema;
+                p.String("workflowId", "Identifier (Id) of the workflow to delete.", required: true);
+            });
         }
     }
 }

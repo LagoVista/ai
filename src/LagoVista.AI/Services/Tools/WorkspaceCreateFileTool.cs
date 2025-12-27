@@ -25,9 +25,7 @@ namespace LagoVista.AI.Services.Tools
     public class WorkspaceCreateFileTool : IAgentTool
     {
         public const string ToolName = "workspace_create_file";
-
         private readonly IAdminLogger _logger;
-
         public bool IsToolFullyExecutedOnServer => false;
 
         public WorkspaceCreateFileTool(IAdminLogger logger)
@@ -35,9 +33,7 @@ namespace LagoVista.AI.Services.Tools
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-
         public const string ToolSummary = "create a file on the user machine with a client side tool";
-
         public string Name => ToolName;
 
         /// <summary>
@@ -65,34 +61,26 @@ namespace LagoVista.AI.Services.Tools
         private sealed class Result
         {
             public string ToolName { get; set; } = WorkspaceCreateFileTool.ToolName;
-
             public string SessionId { get; set; } = string.Empty;
-
-
             /// <summary>
             /// Indicates that this tool is intended for client execution only.
             /// If this object is observed in a real tool result, it typically
             /// indicates a misconfiguration of the tool pipeline.
             /// </summary>
             public bool IsClientExecutedOnly { get; set; } = true;
-
             public string Message { get; set; } = string.Empty;
         }
+
         public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
-        /// <inheritdoc />
-        public async Task<InvokeResult<string>> ExecuteAsync(
-            string argumentsJson,
-            AgentToolExecutionContext context,
-            CancellationToken cancellationToken = default)
+        /// <inheritdoc/>
+        public async Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentToolExecutionContext context, CancellationToken cancellationToken = default)
         {
             try
             {
                 // We do not throw on deserialization errors per AGN-005.
                 // We also do not act on the arguments for this tool; the
                 // filesystem operation is always performed on the client.
-
                 Args args = null;
-
                 if (!string.IsNullOrWhiteSpace(argumentsJson))
                 {
                     try
@@ -112,21 +100,9 @@ namespace LagoVista.AI.Services.Tools
                     IsClientExecutedOnly = true,
                     Message = "workspace_create_file is defined as a client-executed tool. Server-side ExecuteAsync should not be invoked; ensure the client handles this tool call and performs the filesystem operation."
                 };
-
                 // Log a custom event so misconfiguration is easy to detect.
-                _logger.AddCustomEvent(
-                    LagoVista.Core.PlatformSupport.LogLevel.Error,
-                    "WorkspaceCreateFileTool.ExecuteAsync",
-                    "workspace_create_file was executed on the server, but it is a client-executed-only tool.",
-                    new[]
-                    {
-                        new KeyValuePair<string, string>("SessionId", context?.Request?.SessionId ?? string.Empty),
-                        new KeyValuePair<string, string>("SessionId", context?.SessionId ?? string.Empty),
-                        new KeyValuePair<string, string>("ArgumentsJson", argumentsJson ?? string.Empty)
-                    });
-
+                _logger.AddCustomEvent(LagoVista.Core.PlatformSupport.LogLevel.Error, "WorkspaceCreateFileTool.ExecuteAsync", "workspace_create_file was executed on the server, but it is a client-executed-only tool.", new[] { new KeyValuePair<string, string>("SessionId", context?.Request?.SessionId ?? string.Empty), new KeyValuePair<string, string>("SessionId", context?.SessionId ?? string.Empty), new KeyValuePair<string, string>("ArgumentsJson", argumentsJson ?? string.Empty) });
                 var json = JsonConvert.SerializeObject(resultPayload);
-
                 // This is treated as a successful InvokeResult from the
                 // perspective of the executor, but the payload clearly marks
                 // the call as misrouted.
@@ -143,38 +119,14 @@ namespace LagoVista.AI.Services.Tools
         /// OpenAI tool/function schema describing workspace_create_file.
         /// This is used by the Reasoner to populate the /responses tools array.
         /// </summary>
-        public static object GetSchema()
+        public static OpenAiToolDefinition GetSchema()
         {
-            return new
+            return ToolSchema.Function(ToolName, "Create a new file in the user workspace or fully replace an existing file when explicitly allowed. This tool is client-executed only; the server does not perform filesystem I/O.", p =>
             {
-                type = "function",
-                name = ToolName,
-                description = "Create a new file in the user workspace or fully replace an existing file when explicitly allowed. This tool is client-executed only; the server does not perform filesystem I/O.",
-                parameters = new
-                {
-                    type = "object",
-                    properties = new
-                    {
-                        path = new
-                        {
-                            type = "string",
-                            description = "Workspace-relative file path where the new file should be created. Must not be absolute or escape the workspace root (for example: src/Services/AgentOrchestrator.cs)."
-                        },
-                        content = new
-                        {
-                            type = "string",
-                            description = "Full text content of the file. The client should write this as UTF-8 without BOM, normalizing line endings to \n."
-                        },
-                        overwrite = new
-                        {
-                            type = "boolean",
-                            description = "Optional. When true, the client may fully replace an existing file at this path. When false or omitted, the client must fail if the file already exists.",
-                            @default = false
-                        }
-                    },
-                    required = new[] { "path", "content" }
-                }
-            };
+                p.String("path", "Workspace-relative file path where the new file should be created. Must not be absolute or escape the workspace root (for example: src/Services/AgentOrchestrator.cs).", required: true);
+                p.String("content", "Full text content of the file. The client should write this as UTF-8 without BOM, normalizing line endings to \n.", required: true);
+                p.Boolean("overwrite", "Optional. When true, the client may fully replace an existing file at this path. When false or omitted, the client must fail if the file already exists.");
+            });
         }
 
         /// <summary>

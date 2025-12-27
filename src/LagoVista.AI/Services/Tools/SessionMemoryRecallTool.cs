@@ -18,17 +18,12 @@ namespace LagoVista.AI.Services.Tools
     {
         private readonly IAdminLogger _logger;
         private readonly IAgentSessionManager _agentSessionManager;
-
         public string Name => ToolName;
-
         public bool IsToolFullyExecutedOnServer => true;
 
         public const string ToolUsageMetadata = "Recall (play back) one or more session memory notes by id or tag so the LLM can use them as binding context.";
-
         public const string ToolName = "session_memory_recall";
-
         public const string ToolSummary = "recall a memory note";
-
         public SessionMemoryRecallTool(IAdminLogger logger, IAgentSessionManager agentSessionManager)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -63,7 +58,6 @@ namespace LagoVista.AI.Services.Tools
         }
 
         public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
-
         public async Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentToolExecutionContext context, CancellationToken cancellationToken = default)
         {
             if (context == null)
@@ -84,57 +78,30 @@ namespace LagoVista.AI.Services.Tools
             try
             {
                 var args = JsonConvert.DeserializeObject<RecallArgs>(argumentsJson) ?? new RecallArgs();
-
                 var hasIds = args.MemoryIds != null && args.MemoryIds.Any(id => !string.IsNullOrWhiteSpace(id));
                 var hasTag = !string.IsNullOrWhiteSpace(args.Tag);
                 var hasKind = !string.IsNullOrWhiteSpace(args.Kind);
-
                 if (!hasIds && !hasTag && !hasKind)
                 {
                     return InvokeResult<string>.FromError("session_memory_recall requires at least one of memoryIds, tag, or kind.");
                 }
 
                 var includeDetails = !args.IncludeDetails.HasValue || args.IncludeDetails.Value;
-
-                var ids = hasIds
-                    ? args.MemoryIds.Where(id => !string.IsNullOrWhiteSpace(id)).Select(id => id.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).ToList()
-                    : new List<string>();
-
-                var recall = await _agentSessionManager.RecallSessionMemoryNotesAsync(
-                    context.SessionId,
-                    ids,
-                    string.IsNullOrWhiteSpace(args.Tag) ? null : args.Tag.Trim(),
-                    string.IsNullOrWhiteSpace(args.Kind) ? null : args.Kind.Trim(),
-                    includeDetails,
-                    context.Org,
-                    context.User);
-
+                var ids = hasIds ? args.MemoryIds.Where(id => !string.IsNullOrWhiteSpace(id)).Select(id => id.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).ToList() : new List<string>();
+                var recall = await _agentSessionManager.RecallSessionMemoryNotesAsync(context.SessionId, ids, string.IsNullOrWhiteSpace(args.Tag) ? null : args.Tag.Trim(), string.IsNullOrWhiteSpace(args.Kind) ? null : args.Kind.Trim(), includeDetails, context.Org, context.User);
                 if (!recall.Successful)
                 {
                     return InvokeResult<string>.FromInvokeResult(recall.ToInvokeResult());
                 }
 
                 var notes = recall.Result ?? new List<AgentSessionMemoryNote>();
-
-                var items = notes.Select(n => new RecallItem
-                {
-                    MemoryId = n.MemoryId,
-                    Title = n.Title,
-                    Summary = n.Summary,
-                    Details = includeDetails ? n.Details : null,
-                    Kind = n.Kind?.Value.ToString(),
-                    Importance = n.Importance?.Value.ToString(),
-                    Tags = n.Tags ?? new List<string>(),
-                    CreationDate = n.CreationDate
-                }).ToList();
-
+                var items = notes.Select(n => new RecallItem { MemoryId = n.MemoryId, Title = n.Title, Summary = n.Summary, Details = includeDetails ? n.Details : null, Kind = n.Kind?.Value.ToString(), Importance = n.Importance?.Value.ToString(), Tags = n.Tags ?? new List<string>(), CreationDate = n.CreationDate }).ToList();
                 var payload = new RecallResult
                 {
                     Items = items,
                     SessionId = context?.Request?.SessionId,
                     Count = items.Count
                 };
-
                 return InvokeResult<string>.Create(JsonConvert.SerializeObject(payload));
             }
             catch (Exception ex)
@@ -144,26 +111,15 @@ namespace LagoVista.AI.Services.Tools
             }
         }
 
-        public static object GetSchema()
+        public static OpenAiToolDefinition GetSchema()
         {
-            return new
+            return ToolSchema.Function(ToolName, "Recall (play back) session memory notes by id/tag/kind.", p =>
             {
-                type = "function",
-                name = ToolName,
-                description = "Recall (play back) session memory notes by id/tag/kind.",
-                parameters = new
-                {
-                    type = "object",
-                    properties = new
-                    {
-                        memoryIds = new { type = "array", items = new { type = "string" }, description = "Optional list of memory ids to recall (e.g., MEM-0042)." },
-                        tag = new { type = "string", description = "Optional tag filter." },
-                        kind = new { type = "string", description = "Optional kind filter: invariant|decision|constraint|fact|todo|gotcha." },
-                        includeDetails = new { type = "boolean", description = "Whether to include details (default true)." }
-                    },
-                    required = new[] { "includeDetails" }
-                }
-            };
+                p.Any("memoryIds", "array", "Optional list of memory ids to recall (e.g., MEM-0042).");
+                p.String("tag", "Optional tag filter.");
+                p.String("kind", "Optional kind filter: invariant|decision|constraint|fact|todo|gotcha.");
+                p.Boolean("includeDetails", "Whether to include details (default true).", required: true);
+            });
         }
     }
 }

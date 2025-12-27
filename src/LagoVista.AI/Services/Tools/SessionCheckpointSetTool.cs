@@ -19,18 +19,12 @@ namespace LagoVista.AI.Services.Tools
     {
         private readonly IAdminLogger _logger;
         private readonly IAgentSessionManager _sessions;
-
         public string Name => ToolName;
-
         public bool IsToolFullyExecutedOnServer => true;
 
         public const string ToolName = "session_checkpoint_set";
-
         public const string ToolUsageMetadata = "Create a durable checkpoint for the current session at the current turn. Use when the user asks to set a checkpoint. Returns a short CheckpointId and summary.";
-
         public const string ToolSummary = "create a check point in current session";
-
-
         public SessionCheckpointSetTool(IAdminLogger logger, IAgentSessionManager sessions)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -56,18 +50,19 @@ namespace LagoVista.AI.Services.Tools
         public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
         public async Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentToolExecutionContext context, CancellationToken cancellationToken = default)
         {
-            if (string.IsNullOrWhiteSpace(argumentsJson)) argumentsJson = "{}";
-            if (context == null) return InvokeResult<string>.FromError("session_checkpoint_set requires a valid execution context.");
-            if (string.IsNullOrWhiteSpace(context.SessionId)) return InvokeResult<string>.FromError("session_checkpoint_set requires a sessionId in the execution context.");
-            if (string.IsNullOrWhiteSpace(context?.CurrentTurnId)) return InvokeResult<string>.FromError("session_checkpoint_set requires a current turn id in the execution context.");
-
+            if (string.IsNullOrWhiteSpace(argumentsJson))
+                argumentsJson = "{}";
+            if (context == null)
+                return InvokeResult<string>.FromError("session_checkpoint_set requires a valid execution context.");
+            if (string.IsNullOrWhiteSpace(context.SessionId))
+                return InvokeResult<string>.FromError("session_checkpoint_set requires a sessionId in the execution context.");
+            if (string.IsNullOrWhiteSpace(context?.CurrentTurnId))
+                return InvokeResult<string>.FromError("session_checkpoint_set requires a current turn id in the execution context.");
             try
             {
                 var args = JsonConvert.DeserializeObject<Args>(argumentsJson) ?? new Args();
-                if (string.IsNullOrWhiteSpace(args.Name)) 
+                if (string.IsNullOrWhiteSpace(args.Name))
                     args.Name = $"Checkpoint at {DateTime.UtcNow.ToJSONString()}";
-
-              
                 var checkpoint = new AgentSessionCheckpoint
                 {
                     Name = args.Name.Trim(),
@@ -77,12 +72,10 @@ namespace LagoVista.AI.Services.Tools
                     CreationDate = DateTime.UtcNow.ToString("o"),
                     CreatedByUser = context?.User
                 };
-
                 var add = await _sessions.AddSessionCheckpointAsync(context.SessionId, checkpoint, context.Org, context.User);
-                if (!add.Successful) return InvokeResult<string>.FromInvokeResult(add.ToInvokeResult());
-
+                if (!add.Successful)
+                    return InvokeResult<string>.FromInvokeResult(add.ToInvokeResult());
                 var stored = add.Result;
-
                 var payload = new Result
                 {
                     CheckpointId = stored?.CheckpointId,
@@ -92,7 +85,6 @@ namespace LagoVista.AI.Services.Tools
                     CreationDate = DateTime.UtcNow.ToJSONString(),
                     SessionId = context?.Request?.SessionId,
                 };
-
                 return InvokeResult<string>.Create(JsonConvert.SerializeObject(payload));
             }
             catch (Exception ex)
@@ -102,24 +94,13 @@ namespace LagoVista.AI.Services.Tools
             }
         }
 
-        public static object GetSchema()
+        public static OpenAiToolDefinition GetSchema()
         {
-            return new
+            return ToolSchema.Function(ToolName, "Create a checkpoint for the current session at the current turn.", p =>
             {
-                type = "function",
-                name = ToolName,
-                description = "Create a checkpoint for the current session at the current turn.",
-                parameters = new
-                {
-                    type = "object",
-                    properties = new
-                    {
-                        name = new { type = "string", description = "Checkpoint label (e.g., 'Parser baseline')." },
-                        notes = new { type = "string", description = "Optional notes about the checkpoint." },                     
-                    },
-                    required = new[] { "name" }
-                }
-            };
+                p.String("name", "Checkpoint label (e.g., 'Parser baseline').", required: true);
+                p.String("notes", "Optional notes about the checkpoint.");
+            });
         }
     }
 }

@@ -18,70 +18,34 @@ namespace LagoVista.AI.Services.Tools
     public class AddTlaAgentTool : DdrAgentToolBase
     {
         public const string ToolName = "add_tla";
-
-        public AddTlaAgentTool(IDdrManager ddrManager, IAdminLogger adminLogger)
-            : base(ddrManager, adminLogger)
+        public AddTlaAgentTool(IDdrManager ddrManager, IAdminLogger adminLogger) : base(ddrManager, adminLogger)
         {
         }
 
-        public const string ToolUsageMetadata =
-    "Adds a new TLA domain to the DDR catalog. Should be used only when introducing a new domain for DDRs. Requires explicit user intent before use.";
-
+        public const string ToolUsageMetadata = "Adds a new TLA domain to the DDR catalog. Should be used only when introducing a new domain for DDRs. Requires explicit user intent before use.";
         public const string ToolSummary = "add a TLA for DDRs";
-
         public override string Name => ToolName;
-
         protected override string Tag => "[AddTlaAgentTool]";
 
         /// <summary>
         /// Returns the OpenAI tool schema definition for this tool.
         /// </summary>
-        public static object GetSchema()
+        public static OpenAiToolDefinition GetSchema()
         {
-            var schema = new
+            return ToolSchema.Function(ToolName, "Add a new TLA (three-letter acronym) to the DDR catalog.", p =>
             {
-                type = "function",
-                name = ToolName,
-                description = "Add a new TLA (three-letter acronym) to the DDR catalog.",
-                parameters = new
-                {
-                    type = "object",
-                    properties = new
-                    {
-                        tla = new
-                        {
-                            type = "string",
-                            description = "Three-letter acronym such as 'SYS', 'AGN', or 'TUL'. Will be uppercased."
-                        },
-                        title = new
-                        {
-                            type = "string",
-                            description = "Human-friendly title for this TLA domain."
-                        },
-                        summary = new
-                        {
-                            type = "string",
-                            description = "Short description of the domain covered by this TLA."
-                        }
-                    },
-                    required = new[] { "tla", "title", "summary" }
-                }
-            };
-
-            return schema;
+                p.String("tla", "Three-letter acronym such as 'SYS', 'AGN', or 'TUL'. Will be uppercased.", required: true);
+                p.String("title", "Human-friendly title for this TLA domain.", required: true);
+                p.String("summary", "Short description of the domain covered by this TLA.", required: true);
+            });
         }
 
-        protected override async Task<InvokeResult<string>> ExecuteCoreAsync(
-            JObject payload,
-            AgentToolExecutionContext context,
-            CancellationToken cancellationToken)
+        protected override async Task<InvokeResult<string>> ExecuteCoreAsync(JObject payload, AgentToolExecutionContext context, CancellationToken cancellationToken)
         {
             const string baseTag = "[AddTlaAgentTool__Execute]";
-
             var tla = payload.Value<string>("tla")?.Trim();
             var title = payload.Value<string>("title")?.Trim();
             var summary = payload.Value<string>("summary")?.Trim();
-
             if (string.IsNullOrWhiteSpace(tla))
             {
                 return FromError("tla is required.");
@@ -98,12 +62,9 @@ namespace LagoVista.AI.Services.Tools
             }
 
             tla = tla.ToUpperInvariant();
-
             try
             {
-                var existing = await _ddrManager.GetTlaCatalogAsync(context.Org, context.User)
-                               ?? new List<DdrTla>();
-
+                var existing = await _ddrManager.GetTlaCatalogAsync(context.Org, context.User) ?? new List<DdrTla>();
                 if (existing.Any(t => string.Equals(t.Tla, tla, StringComparison.OrdinalIgnoreCase)))
                 {
                     return FromError($"TLA '{tla}' already exists.");
@@ -116,7 +77,6 @@ namespace LagoVista.AI.Services.Tools
                     Summary = summary,
                     CurrentIndex = 0
                 };
-
                 var addResult = await _ddrManager.AddTlaCatalog(newTla, context.Org, context.User);
                 if (!addResult.Successful)
                 {
@@ -134,7 +94,6 @@ namespace LagoVista.AI.Services.Tools
                         ["summary"] = summary
                     }
                 };
-
                 return FromEnvelope(envelope);
             }
             catch (Exception ex)

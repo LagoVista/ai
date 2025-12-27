@@ -8,7 +8,6 @@ using LagoVista.Core;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json;
-using static LagoVista.AI.Models.JsonSchemaExtensions;
 
 namespace LagoVista.AI.Services.Tools
 {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
@@ -17,24 +17,19 @@ namespace LagoVista.AI.Services.Tools
     public sealed class CalculatorTool : IAgentTool
     {
         private readonly IAdminLogger _logger;
-
         public string Name => ToolName;
-
         public bool IsToolFullyExecutedOnServer => true;
 
         public const string ToolUsageMetadata = "This tool is used for testing the system only and should not be used unless explicitly asked for. Supply two numbers and an operator";
-
         public CalculatorTool(IAdminLogger logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public const string ToolSummary = "calculate a result based on two numbers and an operator";
-
-
         private sealed class CalculatorArgs
         {
-            public string Operation { get; set; }  // add | subtract | multiply | divide
+            public string Operation { get; set; } // add | subtract | multiply | divide
             public double? Left { get; set; }
             public double? Right { get; set; }
         }
@@ -47,68 +42,53 @@ namespace LagoVista.AI.Services.Tools
             public double Result { get; set; }
             public string SessionId { get; set; }
         }
-        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
 
-        public Task<InvokeResult<string>> ExecuteAsync(
-            string argumentsJson,
-            AgentToolExecutionContext context,
-            CancellationToken cancellationToken = default)
+        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
+        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentToolExecutionContext context, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(argumentsJson))
             {
-                return Task.FromResult(
-                    InvokeResult<string>.FromError("CalculatorTool requires a non-empty arguments object."));
+                return Task.FromResult(InvokeResult<string>.FromError("CalculatorTool requires a non-empty arguments object."));
             }
 
             try
             {
                 var args = JsonConvert.DeserializeObject<CalculatorArgs>(argumentsJson) ?? new CalculatorArgs();
-
                 if (string.IsNullOrWhiteSpace(args.Operation))
                 {
-                    return Task.FromResult(
-                        InvokeResult<string>.FromError("CalculatorTool requires 'operation' (add|subtract|multiply|divide)."));
+                    return Task.FromResult(InvokeResult<string>.FromError("CalculatorTool requires 'operation' (add|subtract|multiply|divide)."));
                 }
 
                 if (!args.Left.HasValue || !args.Right.HasValue)
                 {
-                    return Task.FromResult(
-                        InvokeResult<string>.FromError("CalculatorTool requires both 'left' and 'right' numeric values."));
+                    return Task.FromResult(InvokeResult<string>.FromError("CalculatorTool requires both 'left' and 'right' numeric values."));
                 }
 
                 var op = args.Operation.Trim().ToLowerInvariant();
                 var left = args.Left.Value;
                 var right = args.Right.Value;
-
                 double result;
-
                 switch (op)
                 {
                     case "add":
                         result = left + right;
                         break;
-
                     case "subtract":
                         result = left - right;
                         break;
-
                     case "multiply":
                         result = left * right;
                         break;
-
                     case "divide":
                         if (Math.Abs(right) < double.Epsilon)
                         {
-                            return Task.FromResult(
-                                InvokeResult<string>.FromError("CalculatorTool divide-by-zero is not allowed."));
+                            return Task.FromResult(InvokeResult<string>.FromError("CalculatorTool divide-by-zero is not allowed."));
                         }
 
                         result = left / right;
                         break;
-
                     default:
-                        return Task.FromResult(
-                            InvokeResult<string>.FromError($"CalculatorTool unsupported operation '{args.Operation}'."));
+                        return Task.FromResult(InvokeResult<string>.FromError($"CalculatorTool unsupported operation '{args.Operation}'."));
                 }
 
                 var payload = new CalculatorResult
@@ -119,55 +99,25 @@ namespace LagoVista.AI.Services.Tools
                     Result = result,
                     SessionId = context?.SessionId
                 };
-
                 var json = JsonConvert.SerializeObject(payload);
-
                 return Task.FromResult(InvokeResult<string>.Create(json));
             }
             catch (Exception ex)
             {
                 _logger.AddException("[CalculatorTool_ExecuteAsync__Exception]", ex);
-
-                return Task.FromResult(
-                    InvokeResult<string>.FromError("CalculatorTool failed to process arguments."));
+                return Task.FromResult(InvokeResult<string>.FromError("CalculatorTool failed to process arguments."));
             }
         }
 
         public const string ToolName = "testing_calculator";
-
-        public static object GetSchema()
+        public static OpenAiToolDefinition GetSchema()
         {
-            var schema = new
+            return ToolSchema.Function(ToolName, "Simple calculator to exercise structured arguments and error paths. Supports add, subtract, multiply, and divide.", p =>
             {
-                type = "function",
-                name = ToolName,
-                description = "Simple calculator to exercise structured arguments and error paths. Supports add, subtract, multiply, and divide.",
-                parameters = new
-                {
-                    type = "object",
-                    properties = new
-                    {
-                        operation = new
-                        {
-                            type = "string",
-                            description = "Operation to perform: add, subtract, multiply, divide."
-                        },
-                        left = new
-                        {
-                            type = "number",
-                            description = "Left-hand operand."
-                        },
-                        right = new
-                        {
-                            type = "number",
-                            description = "Right-hand operand."
-                        }
-                    },
-                    required = new[] { "operation", "left", "right" }
-                }
-            };
-
-            return schema;
+                p.String("operation", "Operation to perform: add, subtract, multiply, divide.", required: true);
+                p.Number("left", "Left-hand operand.", required: true);
+                p.Number("right", "Right-hand operand.", required: true);
+            });
         }
     }
 }

@@ -18,70 +18,34 @@ namespace LagoVista.AI.Services.Tools
     public class AddChapterAgentTool : DdrAgentToolBase
     {
         public const string ToolName = "add_chapter";
-
-        public AddChapterAgentTool(IDdrManager ddrManager, IAdminLogger adminLogger)
-            : base(ddrManager, adminLogger)
+        public AddChapterAgentTool(IDdrManager ddrManager, IAdminLogger adminLogger) : base(ddrManager, adminLogger)
         {
         }
 
-        public const string ToolUsageMetadata =
-    "Adds multiple chapters to a DDR in a single operation. Use when initializing a DDR's chapter structure or importing a predefined outline.";
-
+        public const string ToolUsageMetadata = "Adds multiple chapters to a DDR in a single operation. Use when initializing a DDR's chapter structure or importing a predefined outline.";
         public const string ToolSummary = "add a single chapter to an existing ddr";
-
         public override string Name => ToolName;
-
         protected override string Tag => "[AddChapterAgentTool]";
 
         /// <summary>
         /// Returns the OpenAI tool schema definition for this tool.
         /// </summary>
-        public static object GetSchema()
+        public static OpenAiToolDefinition GetSchema()
         {
-            var schema = new
+            return ToolSchema.Function(ToolName, "Add a new chapter (title + summary) to an existing DDR.", p =>
             {
-                type = "function",
-                name = ToolName,
-                description = "Add a new chapter (title + summary) to an existing DDR.",
-                parameters = new
-                {
-                    type = "object",
-                    properties = new
-                    {
-                        identifier = new
-                        {
-                            type = "string",
-                            description = "DDR identifier in TLA-### format, for example 'SYS-001'."
-                        },
-                        title = new
-                        {
-                            type = "string",
-                            description = "Chapter title. Keep this concise and descriptive."
-                        },
-                        summary = new
-                        {
-                            type = "string",
-                            description = "Short 50K-foot-level chapter summary (one or two sentences)."
-                        }
-                    },
-                    required = new[] { "identifier", "title", "summary" }
-                }
-            };
-
-            return schema;
+                p.String("identifier", "DDR identifier in TLA-### format, for example 'SYS-001'.", required: true);
+                p.String("title", "Chapter title. Keep this concise and descriptive.", required: true);
+                p.String("summary", "Short 50K-foot-level chapter summary (one or two sentences).", required: true);
+            });
         }
 
-        protected override async Task<InvokeResult<string>> ExecuteCoreAsync(
-            JObject payload,
-            AgentToolExecutionContext context,
-            CancellationToken cancellationToken)
+        protected override async Task<InvokeResult<string>> ExecuteCoreAsync(JObject payload, AgentToolExecutionContext context, CancellationToken cancellationToken)
         {
             const string baseTag = "[AddChapterAgentTool__Execute]";
-
             var identifier = payload.Value<string>("identifier")?.Trim();
             var title = payload.Value<string>("title")?.Trim();
             var summary = payload.Value<string>("summary")?.Trim();
-
             if (string.IsNullOrWhiteSpace(identifier))
             {
                 return FromError("identifier is required.");
@@ -99,11 +63,7 @@ namespace LagoVista.AI.Services.Tools
 
             try
             {
-                var ddr = await _ddrManager.GetDdrByTlaIdentiferAsync(
-                    identifier,
-                    context.Org,
-                    context.User);
-
+                var ddr = await _ddrManager.GetDdrByTlaIdentiferAsync(identifier, context.Org, context.User);
                 if (ddr == null)
                 {
                     return FromError($"DDR '{identifier}' not found.");
@@ -123,11 +83,8 @@ namespace LagoVista.AI.Services.Tools
                     ApprovedBy = null,
                     ApprovedTimestamp = null
                 };
-
                 ddr.Chapters.Add(chapter);
-
                 await _ddrManager.UpdateDdrAsync(ddr, context.Org, context.User);
-
                 var envelope = new JObject
                 {
                     ["ok"] = true,
@@ -139,7 +96,6 @@ namespace LagoVista.AI.Services.Tools
                         ["summary"] = summary
                     }
                 };
-
                 return FromEnvelope(envelope);
             }
             catch (Exception ex)

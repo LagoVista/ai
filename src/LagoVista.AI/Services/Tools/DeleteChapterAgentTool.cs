@@ -18,65 +18,32 @@ namespace LagoVista.AI.Services.Tools
     public class DeleteChapterAgentTool : DdrAgentToolBase
     {
         public const string ToolName = "delete_chapter";
-
-        public DeleteChapterAgentTool(IDdrManager ddrManager, IAdminLogger adminLogger)
-            : base(ddrManager, adminLogger)
+        public DeleteChapterAgentTool(IDdrManager ddrManager, IAdminLogger adminLogger) : base(ddrManager, adminLogger)
         {
         }
 
-        public const string ToolUsageMetadata =
-    "Deletes a chapter from a DDR. Should be used cautiously and only when a chapter is no longer relevant.";
-
+        public const string ToolUsageMetadata = "Deletes a chapter from a DDR. Should be used cautiously and only when a chapter is no longer relevant.";
         public const string ToolSummary = "delete a chapter within a ddr";
-
-
         public override string Name => ToolName;
-
         protected override string Tag => "[DeleteChapterAgentTool]";
 
         /// <summary>
         /// Returns the OpenAI tool schema definition for this tool.
         /// </summary>
-        public static object GetSchema()
+        public static OpenAiToolDefinition GetSchema()
         {
-            var schema = new
+            return ToolSchema.Function(ToolName, "Delete a specific DDR chapter by chapter_id.", p =>
             {
-                type = "function",
-                name = ToolName,
-                description = "Delete a specific DDR chapter by chapter_id.",
-                parameters = new
-                {
-                    type = "object",
-                    properties = new
-                    {
-                        identifier = new
-                        {
-                            type = "string",
-                            description = "DDR identifier in TLA-### format, for example 'SYS-001'."
-                        },
-                        chapter_id = new
-                        {
-                            type = "string",
-                            description = "Stable chapter identifier returned from add_chapter/add_chapters/list_chapters."
-                        }
-                    },
-                    required = new[] { "identifier", "chapter_id" }
-                }
-            };
-
-            return schema;
+                p.String("identifier", "DDR identifier in TLA-### format, for example 'SYS-001'.", required: true);
+                p.String("chapter_id", "Stable chapter identifier returned from add_chapter/add_chapters/list_chapters.", required: true);
+            });
         }
 
-        protected override async Task<InvokeResult<string>> ExecuteCoreAsync(
-            JObject payload,
-            AgentToolExecutionContext context,
-            CancellationToken cancellationToken)
+        protected override async Task<InvokeResult<string>> ExecuteCoreAsync(JObject payload, AgentToolExecutionContext context, CancellationToken cancellationToken)
         {
             const string baseTag = "[DeleteChapterAgentTool__Execute]";
-
             var identifier = payload.Value<string>("identifier")?.Trim();
             var chapterId = payload.Value<string>("chapter_id")?.Trim();
-
             if (string.IsNullOrWhiteSpace(identifier))
             {
                 return FromError("identifier is required.");
@@ -89,11 +56,7 @@ namespace LagoVista.AI.Services.Tools
 
             try
             {
-                var ddr = await _ddrManager.GetDdrByTlaIdentiferAsync(
-                    identifier,
-                    context.Org,
-                    context.User);
-
+                var ddr = await _ddrManager.GetDdrByTlaIdentiferAsync(identifier, context.Org, context.User);
                 if (ddr == null)
                 {
                     return FromError($"DDR '{identifier}' not found.");
@@ -101,7 +64,6 @@ namespace LagoVista.AI.Services.Tools
 
                 var chapters = ddr.Chapters ?? new List<DdrChapter>();
                 var chapter = chapters.FirstOrDefault(c => c.Id == chapterId);
-
                 if (chapter == null)
                 {
                     return FromError($"Chapter '{chapterId}' not found.");
@@ -109,9 +71,7 @@ namespace LagoVista.AI.Services.Tools
 
                 chapters.Remove(chapter);
                 ddr.Chapters = chapters;
-
                 await _ddrManager.UpdateDdrAsync(ddr, context.Org, context.User);
-
                 var envelope = new JObject
                 {
                     ["ok"] = true,
@@ -122,7 +82,6 @@ namespace LagoVista.AI.Services.Tools
                         ["deleted"] = true
                     }
                 };
-
                 return FromEnvelope(envelope);
             }
             catch (Exception ex)

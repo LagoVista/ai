@@ -13,6 +13,6 @@ namespace LagoVista.AI.Interfaces
     public interface IContentProviderStore
     {
         Task SaveAsync(string sessionId, PromptKnowledgeProvider provider, CancellationToken ct = default);
-        Task<PromptKnowledgeProvider?> LoadAsync(string sessionId, CancellationToken ct = default);
+        Task<PromptKnowledgeProvider> LoadAsync(string sessionId, CancellationToken ct = default);
     }
 }

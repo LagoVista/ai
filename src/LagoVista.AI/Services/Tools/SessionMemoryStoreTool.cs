@@ -22,17 +22,12 @@ namespace LagoVista.AI.Services.Tools
     {
         private readonly IAdminLogger _logger;
         private readonly IAgentSessionManager _agentSessionManager;
-
         public string Name => ToolName;
-
         public bool IsToolFullyExecutedOnServer => true;
 
         public const string ToolUsageMetadata = "Store a durable session memory note only when the user explicitly asks to remember/save/write something down. Returns a short MemoryId and a one-line summary of what was stored.";
-
         public const string ToolName = "session_memory_store";
-
         public const string ToolSummary = "save a session memory note";
-
         public SessionMemoryStoreTool(IAdminLogger logger, IAgentSessionManager agentSessionManager)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -83,7 +78,6 @@ namespace LagoVista.AI.Services.Tools
             try
             {
                 var args = JsonConvert.DeserializeObject<StoreArgs>(argumentsJson) ?? new StoreArgs();
-
                 if (string.IsNullOrWhiteSpace(args.Title))
                 {
                     return InvokeResult<string>.FromError("session_memory_store requires 'title'.");
@@ -95,7 +89,6 @@ namespace LagoVista.AI.Services.Tools
                 }
 
                 var tags = (args.Tags ?? new List<string>()).Where(t => !string.IsNullOrWhiteSpace(t)).Select(t => t.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
-
                 var note = new AgentSessionMemoryNote
                 {
                     Title = args.Title.Trim(),
@@ -107,10 +100,8 @@ namespace LagoVista.AI.Services.Tools
                     CreationDate = DateTime.UtcNow.ToString("o"),
                     CreatedByUser = context?.User
                 };
-
                 note.Kind = EntityHeader<AgentSessionMemoryNoteKinds>.Create(ParseKind(args.Kind));
                 note.Importance = EntityHeader<AgentSessionMemoryNoteImportance>.Create(ParseImportance(args.Importance));
-
                 var addResult = await _agentSessionManager.AddSessionMemoryNoteAsync(context.SessionId, note, context.Org, context.User);
                 if (!addResult.Successful)
                 {
@@ -118,7 +109,6 @@ namespace LagoVista.AI.Services.Tools
                 }
 
                 var stored = addResult.Result;
-
                 var payload = new StoreResult
                 {
                     MemoryId = stored?.MemoryId,
@@ -131,7 +121,6 @@ namespace LagoVista.AI.Services.Tools
                     TurnSourceId = stored.TurnSourceId,
                     CreationDate = stored.CreationDate
                 };
-
                 return InvokeResult<string>.Create(JsonConvert.SerializeObject(payload));
             }
             catch (Exception ex)
@@ -143,8 +132,8 @@ namespace LagoVista.AI.Services.Tools
 
         private static AgentSessionMemoryNoteImportance ParseImportance(string importance)
         {
-            if (string.IsNullOrWhiteSpace(importance)) return AgentSessionMemoryNoteImportance.Normal;
-
+            if (string.IsNullOrWhiteSpace(importance))
+                return AgentSessionMemoryNoteImportance.Normal;
             switch (importance.Trim().ToLowerInvariant())
             {
                 case "low":
@@ -162,8 +151,8 @@ namespace LagoVista.AI.Services.Tools
 
         private static AgentSessionMemoryNoteKinds ParseKind(string kind)
         {
-            if (string.IsNullOrWhiteSpace(kind)) return AgentSessionMemoryNoteKinds.Decision;
-
+            if (string.IsNullOrWhiteSpace(kind))
+                return AgentSessionMemoryNoteKinds.Decision;
             switch (kind.Trim().ToLowerInvariant())
             {
                 case "invariant":
@@ -183,28 +172,17 @@ namespace LagoVista.AI.Services.Tools
             }
         }
 
-        public static object GetSchema()
+        public static OpenAiToolDefinition GetSchema()
         {
-            return new
+            return ToolSchema.Function(ToolName, "Store a durable memory note on the current agent session (invariant/decision/constraint/etc.).", p =>
             {
-                type = "function",
-                name = ToolName,
-                description = "Store a durable memory note on the current agent session (invariant/decision/constraint/etc.).",
-                parameters = new
-                {
-                    type = "object",
-                    properties = new
-                    {
-                        title = new { type = "string", description = "Short title for the memory note." },
-                        summary = new { type = "string", description = "1-2 line summary (the marker)." },
-                        details = new { type = "string", description = "Optional longer details; may include snippets." },
-                        tags = new { type = "array", items = new { type = "string" }, description = "Optional tags (e.g., safety, parser, invariant)." },
-                        importance = new { type = "string", description = "Importance: low|normal|high|critical (default normal)." },
-                        kind = new { type = "string", description = "Kind: invariant|decision|constraint|fact|todo|gotcha (default decision)." }
-                    },
-                    required = new[] { "title", "summary" }
-                }
-            };
+                p.String("title", "Short title for the memory note.", required: true);
+                p.String("summary", "1-2 line summary (the marker).", required: true);
+                p.String("details", "Optional longer details; may include snippets.");
+                p.Any("tags", "array", "Optional tags (e.g., safety, parser, invariant).");
+                p.String("importance", "Importance: low|normal|high|critical (default normal).");
+                p.String("kind", "Kind: invariant|decision|constraint|fact|todo|gotcha (default decision).");
+            });
         }
     }
 }

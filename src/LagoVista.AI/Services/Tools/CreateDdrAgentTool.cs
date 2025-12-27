@@ -22,77 +22,36 @@ namespace LagoVista.AI.Services.Tools
     public class CreateDdrAgentTool : DdrAgentToolBase
     {
         public const string ToolName = "create_ddr";
-
-        public CreateDdrAgentTool(IDdrManager ddrManager, IAdminLogger adminLogger)
-            : base(ddrManager, adminLogger)
+        public CreateDdrAgentTool(IDdrManager ddrManager, IAdminLogger adminLogger) : base(ddrManager, adminLogger)
         {
         }
 
         public const string ToolSummary = "saves a new ddr";
-
-
-        public const string ToolUsageMetadata =
-    "Creates a new Detailed Design Review (DDR) with the next available numeric index for the specified TLA. When creating this DDR from an imported document it is OK to use the existing index, we don't have to pull from TLA catalog.  Used only when beginning a new DDR document.";
-
+        public const string ToolUsageMetadata = "Creates a new Detailed Design Review (DDR) with the next available numeric index for the specified TLA. When creating this DDR from an imported document it is OK to use the existing index, we don't have to pull from TLA catalog.  Used only when beginning a new DDR document.";
         public override string Name => ToolName;
-
         protected override string Tag => "[CreateDdrAgentTool]";
 
         /// <summary>
         /// Returns the OpenAI tool schema definition for this tool.
         /// </summary>
-        public static object GetSchema()
+        public static OpenAiToolDefinition GetSchema()
         {
-            var schema = new
+            return ToolSchema.Function(ToolName, "Create a new Detailed Design Review (DDR) for an existing TLA and allocate the next sequence number.", p =>
             {
-                type = "function",
-                name = ToolName,
-                description = "Create a new Detailed Design Review (DDR) for an existing TLA and allocate the next sequence number.",
-                parameters = new
-                {
-                    type = "object",
-                    properties = new
-                    {
-                        tla = new
-                        {
-                            type = "string",
-                            description = "Three-letter acronym (TLA) such as 'SYS', 'AGN', 'TUL'. Must already exist in the TLA catalog."
-                        },
-                        index = new
-                        {
-                            type = "string",
-                            description = "The numeric portion of the identifier, it is found after TLA- and is optional, if it is there, we should use it and not generate a new one."
-                        },
-                        title = new
-                        {
-                            type = "string",
-                            description = "Short human-readable DDR title (used as the DDR display name)."
-                        },
-                        summary = new
-                        {
-                            type = "string",
-                            description = "Brief description of the DDR goal and scope (one or two sentences)."
-                        }
-                    },
-                    required = new[] { "tla", "title", "summary" }
-                }
-            };
-
-            return schema;
+                p.String("tla", "Three-letter acronym (TLA) such as 'SYS', 'AGN', 'TUL'. Must already exist in the TLA catalog.", required: true);
+                p.String("index", "The numeric portion of the identifier, it is found after TLA- and is optional, if it is there, we should use it and not generate a new one.");
+                p.String("title", "Short human-readable DDR title (used as the DDR display name).", required: true);
+                p.String("summary", "Brief description of the DDR goal and scope (one or two sentences).", required: true);
+            });
         }
 
-        protected override async Task<InvokeResult<string>> ExecuteCoreAsync(
-            JObject payload,
-            AgentToolExecutionContext context,
-            CancellationToken cancellationToken)
+        protected override async Task<InvokeResult<string>> ExecuteCoreAsync(JObject payload, AgentToolExecutionContext context, CancellationToken cancellationToken)
         {
             const string baseTag = "[CreateDdrAgentTool__Execute]";
-
             var tla = payload.Value<string>("tla")?.Trim();
             var title = payload.Value<string>("title")?.Trim();
             var summary = payload.Value<string>("summary")?.Trim();
             var strIndex = payload.Value<string>("index")?.Trim();
-
             if (string.IsNullOrWhiteSpace(tla))
             {
                 return FromError("tla is required.");
@@ -109,7 +68,6 @@ namespace LagoVista.AI.Services.Tools
             }
 
             tla = tla.ToUpperInvariant();
-
             try
             {
                 var tlaIndex = -1;
@@ -133,14 +91,13 @@ namespace LagoVista.AI.Services.Tools
 
                 var identifier = $"{tla}-{tlaIndex:D3}";
                 var now = DateTime.UtcNow.ToJSONString();
-
                 var ddr = new DetailedDesignReview
                 {
                     Tla = tla,
                     Index = tlaIndex,
                     Name = title,
                     DdrIdentifier = identifier,
-                    Key = identifier.Replace("-","").ToLower(),
+                    Key = identifier.Replace("-", "").ToLower(),
                     Description = summary,
                     Status = "Draft",
                     StatusTimestamp = now,
@@ -156,11 +113,9 @@ namespace LagoVista.AI.Services.Tools
                     ApprovedTimestamp = null,
                     Chapters = new List<DdrChapter>()
                 };
-
-
                 var result = Validator.Validate(ddr);
-                if(!result.Successful)
-                { 
+                if (!result.Successful)
+                {
                     return InvokeResult<string>.FromInvokeResult(result.ToInvokeResult());
                 }
 
@@ -183,7 +138,6 @@ namespace LagoVista.AI.Services.Tools
                         ["status"] = ddr.Status
                     }
                 };
-
                 return FromEnvelope(envelope);
             }
             catch (Exception ex)

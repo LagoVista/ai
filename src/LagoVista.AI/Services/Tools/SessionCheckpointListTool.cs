@@ -18,18 +18,12 @@ namespace LagoVista.AI.Services.Tools
     {
         private readonly IAdminLogger _logger;
         private readonly IAgentSessionManager _sessions;
-
         public string Name => ToolName;
-
         public bool IsToolFullyExecutedOnServer => true;
 
         public const string ToolName = "session_checkpoint_list";
-
         public const string ToolUsageMetadata = "List checkpoints for the current session. Use when the user asks to view checkpoints or before restoring one.";
-
         public const string ToolSummary = "list current session based check points";
-
-
         public SessionCheckpointListTool(IAdminLogger logger, IAgentSessionManager sessions)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -56,36 +50,28 @@ namespace LagoVista.AI.Services.Tools
             public int Count { get; set; }
             public string SessionId { get; set; }
         }
+
         public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
         public async Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentToolExecutionContext context, CancellationToken cancellationToken = default)
         {
-            if (context == null) return InvokeResult<string>.FromError("session_checkpoint_list requires a valid execution context.");
-            if (string.IsNullOrWhiteSpace(context.SessionId)) return InvokeResult<string>.FromError("session_checkpoint_list requires a sessionId in the execution context.");
-
+            if (context == null)
+                return InvokeResult<string>.FromError("session_checkpoint_list requires a valid execution context.");
+            if (string.IsNullOrWhiteSpace(context.SessionId))
+                return InvokeResult<string>.FromError("session_checkpoint_list requires a sessionId in the execution context.");
             try
             {
                 var args = string.IsNullOrWhiteSpace(argumentsJson) ? new Args() : (JsonConvert.DeserializeObject<Args>(argumentsJson) ?? new Args());
                 var limit = args.Limit.HasValue && args.Limit.Value > 0 ? args.Limit.Value : 100;
-
                 var list = await _sessions.ListSessionCheckpointsAsync(context.SessionId, limit, context.Org, context.User);
-                if (!list.Successful) return InvokeResult<string>.FromInvokeResult(list);
-
-                var items = (list.Model ?? new List<AgentSessionCheckpoint>()).Select(cp => new Item
-                {
-                    CheckpointId = cp.CheckpointId,
-                    Name = cp.Name,
-                    Notes = cp.Notes,
-                    TurnSourceId = cp.TurnSourceId,
-                    CreationDate = cp.CreationDate
-                }).ToList();
-
+                if (!list.Successful)
+                    return InvokeResult<string>.FromInvokeResult(list);
+                var items = (list.Model ?? new List<AgentSessionCheckpoint>()).Select(cp => new Item { CheckpointId = cp.CheckpointId, Name = cp.Name, Notes = cp.Notes, TurnSourceId = cp.TurnSourceId, CreationDate = cp.CreationDate }).ToList();
                 var payload = new Result
                 {
                     Items = items,
                     Count = items.Count,
                     SessionId = context?.SessionId
                 };
-
                 return InvokeResult<string>.Create(JsonConvert.SerializeObject(payload));
             }
             catch (Exception ex)
@@ -95,23 +81,12 @@ namespace LagoVista.AI.Services.Tools
             }
         }
 
-        public static object GetSchema()
+        public static OpenAiToolDefinition GetSchema()
         {
-            return new
+            return ToolSchema.Function(ToolName, "List checkpoints stored on the current session.", p =>
             {
-                type = "function",
-                name = ToolName,
-                description = "List checkpoints stored on the current session.",
-                parameters = new
-                {
-                    type = "object",
-                    properties = new
-                    {
-                        limit = new { type = "integer", description = "Optional max items to return (default 100)." }
-                    },
-                    required = new string[] { }
-                }
-            };
+                p.Integer("limit", "Optional max items to return (default 100).");
+            });
         }
     }
 }
