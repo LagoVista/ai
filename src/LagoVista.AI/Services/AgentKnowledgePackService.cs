@@ -67,8 +67,6 @@ namespace LagoVista.AI.Services
             }
 
 
-
-
             // Collect in deterministic precedence order: Agent -> Conversation -> Mode
             // Dedup is done during collection so downstream DDR lookups are minimized.
             var instructionIds = new List<string>();
@@ -181,7 +179,7 @@ namespace LagoVista.AI.Services
                 InstructionLine = "The follow are instructions that should be followed from the agent supplied from the mode."
             };
 
-           
+  
             AddInstructions(pack.KindCatalog[KnowledgeKind.AgentContextInstructions].SessionKnowledge, KnowledgeKind.AgentContextInstructions, agentContext.Instructions);
             AddInstructions(pack.KindCatalog[KnowledgeKind.ConversationContextInstructions].SessionKnowledge, KnowledgeKind.ConversationContextInstructions, conversation.Instructions);
             AddInstructions(pack.KindCatalog[KnowledgeKind.ModeInstructions].SessionKnowledge, KnowledgeKind.ModeInstructions, agentContext.Instructions);

@@ -96,6 +96,13 @@ namespace LagoVista.AI.Services.Pipeline
 
             var currentBranch = String.IsNullOrEmpty(ctx.Session.CurrentBranch) ? AgentSession.DefaultBranch : ctx.Session.CurrentBranch;
 
+            foreach (var toolName in apk.EnabledToolNames)
+            {
+                var schema = _toolSchemaProvider.GetToolSchema(toolName);
+
+                ctx.PromptKnowledgeProvider.AvailableToolSchemas.Add(toolName, schema);
+            }
+
             if (!ctx.Session.Kfrs.ContainsKey(currentBranch))
             {
                 var kfrBlock = @$"
@@ -129,13 +136,6 @@ Do not infer or assume facts outside this registry.
             else
             {
                 var branchKfrs = ctx.Session.Kfrs[ctx.Session.CurrentBranch];
-
-                foreach (var toolName in apk.EnabledToolNames)
-                {
-                    var schema = _toolSchemaProvider.GetToolSchema(toolName);
-
-                    ctx.PromptKnowledgeProvider.AvailableToolSchemas.Add(toolName, schema);
-                }
 
                 var kfrBlock = @$"
 ## BEGIN Known Facts Registry (KFR) — Active Working Memory

@@ -113,42 +113,7 @@ namespace LagoVista.AI.Models
         /// </summary>
         public string[] ToolGroupHints { get; set; } = Array.Empty<string>();
 
-
-
-
         public List<AgentMode> AgentModes { get; set; } = new List<AgentMode>();
-
-        public string BuildSystemPrompt(string currentModeKey)
-        {
-            var current = AgentModes.SingleOrDefault(mode => mode.Key == currentModeKey);
-
-            if(current == null)
-            {
-                throw new RecordNotFoundException(nameof(AgentMode), currentModeKey);
-            }
-
-            var sb = new StringBuilder();
-
-            sb.AppendLine($"Current Mode: {current.Key}");
-            sb.AppendLine();
-            sb.AppendLine("Available Modes:");
-
-            foreach (var mode in AgentModes)
-            {
-                sb.Append("- ")
-                  .Append(mode.Key)
-                  .Append(": ")
-                  .AppendLine(mode.WhenToUse ?? mode.Description ?? string.Empty);
-            }
-
-            sb.AppendLine();
-            sb.AppendLine("Mode Switching:");
-            sb.AppendLine("- If the user’s request clearly matches another mode’s \"when to use\" description, you may recommend switching.");
-            sb.AppendLine("- If the user expresses interest in switching, follow the instructions in the agent_change_mode tool.");
-            sb.AppendLine("- If you need more detail about modes, call the agent_list_modes tool.");
-
-            return sb.ToString();
-        }
 
         ISummaryData ISummaryFactory.CreateSummary()
         {

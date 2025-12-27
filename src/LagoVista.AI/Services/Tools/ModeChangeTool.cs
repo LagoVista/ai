@@ -8,6 +8,7 @@ using LagoVista.Core;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json;
+using static LagoVista.AI.Models.JsonSchemaExtensions;
 
 namespace LagoVista.AI.Services.Tools
 {
@@ -145,41 +146,32 @@ namespace LagoVista.AI.Services.Tools
             }
         }
 
-        public static object GetSchema()
+        public static OpenAiToolDefinition GetSchema()
         {
-            return new
-            {
-                type = "function",
-                name = ToolName,
-                description =
-                    "Changes the mode for the current agent session to the specified mode string. " +
-                    "Call only after the user confirms a mode change, and provide a short 'reason' " +
-                    "describing why this mode fits the current request. Set branch=true when the user " +
-                    "wants the new work to start as a separate session.",
-                parameters = new
+            return ToolSchema.Function(
+                ToolName,
+                "Changes the mode for the current agent session to the specified mode string. " +
+                "Call only after the user confirms a mode change, and provide a short 'reason' " +
+                "describing why this mode fits the current request. Set branch=true when the user " +
+                "wants the new work to start as a separate session.",
+                p =>
                 {
-                    type = "object",
-                    properties = new
-                    {
-                        mode = new
-                        {
-                            type = "string",
-                            description = "Target mode name for the current session. Must be a non-empty string."
-                        },
-                        branch = new
-                        {
-                            type = "boolean",
-                            description = "Whether the caller intends to branch into a new session for the new mode (true) or continue in this session (false)."
-                        },
-                        reason = new
-                        {
-                            type = "string",
-                            description = "Short explanation of why this mode is appropriate for the current user request."
-                        }
-                    },
-                    required = new[] { "mode", "branch", "reason" }
-                }
-            };
+                    p.String(
+                        "mode",
+                        "Target mode name for the current session. Must be a non-empty string.",
+                        required: true);
+
+                    p.Boolean(
+                        "branch",
+                        "Whether to branch into a new session.",
+                        required: true);
+
+                    p.String(
+                        "reason",
+                        "Short explanation of why this mode is appropriate.",
+                        required: true);
+                });
         }
+
     }
 }
