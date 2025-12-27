@@ -83,11 +83,13 @@ namespace LagoVista.AI.Services.Pipeline
                     var contentBlock = new StringBuilder();
                     contentBlock.AppendLine(items.BeginMarker);
                     contentBlock.AppendLine(items.InstructionLine);
-                    foreach (var content in items.ConsumableKnowledge.Items)
+                    foreach (var content in items.SessionKnowledge.Items)
                     {
                         contentBlock.AppendLine(content.Content);
                     }
                     contentBlock.AppendLine(items.EndMarker);
+                    Console.WriteLine($"---------\r\n{contentBlock.ToString()}\r\n---------------------------\r\n)"); 
+
                     register.Add(contentBlock.ToString());
                 }
             }

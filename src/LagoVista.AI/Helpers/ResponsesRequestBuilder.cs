@@ -153,12 +153,9 @@ namespace LagoVista.AI.Helpers
                 });
             }
 
-            if(ctx.PromptKnowledgeProvider.AvailableToolSchemas.Any())
+            foreach(var tool in ctx.PromptKnowledgeProvider.AvailableToolSchemas)
             {
-                foreach(var tool in ctx.PromptKnowledgeProvider.AvailableToolSchemas)
-                {
-                    dto.Tools.Add(new  JObject(tool));    
-                }
+                dto.Tools.Add(new  JObject(tool));    
             }
 
             dto.Input.Add(systemMessage);

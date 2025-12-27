@@ -377,11 +377,11 @@ namespace LagoVista.AI.Services.Pipeline
             if (ctx.Session == null)
                 result.Errors.Add(new ErrorMessage("AgentSessionCreator POST: ctx.Session must be populated."));
 
-            if (ctx.ThisTurn == null)
-                result.Errors.Add(new ErrorMessage("AgentSessionCreator POST: ctx.ThisTurn must be populated."));
-
-            if (ctx.ThisTurn != null)
+            if (ctx.PreviousTurn != null)
                 result.Errors.Add(new ErrorMessage("AgentSessionCreator POST: ctx.PreviousTurn must be null."));
+
+            if (ctx.ThisTurn == null)
+                result.Errors.Add(new ErrorMessage("AgentSessionCreator POST: ctx.ThisTurn must be ppulated."));
 
             return result;
         }

@@ -11,6 +11,7 @@ namespace LagoVista.AI
         Task UpdateAgentToolBoxAsync(AgentToolBox agentToolBox);
         Task DeleteAgentToolBoxAsync(string id);
         Task<AgentToolBox> GetAgentToolBoxAsync(string id);
+        Task<AgentToolBox> GetAgentToolBoxByKeyAsync(string orgId, string toolBoxKey);
         Task<ListResponse<AgentToolBoxSummary>> GetAgentToolBoxSummariesForOrgAsync(string orgId, ListRequest listRequest);
         
     }

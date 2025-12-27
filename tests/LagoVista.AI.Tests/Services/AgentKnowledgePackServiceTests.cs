@@ -17,10 +17,11 @@ namespace LagoVista.AI.Tests.Services
     {
         private Mock<IDdrConsumptionFieldProvider> _ddr;
         private Mock<IServerToolUsageMetadataProvider> _usageProvider;
+        private Mock<IAgentToolBoxRepo> _tbRepo;
 
         private AgentKnowledgePackService CreateSut()
         {
-            return new AgentKnowledgePackService(_ddr.Object, _usageProvider.Object);
+            return new AgentKnowledgePackService(_ddr.Object, _tbRepo.Object, _usageProvider.Object);
         }
 
         [SetUp]
@@ -28,6 +29,7 @@ namespace LagoVista.AI.Tests.Services
         {
             _ddr = new Mock<IDdrConsumptionFieldProvider>(MockBehavior.Strict);
             _usageProvider = new Mock<IServerToolUsageMetadataProvider>(MockBehavior.Strict);
+            _tbRepo = new Mock<IAgentToolBoxRepo>(MockBehavior.Strict);
         }
 
         [Test]

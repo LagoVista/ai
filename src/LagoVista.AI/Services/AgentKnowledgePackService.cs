@@ -28,11 +28,13 @@ namespace LagoVista.AI.Services
     {
         private readonly IDdrConsumptionFieldProvider _ddrConsumption;
         private readonly IServerToolUsageMetadataProvider _toolUsageMetaData;
+        private readonly IAgentToolBoxRepo _toolBoxRepo;
 
-        public AgentKnowledgePackService(IDdrConsumptionFieldProvider ddrConsumption, IServerToolUsageMetadataProvider toolUsageMetaData)
+        public AgentKnowledgePackService(IDdrConsumptionFieldProvider ddrConsumption, IAgentToolBoxRepo toolBoxRepo, IServerToolUsageMetadataProvider toolUsageMetaData)
         {
             _ddrConsumption = ddrConsumption ?? throw new ArgumentNullException(nameof(ddrConsumption));
             _toolUsageMetaData = toolUsageMetaData ?? throw new ArgumentNullException(nameof(toolUsageMetaData));
+            _toolBoxRepo = toolBoxRepo ?? throw new ArgumentNullException(nameof(toolBoxRepo));
         }
 
         public async Task<InvokeResult<AgentKnowledgePack>> CreateAsync(
@@ -64,24 +66,33 @@ namespace LagoVista.AI.Services
                 return InvokeResult<AgentKnowledgePack>.FromError($"Mode '{mode}' not found on AgentContext '{agentContext.Name}'.");
             }
 
+
+
+
             // Collect in deterministic precedence order: Agent -> Conversation -> Mode
             // Dedup is done during collection so downstream DDR lookups are minimized.
             var instructionIds = new List<string>();
             var referenceIds = new List<string>();
             var toolNames = new List<string>();
-
+            var instructions = new List<string>();
             // AgentContext
+
+            foreach (var tb in agentContext.ToolBoxes)
+            {
+                var toolBox = await _toolBoxRepo.GetAgentToolBoxAsync(tb.Id);
+                AddRangeDistinctInOrder(toolNames, toolBox.Tools.Select(tl => tl.Id));
+            }
+
+
             AddRangeDistinctInOrder(instructionIds, agentContext.AgentInstructionDdrs);
             AddRangeDistinctInOrder(referenceIds, agentContext.ReferenceDdrs);
             AddRangeDistinctInOrder(toolNames, agentContext.AssociatedToolIds);
 
             // ConversationContext
-            AddRangeDistinctInOrder(instructionIds, conversation.AgentInstructionDdrs);
             AddRangeDistinctInOrder(referenceIds, conversation.ReferenceDdrs);
             AddRangeDistinctInOrder(toolNames, conversation.AssociatedToolIds);
 
             // Mode
-            AddRangeDistinctInOrder(instructionIds, agentMode.AgentInstructionDdrs);
             AddRangeDistinctInOrder(referenceIds, agentMode.ReferenceDdrs);
             AddRangeDistinctInOrder(toolNames, agentMode.AssociatedToolIds);
 
@@ -141,11 +152,46 @@ namespace LagoVista.AI.Services
                 InstructionLine = "The following tools are available. Call tools only when needed and provide valid arguments."
             };
 
+
+            pack.KindCatalog[KnowledgeKind.AgentContextInstructions] = new KnowledgeKindDescriptor
+            {
+                Kind = KnowledgeKind.Tool,
+                Title = "Agent Context Instructions",
+                BeginMarker = "[BEGIN AGENT CTX INST]",
+                EndMarker = "[END AGENT CTX INST]",
+                InstructionLine = "The follow are instructions that should be followed from the agent."
+            };
+
+
+            pack.KindCatalog[KnowledgeKind.ConversationContextInstructions] = new KnowledgeKindDescriptor
+            {
+                Kind = KnowledgeKind.Tool,
+                Title = "Agent Role Instructions",
+                BeginMarker = "[BEGIN CONV CTX INST]",
+                EndMarker = "[END CONV CTX INST]",
+                InstructionLine = "The follow are instructions that should be followed from the agent supplied from the role."
+            };
+
+            pack.KindCatalog[KnowledgeKind.ModeInstructions] = new KnowledgeKindDescriptor
+            {
+                Kind = KnowledgeKind.Tool,
+                Title = "Mode Instructions",
+                BeginMarker = "[BEGIN MODE INST]",
+                EndMarker = "[END MODE INST]",
+                InstructionLine = "The follow are instructions that should be followed from the agent supplied from the mode."
+            };
+
+           
+            AddInstructions(pack.KindCatalog[KnowledgeKind.AgentContextInstructions].SessionKnowledge, KnowledgeKind.AgentContextInstructions, agentContext.Instructions);
+            AddInstructions(pack.KindCatalog[KnowledgeKind.ConversationContextInstructions].SessionKnowledge, KnowledgeKind.ConversationContextInstructions, conversation.Instructions);
+            AddInstructions(pack.KindCatalog[KnowledgeKind.ModeInstructions].SessionKnowledge, KnowledgeKind.ModeInstructions, agentContext.Instructions);
+
             // Populate SessionKnowledge lane as the primary lane in V1.
             // Consumers can migrate items to ConsumableKnowledge as turn-scoped patterns mature.
             AddDdrItems(pack.KindCatalog[KnowledgeKind.Instruction].SessionKnowledge, KnowledgeKind.Instruction, instructionIds, resolvedInstructions.Result);
             AddDdrItems(pack.KindCatalog[KnowledgeKind.Reference].SessionKnowledge, KnowledgeKind.Reference, referenceIds, resolvedReferences.Result);
             AddToolItems(pack.KindCatalog[KnowledgeKind.Tool].SessionKnowledge, toolNames);
+
 
             return InvokeResult<AgentKnowledgePack>.Create(pack);
         }
@@ -179,6 +225,18 @@ namespace LagoVista.AI.Services
                 if (string.IsNullOrWhiteSpace(v)) continue;
                 if (target.Contains(v)) continue;
                 target.Add(v);
+            }
+        }
+        
+        private static void AddInstructions(KnowledgeLane lane, KnowledgeKind kind, List<string> instructions)
+        {
+            foreach (var inst in instructions)
+            {
+                lane.Items.Add(new KnowledgeItem()
+                {
+                    Kind = kind,
+                    Content = inst
+                });
             }
         }
 
