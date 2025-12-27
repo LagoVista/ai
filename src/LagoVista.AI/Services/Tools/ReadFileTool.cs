@@ -23,6 +23,7 @@ namespace LagoVista.AI.Services.Tools
         private readonly IAdminLogger _logger;
         public bool IsToolFullyExecutedOnServer => true;
 
+        public const string ToolSummary = "used to load a file from a cloud repository.";
 
         public ReadFileTool(IAdminLogger logger)
         {

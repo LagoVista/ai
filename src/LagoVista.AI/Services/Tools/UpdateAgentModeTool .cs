@@ -23,6 +23,9 @@ namespace LagoVista.AI.Services.Tools
             _agentContextManager = agentContextManager;
         }
 
+
+        public const string ToolSummary = "udpate an agent mode";
+
         public const string ToolName = "update_agent_mode";
 
         public const string ToolUsageMetadata = "Update an existing Agent Mode by Id after clarifying which fields the user wants to change.";

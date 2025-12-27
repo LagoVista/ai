@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="LagoVista.CloudStorage" Version="3.0.3146.0550" />
+    <PackageReference Include="LagoVista.CloudStorage" Version="3.0.3146.1247" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.22.1" />
     <ProjectReference Include="..\LagoVista.AI.Models\LagoVista.AI.Models.csproj" />
     <ProjectReference Include="..\LagoVista.AI\LagoVista.AI.csproj" />

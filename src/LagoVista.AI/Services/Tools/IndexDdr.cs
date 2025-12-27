@@ -32,6 +32,8 @@ namespace LagoVista.AI.Services.Tools
         private readonly IQdrantClient _qdrantClient;
         private readonly IEmbedder _embedder;
 
+        public const string ToolSummary = "uused to index a ddr into vector database for RAG";
+
 
         public string Name => ToolName;
 

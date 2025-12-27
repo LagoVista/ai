@@ -27,6 +27,9 @@ namespace LagoVista.AI.Services.Tools
 
         public const string ToolUsageMetadata = "List checkpoints for the current session. Use when the user asks to view checkpoints or before restoring one.";
 
+        public const string ToolSummary = "list current session based check points";
+
+
         public SessionCheckpointListTool(IAdminLogger logger, IAgentSessionManager sessions)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));

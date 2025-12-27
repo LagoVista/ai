@@ -25,6 +25,7 @@ namespace LagoVista.AI.Services.Tools
         public const string ToolUsageMetadata =
     "Updates the DDR's human-readable title or summary metadata. Should be used when refining or correcting top-level DDR information.";
 
+        public const string ToolSummary = "udpate the title, and summary within a ddr";
 
         public override string Name => ToolName;
 

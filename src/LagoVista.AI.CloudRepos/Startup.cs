@@ -3,6 +3,7 @@
 // IndexVersion: 2
 // --- END CODE INDEX META ---
 using LagoVista.AI.Interfaces;
+using LagoVista.AI.Managers;
 using LagoVista.AI.Rag.ContractPacks.Content.Interfaces;
 using LagoVista.Core.Interfaces;
 using System;
@@ -35,6 +36,7 @@ namespace LagoVista.AI.CloudRepos
             services.AddSingleton<IContentStorage, ContentStorage>();
             services.AddSingleton<IResourceUsageTableWriter, ResourceUsageTableWriter>();
             services.AddSingleton<IDdrConsumptionFieldProvider, DdrRepo>();
+            services.AddSingleton<IAgentToolBoxRepo, AgentToolBoxRepo>();
             services.AddSingleton<IToolCallManifestRepo,  ToolCallManifestRepo>();
         }
     }

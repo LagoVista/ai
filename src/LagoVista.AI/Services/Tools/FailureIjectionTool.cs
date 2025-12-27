@@ -29,6 +29,7 @@ namespace LagoVista.AI.Services.Tools
 
         public const string ToolUsageMetadata = "This tool is used for testing the system only and should not be used unless explicitly asked for.   Not much to do other than expect an error.";
 
+        public const string ToolSummary = "inject agent tool failure (used for testing)";
 
         public bool IsToolFullyExecutedOnServer => true;
 

@@ -29,6 +29,9 @@ namespace LagoVista.AI.Services.Tools
 
         public const string ToolUsageMetadata = "Restore a checkpoint by branching the session to the checkpoint's turn. Use when the user asks to restore a checkpoint to reset context. Returns the new SessionId plus restore info for the client.";
 
+        public const string ToolSummary = "restore a session to a known check point";
+
+
         public SessionCheckpointRestoreTool(IAdminLogger logger, IAgentSessionManager sessions)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));

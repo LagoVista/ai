@@ -29,6 +29,9 @@ namespace LagoVista.AI.Services.Tools
 
         public const string ToolName = "agent_workflow_manifest_get";
 
+
+        public const string ToolSummary = "read a full workflow manifest";
+
         public GetWorkflowManifestTool(IWorkflowDefinitionManager workflowManager, IAdminLogger logger)
         {
             _workflowManager = workflowManager ?? throw new ArgumentNullException(nameof(workflowManager));

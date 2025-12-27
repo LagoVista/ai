@@ -23,6 +23,9 @@ namespace LagoVista.AI.Services.Tools
         {
         }
 
+        public const string ToolSummary = "udpate the detail of a chapter in a ddr";
+
+
         public override string Name => ToolName;
 
         public const string ToolUsageMetadata =

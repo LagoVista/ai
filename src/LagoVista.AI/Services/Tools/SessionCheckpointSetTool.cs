@@ -28,6 +28,9 @@ namespace LagoVista.AI.Services.Tools
 
         public const string ToolUsageMetadata = "Create a durable checkpoint for the current session at the current turn. Use when the user asks to set a checkpoint. Returns a short CheckpointId and summary.";
 
+        public const string ToolSummary = "create a check point in current session";
+
+
         public SessionCheckpointSetTool(IAdminLogger logger, IAgentSessionManager sessions)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));

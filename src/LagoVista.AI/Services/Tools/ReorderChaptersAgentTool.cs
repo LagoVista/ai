@@ -24,6 +24,9 @@ namespace LagoVista.AI.Services.Tools
         {
         }
 
+        public const string ToolSummary = "reorder the chapters in a ddr";
+
+
         public override string Name => ToolName;
 
         public const string ToolUsageMetadata =

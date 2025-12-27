@@ -27,6 +27,9 @@ namespace LagoVista.AI.Services.Tools
         public const string ToolUsageMetadata =
     "Moves a DDR from one TLA domain to another, assigning a new index. Use only when the DDR was misclassified or organizational boundaries change.";
 
+        public const string ToolSummary = "use to reassign tla id on a ddr";
+
+
         public override string Name => ToolName;
 
         protected override string Tag => "[MoveDdrTlaAgentTool]";

@@ -1,4 +1,4 @@
-﻿/*12/22/2025 12:38:02 PM*/
+﻿/*12/27/2025 1:11:19 PM*/
 using System.Globalization;
 using System.Reflection;
 
@@ -114,6 +114,24 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:AgentSessions_Title
 
 		public static string AgentSessions_Title { get { return GetResourceString("AgentSessions_Title"); } }
+//Resources:AIResources:AgentToolBox_Description
+
+		public static string AgentToolBox_Description { get { return GetResourceString("AgentToolBox_Description"); } }
+//Resources:AIResources:AgentToolBox_Help
+
+		public static string AgentToolBox_Help { get { return GetResourceString("AgentToolBox_Help"); } }
+//Resources:AIResources:AgentToolBox_SummaryInstructions
+
+		public static string AgentToolBox_SummaryInstructions { get { return GetResourceString("AgentToolBox_SummaryInstructions"); } }
+//Resources:AIResources:AgentToolBox_SummaryInstructions_Help
+
+		public static string AgentToolBox_SummaryInstructions_Help { get { return GetResourceString("AgentToolBox_SummaryInstructions_Help"); } }
+//Resources:AIResources:AgentToolBox_Title
+
+		public static string AgentToolBox_Title { get { return GetResourceString("AgentToolBox_Title"); } }
+//Resources:AIResources:AgentToolBoxes_Title
+
+		public static string AgentToolBoxes_Title { get { return GetResourceString("AgentToolBoxes_Title"); } }
 //Resources:AIResources:AiAgentContext_Description
 
 		public static string AiAgentContext_Description { get { return GetResourceString("AiAgentContext_Description"); } }
@@ -683,6 +701,12 @@ namespace LagoVista.AI.Models.Resources
 			public const string AgentSession_Help = "AgentSession_Help";
 			public const string AgentSession_Title = "AgentSession_Title";
 			public const string AgentSessions_Title = "AgentSessions_Title";
+			public const string AgentToolBox_Description = "AgentToolBox_Description";
+			public const string AgentToolBox_Help = "AgentToolBox_Help";
+			public const string AgentToolBox_SummaryInstructions = "AgentToolBox_SummaryInstructions";
+			public const string AgentToolBox_SummaryInstructions_Help = "AgentToolBox_SummaryInstructions_Help";
+			public const string AgentToolBox_Title = "AgentToolBox_Title";
+			public const string AgentToolBoxes_Title = "AgentToolBoxes_Title";
 			public const string AiAgentContext_Description = "AiAgentContext_Description";
 			public const string AiAgentContext_Title = "AiAgentContext_Title";
 			public const string AiAgentContexts_Title = "AiAgentContexts_Title";

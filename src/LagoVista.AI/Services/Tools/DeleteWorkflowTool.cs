@@ -30,6 +30,9 @@ namespace LagoVista.AI.Services.Tools
 
         public const string ToolName = "agent_workflow_delete";
 
+        public const string ToolSummary = "delete a workflow";
+
+
         private sealed class DeleteWorkflowArgs
         {
             public string WorkflowId { get; set; }

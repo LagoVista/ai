@@ -6,6 +6,7 @@ using System.Threading;
 using System;
 using LagoVista.Core.Validation;
 using LagoVista.Core;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace LagoVista.AI.Services.Tools
 {
@@ -19,6 +20,8 @@ namespace LagoVista.AI.Services.Tools
         }
 
         public const string ToolName = "add_agent_mode";
+
+        public const string ToolSummary = "used to create agent modes that inject specific behavior instructions";
 
         public string Name => ToolName;
 

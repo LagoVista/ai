@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using LagoVista.AI.Interfaces;
@@ -14,7 +15,7 @@ namespace LagoVista.AI.Services
         private readonly Dictionary<string, Type> _toolsByName;
         private readonly IAdminLogger _logger;
 
-        private readonly List<string> _allToolIds = new List<string>();
+        private readonly List<AgentToolSummary> _allTools = new List<AgentToolSummary>();
 
         
         public static AgentToolRegistry Instance { get; private set; }
@@ -49,7 +50,30 @@ namespace LagoVista.AI.Services
                 throw new InvalidOperationException(msg);
             }
 
+
             var toolName = toolNameField.GetRawConstantValue() as string;
+
+            //
+            // CONTRACT #2:
+            //   The tool MUST define: public const string ToolName
+            //
+            var toolSummaryField = toolType.GetField(
+                "ToolSummary",
+                BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy);
+
+            if (toolSummaryField == null ||
+                toolSummaryField.FieldType != typeof(string) ||
+                toolSummaryField.IsLiteral == false)
+            {
+                var msg =
+                    $"Tool '{toolType.FullName}' must declare: public const string ToolSummary.";
+
+                _logger.AddError("[AgentToolRegistry_RegisterTool__MissingToolSummaryConst]", msg);
+                throw new InvalidOperationException(msg);
+            }
+
+            var toolSummary = toolSummaryField.GetRawConstantValue() as string;
+
 
             if (string.IsNullOrWhiteSpace(toolName))
             {
@@ -61,7 +85,7 @@ namespace LagoVista.AI.Services
             }
 
             //
-            // NEW CONTRACT: ToolName must be OpenAI-compliant:
+            // CONTRACT #3: ToolName must be OpenAI-compliant:
             //   ^[a-zA-Z0-9_-]+$
             //
             var namePattern = new Regex("^[a-zA-Z0-9_-]+$", RegexOptions.Compiled);
@@ -78,7 +102,7 @@ namespace LagoVista.AI.Services
             }
 
             //
-            // CONTRACT #2:
+            // CONTRACT #4:
             //   The tool MUST declare: public static object GetSchema()
             //
             var schemaMethod = toolType.GetMethod(
@@ -97,7 +121,7 @@ namespace LagoVista.AI.Services
             }
 
             //
-            // CONTRACT #3:
+            // CONTRACT #5:
             //   The tool MUST declare: public const string ToolUsageMetadata (non-empty)
             //
             var usageMetadataField = toolType.GetField(
@@ -127,7 +151,7 @@ namespace LagoVista.AI.Services
             }
 
             //
-            // CONTRACT #4:
+            // CONTRACT #6:
             //   Prevent duplicate tool names
             //
             if (_toolsByName.ContainsKey(toolName))
@@ -148,7 +172,11 @@ namespace LagoVista.AI.Services
             //
             _toolsByName.Add(toolName, toolType);
 
-            _allToolIds.Add(toolName);
+            _allTools.Add(new AgentToolSummary()
+            {
+                ToolId = toolName,
+                ToolSummary = toolSummary
+            });
 
             _logger.Trace(
                 $"[AgentToolRegistry_RegisterTool] Registered tool '{toolName}' -> '{toolType.FullName}'.");
@@ -185,9 +213,20 @@ namespace LagoVista.AI.Services
             return new ReadOnlyDictionary<string, Type>(_toolsByName);
         }
 
+        public IEnumerable<AgentToolSummary> GetAllTools()
+        {
+            return _allTools.OrderBy(ts => ts.ToolId);
+        }
+
         public IEnumerable<string> GetAllToolIds()
         {
-            return _allToolIds;
+            return _allTools.Select(tl => tl.ToolId);
         }
+    }
+
+    public class AgentToolSummary
+    {
+        public string ToolId { get; set; }
+        public string ToolSummary { get; set; }
     }
 }

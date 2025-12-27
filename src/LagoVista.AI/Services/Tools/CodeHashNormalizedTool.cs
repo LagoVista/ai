@@ -21,6 +21,8 @@ namespace LagoVista.AI.Services.Tools
 
         public string Name => ToolName;
 
+        public const string ToolSummary = "normalize text and then calculate a hash";
+
         public bool IsToolFullyExecutedOnServer => true;
 
         private readonly IContentHashService _contentHashService;

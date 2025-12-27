@@ -30,6 +30,8 @@ namespace LagoVista.AI.Services.Tools
 
         public override string Name => ToolName;
 
+        public const string ToolSummary = "list all ddrs";
+
         protected override string Tag => "[ListDdrsAgentTool]";
 
         /// <summary>

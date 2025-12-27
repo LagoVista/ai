@@ -27,6 +27,7 @@ namespace LagoVista.AI.Services.Tools
         public const string ToolUsageMetadata =
     "Approves the entire DDR after its goal and chapters are approved. Finalizes the DDR. Requires explicit user approval.";
 
+        public const string ToolSummary = "approve a ddr";
 
         public override string Name => ToolName;
 

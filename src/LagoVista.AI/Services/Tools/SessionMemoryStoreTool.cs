@@ -31,6 +31,8 @@ namespace LagoVista.AI.Services.Tools
 
         public const string ToolName = "session_memory_store";
 
+        public const string ToolSummary = "save a session memory note";
+
         public SessionMemoryStoreTool(IAdminLogger logger, IAgentSessionManager agentSessionManager)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));

@@ -30,6 +30,8 @@ namespace LagoVista.AI.Services.Tools
 
         public const string ToolName = "agent_workflow_update";
 
+        public const string ToolSummary = "udpate a workflow";
+
         private sealed class UpdateWorkflowArgs
         {
             public WorkflowDefinition Workflow { get; set; }

@@ -27,6 +27,8 @@ namespace LagoVista.AI.Services.Tools
 
         public const string ToolName = "session_memory_list";
 
+        public const string ToolSummary = "list all memory notes in the system";
+
         public SessionMemoryListTool(IAdminLogger logger, IAgentSessionManager agentSessionManager)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));

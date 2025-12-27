@@ -26,6 +26,8 @@ namespace LagoVista.AI.Services.Tools
 
         public const string ToolUsageMetadata =
     "Updates the summary text for an existing DDR chapter. Used during refinement to keep chapter descriptions accurate and helpful.";
+        
+        public const string ToolSummary = "udpate the summary of a chapter in a ddr";
 
 
         public override string Name => ToolName;

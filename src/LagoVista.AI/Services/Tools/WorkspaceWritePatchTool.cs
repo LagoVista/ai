@@ -19,6 +19,7 @@ namespace LagoVista.AI.Services.Tools
 
         public bool IsToolFullyExecutedOnServer => false;
 
+        public const string ToolSummary = "create a set of patches to be applied on the humans machine with a client tool";
 
         private readonly IWorkspaceWritePatchOrchestrator _orchestrator;
 

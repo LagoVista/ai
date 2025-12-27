@@ -21,11 +21,11 @@ namespace LagoVista.AI.Rest
     /// </summary>
     [ConfirmedUser]
     [AppBuilder]
-    public class VectorDatabaseController : LagoVistaBaseController
+    public class AgentContextController : LagoVistaBaseController
     {
         private readonly IAgentContextManager _agentContextManager;
 
-        public VectorDatabaseController(IAgentContextManager AgentContextMgr, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
+        public AgentContextController(IAgentContextManager AgentContextMgr, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
         {
             this._agentContextManager = AgentContextMgr;
         }

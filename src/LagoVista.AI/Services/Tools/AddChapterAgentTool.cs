@@ -27,6 +27,7 @@ namespace LagoVista.AI.Services.Tools
         public const string ToolUsageMetadata =
     "Adds multiple chapters to a DDR in a single operation. Use when initializing a DDR's chapter structure or importing a predefined outline.";
 
+        public const string ToolSummary = "add a single chapter to an existing ddr";
 
         public override string Name => ToolName;
 

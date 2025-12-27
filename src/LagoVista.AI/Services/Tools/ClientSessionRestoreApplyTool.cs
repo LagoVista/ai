@@ -28,6 +28,8 @@ namespace LagoVista.AI.Services.Tools
 
         public const string ToolUsageMetadata = "Client-side tool to apply a checkpoint restore in the UI. Use after session_checkpoint_restore. The client must switch to newSessionId and reset the conversation chain (drop previous_response_id), then confirm.";
 
+        public const string ToolSummary = "used to apply restoring a check point within a session";
+
         public ClientSessionRestoreApplyTool(IAdminLogger logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));

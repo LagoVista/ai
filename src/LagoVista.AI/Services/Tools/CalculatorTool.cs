@@ -29,6 +29,9 @@ namespace LagoVista.AI.Services.Tools
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
+        public const string ToolSummary = "calculate a result based on two numbers and an operator";
+
+
         private sealed class CalculatorArgs
         {
             public string Operation { get; set; }  // add | subtract | multiply | divide

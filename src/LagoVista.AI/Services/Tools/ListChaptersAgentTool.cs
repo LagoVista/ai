@@ -28,6 +28,8 @@ namespace LagoVista.AI.Services.Tools
         {
         }
 
+        public const string ToolSummary = "list chapters in a ddr by identifer";
+
         public override string Name => ToolName;
 
         protected override string Tag => "[ListChaptersAgentTool]";

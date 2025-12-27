@@ -28,6 +28,8 @@ namespace LagoVista.AI.Services.Tools
         private readonly IAgentSessionManager _sessionManager;
         private readonly IAdminLogger _logger;
 
+        public const string ToolSummary = "use this tool to change an agent mode";
+
         public ModeChangeTool(IAgentSessionManager sessionManager, IAdminLogger logger)
         {
             _sessionManager = sessionManager ?? throw new ArgumentNullException(nameof(sessionManager));

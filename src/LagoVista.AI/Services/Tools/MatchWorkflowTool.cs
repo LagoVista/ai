@@ -31,6 +31,9 @@ namespace LagoVista.AI.Services.Tools
 
         public const string ToolName = "agent_workflows_match";
 
+        public const string ToolSummary = "used to find a workflow";
+
+
         public MatchWorkflowTool(IWorkflowDefinitionManager workflowManager, IAdminLogger logger)
         {
             _workflowManager = workflowManager ?? throw new ArgumentNullException(nameof(workflowManager));

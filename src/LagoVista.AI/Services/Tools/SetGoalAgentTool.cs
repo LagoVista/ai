@@ -28,6 +28,8 @@ namespace LagoVista.AI.Services.Tools
 
         public override string Name => ToolName;
 
+        public const string ToolSummary = "set the goal of a ddr";
+
         protected override string Tag => "[SetGoalAgentTool]";
 
         /// <summary>

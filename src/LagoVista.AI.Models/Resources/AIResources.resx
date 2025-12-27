@@ -727,4 +727,22 @@
   <data name="AgentContext_CompletionReservePercent_Help" xml:space="preserve">
     <value>Percentage of tokens held back for the model’s response to avoid truncated answers.</value>
   </data>
+  <data name="AgentToolBox_Title" xml:space="preserve">
+    <value>Agent Tool Box</value>
+  </data>
+  <data name="AgentToolBox_Description" xml:space="preserve">
+    <value>An Agent Tool Box is collection of assets that will be used to include tools, instructions and refrences in prompts.</value>
+  </data>
+  <data name="AgentToolBox_Help" xml:space="preserve">
+    <value>An Agent Tool Box is collection of assets that will be used to include tools, instructions and refrences in prompts.</value>
+  </data>
+  <data name="AgentToolBox_SummaryInstructions" xml:space="preserve">
+    <value>Summary Instructions</value>
+  </data>
+  <data name="AgentToolBox_SummaryInstructions_Help" xml:space="preserve">
+    <value>Summary instructions are provided within the prompt to give the model hints about what this is for.  This should not be a large paragraph, just used ot help establish baseline context.</value>
+  </data>
+  <data name="AgentToolBoxes_Title" xml:space="preserve">
+    <value>Agent Tool Boxes</value>
+  </data>
 </root>

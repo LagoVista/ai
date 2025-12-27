@@ -28,6 +28,9 @@ namespace LagoVista.AI.Services.Tools
         {
         }
 
+        public const string ToolSummary = "saves a new ddr";
+
+
         public const string ToolUsageMetadata =
     "Creates a new Detailed Design Review (DDR) with the next available numeric index for the specified TLA. When creating this DDR from an imported document it is OK to use the existing index, we don't have to pull from TLA catalog.  Used only when beginning a new DDR document.";
 

@@ -33,6 +33,8 @@ namespace LagoVista.AI.Services.Tools
 
         public bool IsToolFullyExecutedOnServer => true;
 
+        public const string ToolSummary = "use to test agent calls by sending a ping and expecting a pong";
+
 
         public const string ToolUsageMetadata = "This tool is used for testing the system only and should not be used unless explicitly asked for. Send a ping, expect a pong!";
 

@@ -35,6 +35,9 @@ namespace LagoVista.AI.Services.Tools
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
+
+        public const string ToolSummary = "create a file on the user machine with a client side tool";
+
         public string Name => ToolName;
 
         /// <summary>

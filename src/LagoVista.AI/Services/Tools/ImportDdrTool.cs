@@ -26,6 +26,8 @@ namespace LagoVista.AI.Services.Tools
         private readonly IAdminLogger _logger;
         private readonly IDdrManager _ddrManager;
 
+        public const string ToolSummary = "uused to import a ddr";
+
         public string Name => ToolName;
 
         public bool IsToolFullyExecutedOnServer => true;

@@ -29,6 +29,9 @@ namespace LagoVista.AI.Services.Tools
 
         public override string Name => ToolName;
 
+        public const string ToolSummary = "get a ddr";
+
+
         protected override string Tag => "[GetDdrAgentTool]";
 
         /// <summary>

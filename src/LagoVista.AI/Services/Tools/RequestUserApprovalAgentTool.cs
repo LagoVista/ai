@@ -23,6 +23,8 @@ namespace LagoVista.AI.Services.Tools
         public const string ToolUsageMetadata =
     "Client-side tool used to prompt the user for explicit approval before performing a server-side DDR modification. The server never executes this action directly.";
 
+        public const string ToolSummary = "used to call a client side tool to request human approval";
+
         public RequestUserApprovalAgentTool(IAdminLogger adminLogger)
         {
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));

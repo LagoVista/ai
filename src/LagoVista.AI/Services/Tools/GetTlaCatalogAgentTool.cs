@@ -27,6 +27,7 @@ namespace LagoVista.AI.Services.Tools
         public const string ToolUsageMetadata =
      "Retrieves the full catalog of DDR TLAs, including titles and summaries. Used when the LLM needs to browse existing domains before creating or organizing DDRs.";
 
+        public const string ToolSummary = "get three letter acroynm (TLA) catalog";
 
         public override string Name => ToolName;
 

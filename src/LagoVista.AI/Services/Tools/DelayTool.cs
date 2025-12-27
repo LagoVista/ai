@@ -50,6 +50,9 @@ namespace LagoVista.AI.Services.Tools
             public string ConversationId { get; set; }
         }
 
+        public const string ToolSummary = "perform an agent side delay (used for testing)";
+
+
         public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
 
 

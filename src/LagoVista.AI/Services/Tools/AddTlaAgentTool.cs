@@ -27,6 +27,7 @@ namespace LagoVista.AI.Services.Tools
         public const string ToolUsageMetadata =
     "Adds a new TLA domain to the DDR catalog. Should be used only when introducing a new domain for DDRs. Requires explicit user intent before use.";
 
+        public const string ToolSummary = "add a TLA or three letter acryonm to be used when creating DDRs";
 
         public override string Name => ToolName;
 

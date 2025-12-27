@@ -31,6 +31,9 @@ namespace LagoVista.AI.Services.Tools
 
         public const string ToolName = "session_kfr";
 
+        public const string ToolSummary = "known facts registry - working memory";
+
+
         public const string ToolUsageMetadata = @"Tool Usage Instructions — Working Memory & Known Facts Registry (KFR)
 
 Purpose:

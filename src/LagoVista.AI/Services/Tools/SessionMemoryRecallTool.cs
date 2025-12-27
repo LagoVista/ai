@@ -27,6 +27,8 @@ namespace LagoVista.AI.Services.Tools
 
         public const string ToolName = "session_memory_recall";
 
+        public const string ToolSummary = "recall a memory note";
+
         public SessionMemoryRecallTool(IAdminLogger logger, IAgentSessionManager agentSessionManager)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));

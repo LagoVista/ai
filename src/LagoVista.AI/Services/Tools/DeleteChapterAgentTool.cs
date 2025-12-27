@@ -27,6 +27,8 @@ namespace LagoVista.AI.Services.Tools
         public const string ToolUsageMetadata =
     "Deletes a chapter from a DDR. Should be used cautiously and only when a chapter is no longer relevant.";
 
+        public const string ToolSummary = "delete a chapter within a ddr";
+
 
         public override string Name => ToolName;
 

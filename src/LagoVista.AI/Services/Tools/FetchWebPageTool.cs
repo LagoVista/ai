@@ -36,6 +36,8 @@ namespace LagoVista.AI.Services.Tools
 
         public const string ToolUsageMetadata = "Use this tool when the user asks to look up information on a public website. Provide a URL and receive extracted text for analysis.";
 
+        public const string ToolSummary = "make an http web request and return the contents";
+
         public FetchWebPageTool(IAdminLogger logger, IHttpClientFactory httpClientFactory)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));

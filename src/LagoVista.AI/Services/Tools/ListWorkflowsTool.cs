@@ -29,6 +29,9 @@ namespace LagoVista.AI.Services.Tools
 
         public const string ToolName = "agent_workflows_list";
 
+
+        public const string ToolSummary = "list all workflows";
+
         public ListWorkflowsTool(IWorkflowDefinitionManager workflowManager, IAdminLogger logger)
         {
             _workflowManager = workflowManager ?? throw new ArgumentNullException(nameof(workflowManager));

@@ -1,4 +1,5 @@
-﻿using LagoVista.Core.Validation;
+﻿using LagoVista.AI.Services;
+using LagoVista.Core.Validation;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -21,5 +22,6 @@ namespace LagoVista.AI.Interfaces
         IReadOnlyDictionary<string, Type> GetRegisteredTools();
 
         IEnumerable<string> GetAllToolIds();
+        IEnumerable<AgentToolSummary> GetAllTools();
     }
 }

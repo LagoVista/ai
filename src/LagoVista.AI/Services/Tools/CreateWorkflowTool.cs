@@ -65,6 +65,9 @@ this rule.
 
 ";
 
+        public const string ToolSummary = "create a workflow to be used as an instruction";
+
+
         public const string ToolName = "agent_workflow_create";
 
         public CreateWorkflowTool(IWorkflowDefinitionManager workflowManager, IAdminLogger logger)

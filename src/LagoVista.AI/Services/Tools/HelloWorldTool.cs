@@ -25,6 +25,9 @@ namespace LagoVista.AI.Services.Tools
             "Generates a personalized greeting message. Use when the user " +
             "asks to be greeted, welcomed, or acknowledged.";
 
+
+        public const string ToolSummary = "returns hello world from the agent (mostly used for testing)";
+
         /* --------------------------------------------------------------
          * DI CONSTRUCTOR (Contract §3.1)
          * -------------------------------------------------------------- */
