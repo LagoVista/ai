@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace LagoVista.AI.Models
+namespace LagoVista.AI
 {
     public sealed class OpenAiToolDefinition
     {
@@ -54,44 +54,87 @@ namespace LagoVista.AI.Models
         public IReadOnlyList<string>? Enum { get; set; }
     }
 
+
+    public static class ToolSchema
+    {
+        public static OpenAiToolDefinition Function(
+            string name,
+            string description,
+            Action<JsonSchemaObject> parameters)
+        {
+            var schema = new JsonSchemaObject();
+            parameters(schema);
+
+            return new OpenAiToolDefinition
+            {
+                Function = new OpenAiFunctionDefinition
+                {
+                    Name = name,
+                    Description = description,
+                    Parameters = schema
+                }
+            };
+        }
+    }
+
+
     public static class JsonSchemaExtensions
     {
         public static void String(
             this JsonSchemaObject schema,
             string name,
             string description,
+            IReadOnlyList<string> enumValues = null,
             bool required = false)
         {
             schema.Properties[name] = new JsonSchemaProperty
             {
                 Type = "string",
-                Description = description
+                Description = description,
+                Enum = enumValues
             };
 
             if (required)
                 schema.Require(name);
         }
 
-        public static class ToolSchema
-        {
-            public static OpenAiToolDefinition Function(
-                string name,
-                string description,
-                Action<JsonSchemaObject> parameters)
-            {
-                var schema = new JsonSchemaObject();
-                parameters(schema);
 
-                return new OpenAiToolDefinition
-                {
-                    Function = new OpenAiFunctionDefinition
-                    {
-                        Name = name,
-                        Description = description,
-                        Parameters = schema
-                    }
-                };
-            }
+        /// <summary>
+        /// Escape hatch for types not yet modeled with dedicated helpers (array, object, integer, etc.).
+        /// </summary>
+        public static void Any(
+            this JsonSchemaObject schema,
+            string name,
+            string type,
+            string description,
+            IReadOnlyList<string> enumValues = null,
+            bool required = false)
+        {
+            schema.Properties[name] = new JsonSchemaProperty
+            {
+                Type = type,
+                Description = description,
+                Enum = enumValues
+            };
+
+            if (required)
+                schema.Require(name);
+        }
+
+        public static void Integer(
+           this JsonSchemaObject schema,
+           string name,
+           string description,
+           bool required = false)
+        {
+            schema.Properties[name] = new JsonSchemaProperty
+            {
+                Type = "integer",
+                Description = description
+            };
+
+            if (required)
+                schema.Require(name);
         }
 
         public static void Boolean(
