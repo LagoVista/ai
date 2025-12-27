@@ -40,8 +40,11 @@ namespace LagoVista.AI.Services.OpenAI
             if (!preValidation.Successful) return InvokeResult<IAgentPipelineContext>.FromInvokeResult(preValidation);
 
             var req = await _builder.BuildAsync(ctx);
-            var reqJson = JsonConvert.SerializeObject(req);
-            _log.Trace("[OpenAIResponsesClient__ExecuteAsync] Call LLM with JSON\r\n=====\r\n" + reqJson + "\r\n====");
+            if(!req.Successful)
+                return await FailAsync(ctx.Session.Id, req.ToInvokeResult(), "Request build failed.", ctx.CancellationToken);
+
+            var reqJson = JsonConvert.SerializeObject(req.Result);
+            _log.Trace("[OpenAIResponsesClient__ExecuteAsync] Call LLM with JSON\r\n===== >>>>>\r\n" + reqJson + "\r\n===== >>>>>");
 
             await _events.PublishAsync(ctx.Session.Id, "LLMStarted", "in-progress", "Calling OpenAI model...", null, ctx.CancellationToken);
 
@@ -49,14 +52,14 @@ namespace LagoVista.AI.Services.OpenAI
             var invoke = await _invoker.InvokeAsync(ctx, reqJson);
             if (!invoke.Successful) return await FailAsync(ctx.Session.Id, invoke.ToInvokeResult(), "LLM invoke failed.", ctx.CancellationToken);
 
+            _log.Trace($"[OpenAIResponsesClient__ExecuteAsync] Response JSON in {sw.Elapsed.TotalMilliseconds}ms \r\n<<<<< =====\r\n" + invoke.Result + "\r\n<<<<< =====");
+
             var parsed = await _parser.ParseAsync(ctx, invoke.Result);
             if (!parsed.Successful) return await FailAsync(ctx.Session.Id, parsed.ToInvokeResult(), "Response parse failed.", ctx.CancellationToken);
 
             sw.Stop();
 
-
-
-            var postValidation = _validator.ValidatePreStep(ctx, PipelineSteps.LLMClient);
+            var postValidation = _validator.ValidatePostStep(ctx, PipelineSteps.LLMClient);
             if (!postValidation.Successful) return InvokeResult<IAgentPipelineContext>.FromInvokeResult(postValidation);
 
             await _events.PublishAsync(ctx.Session.Id, "LLMCompleted", "completed", "Model response received.", sw.Elapsed.TotalMilliseconds, ctx.CancellationToken);
@@ -65,6 +68,7 @@ namespace LagoVista.AI.Services.OpenAI
 
         private async Task<InvokeResult<IAgentPipelineContext>> FailAsync(string sid, InvokeResult err, string fallbackMsg, CancellationToken ct)
         {
+            _log.AddError("[OpenAIResponsesClientPipelineStap__ExecuteAsync]", err.ErrorMessage);
             await _events.PublishAsync(sid, "LLMFailed", "failed", err?.ErrorMessage ?? fallbackMsg, null, ct);
             return InvokeResult<IAgentPipelineContext>.FromInvokeResult(err);
         }

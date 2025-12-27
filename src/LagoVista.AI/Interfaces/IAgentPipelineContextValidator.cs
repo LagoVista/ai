@@ -10,7 +10,7 @@ namespace LagoVista.AI.Interfaces
         /// Validates the core object after it's initially created.
         /// This should be safe to call multiple times; it must not mutate ctx.
         /// </summary>
-        InvokeResult ValidateCore(IAgentPipelineContext ctx, PipelineSteps step);
+        InvokeResult ValidateCore(IAgentPipelineContext ctx, PipelineSteps step, bool postStep);
 
         /// <summary>
         /// To be called prior to entering a pipeline step to ensure

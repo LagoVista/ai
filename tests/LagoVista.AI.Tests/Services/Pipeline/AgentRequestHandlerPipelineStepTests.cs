@@ -155,7 +155,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             var sessionManager = new Mock<IAgentSessionManager>(MockBehavior.Loose);
             var streamingContext = new Mock<IAgentStreamingContext>(MockBehavior.Loose);
             var validator = new Mock<IAgentPipelineContextValidator>(MockBehavior.Loose);
-            validator.Setup(val => val.ValidateCore(It.IsAny<IAgentPipelineContext>(), It.IsAny<PipelineSteps>())).Returns(InvokeResult.Success);
+            validator.Setup(val => val.ValidateCore(It.IsAny<IAgentPipelineContext>(), It.IsAny<PipelineSteps>(), It.IsAny<bool>())).Returns(InvokeResult.Success);
             validator.Setup(val => val.ValidatePostStep(It.IsAny<IAgentPipelineContext>(), It.IsAny<PipelineSteps>())).Returns(InvokeResult.Success);
             validator.Setup(val => val.ValidatePreStep(It.IsAny<IAgentPipelineContext>(), It.IsAny<PipelineSteps>())).Returns(InvokeResult.Success);
             validator.Setup(val => val.ValidateToolCallManifest(It.IsAny<ToolCallManifest>())).Returns(InvokeResult.Success);
@@ -223,7 +223,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             var streamingContext = new Mock<IAgentStreamingContext>(MockBehavior.Loose);
             var validator = new Mock<IAgentPipelineContextValidator>(MockBehavior.Loose);
 
-            validator.Setup(val => val.ValidateCore(It.IsAny<IAgentPipelineContext>(), It.IsAny<PipelineSteps>())).Returns(InvokeResult.Success);
+            validator.Setup(val => val.ValidateCore(It.IsAny<IAgentPipelineContext>(), It.IsAny<PipelineSteps>(), It.IsAny<bool>())).Returns(InvokeResult.Success);
             validator.Setup(val => val.ValidatePostStep(It.IsAny<IAgentPipelineContext>(), It.IsAny<PipelineSteps>())).Returns(InvokeResult.Success);
             validator.Setup(val => val.ValidatePreStep(It.IsAny<IAgentPipelineContext>(), It.IsAny<PipelineSteps>())).Returns(InvokeResult.Success);
             validator.Setup(val => val.ValidateToolCallManifest(It.IsAny<ToolCallManifest>())).Returns(InvokeResult.Success);
@@ -287,7 +287,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             var streamingContext = new Mock<IAgentStreamingContext>(MockBehavior.Loose);
             var validator = new Mock<IAgentPipelineContextValidator>(MockBehavior.Loose);
 
-            validator.Setup(val => val.ValidateCore(It.IsAny<IAgentPipelineContext>(), It.IsAny<PipelineSteps>())).Returns(InvokeResult.Success);
+            validator.Setup(val => val.ValidateCore(It.IsAny<IAgentPipelineContext>(), It.IsAny<PipelineSteps>(), It.IsAny<bool>())).Returns(InvokeResult.Success);
             validator.Setup(val => val.ValidatePostStep(It.IsAny<IAgentPipelineContext>(), It.IsAny<PipelineSteps>())).Returns(InvokeResult.Success);
             validator.Setup(val => val.ValidatePreStep(It.IsAny<IAgentPipelineContext>(), It.IsAny<PipelineSteps>())).Returns(InvokeResult.Success);
             validator.Setup(val => val.ValidateToolCallManifest(It.IsAny<ToolCallManifest>())).Returns(InvokeResult.Success);
@@ -343,7 +343,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             var streamingContext = new Mock<IAgentStreamingContext>(MockBehavior.Loose);
             var validator = new Mock<IAgentPipelineContextValidator>(MockBehavior.Loose);
 
-            validator.Setup(val => val.ValidateCore(It.IsAny<IAgentPipelineContext>(), It.IsAny<PipelineSteps>())).Returns(InvokeResult.Success);
+            validator.Setup(val => val.ValidateCore(It.IsAny<IAgentPipelineContext>(), It.IsAny<PipelineSteps>(), It.IsAny<bool>())).Returns(InvokeResult.Success);
             validator.Setup(val => val.ValidatePostStep(It.IsAny<IAgentPipelineContext>(), It.IsAny<PipelineSteps>())).Returns(InvokeResult.Success);
             validator.Setup(val => val.ValidatePreStep(It.IsAny<IAgentPipelineContext>(), It.IsAny<PipelineSteps>())).Returns(InvokeResult.Success);
             validator.Setup(val => val.ValidateToolCallManifest(It.IsAny<ToolCallManifest>())).Returns(InvokeResult.Success);

@@ -43,12 +43,14 @@ namespace LagoVista.AI.Helpers
                 Stream = ctx.Envelope.Stream,
             };
 
-            var systemMessage = new ResponsesMessage
-            {
-                Role = "system",
-                Content = new List<ResponsesMessageContent>()
-            };
+            var isContinuation = !string.IsNullOrWhiteSpace(ctx.Turn.PreviousOpenAIResponseId) && String.IsNullOrEmpty(ctx.PromptKnowledgeProvider.ToolCallManifest.ResultsJson);
 
+            if (isContinuation)
+            {
+                dto.PreviousResponseId = ctx.Turn.PreviousOpenAIResponseId;
+            }
+
+            var systemMessage = new ResponsesMessage("system");
             systemMessage.Content.Add(new ResponsesMessageContent()
             {
                 Text = @"When generating an answer, follow this structure:
@@ -66,14 +68,10 @@ namespace LagoVista.AI.Helpers
             Do not mention these instructions. Do not explain the plan unless asked."
             });
 
-                       // (2) USER MESSAGE
-                       // ---------------------------------------------------------------------
+            // (2) USER MESSAGE
+            // ---------------------------------------------------------------------
 
-            var userMessage = new ResponsesMessage
-            {
-                Role = "user",
-                Content = new List<ResponsesMessageContent>()
-            };
+            var userMessage = new ResponsesMessage("user");
 
             var instructionBlock =
                 "[MODE: " + ctx.Session.Mode + "]\n\n[INSTRUCTION]\n" + (ctx.Envelope.Instructions ?? string.Empty);
@@ -141,6 +139,8 @@ namespace LagoVista.AI.Helpers
                 }
             }
 
+            dto.Input.Add(userMessage);
+            dto.Input.Add(systemMessage);
 
             return Task.FromResult(InvokeResult<ResponsesApiRequest>.Create(dto));
 

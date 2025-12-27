@@ -8,6 +8,8 @@ namespace LagoVista.AI.Models.Context
     {
         public string ToolContinuationMessage { get; set; }
 
+        public string ResultsJson { get; set; }
+
         public List<AgentToolCall> ToolCalls { get; set; } = new List<AgentToolCall>();
         public List<AgentToolCallResult> ToolCallResults { get; set; } = new List<AgentToolCallResult>();
     }

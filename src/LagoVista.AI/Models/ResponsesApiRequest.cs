@@ -47,6 +47,11 @@ namespace LagoVista.AI.Models
 
     public class ResponsesMessage
     {
+        public ResponsesMessage(string role)
+        {
+            Role = role;
+        }
+
         [JsonProperty("role")]
         public string Role { get; set; }
 

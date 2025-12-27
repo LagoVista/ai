@@ -97,7 +97,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
         public void ValidateCore_NullCtx_ReturnsFailure()
         {
             var sut = new AgentPipelineContextValidator();
-            var result = sut.ValidateCore(null, PipelineSteps.ResponseBuilder);
+            var result = sut.ValidateCore(null, PipelineSteps.ResponseBuilder, false);
             Assert.That(result.Successful, Is.False);
         }
 
@@ -114,7 +114,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
                 Envelope = null
             };
 
-            var result = sut.ValidateCore(ctx, PipelineSteps.RequestHandler);
+            var result = sut.ValidateCore(ctx, PipelineSteps.RequestHandler, false);
             Assert.That(result.Successful, Is.False);
         }
 
@@ -136,7 +136,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
                 Envelope = env
             };
 
-            var result = sut.ValidateCore(ctx, PipelineSteps.RequestHandler);
+            var result = sut.ValidateCore(ctx, PipelineSteps.RequestHandler, false);
             Assert.That(result.Successful, Is.False);
         }
 

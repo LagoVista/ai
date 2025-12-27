@@ -9,7 +9,7 @@ namespace LagoVista.AI.Services.Pipeline
 {
     public sealed class AgentPipelineContextValidator : IAgentPipelineContextValidator
     {
-        public InvokeResult ValidateCore(IAgentPipelineContext ctx, PipelineSteps step)
+        public InvokeResult ValidateCore(IAgentPipelineContext ctx, PipelineSteps step, bool postStep)
         {
             if (ctx == null) return InvokeResult.FromError("Pipeline context is null.");
 
@@ -18,7 +18,7 @@ namespace LagoVista.AI.Services.Pipeline
             ValidateCore_Invariants(ctx, result);
             if (!result.Successful) return result;
 
-            ValidateCore_TypeBasedEnvelopeRules(ctx, step, result);
+            ValidateCore_TypeBasedEnvelopeRules(ctx, step, postStep, result);
             return result;
         }
 
@@ -27,7 +27,7 @@ namespace LagoVista.AI.Services.Pipeline
             if (ctx == null) return InvokeResult.FromError("Pipeline context is null.");
 
             // Always enforce Core first.
-            var core = ValidateCore(ctx,step);
+            var core = ValidateCore(ctx,step, false);
             if (!core.Successful) return core;
 
             return step switch
@@ -51,7 +51,7 @@ namespace LagoVista.AI.Services.Pipeline
             if (ctx == null) return InvokeResult.FromError("Pipeline context is null.");
 
             // Always enforce Core first.
-            var core = ValidateCore(ctx,step);
+            var core = ValidateCore(ctx,step, true);
             if (!core.Successful) return core;
 
             return step switch
@@ -156,7 +156,7 @@ namespace LagoVista.AI.Services.Pipeline
                 result.Errors.Add(new ErrorMessage("Envelope.User is required."));
         }
 
-        private static void ValidateCore_TypeBasedEnvelopeRules(IAgentPipelineContext ctx, PipelineSteps step, InvokeResult result)
+        private static void ValidateCore_TypeBasedEnvelopeRules(IAgentPipelineContext ctx, PipelineSteps step, bool postStep, InvokeResult result)
         {
             var hasInstructions = !String.IsNullOrWhiteSpace(ctx.Envelope?.Instructions);
             var hasArtifacts = (ctx.Envelope?.InputArtifacts?.Count ?? 0) > 0;
@@ -174,7 +174,7 @@ namespace LagoVista.AI.Services.Pipeline
                     if (!String.IsNullOrEmpty(ctx.Envelope?.ConversationContextId) && String.IsNullOrEmpty(ctx.Envelope?.AgentContextId))
                         result.Errors.Add(new ErrorMessage("ConversationContextId must be empty when AgentContextId is not provided."));
 
-                    if (step < PipelineSteps.AgentSessionCreator)
+                    if (step < PipelineSteps.AgentSessionCreator && !postStep)
                     {
                         if (!String.IsNullOrEmpty(ctx.Envelope?.SessionId) || !String.IsNullOrEmpty(ctx.Envelope?.TurnId))
                             result.Errors.Add(new ErrorMessage("SessionId and TurnId must be empty for Initial requests."));
@@ -217,7 +217,7 @@ namespace LagoVista.AI.Services.Pipeline
         private InvokeResult ValidatePost_RequestHandler(IAgentPipelineContext ctx)
         {
             // POST - Must validate with ValidateCore
-            return ValidateCore(ctx, PipelineSteps.RequestHandler);
+            return ValidateCore(ctx, PipelineSteps.RequestHandler, true);
         }
 
         private static InvokeResult ValidatePre_SessionRestorer(IAgentPipelineContext ctx)

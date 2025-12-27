@@ -30,7 +30,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
         {
             var logger = new AdminLogger(new ConsoleLogWriter());
 
-            validator.Setup(val => val.ValidateCore(It.IsAny<IAgentPipelineContext>(), It.IsAny<PipelineSteps>())).Returns(InvokeResult.Success);
+            validator.Setup(val => val.ValidateCore(It.IsAny<IAgentPipelineContext>(), It.IsAny<PipelineSteps>(), It.IsAny<bool>())).Returns(InvokeResult.Success);
             validator.Setup(val => val.ValidatePostStep(It.IsAny<IAgentPipelineContext>(), It.IsAny<PipelineSteps>())).Returns(InvokeResult.Success);
             validator.Setup(val => val.ValidatePreStep(It.IsAny<IAgentPipelineContext>(), It.IsAny<PipelineSteps>())).Returns(InvokeResult.Success);
             validator.Setup(val => val.ValidateToolCallManifest(It.IsAny<ToolCallManifest>())).Returns(InvokeResult.Success);
