@@ -98,6 +98,8 @@ namespace LagoVista.AI.Services.Pipeline
 
             if (result.Successful)
             {
+                _adminLogger.Trace($"[AgentRequestHandlerPipelineStep__Handle] - Success");
+             
                 await _agentSessionManager.UpdateSessionAsync(result.Result.Session, org, user);
                 ctx.LogDetails(_adminLogger, PipelineSteps.RequestHandler, sw.Elapsed);
 
@@ -109,6 +111,7 @@ namespace LagoVista.AI.Services.Pipeline
             }
             else
             {
+                _adminLogger.Trace($"[AgentRequestHandlerPipelineStep__Handle] - Failed: {result.ErrorMessage}");
                 if (ctx.Session != null) // failed path will check to see if we have a session, if we do, save it for diagnostics
                     await _agentSessionManager.UpdateSessionAsync(ctx.Session, org, user);
 

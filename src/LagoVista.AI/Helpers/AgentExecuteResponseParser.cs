@@ -49,8 +49,18 @@ namespace LagoVista.AI.Helpers
             };
 
 
-            // Usage block – support both old (prompt/completion) and new (input/output) fields
-            var usage = root["usage"];
+            var id = root["id"];
+            if (id == null)
+            {
+                return Task.FromResult(InvokeResult<IAgentPipelineContext>.FromError("[AgentExecuteResponseParser__Parse] Missing [id] Node."));
+            }
+            else
+            {
+                ctx.ThisTurn.OpenAIResponseId = id.Value<string>();
+            }
+
+                // Usage block – support both old (prompt/completion) and new (input/output) fields
+                var usage = root["usage"];
             if (usage != null)
             {
                 var promptTokens =
@@ -63,6 +73,20 @@ namespace LagoVista.AI.Helpers
 
                 var totalTokens =
                     usage.Value<int?>("total_tokens");
+
+                var promptTokenDetails = usage["prompt_tokens_details"];
+                if(promptTokenDetails != null)
+                {
+                    var cachedTokens = promptTokenDetails.Value<int?>("cached_tokens");
+                    response.Usage.CachedTokends = cachedTokens ?? 0;    
+                }
+
+                var completionTokenDetails = usage["prompt_tokens_details"];
+                if (completionTokenDetails != null)
+                {
+                    var reasoningTokens = completionTokenDetails.Value<int?>("reasoning_tokens");
+                    response.Usage.ReasoningTokens = reasoningTokens ?? 0;
+                }
 
                 response.Usage.PromptTokens = promptTokens ?? 0;
                 response.Usage.CompletionTokens = completionTokens ?? 0;
@@ -261,6 +285,12 @@ namespace LagoVista.AI.Helpers
             response.PrimaryOutputText = textSegments.Count > 0
                 ? string.Join("\n\n", textSegments)
                 : null;
+
+            ctx.ThisTurn.PromptTokens = response.Usage.PromptTokens;
+            ctx.ThisTurn.CachedTokens = response.Usage.CachedTokends;
+            ctx.ThisTurn.TotalTokens = response.Usage.TotalTokens;
+            ctx.ThisTurn.ReasoningTokens = response.Usage.ReasoningTokens;
+            ctx.ThisTurn.CompletionTokens = response.Usage.CompletionTokens;
 
             ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCalls = toolCalls;
 

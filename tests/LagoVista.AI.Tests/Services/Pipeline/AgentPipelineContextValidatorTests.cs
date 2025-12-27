@@ -21,7 +21,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             public string CorrelationId { get; set; } = "corr_1";
             public CancellationToken CancellationToken { get; set; } = CancellationToken.None;
 
-            public AgentSessionTurn Turn { get; set; }
+            public AgentSessionTurn ThisTurn { get; set; }
             public AgentSession Session { get; set; }
 
             public ResponsePayload ResponsePayload { get; set; }
@@ -42,6 +42,8 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             public string TimeStamp { get; set; } = DateTime.UtcNow.ToString("o");
             public Envelope Envelope { get; set; }
 
+            public AgentSessionTurn PreviousTurn { get; set; }
+
             public AgentToolExecutionContext ToToolContext() => new AgentToolExecutionContext();
 
             public void AttachAgentContext(AgentContext context, ConversationContext conversationContext)
@@ -53,7 +55,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             public void AttachSession(AgentSession session, AgentSessionTurn turn)
             {
                 Session = session;
-                Turn = turn;
+                ThisTurn = turn;
             }
 
             public void AttachToolManifest(ToolCallManifest toolManifest)
@@ -71,6 +73,11 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             {
                 ResponsePayload = payload;
             }
+
+            public void AttachSession(AgentSession session, AgentSessionTurn previousSessoin, AgentSessionTurn thisTurn)
+            {
+                throw new NotImplementedException();
+            }
         }
 
         private static Envelope NewEnvelope(string agentContextId = null, string conversationContextId = null, string sessionId = null, string turnId = null, bool stream = false, IEnumerable<ToolResultSubmission> toolResults = null)
@@ -82,6 +89,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
                 agentContextId,
                 conversationContextId,
                 sessionId,
+                null,
                 turnId,
                 instructions: "hi",
                 stream: stream,
@@ -126,7 +134,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             // Create an envelope with empty Instructions and no artifacts/clipboard.
             var org = EntityHeader.Create("org_1", "Org");
             var user = EntityHeader.Create("user_1", "User");
-            var env = new Envelope(null, null, null, null, instructions: null, stream: false, toolResults: null, clipboardImages: null, inputArtifacts: null, ragScope: new RagScope(), org: org, user: user);
+            var env = new Envelope(null, null, null, null, null, instructions: null, stream: false, toolResults: null, clipboardImages: null, inputArtifacts: null, ragScope: new RagScope(), org: org, user: user);
 
             var ctx = new TestPipelineContext
             {
@@ -234,7 +242,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
                 Type = AgentPipelineContextTypes.FollowOn,
                 Envelope = NewEnvelope(sessionId: "sess_1", turnId: "turn_env"),
                 Session = new AgentSession { Id = "sess_1", Mode = "general" },
-                Turn = new AgentSessionTurn { Id = "turn_env" }
+                ThisTurn = new AgentSessionTurn { Id = "turn_env" }
             };
 
             var result = sut.ValidatePostStep(ctx, PipelineSteps.SessionRestorer);
@@ -251,7 +259,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
                 Type = AgentPipelineContextTypes.ClientToolCallContinuation,
                 Envelope = NewEnvelope(sessionId: "sess_1", turnId: "turn_env", toolResults: new List<ToolResultSubmission> { new ToolResultSubmission() }),
                 Session = new AgentSession { Id = "sess_1", Mode = "general" },
-                Turn = new AgentSessionTurn { Id = "turn_other" },
+                ThisTurn = new AgentSessionTurn { Id = "turn_other" },
                 PromptKnowledgeProvider = new PromptKnowledgeProvider()
                 {
                     ToolCallManifest = new ToolCallManifest()
@@ -272,7 +280,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
                 Type = AgentPipelineContextTypes.FollowOn,
                 Envelope = NewEnvelope(sessionId: "sess_1", turnId: "turn_1"),
                 Session = new AgentSession { Id = "sess_1", Mode = "general" },
-                Turn = new AgentSessionTurn { Id = "turn_1" },
+                ThisTurn = new AgentSessionTurn { Id = "turn_1" },
                 ResponseType = ResponseTypes.Final,
                 ResponsePayload = new ResponsePayload { PrimaryOutputText = null }
             };
@@ -291,7 +299,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
                 Type = AgentPipelineContextTypes.FollowOn,
                 Envelope = NewEnvelope(sessionId: "sess_1", turnId: "turn_1"),
                 Session = new AgentSession { Id = "sess_1", Mode = "general" },
-                Turn = new AgentSessionTurn { Id = "turn_1" },
+                ThisTurn = new AgentSessionTurn { Id = "turn_1" },
                 ResponseType = ResponseTypes.ToolContinuation,
                 PromptKnowledgeProvider = new PromptKnowledgeProvider { ToolCallManifest = null }
             };

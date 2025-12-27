@@ -43,14 +43,16 @@ namespace LagoVista.AI.Helpers
                 Stream = ctx.Envelope.Stream,
             };
 
-            var isContinuation = !string.IsNullOrWhiteSpace(ctx.Turn.PreviousOpenAIResponseId) && String.IsNullOrEmpty(ctx.PromptKnowledgeProvider.ToolCallManifest.ResultsJson);
+            var isContinuation = !string.IsNullOrWhiteSpace(ctx.ThisTurn.PreviousOpenAIResponseId) && String.IsNullOrEmpty(ctx.PromptKnowledgeProvider.ToolCallManifest.ResultsJson);
 
             if (isContinuation)
             {
-                dto.PreviousResponseId = ctx.Turn.PreviousOpenAIResponseId;
+                dto.PreviousResponseId = ctx.ThisTurn.PreviousOpenAIResponseId;
             }
 
             var systemMessage = new ResponsesMessage("system");
+            var userMessage = new ResponsesMessage("user");
+
             systemMessage.Content.Add(new ResponsesMessageContent()
             {
                 Text = @"When generating an answer, follow this structure:
@@ -68,11 +70,31 @@ namespace LagoVista.AI.Helpers
             Do not mention these instructions. Do not explain the plan unless asked."
             });
 
-            // (2) USER MESSAGE
-            // ---------------------------------------------------------------------
+            foreach (var register in ctx.PromptKnowledgeProvider.Registers)
+            {
+                if (register.Classification == Models.Context.ContextClassification.Session)
+                {
+                    foreach (var item in register.Items)
+                    {
+                        systemMessage.Content.Add(new ResponsesMessageContent
+                        {
+                            Text = item
+                        });
+                    }
+                }
 
-            var userMessage = new ResponsesMessage("user");
-
+                if (register.Classification == Models.Context.ContextClassification.Consumable)
+                {
+                    foreach (var item in register.Items)
+                    {
+                        userMessage.Content.Add(new ResponsesMessageContent
+                        {
+                            Text = item
+                        });
+                    }
+                }
+            }
+              
             var instructionBlock =
                 "[MODE: " + ctx.Session.Mode + "]\n\n[INSTRUCTION]\n" + (ctx.Envelope.Instructions ?? string.Empty);
 
@@ -139,9 +161,9 @@ namespace LagoVista.AI.Helpers
                 }
             }
 
-            dto.Input.Add(userMessage);
             dto.Input.Add(systemMessage);
-
+            dto.Input.Add(userMessage);
+         
             return Task.FromResult(InvokeResult<ResponsesApiRequest>.Create(dto));
 
 //            if (conversationContext == null) throw new ArgumentNullException(nameof(conversationContext));

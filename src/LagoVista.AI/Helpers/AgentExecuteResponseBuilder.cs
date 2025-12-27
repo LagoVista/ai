@@ -50,7 +50,7 @@ namespace LagoVista.AI.Helpers
             var response = new AgentExecuteResponse
             {
                 SessionId = ctx.Session.Id,
-                TurnId = ctx.Turn.Id,
+                TurnId = ctx.ThisTurn.Id,
                 ModeDisplayName = mode.DisplayName
             };
 
@@ -66,9 +66,9 @@ namespace LagoVista.AI.Helpers
                     response.PrimaryOutputText = ctx.ResponsePayload.PrimaryOutputText;
                    
                     // Allowed buckets for Final.          
-                    if (ctx.Turn.Warnings != null && ctx.Turn.Warnings.Count > 0)
+                    if (ctx.ThisTurn.Warnings != null && ctx.ThisTurn.Warnings.Count > 0)
                     {
-                        response.UserWarnings = ctx.Turn.Warnings.ToList();
+                        response.UserWarnings = ctx.ThisTurn.Warnings.ToList();
                     }
 
                     break;

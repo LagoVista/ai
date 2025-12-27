@@ -41,7 +41,8 @@ namespace LagoVista.AI.Interfaces
         string CorrelationId { get; }
         CancellationToken CancellationToken { get; }
 
-        AgentSessionTurn Turn { get; }
+        AgentSessionTurn PreviousTurn { get; }
+        AgentSessionTurn ThisTurn { get; }
 
         ResponsePayload ResponsePayload { get; }
 
@@ -58,7 +59,8 @@ namespace LagoVista.AI.Interfaces
 
         string ToolManifestId { get; }
         void AttachAgentContext(AgentContext context, ConversationContext conversationContext);
-        void AttachSession(AgentSession session, AgentSessionTurn turn);
+        void AttachSession(AgentSession session, AgentSessionTurn thisTurn);
+        void AttachSession(AgentSession session, AgentSessionTurn previousSessoin, AgentSessionTurn thisTurn);
         void AttachToolManifest(ToolCallManifest toolManifest);
 
         void SetResponsePayload(ResponsePayload payload);

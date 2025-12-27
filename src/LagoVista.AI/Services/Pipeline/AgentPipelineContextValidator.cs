@@ -176,8 +176,8 @@ namespace LagoVista.AI.Services.Pipeline
 
                     if (step < PipelineSteps.AgentSessionCreator && !postStep)
                     {
-                        if (!String.IsNullOrEmpty(ctx.Envelope?.SessionId) || !String.IsNullOrEmpty(ctx.Envelope?.TurnId))
-                            result.Errors.Add(new ErrorMessage("SessionId and TurnId must be empty for Initial requests."));
+                        if (!String.IsNullOrEmpty(ctx.Envelope?.SessionId) || !String.IsNullOrEmpty(ctx.Envelope?.PreviousTurnId))
+                            result.Errors.Add(new ErrorMessage("SessionId and PreviousTurnId must be empty for Initial requests."));
 
                         if ((ctx.Envelope?.ToolResults?.Count ?? 0) > 0)
                             result.Errors.Add(new ErrorMessage("ToolResults must be empty for Initial requests."));
@@ -188,8 +188,8 @@ namespace LagoVista.AI.Services.Pipeline
                     if (String.IsNullOrEmpty(ctx.Envelope?.SessionId))
                         result.Errors.Add(new ErrorMessage("SessionId is required for FollowOn requests."));
 
-                    if (String.IsNullOrEmpty(ctx.Envelope?.TurnId))
-                        result.Errors.Add(new ErrorMessage("TurnId is required for FollowOn requests."));
+                    if (String.IsNullOrEmpty(ctx.Envelope?.PreviousTurnId))
+                        result.Errors.Add(new ErrorMessage("PreviousTurnId is required for FollowOn requests."));
 
                     if ((ctx.Envelope?.ToolResults?.Count ?? 0) > 0)
                         result.Errors.Add(new ErrorMessage("ToolResults must be empty for FollowOn requests."));
@@ -199,8 +199,8 @@ namespace LagoVista.AI.Services.Pipeline
                     if (String.IsNullOrEmpty(ctx.Envelope?.SessionId))
                         result.Errors.Add(new ErrorMessage("SessionId is required for ClientToolCallContinuation requests."));
 
-                    if (String.IsNullOrEmpty(ctx.Envelope?.TurnId))
-                        result.Errors.Add(new ErrorMessage("TurnId is required for ClientToolCallContinuation requests."));
+                    if (String.IsNullOrEmpty(ctx.Envelope?.PreviousTurnId))
+                        result.Errors.Add(new ErrorMessage("PreviousTurnId is required for ClientToolCallContinuation requests."));
 
                     if ((ctx.Envelope?.ToolResults?.Count ?? 0) == 0)
                         result.Errors.Add(new ErrorMessage("ToolResults must contain at least one row for ClientToolCallContinuation requests."));
@@ -227,13 +227,13 @@ namespace LagoVista.AI.Services.Pipeline
             if (String.IsNullOrEmpty(ctx.Envelope?.SessionId))
                 result.Errors.Add(new ErrorMessage("SessionRestorer PRE: Envelope.SessionId is required."));
 
-            if (String.IsNullOrEmpty(ctx.Envelope?.TurnId))
+            if (String.IsNullOrEmpty(ctx.Envelope?.PreviousTurnId))
                 result.Errors.Add(new ErrorMessage("SessionRestorer PRE: Envelope.TurnId is required."));
 
             if (ctx.Session != null)
                 result.Errors.Add(new ErrorMessage("SessionRestorer PRE: ctx.Session must be null."));
 
-            if (ctx.Turn != null)
+            if (ctx.ThisTurn != null)
                 result.Errors.Add(new ErrorMessage("SessionRestorer PRE: ctx.Turn must be null."));
 
             return result;
@@ -246,14 +246,14 @@ namespace LagoVista.AI.Services.Pipeline
             if (ctx.Session == null)
                 result.Errors.Add(new ErrorMessage("SessionRestorer POST: ctx.Session must be populated."));
 
-            if (ctx.Turn == null)
+            if (ctx.ThisTurn == null)
                 result.Errors.Add(new ErrorMessage("SessionRestorer POST: ctx.Turn must be populated."));
 
             if (ctx.Session != null && String.IsNullOrWhiteSpace(ctx.Session.Mode))
                 result.Errors.Add(new ErrorMessage("SessionRestorer POST: Session.Mode must have a value."));
 
-            if (ctx.Turn != null && String.Equals(ctx.Turn.Id, ctx.Envelope?.TurnId, StringComparison.Ordinal))
-                result.Errors.Add(new ErrorMessage("SessionRestorer POST: Turn.Id must NOT equal Envelope.TurnId."));
+            if (ctx.ThisTurn != null && String.Equals(ctx.ThisTurn.Id, ctx.Envelope?.PreviousTurnId, StringComparison.Ordinal))
+                result.Errors.Add(new ErrorMessage("SessionRestorer POST: ThisTurn.Id must NOT equal Envelope.PreviousTurnId."));
 
             return result;
         }
@@ -265,8 +265,11 @@ namespace LagoVista.AI.Services.Pipeline
             if (ctx.Session != null)
                 result.Errors.Add(new ErrorMessage("AgentContextResolver PRE: ctx.Session must be null."));
 
-            if (ctx.Turn != null)
-                result.Errors.Add(new ErrorMessage("AgentContextResolver PRE: ctx.Turn must be null."));
+            if (ctx.ThisTurn != null)
+                result.Errors.Add(new ErrorMessage("AgentContextResolver PRE: ctx.ThisTurn must be null."));
+
+            if (ctx.PreviousTurn != null)
+                result.Errors.Add(new ErrorMessage("AgentContextResolver PRE: ctx.PreviousTurn must be null."));
 
             return result;
         }
@@ -298,8 +301,8 @@ namespace LagoVista.AI.Services.Pipeline
             if (ctx.Session == null)
                 result.Errors.Add(new ErrorMessage("ClientToolContinuationResolver PRE: ctx.Session must be populated."));
 
-            if (ctx.Turn == null)
-                result.Errors.Add(new ErrorMessage("ClientToolContinuationResolver PRE: ctx.Turn must be populated."));
+            if (ctx.ThisTurn == null)
+                result.Errors.Add(new ErrorMessage("ClientToolContinuationResolver PRE: ctx.ThisTurn must be populated."));
 
             if ((ctx.Envelope?.ToolResults?.Count ?? 0) == 0)
                 result.Errors.Add(new ErrorMessage("ClientToolContinuationResolver PRE: Envelope.ToolResults must contain at least one row."));
@@ -320,11 +323,17 @@ namespace LagoVista.AI.Services.Pipeline
             if (ctx.Session == null)
                 result.Errors.Add(new ErrorMessage("ClientToolContinuationResolver POST: ctx.Session must be populated."));
 
-            if (ctx.Turn == null)
-                result.Errors.Add(new ErrorMessage("ClientToolContinuationResolver POST: ctx.Turn must be populated."));
+            if (ctx.ThisTurn == null)
+                result.Errors.Add(new ErrorMessage("ClientToolContinuationResolver POST: ctx.ThisTurn must be populated."));
 
-            if (ctx.Turn != null && !String.Equals(ctx.Turn.Id, ctx.Envelope?.TurnId, StringComparison.Ordinal))
-                result.Errors.Add(new ErrorMessage("ClientToolContinuationResolver POST: Turn.Id must equal Envelope.TurnId."));
+            if (ctx.PreviousTurn == null)
+                result.Errors.Add(new ErrorMessage("ClientToolContinuationResolver POST: ctx.PeviousTurn must be populated."));
+
+            if (ctx.ThisTurn != null && !String.Equals(ctx.ThisTurn.Id, ctx.Envelope?.PreviousTurnId, StringComparison.Ordinal))
+                result.Errors.Add(new ErrorMessage("ClientToolContinuationResolver POST: ThisTurn.Id must equal Envelope.PreviousTurnId."));
+
+            if (ctx.ThisTurn != null && !String.Equals(ctx.PreviousTurn.Id, ctx.Envelope?.PreviousTurnId, StringComparison.Ordinal))
+                result.Errors.Add(new ErrorMessage("ClientToolContinuationResolver POST: Previous.Id must equal Envelope.PreviousTurnId."));
 
             if (ctx.PromptKnowledgeProvider?.ToolCallManifest == null)
             {
@@ -352,8 +361,11 @@ namespace LagoVista.AI.Services.Pipeline
             if (ctx.Session != null)
                 result.Errors.Add(new ErrorMessage("AgentSessionCreator PRE: ctx.Session must be null."));
 
-            if (ctx.Turn != null)
-                result.Errors.Add(new ErrorMessage("AgentSessionCreator PRE: ctx.Turn must be null."));
+            if (ctx.ThisTurn != null)
+                result.Errors.Add(new ErrorMessage("AgentSessionCreator PRE: ctx.ThisTurn must be null."));
+
+            if (ctx.ThisTurn != null)
+                result.Errors.Add(new ErrorMessage("AgentSessionCreator PRE: ctx.PreviousTurn must be null."));
 
             return result;
         }
@@ -365,8 +377,11 @@ namespace LagoVista.AI.Services.Pipeline
             if (ctx.Session == null)
                 result.Errors.Add(new ErrorMessage("AgentSessionCreator POST: ctx.Session must be populated."));
 
-            if (ctx.Turn == null)
-                result.Errors.Add(new ErrorMessage("AgentSessionCreator POST: ctx.Turn must be populated."));
+            if (ctx.ThisTurn == null)
+                result.Errors.Add(new ErrorMessage("AgentSessionCreator POST: ctx.ThisTurn must be populated."));
+
+            if (ctx.ThisTurn != null)
+                result.Errors.Add(new ErrorMessage("AgentSessionCreator POST: ctx.PreviousTurn must be null."));
 
             return result;
         }
@@ -378,8 +393,8 @@ namespace LagoVista.AI.Services.Pipeline
             if (ctx.Session == null)
                 result.Errors.Add(new ErrorMessage("AgentContextLoader PRE: ctx.Session must be populated."));
 
-            if (ctx.Turn == null)
-                result.Errors.Add(new ErrorMessage("AgentContextLoader PRE: ctx.Turn must be populated."));
+            if (ctx.ThisTurn == null)
+                result.Errors.Add(new ErrorMessage("AgentContextLoader PRE: ctx.ThisTurn must be populated."));
 
             return result;
         }
@@ -404,8 +419,8 @@ namespace LagoVista.AI.Services.Pipeline
             if (ctx.Session == null)
                 result.Errors.Add(new ErrorMessage("PromptContentProvider PRE: ctx.Session must be populated."));
 
-            if (ctx.Turn == null)
-                result.Errors.Add(new ErrorMessage("PromptContentProvider PRE: ctx.Turn must be populated."));
+            if (ctx.ThisTurn == null)
+                result.Errors.Add(new ErrorMessage("PromptContentProvider PRE: ctx.ThisTurn must be populated."));
 
             if (ctx.AgentContext == null)
                 result.Errors.Add(new ErrorMessage("PromptContentProvider PRE: ctx.AgentContext must be populated."));
@@ -433,8 +448,8 @@ namespace LagoVista.AI.Services.Pipeline
             if (ctx.Session == null)
                 result.Errors.Add(new ErrorMessage("Reasoner PRE: ctx.Session must be populated."));
 
-            if (ctx.Turn == null)
-                result.Errors.Add(new ErrorMessage("Reasoner PRE: ctx.Turn must be populated."));
+            if (ctx.ThisTurn == null)
+                result.Errors.Add(new ErrorMessage("Reasoner PRE: ctx.ThisTurn must be populated."));
 
             if (ctx.AgentContext == null)
                 result.Errors.Add(new ErrorMessage("Reasoner PRE: ctx.AgentContext must be populated."));

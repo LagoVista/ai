@@ -108,6 +108,8 @@ namespace LagoVista.AI.Rest
             }
             catch(OperationCanceledException)
             {
+                _adminLogger.Trace("[AgentExecutionController_ExecuteAsync] Operation Cancelled");
+
                 if (streamingContext.Current != null)
                 {
                     await streamingContext.Current(new AgentStreamEvent
@@ -136,6 +138,8 @@ namespace LagoVista.AI.Rest
             }
             catch(RecordNotFoundException ex)
             {
+                _adminLogger.AddException("[AgentExecutionController_ExecuteAsync] - Record Not Found Exception", ex);
+
                 if (streamingContext.Current != null)
                 {
                     await streamingContext.Current(new AgentStreamEvent
@@ -150,12 +154,14 @@ namespace LagoVista.AI.Rest
             }
             catch(Exception ex)
             {
+                _adminLogger.AddException("[AgentExecutionController_ExecuteAsync] - Unhandled Exception", ex);
+
                 if (streamingContext.Current != null)
                 {
                     await streamingContext.Current(new AgentStreamEvent
                     {
                         Kind = "final",
-                        Final = InvokeResult<AgentExecuteResponse>.FromException("[AgentExecutionController_AgentExecutionController]", ex),
+                        Final = InvokeResult<AgentExecuteResponse>.FromException("[AgentExecutionController_ExecuteAsync]", ex),
                         Index = 99999
                     });
                 }

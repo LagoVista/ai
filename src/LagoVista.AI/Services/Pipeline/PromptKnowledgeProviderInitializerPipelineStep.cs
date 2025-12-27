@@ -19,7 +19,7 @@ namespace LagoVista.AI.Services.Pipeline
     /// AGN-032 Step: ContextProviderInitializer
     ///
     /// Expects:
-    /// - <see cref="AgentPipelineContext.Session"/>, <see cref="AgentPipelineContext.Turn"/>, and <see cref="AgentPipelineContext.Request"/> are present.
+    /// - <see cref="AgentPipelineContext.Session"/>, <see cref="AgentPipelineContext.ThisTurn"/>, and <see cref="AgentPipelineContext.Request"/> are present.
     /// - <see cref="AgentPipelineContext.AgentContext"/> and (optionally) <see cref="AgentPipelineContext.ConversationContext"/> are resolved.
     ///
     /// Updates:

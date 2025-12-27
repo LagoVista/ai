@@ -46,7 +46,7 @@ namespace LagoVista.AI.Models
 
             var hasToolResults = request.ToolResults?.Any() ?? false;
 
-            Envelope = new Envelope(request.AgentContextId, request.ConversationContextId, request.SessionId, request.TurnId, request.Instruction, 
+            Envelope = new Envelope(request.AgentContextId, request.ConversationContextId, request.SessionId, request.TurnId, null, request.Instruction, 
                 request.Streaming, request.ToolResults, request.ClipboardImages, request.InputArtifacts, request.RagScope, org, user);
 
             if (String.IsNullOrEmpty(request.SessionId) && String.IsNullOrEmpty(request.TurnId) && !hasToolResults)
@@ -88,7 +88,15 @@ namespace LagoVista.AI.Models
         public void AttachSession(AgentSession session, AgentSessionTurn turn)
         {
             Session = session ?? throw new ArgumentNullException(nameof(session));
-            Turn = turn ?? throw new ArgumentNullException(nameof(turn));   
+            ThisTurn = turn ?? throw new ArgumentNullException(nameof(turn));   
+            RefreshEnvelope();
+        }
+
+        public void AttachSession(AgentSession session, AgentSessionTurn previousTurn, AgentSessionTurn thisTurn)
+        {
+            Session = session ?? throw new ArgumentNullException(nameof(session));
+            ThisTurn = thisTurn ?? throw new ArgumentNullException(nameof(thisTurn));
+            PreviousTurn = previousTurn ?? throw new ArgumentNullException(nameof(previousTurn));
             RefreshEnvelope();
         }
 
@@ -98,8 +106,8 @@ namespace LagoVista.AI.Models
             PromptKnowledgeProvider.ToolCallManifest = toolManifest;
         }
 
-        public AgentSessionTurn Turn { get; private set; }
-
+        public AgentSessionTurn ThisTurn { get; private set; }
+        public AgentSessionTurn PreviousTurn { get; private set; }
 
         public void AttachAgentContext(AgentContext context, ConversationContext conversationContext)
         {
@@ -137,9 +145,9 @@ namespace LagoVista.AI.Models
             get
             {
                 if (Session == null) throw new InvalidOperationException("Attempt to generate tool manifest id, prior to restoring session.");
-                if (Turn == null) throw new InvalidOperationException("Attempt to generate tool manifest id, prior to restoring turn.");
+                if (ThisTurn == null) throw new InvalidOperationException("Attempt to generate tool manifest id, prior to restoring turn.");
 
-                return $"{Session.Id}.{Turn.Id}";
+                return $"{Session.Id}.{ThisTurn.Id}";
             }
         }
 
@@ -152,7 +160,7 @@ namespace LagoVista.AI.Models
                 Org = Envelope.Org,
                 User = Envelope.User,
                 SessionId = Envelope.SessionId,
-                CurrentTurnId = Envelope.TurnId,            
+                CurrentTurnId = Envelope.PreviousTurnId,            
             };
         }
 
@@ -180,8 +188,9 @@ namespace LagoVista.AI.Models
         {
             var existing = Envelope;
 
+            // turn is a litte interesting on the envelope, if we have it coming in we don't ovwrwrite it because on new turns it will be null
             Envelope = new Envelope(AgentContext?.Id ?? existing.AgentContextId, ConversationContext?.Id ?? existing.ConversationContextId , Session?.Id ?? existing.SessionId, 
-                                    Turn?.Id ?? existing.TurnId, existing.Instructions, existing.Stream, existing.ToolResults, existing.ClipBoardImages,
+                                    PreviousTurn?.Id ?? existing.PreviousTurnId, ThisTurn?.Id ?? existing.ThisTurnId, existing.Instructions, existing.Stream, existing.ToolResults, existing.ClipBoardImages,
                                     existing.InputArtifacts, existing.RagScope, existing.Org, existing.User);
         }
 
@@ -220,14 +229,15 @@ namespace LagoVista.AI.Models
 
     public class Envelope
     {
-        public Envelope(string agentContextId, string conversationContextId, string sessionId, string turnId, string instructions, bool stream,
+        public Envelope(string agentContextId, string conversationContextId, string sessionId, string previousTurnid, string thisTurnId, string instructions, bool stream,
                         IEnumerable<ToolResultSubmission> toolResults, IEnumerable<ClipboardImage> clipboardImages, IEnumerable<InputArtifact> inputArtifacts,
                         RagScope ragScope, EntityHeader org, EntityHeader user)
         {
             AgentContextId = agentContextId;
             ConversationContextId = conversationContextId;
             SessionId = sessionId;
-            TurnId = turnId;
+            PreviousTurnId = previousTurnid;
+            ThisTurnId = thisTurnId;
             Org = org ?? throw new ArgumentNullException(nameof(org));
             User = user ?? throw new ArgumentNullException(nameof(user));
             ToolResults = toolResults?.ToList() ?? new List<ToolResultSubmission>();
@@ -248,7 +258,8 @@ namespace LagoVista.AI.Models
         public string AgentContextId { get; }
         public string ConversationContextId { get; }
         public string SessionId { get; }
-        public string TurnId { get; }
+        public string PreviousTurnId { get; }
+        public string ThisTurnId { get; set; }
         public EntityHeader Org { get; }
         public EntityHeader User { get; }
         public bool Stream { get; }

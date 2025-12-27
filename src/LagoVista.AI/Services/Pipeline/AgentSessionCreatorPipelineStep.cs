@@ -27,7 +27,7 @@ namespace LagoVista.AI.Services.Pipeline
         {
             var session = await _sessionFactory.CreateSession(ctx);
             var turn = _sessionFactory.CreateTurnForNewSession(ctx, session);
-
+            session.Turns.Add(turn);
             ctx.AttachSession(session, turn);
             
             return InvokeResult<IAgentPipelineContext>.Create(ctx);

@@ -86,7 +86,7 @@
 
 //            // Ids
 //            Assert.That(response.ResponseContinuationId, Is.EqualTo("resp_real_world"));
-//            Assert.That(response.TurnId, Is.EqualTo("resp_real_world"));
+//            Assert.That(response.PreviousTurnId, Is.EqualTo("resp_real_world"));
 
 //            // Model
 //            Assert.That(response.ModelId, Is.EqualTo("gpt-4.1-mini"));
@@ -148,7 +148,7 @@
 
 //            Assert.That(response.Kind, Is.EqualTo("ok"));
 //            Assert.That(response.ResponseContinuationId, Is.EqualTo("resp_text_only"));
-//            Assert.That(response.TurnId, Is.EqualTo("resp_text_only"));
+//            Assert.That(response.PreviousTurnId, Is.EqualTo("resp_text_only"));
 //            Assert.That(response.ModelId, Is.EqualTo("gpt-5.1"));
 //            Assert.That(response.Text, Is.EqualTo("Hello from the model."));
 //            Assert.That(response.Usage.PromptTokens, Is.EqualTo(21));
@@ -303,7 +303,7 @@
 
 //            // Basic metadata
 //            Assert.That(response.ResponseContinuationId, Is.EqualTo("resp_func_call"));
-//            Assert.That(response.TurnId, Is.EqualTo("resp_func_call"));
+//            Assert.That(response.PreviousTurnId, Is.EqualTo("resp_func_call"));
 //            Assert.That(response.ModelId, Is.EqualTo("gpt-5-2025-08-07"));
 
 //            // No assistant text in this payload

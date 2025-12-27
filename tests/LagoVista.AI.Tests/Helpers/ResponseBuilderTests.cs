@@ -25,7 +25,7 @@ namespace LagoVista.AI.Tests.Helpers
             public string CorrelationId { get; set; } = "corr_1";
             public CancellationToken CancellationToken { get; set; } = CancellationToken.None;
 
-            public AgentSessionTurn Turn { get; set; }
+            public AgentSessionTurn ThisTurn { get; set; }
             public AgentSession Session { get; set; }
 
             public ResponsePayload ResponsePayload { get; set; }
@@ -57,7 +57,7 @@ namespace LagoVista.AI.Tests.Helpers
             public void AttachSession(AgentSession session, AgentSessionTurn turn)
             {
                 Session = session;
-                Turn = turn;
+                ThisTurn = turn;
             }
 
             public void AttachToolManifest(ToolCallManifest toolManifest)
@@ -70,6 +70,8 @@ namespace LagoVista.AI.Tests.Helpers
 
             public InvokeResult ValidateResult { get; set; }
 
+            public AgentSessionTurn PreviousTurn => throw new NotImplementedException();
+
             public void LogStepErrorDetails(IAdminLogger logger, PipelineSteps step, string error, TimeSpan ts) { }
             public void LogStepErrorDetails(IAdminLogger logger, PipelineSteps step, InvokeResult error, TimeSpan ts) { }
             public void LogDetails(IAdminLogger logger, PipelineSteps step, TimeSpan? ts = null) { }
@@ -77,6 +79,11 @@ namespace LagoVista.AI.Tests.Helpers
             public void SetResponsePayload(ResponsePayload payload)
             {
                 ResponsePayload = payload;
+            }
+
+            public void AttachSession(AgentSession session, AgentSessionTurn previousSessoin, AgentSessionTurn thisTurn)
+            {
+                throw new NotImplementedException();
             }
         }
 
@@ -193,7 +200,7 @@ namespace LagoVista.AI.Tests.Helpers
                 ResponseType = ResponseTypes.NotReady,
                 ValidateResult = InvokeResult.Success,
                 Session = new AgentSession { Id = "sess_1", Mode = "general" },
-                Turn = new AgentSessionTurn { Id = "turn_1" },
+                ThisTurn = new AgentSessionTurn { Id = "turn_1" },
                 AgentContext = CreateAgentContextWithMode("general", "General"),
                 PromptKnowledgeProvider = new PromptKnowledgeProvider(),
                 ResponsePayload = new ResponsePayload { PrimaryOutputText = "ignored" }
@@ -213,7 +220,7 @@ namespace LagoVista.AI.Tests.Helpers
                 ResponseType = ResponseTypes.Final,
                 ValidateResult = InvokeResult.FromError("validation failed"),
                 Session = new AgentSession { Id = "sess_1", Mode = "general" },
-                Turn = new AgentSessionTurn { Id = "turn_1" },
+                ThisTurn = new AgentSessionTurn { Id = "turn_1" },
                 AgentContext = CreateAgentContextWithMode("general", "General"),
                 PromptKnowledgeProvider = new PromptKnowledgeProvider(),
                 ResponsePayload = new ResponsePayload { PrimaryOutputText = "ignored" }
@@ -233,7 +240,7 @@ namespace LagoVista.AI.Tests.Helpers
                 ResponseType = ResponseTypes.Final,
                 ValidateResult = InvokeResult.Success,
                 Session = new AgentSession { Id = "sess_1", Mode = "missing_mode" },
-                Turn = new AgentSessionTurn { Id = "turn_1" },
+                ThisTurn = new AgentSessionTurn { Id = "turn_1" },
                 AgentContext = CreateAgentContextWithMode("general", "General"),
                 PromptKnowledgeProvider = new PromptKnowledgeProvider(),
                 ResponsePayload = new ResponsePayload { PrimaryOutputText = "ignored" }
@@ -253,7 +260,7 @@ namespace LagoVista.AI.Tests.Helpers
                 ResponseType = ResponseTypes.Final,
                 ValidateResult = InvokeResult.Success,
                 Session = new AgentSession { Id = "sess_1", Mode = "general" },
-                Turn = new AgentSessionTurn { Id = "turn_1", Warnings = new List<string> { "w1", "w2" } },
+                ThisTurn = new AgentSessionTurn { Id = "turn_1", Warnings = new List<string> { "w1", "w2" } },
                 AgentContext = CreateAgentContextWithMode("general", "General"),
                 PromptKnowledgeProvider = new PromptKnowledgeProvider(),
                 ResponsePayload = new ResponsePayload
@@ -301,7 +308,7 @@ namespace LagoVista.AI.Tests.Helpers
                 ResponseType = ResponseTypes.ToolContinuation,
                 ValidateResult = InvokeResult.Success,
                 Session = new AgentSession { Id = "sess_1", Mode = "general" },
-                Turn = new AgentSessionTurn { Id = "turn_1" },
+                ThisTurn = new AgentSessionTurn { Id = "turn_1" },
                 AgentContext = CreateAgentContextWithMode("general", "General"),
                 PromptKnowledgeProvider = cp,
                 ResponsePayload = new ResponsePayload { PrimaryOutputText = "ignored" }
@@ -328,7 +335,7 @@ namespace LagoVista.AI.Tests.Helpers
                 ResponseType = ResponseTypes.ToolContinuation,
                 ValidateResult = InvokeResult.Success,
                 Session = new AgentSession { Id = "sess_1", Mode = "general" },
-                Turn = new AgentSessionTurn { Id = "turn_1", Warnings = new List<string> { "w1" } },
+                ThisTurn = new AgentSessionTurn { Id = "turn_1", Warnings = new List<string> { "w1" } },
                 AgentContext = CreateAgentContextWithMode("general", "General"),
                 PromptKnowledgeProvider = cp,
                 ResponsePayload = new ResponsePayload

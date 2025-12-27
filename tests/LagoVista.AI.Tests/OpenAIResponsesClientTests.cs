@@ -202,7 +202,7 @@
 //                AgentContext = CreateAgentContext(),
 //                ConversationContext = CreateConversationContext(),
 //                Request = CreateExecuteRequest(),
-//                Turn = new AgentSessionTurn { Id = "turn-1" }
+//                ThisTurn = new AgentSessionTurn { Id = "turn-1" }
 //            };
 //        }
 
@@ -242,7 +242,7 @@
 //            Assert.That(response.Text, Is.EqualTo("Hello world!"));
 //            Assert.That(response.ModelId, Is.EqualTo("gpt-5.1"));
 //            Assert.That(response.ResponseContinuationId, Is.EqualTo("resp_123"));
-//            Assert.That(response.TurnId, Is.EqualTo("resp_123"));
+//            Assert.That(response.PreviousTurnId, Is.EqualTo("resp_123"));
 //            Assert.That(response.Usage.PromptTokens, Is.EqualTo(10));
 //            Assert.That(response.Usage.CompletionTokens, Is.EqualTo(5));
 //            Assert.That(response.Usage.TotalTokens, Is.EqualTo(15));

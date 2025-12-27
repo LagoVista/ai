@@ -62,7 +62,7 @@ namespace LagoVista.AI.Services.Pipeline
                     _adminLogger.Trace($"[PipelineStep__ExecuteAsync] - Failed validation {StepType} {postvalidation.ErrorMessage}");
 
                     LogContractViolation(ctx, postvalidation.ErrorMessage, sw.Elapsed);
-                    return InvokeResult<IAgentPipelineContext>.FromInvokeResult(preValidation);
+                    return InvokeResult<IAgentPipelineContext>.FromInvokeResult(postvalidation);
                 }
 
                 _adminLogger.Trace($"[PipelineStep__ExecuteAsync] - Success {StepType} {sw.Elapsed.TotalMilliseconds}ms");
