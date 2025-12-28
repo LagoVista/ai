@@ -36,7 +36,7 @@ namespace LagoVista.AI.Services.Tools
             return ToolSchema.Function(ToolName, "Reorder all chapters for a DDR. The provided chapter_ids must match the existing chapter IDs exactly.", p =>
             {
                 p.String("identifier", "DDR identifier in TLA-### format, for example 'SYS-001'.", required: true);
-                p.Any("chapter_ids", "array", "New ordered list of chapter IDs. Must contain exactly the same IDs as the current chapters.", required: true);
+                p.StringArray("chapter_ids", "New ordered list of chapter IDs. Must contain exactly the same IDs as the current chapters.");
             });
         }
 

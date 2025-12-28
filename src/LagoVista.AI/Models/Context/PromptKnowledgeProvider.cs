@@ -35,6 +35,14 @@ namespace LagoVista.AI.Models.Context
         [JsonIgnore]
         public IReadOnlyCollection<ContentRegister> Registers => _registers.Values.ToList().AsReadOnly();
 
+
+        public void Reset()
+        {
+            ActiveTools.Clear();
+            ToolCallManifest.ToolCallResults.Clear();
+            ToolCallManifest.ToolCalls.Clear();
+        }
+
         /// <summary>
         /// Get an existing register by name, or create it with the provided classification.
         /// </summary>
@@ -57,7 +65,13 @@ namespace LagoVista.AI.Models.Context
             return created;
         }
 
-        public List<OpenAiToolDefinition> AvailableToolSchemas { get; } = new List<OpenAiToolDefinition>();
+        public List<ActiveTool> ActiveTools { get; } = new List<ActiveTool>();
+        public IReadOnlyList<AvailableTool> AvailableTools { get; private set; } = new List<AvailableTool>();
+
+        public void AttachAvailbleTools(List<AvailableTool> availableTools)
+        {
+            AvailableTools = availableTools;
+        }
 
         public PromptKnowledgeProviderStates State { get; set; } = PromptKnowledgeProviderStates.NotSet;
 

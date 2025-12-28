@@ -21,6 +21,7 @@ namespace LagoVista.AI.Services
             services.AddScoped<IAgentExecuteResponseBuilder, AgentExecuteResponseBuilder>();
             services.AddScoped<ILLMWorkflowNarrator, LlmWorkflowNarrator>();
             Pipeline.Startup.ConfigureServices(services, adminLogger);
+            Qdrant.Startup.ConfigureServices(services, adminLogger);
         }
     }
 }

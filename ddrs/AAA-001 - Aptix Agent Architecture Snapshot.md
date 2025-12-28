@@ -3,6 +3,7 @@
 **ID:** AAA-001
 **Title:** Aptix Agent Architecture Snapshot
 **Status:** Draft
+**DdrType:** Referential
 **Approved By:** Kevin D. Wolf
 **Approval Timestamp:** 2025-12-21T16:21:00.000Z
 ---

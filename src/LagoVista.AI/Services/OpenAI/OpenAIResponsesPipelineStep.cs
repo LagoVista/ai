@@ -66,10 +66,12 @@ namespace LagoVista.AI.Services.OpenAI
             var preValidation = _validator.ValidatePreStep(ctx, PipelineSteps.LLMClient);
             if (!preValidation.Successful) return InvokeResult<IAgentPipelineContext>.FromInvokeResult(preValidation);
 
-            var requestBuildResult = ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCallResults.Any() ?
-                await BuildToolResultdRequest(ctx) :
-                await BuildNonToolResultdRequest(ctx);
-       
+            //var requestBuildResult = ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCallResults.Any() ?
+            //    await BuildToolResultdRequest(ctx) :
+            //    await BuildNonToolResultdRequest(ctx);
+
+            var requestBuildResult = await BuildNonToolResultdRequest(ctx);
+
             if(!requestBuildResult.Successful) await FailAsync(ctx.Session.Id, requestBuildResult.ToInvokeResult(), "Response parse failed.", ctx.CancellationToken);
 
             var requestJson = requestBuildResult.Result;

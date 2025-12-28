@@ -22,6 +22,8 @@ namespace LagoVista.AI.Services.Tools
 
             adminLogger.Trace("[AgentToolRegistry_RegisterTool] - Start Register Server Tools - vvvv");
 
+            toolRegistry.RegisterTool<ActivateToolsTool>();
+
             ///* define our agent tools here */
             toolRegistry.RegisterTool<HelloWorldTool>();
             toolRegistry.RegisterTool<HelloWorldClientTool>();

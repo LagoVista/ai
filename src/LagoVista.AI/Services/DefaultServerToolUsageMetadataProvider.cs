@@ -81,6 +81,56 @@ namespace LagoVista.AI.Services
             }
         }
 
+        public string GetToolSummary(string toolName)
+        {
+            var registered = _toolRegistry.GetRegisteredTools();
+            var sb = new StringBuilder();
+            try
+            {
+                var toolType = registered[toolName];
+                var usageField = toolType.GetField(
+                    "ToolSummary",
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy);
+
+                // This should already be enforced by AgentToolRegistry.RegisterTool,
+                // but we keep a defensive check and log if it is not.
+                if (usageField == null ||
+                    usageField.FieldType != typeof(string) ||
+                    usageField.IsLiteral == false)
+                {
+                    _logger.AddError(
+                        "[DefaultServerToolUsageMetadataProvider_Summary__MissingSummaryField]",
+                        "Tool '" + toolType.FullName + "' registered as '" + toolName +
+                        "' does not expose a valid public const string ToolSummary.");
+
+                    return String.Empty;
+                }
+
+                var summary = usageField.GetRawConstantValue() as string;
+
+                if (string.IsNullOrWhiteSpace(summary))
+                {
+                    _logger.AddError(
+                        "[DefaultServerToolUsageMetadataProvider_GetGetToolUSummary__EmptySummary]",
+                        "Tool '" + toolType.FullName + "' registered as '" + toolName +
+                        "' exposes an empty ToolSummaryMetadata constant.");
+
+                    return String.Empty;
+                }
+
+                return $"{toolName} - {summary}";
+            }
+            catch (Exception ex)
+            {
+                _logger.AddException(
+                    "[DefaultServerToolUsageMetadataProvider_GetToolUsageMetadata__Exception]",
+                    ex);
+
+                return string.Empty;
+            }
+        }
+
+
         public string GetToolUsageMetadata(string[] toolIds)
         {
             var registered = _toolRegistry.GetRegisteredTools();

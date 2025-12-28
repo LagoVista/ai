@@ -10,6 +10,5 @@ namespace LagoVista.AI.Models
         ModeInstructions,
         Instruction,
         Reference,
-        Tool
     }
 }

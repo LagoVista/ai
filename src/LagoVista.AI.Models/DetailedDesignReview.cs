@@ -38,6 +38,7 @@ namespace LagoVista.AI.Models
         public string RagIndexCard { get; set; }
         public string CondensedDdrContent { get; set; }
         public bool NeedsHumanConfirmation { get; set; }
+        public string NeedsHumanConfirmationReason { get; set; }
         public string ReferentialSummary { get; set; }
 
         public string AgentInstructions { get; set; }
@@ -64,6 +65,8 @@ namespace LagoVista.AI.Models
             summary.Status = Status;
             summary.StatusTimestamp = StatusTimestamp;
             summary.DdrIdentifier = DdrIdentifier;
+            summary.Type = Type;
+            summary.NeedsHumanConfirmation = NeedsHumanConfirmation;
             return summary;
         }
 
@@ -90,9 +93,10 @@ namespace LagoVista.AI.Models
     {
         public string DdrIdentifier { get; set; }
         public string Status { get; set; }
+        public string Type { get; set; }
         public string Summary { get; set; }
         public string StatusTimestamp { get; set; }
-
+        public bool NeedsHumanConfirmation { get; set; }
     }
 
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.DDR_Chapter, AIResources.Names.DDR_Chapter_Help, AIResources.Names.DDR_Chapter_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIDomain))]

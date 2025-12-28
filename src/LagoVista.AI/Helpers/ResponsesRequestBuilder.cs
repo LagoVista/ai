@@ -9,6 +9,8 @@ using System.Linq;
 using LagoVista.AI.Interfaces;
 using System.Threading.Tasks;
 using LagoVista.Core.Validation;
+using LagoVista.AI.Services.Tools;
+using LagoVista.AI.Managers;
 
 namespace LagoVista.AI.Helpers
 {
@@ -41,17 +43,18 @@ namespace LagoVista.AI.Helpers
                 Model = ctx.ConversationContext.ModelName,
                 Temperature = ctx.ConversationContext.Temperature,
                 Stream = ctx.Envelope.Stream,
-            };            
-           
-            var isContinuation = !string.IsNullOrWhiteSpace(ctx.ThisTurn.PreviousOpenAIResponseId) && String.IsNullOrEmpty(ctx.PromptKnowledgeProvider.ToolCallManifest.ResultsJson);
+            };
 
-            if (isContinuation)
+            var systemMessage = new ResponsesMessage("system");
+            var userMessage = new ResponsesMessage("user");
+
+            var isContinuation = !string.IsNullOrWhiteSpace(ctx.ThisTurn.PreviousOpenAIResponseId);
+
+            if (isContinuation && !ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCallResults.Any())
             {
                 dto.PreviousResponseId = ctx.ThisTurn.PreviousOpenAIResponseId;
             }
 
-            var systemMessage = new ResponsesMessage("system");
-            var userMessage = new ResponsesMessage("user");
 
             systemMessage.Content.Add(new ResponsesMessageContent()
             {
@@ -95,24 +98,55 @@ namespace LagoVista.AI.Helpers
                 }
             }
 
-            if (ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCallResults.Any())
+            ctx.PromptKnowledgeProvider.ActiveTools.Add(new ActiveTool()
             {
-                var toolCallResults = new StringBuilder();
-                toolCallResults.AppendLine("[BEGIN TOOL CALL RESULTS]");
-                foreach (var result in ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCallResults)
-                {
-                    toolCallResults.AppendLine($"{result.ToolCallId} = {result.ResultJson}");
-                }
-                toolCallResults.AppendLine("[END TOOL CALL RESULTS]");
+                 Name = ActivateToolsTool.ToolName,
+                 Schama = ActivateToolsTool.GetSchema(),
+                 ToolUsageMetaData = ActivateToolsTool.ToolUsageMetadata
+            });
 
-                userMessage.Content.Add(new ResponsesMessageContent
+            var loadedToolContent = new StringBuilder();
+            loadedToolContent.AppendLine("[LOADED TOOLS]");
+            loadedToolContent.AppendLine("These tools are available to assist you in completing the request.");
+
+            foreach (var tool in ctx.PromptKnowledgeProvider.ActiveTools)
+            {
+                loadedToolContent.AppendLine($"{tool.Name}: {tool.ToolUsageMetaData}");
+            }
+
+            systemMessage.Content.Add(new ResponsesMessageContent
+            {
+                Text = loadedToolContent.ToString()
+            });
+
+
+            Console.WriteLine(JsonConvert.SerializeObject(ctx.PromptKnowledgeProvider));
+
+            // Available Tools are all the tools that could be used
+            // with this mode, we need to let the LLM know about them.  
+            // If the tool is active, we leave out since it well has it.
+            var activeTools = ctx.PromptKnowledgeProvider.ActiveTools.Select(tl => tl.Name);
+            var tools = ctx.PromptKnowledgeProvider.AvailableTools.Where( tl => !activeTools.Contains(tl.Name));
+            if (tools.Any()) {
+                var bldr = new StringBuilder();
+                bldr.AppendLine("[AVAILABLE TOOLS]");
+                bldr.AppendLine(@"The following tools are available.  
+Tools are not provided by default.
+If any of these tools are useful to process the request, you may request them with the activate_tools tool.  
+As soon as you know the tools you require to complete this request, you may stop reasoning the request will be replayed with the requested tools.");
+        
+                foreach(var tool in tools)
                 {
-                    Text = toolCallResults.ToString()
+                    bldr.AppendLine($"- {tool.Name}: {tool.Summary}");
+                }
+
+                systemMessage.Content.Add(new ResponsesMessageContent
+                {
+                    Text = bldr.ToString()
                 });
             }
 
-            var instructionBlock =
-                "[MODE: " + ctx.Session.Mode + "]\n\n[INSTRUCTION]\n" + (ctx.Envelope.Instructions ?? string.Empty);
+            var instructionBlock = "[MODE: " + ctx.Session.Mode + "]\n\n[INSTRUCTION]\n" + (ctx.Envelope.Instructions ?? string.Empty);
 
             userMessage.Content.Add(new ResponsesMessageContent
             {
@@ -169,228 +203,31 @@ namespace LagoVista.AI.Helpers
                 });
             }
 
-            foreach(var tool in ctx.PromptKnowledgeProvider.AvailableToolSchemas)
+            foreach(var tool in ctx.PromptKnowledgeProvider.ActiveTools)
             {
-                dto.Tools.Add(tool);    
+                dto.Tools.Add(tool.Schama);    
             }
+
+            ctx.PromptKnowledgeProvider.Reset();
+
+            if (ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCallResults.Any())
+            {
+                var toolResultsText = ToolResultsTextBuilder.BuildFromToolResults(ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCallResults);
+                if (!string.IsNullOrWhiteSpace(toolResultsText))
+                {
+                    userMessage.Content.Add(new ResponsesMessageContent
+                    {
+                        Text = toolResultsText
+                    });
+                }
+            }
+
 
             dto.Input.Add(systemMessage);
             dto.Input.Add(userMessage);
          
             return Task.FromResult(InvokeResult<ResponsesApiRequest>.Create(dto));
 
-//            if (conversationContext == null) throw new ArgumentNullException(nameof(conversationContext));
-//            if (request == null) throw new ArgumentNullException(nameof(request));
-
-//            var isContinuation = !string.IsNullOrWhiteSpace(request.ResponseContinuationId) && String.IsNullOrEmpty(request.ToolResultsJson);
-
-
-//            if (isContinuation)
-//            {
-//                dto.PreviousResponseId = request.ResponseContinuationId;
-//            }
-
-//            // ---------------------------------------------------------------------
-//            // (1) SYSTEM MESSAGE — ALWAYS INCLUDED
-//            // ---------------------------------------------------------------------
-
-//            var hasAnySystemContent =
-//                (conversationContext.SystemPrompts != null && conversationContext.SystemPrompts.Count > 0)
-//                || !string.IsNullOrWhiteSpace(request.SystemPrompt)
-//                || !string.IsNullOrWhiteSpace(toolUsageMetadataBlock);
-
-//            if (hasAnySystemContent)
-//            {
-//                var systemMessage = new ResponsesMessage
-//                {
-//                    Role = "system",
-//                    Output = new List<ResponsesMessageContent>()
-//                };
-
-//                // Boot / conversation-level prompts
-//                if (conversationContext.SystemPrompts != null)
-//                {
-//                    foreach (var systemPrompt in conversationContext.SystemPrompts)
-//                    {
-//                        if (!string.IsNullOrWhiteSpace(systemPrompt))
-//                        {
-//                            systemMessage.Output.Add(new ResponsesMessageContent
-//                            {
-//                                Text = systemPrompt
-//                            });
-//                        }
-//                    }
-//                }
-
-//                // Optional per-request SystemPrompt
-//                if (!string.IsNullOrWhiteSpace(request.SystemPrompt))
-//                {
-//                    systemMessage.Output.Add(new ResponsesMessageContent
-//                    {
-//                        Text = request.SystemPrompt
-//                    });
-//                }
-
-//                systemMessage.Output.Add(new ResponsesMessageContent()
-//                {
-//                    Text = @"When generating an answer, follow this structure:
-
-//1. First output a planning section marked exactly like this:
-
-//APTIX-PLAN:
-//- Provide 3–7 short bullet points describing your approach.
-//- Keep each bullet simple and readable.
-//- This section is for internal agent preview. Do NOT include code or long text.
-//APTIX-PLAN-END
-
-//2. After that, output your full answer normally.
-
-//Do not mention these instructions. Do not explain the plan unless asked.
-//"
-//                });
-
-//                // Optional tool usage metadata for all tools
-//                if (!string.IsNullOrWhiteSpace(toolUsageMetadataBlock))
-//                {
-//                    systemMessage.Output.Add(new ResponsesMessageContent
-//                    {
-//                        Text = toolUsageMetadataBlock
-//                    });
-//                }
-
-//                dto.Input.Add(systemMessage);
-//            }
-
-//            // ---------------------------------------------------------------------
-//            // (2) USER MESSAGE
-//            // ---------------------------------------------------------------------
-
-//            var userMessage = new ResponsesMessage
-//            {
-//                Role = "user",
-//                Output = new List<ResponsesMessageContent>()
-//            };
-
-//            var instructionBlock =
-//                "[MODE: " + request.Mode + "]\n\n[INSTRUCTION]\n" + (request.Instruction ?? string.Empty);
-
-//            userMessage.Output.Add(new ResponsesMessageContent
-//            {
-//                Text = instructionBlock
-//            });
-//            // ---------------------------------------------------------------------
-//            // IMAGE ATTACHMENTS (from client-side chat composer)
-//            // ---------------------------------------------------------------------
-//            if (request.ImageAttachments != null && request.ImageAttachments.Any())
-//            {
-//                foreach (var img in request.ImageAttachments)
-//                {
-//                    if (img == null) continue;
-//                    if (string.IsNullOrWhiteSpace(img.DataBase64)) continue;
-//                    if (string.IsNullOrWhiteSpace(img.MimeType)) continue;
-
-//                    var dataUrl = $"data:{img.MimeType};base64,{img.DataBase64}";
-
-//                    userMessage.Output.Add(new ResponsesMessageContent
-//                    {
-//                        Type = "input_image",
-//                        ImageUrl = dataUrl
-//                    });
-//                }
-//            }
-
-
-//            // ---------------------------------------------------------------------
-//            // ACTIVE FILES (Attach editor contents for reasoning)
-//            // ---------------------------------------------------------------------
-//            if (request.ActiveFiles != null && request.ActiveFiles.Any())
-//            {
-//                var sb = new StringBuilder();
-//                sb.AppendLine("[ACTIVE FILES]");
-
-//                foreach (var file in request.ActiveFiles)
-//                {
-//                    sb.AppendLine($"--- BEGIN ACTIVE FILE ---");
-//                    sb.AppendLine($"Absolute Path: {file.AbsolutePath}");
-//                    sb.AppendLine($"Relative Path: {file.RelativePath}");
-//                    sb.AppendLine($"File Name: {file.FileName}");
-//                    sb.AppendLine($"SHA256 Hash: {file.Sha256Hash}");
-//                    sb.AppendLine($"Language: {file.Language}");
-//                    sb.AppendLine();
-//                    sb.AppendLine(file.Contents ?? string.Empty);
-//                    sb.AppendLine($"--- END ACTIVE FILE ---");
-//                    sb.AppendLine();
-//                }
-
-//                userMessage.Output.Add(new ResponsesMessageContent
-//                {
-//                    Text = sb.ToString()
-//                });
-//            }
-
-//            if (!string.IsNullOrWhiteSpace(ragContextBlock))
-//            {
-//                userMessage.Output.Add(new ResponsesMessageContent
-//                {
-//                    Text = ragContextBlock
-//                });
-//            }
-
-//            if (!string.IsNullOrWhiteSpace(request.ToolResultsJson))
-//            {
-//                var toolResultsText = ToolResultsTextBuilder.BuildFromToolResultsJson(request.ToolResultsJson);
-//                if (!string.IsNullOrWhiteSpace(toolResultsText))
-//                {
-//                    userMessage.Output.Add(new ResponsesMessageContent
-//                    {
-//                        Text = toolResultsText
-//                    });
-//                }
-//            }
-
-//            dto.Input.Add(userMessage);
-
-//            // ---------------------------------------------------------------------
-//            // (3) TOOLS — INCLUDED ON EVERY TURN WHEN PRESENT
-//            // ---------------------------------------------------------------------
-
-//            if (!string.IsNullOrWhiteSpace(request.ToolsJson))
-//            {
-//                try
-//                {
-//                    var toolsToken = JToken.Parse(request.ToolsJson);
-//                    if (toolsToken is JArray toolsArray && toolsArray.Count > 0)
-//                    {
-//                        dto.Tools = new List<JObject>();
-//                        foreach (var tool in toolsArray)
-//                        {
-//                            if (tool is JObject obj)
-//                            {
-//                                dto.Tools.Add(obj);
-//                            }
-//                        }
-//                    }
-//                }
-//                catch (JsonException)
-//                {
-//                    // Ignore malformed ToolsJson; higher-level code may log
-//                }
-//            }
-
-//            // ---------------------------------------------------------------------
-//            // (4) TOOL CHOICE (optional)
-//            // ---------------------------------------------------------------------
-
-//            if (!string.IsNullOrWhiteSpace(request.ToolChoiceName))
-//            {
-//                dto.ToolChoice = new ResponsesToolChoice
-//                {
-//                    Name = request.ToolChoiceName
-//                };
-//            }
-
-
-//            return dto;
         }
     }
 }

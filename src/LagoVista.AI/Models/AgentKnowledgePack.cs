@@ -20,12 +20,22 @@ namespace LagoVista.AI.Models
         public string ConversationWelcomeMessage { get; set; }
         public string ModeWelcomeMessage { get; set; }
 
+        /// <summary>
+        /// Enabled tools are tools that can be used by the current request but do not have their schema
+        /// and usage data in the request.  They are used to render a list of tools that may be 
+        /// requested to become active in the next call.
+        /// </summary>
+        public List<AvailableTool> AvailableTools { get; set; } = new List<AvailableTool>();
 
         // Kind catalog used by PKP to render blocks generically.
-        public Dictionary<KnowledgeKind, KnowledgeKindDescriptor> KindCatalog { get; set; }
-            = new Dictionary<KnowledgeKind, KnowledgeKindDescriptor>();
+        public Dictionary<KnowledgeKind, KnowledgeKindDescriptor> KindCatalog { get; set; } = new Dictionary<KnowledgeKind, KnowledgeKindDescriptor>();
 
-        // Tools enabled for this pack (deduped). PKP uses this to attach tool schemas.
-        public List<string> EnabledToolNames { get; set; } = new List<string>();
+      
+        /// <summary>
+        /// Active tool names are tools that are ready to use in the current request
+        /// their usage data and schema are included in the request.
+        /// </summary>
+        public List<string> ActiveToolNames { get; set; } = new List<string>();
+
     }
 }

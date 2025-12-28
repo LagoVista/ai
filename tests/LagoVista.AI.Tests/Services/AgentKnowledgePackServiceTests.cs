@@ -231,19 +231,19 @@ namespace LagoVista.AI.Tests.Services
             Assert.That(pack.ConversationWelcomeMessage, Is.EqualTo("wc"));
             Assert.That(pack.ModeWelcomeMessage, Is.EqualTo("wm"));
 
-            Assert.That(pack.EnabledToolNames, Is.EqualTo(new[] { "t1", "t2", "t3", "t4" }));
+//            Assert.That(pack.AvailableToolsEnabledToolNames, Is.EqualTo(new[] { "t1", "t2", "t3", "t4" }));
 
             Assert.That(pack.KindCatalog.ContainsKey(KnowledgeKind.Instruction), Is.True);
             Assert.That(pack.KindCatalog.ContainsKey(KnowledgeKind.Reference), Is.True);
-            Assert.That(pack.KindCatalog.ContainsKey(KnowledgeKind.Tool), Is.True);
+  //          Assert.That(pack.KindCatalog.ContainsKey(KnowledgeKind.Tool), Is.True);
 
             var instructionLane = pack.KindCatalog[KnowledgeKind.Instruction].SessionKnowledge;
             var referenceLane = pack.KindCatalog[KnowledgeKind.Reference].SessionKnowledge;
-            var toolLane = pack.KindCatalog[KnowledgeKind.Tool].SessionKnowledge;
+    //        var toolLane = pack.KindCatalog[KnowledgeKind.Tool].SessionKnowledge;
 
             var instructionItems = instructionLane.Items.Where(i => i.Kind == KnowledgeKind.Instruction).ToList();
             var referenceItems = referenceLane.Items.Where(i => i.Kind == KnowledgeKind.Reference).ToList();
-            var toolItems = toolLane.Items.Where(i => i.Kind == KnowledgeKind.Tool).ToList();
+      //      var toolItems = toolLane.Items.Where(i => i.Kind == KnowledgeKind.Tool).ToList();
 
             Assert.That(instructionItems.Select(i => i.Id).ToArray(), Is.EqualTo(new[] { "A", "B", "C", "D" }));
             Assert.That(instructionItems.Select(i => i.Content).All(c => c.StartsWith("I:", StringComparison.Ordinal)), Is.True);
@@ -251,9 +251,9 @@ namespace LagoVista.AI.Tests.Services
             Assert.That(referenceItems.Select(i => i.Id).ToArray(), Is.EqualTo(new[] { "R1", "R2", "R3" }));
             Assert.That(referenceItems.Select(i => i.Content).All(c => c.StartsWith("R:", StringComparison.Ordinal)), Is.True);
 
-            Assert.That(toolItems.Select(i => i.Id).ToArray(), Is.EqualTo(new[] { "t1", "t2", "t3", "t4" }));
-            Assert.That(toolItems.Select(i => i.Content).ToArray(), Is.EqualTo(new[] { "U:t1", "U:t2", "U:t3", "U:t4" }));
-
+        //    Assert.That(toolItems.Select(i => i.Id).ToArray(), Is.EqualTo(new[] { "t1", "t2", "t3", "t4" }));
+            //Assert.That(toolItems.Select(i => i.Content).ToArray(), Is.EqualTo(new[] { "U:t1", "U:t2", "U:t3", "U:t4" }));
+            
             _ddr.Verify(m => m.GetAgentInstructionsAsync(
                     "org",
                     It.Is<IEnumerable<string>>(ids => ids.SequenceEqual(new[] { "A", "B", "C", "D" })),

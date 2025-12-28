@@ -82,10 +82,7 @@ namespace LagoVista.AI.Services
                 {
                     var errorMessage = execResult.ErrorMessage;
 
-                    _logger.AddError(
-                        "[AgentToolExecutor_ExecuteServerToolAsync__ToolFailed]",
-                        $"Tool '{call.Name}' execution failed: {errorMessage}");
-
+                    _logger.AddError("[AgentToolExecutor_ExecuteServerToolAsync__ToolFailed]", $"Tool '{call.Name}' execution failed: {errorMessage}");
 
                     return InvokeResult<AgentToolCallResult>.FromInvokeResult(execResult.ToInvokeResult());
                 }

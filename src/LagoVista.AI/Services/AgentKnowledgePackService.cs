@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
 using LagoVista.Core.Validation;
+using Newtonsoft.Json;
 
 namespace LagoVista.AI.Services
 {
@@ -81,7 +82,6 @@ namespace LagoVista.AI.Services
                 AddRangeDistinctInOrder(toolNames, toolBox.Tools.Select(tl => tl.Id));
             }
 
-
             AddRangeDistinctInOrder(instructionIds, agentContext.AgentInstructionDdrs);
             AddRangeDistinctInOrder(referenceIds, agentContext.ReferenceDdrs);
             AddRangeDistinctInOrder(toolNames, agentContext.AssociatedToolIds);
@@ -117,9 +117,6 @@ namespace LagoVista.AI.Services
                 AgentWelcomeMessage = agentContext.WelcomeMessage,
                 ConversationWelcomeMessage = conversation.WelcomeMessage,
                 ModeWelcomeMessage = agentMode.WelcomeMessage,
-
-                // EnabledToolNames is used by PKP to attach tool schemas.
-                EnabledToolNames = toolNames
             };
 
             // Kind catalog: conservative defaults; PKP may render with these markers.
@@ -141,19 +138,9 @@ namespace LagoVista.AI.Services
                 InstructionLine = "The following are reference DDRs. Use the tool that retrieves ReferentialSummary content when you need more detail."
             };
 
-            pack.KindCatalog[KnowledgeKind.Tool] = new KnowledgeKindDescriptor
-            {
-                Kind = KnowledgeKind.Tool,
-                Title = "Tools",
-                BeginMarker = "[BEGIN TOOLS BLOCK]",
-                EndMarker = "[END TOOLS BLOCK]",
-                InstructionLine = "The following tools are available. Call tools only when needed and provide valid arguments."
-            };
-
-
             pack.KindCatalog[KnowledgeKind.AgentContextInstructions] = new KnowledgeKindDescriptor
             {
-                Kind = KnowledgeKind.Tool,
+                Kind = KnowledgeKind.Instruction,
                 Title = "Agent Context Instructions",
                 BeginMarker = "[BEGIN AGENT CTX INST]",
                 EndMarker = "[END AGENT CTX INST]",
@@ -163,7 +150,7 @@ namespace LagoVista.AI.Services
 
             pack.KindCatalog[KnowledgeKind.ConversationContextInstructions] = new KnowledgeKindDescriptor
             {
-                Kind = KnowledgeKind.Tool,
+                Kind = KnowledgeKind.Instruction,
                 Title = "Agent Role Instructions",
                 BeginMarker = "[BEGIN CONV CTX INST]",
                 EndMarker = "[END CONV CTX INST]",
@@ -172,7 +159,7 @@ namespace LagoVista.AI.Services
 
             pack.KindCatalog[KnowledgeKind.ModeInstructions] = new KnowledgeKindDescriptor
             {
-                Kind = KnowledgeKind.Tool,
+                Kind = KnowledgeKind.Instruction,
                 Title = "Mode Instructions",
                 BeginMarker = "[BEGIN MODE INST]",
                 EndMarker = "[END MODE INST]",
@@ -184,12 +171,12 @@ namespace LagoVista.AI.Services
             AddInstructions(pack.KindCatalog[KnowledgeKind.ConversationContextInstructions].SessionKnowledge, KnowledgeKind.ConversationContextInstructions, conversation.Instructions);
             AddInstructions(pack.KindCatalog[KnowledgeKind.ModeInstructions].SessionKnowledge, KnowledgeKind.ModeInstructions, agentContext.Instructions);
 
-            // Populate SessionKnowledge lane as the primary lane in V1.
+            // Populate SessionKnowledge tools as the primary tools in V1.
             // Consumers can migrate items to ConsumableKnowledge as turn-scoped patterns mature.
             AddDdrItems(pack.KindCatalog[KnowledgeKind.Instruction].SessionKnowledge, KnowledgeKind.Instruction, instructionIds, resolvedInstructions.Result);
             AddDdrItems(pack.KindCatalog[KnowledgeKind.Reference].SessionKnowledge, KnowledgeKind.Reference, referenceIds, resolvedReferences.Result);
-            AddToolItems(pack.KindCatalog[KnowledgeKind.Tool].SessionKnowledge, toolNames);
 
+            AddToolItems(pack.AvailableTools, toolNames);
 
             return InvokeResult<AgentKnowledgePack>.Create(pack);
         }
@@ -269,21 +256,20 @@ namespace LagoVista.AI.Services
             }
         }
 
-        private void AddToolItems(KnowledgeLane lane, IEnumerable<string> toolNames)
+        private void AddToolItems(List<AvailableTool> tools, IEnumerable<string> toolNames)
         {
-            if (lane == null) throw new ArgumentNullException(nameof(lane));
+            if (tools == null) throw new ArgumentNullException(nameof(tools));
             if (toolNames == null) return;
 
             foreach (var toolName in toolNames)
             {
                 if (string.IsNullOrWhiteSpace(toolName)) continue;
-                var toolUsage = _toolUsageMetaData.GetToolUsageMetadata(toolName);
+                var summary = _toolUsageMetaData.GetToolSummary(toolName);
 
-                lane.Items.Add(new KnowledgeItem
+                tools.Add(new AvailableTool
                 {
-                    Kind = KnowledgeKind.Tool,
-                    Id = toolName,
-                    Content = toolUsage
+                    Name = toolName,
+                    Summary = summary
                 });
             }
         }

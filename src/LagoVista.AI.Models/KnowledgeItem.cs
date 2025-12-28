@@ -18,5 +18,7 @@ namespace LagoVista.AI.Models
         /// Resolved consumption content for DDR-based items, optional for tools.
         /// </summary>
         public string Content { get; set; }
+
+        public bool Active { get; set; } = true;
     }
 }

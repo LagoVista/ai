@@ -5,13 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Pipeline;
-using LagoVista.AI.Managers;
 using LagoVista.AI.Models;
-using LagoVista.Core;
-using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
-using Newtonsoft.Json;
 
 namespace LagoVista.AI.Services.Pipeline
 {
@@ -88,20 +84,12 @@ namespace LagoVista.AI.Services.Pipeline
                         contentBlock.AppendLine(content.Content);
                     }
                     contentBlock.AppendLine(items.EndMarker);
-                    Console.WriteLine($"---------\r\n{contentBlock.ToString()}\r\n---------------------------\r\n)"); 
 
                     register.Add(contentBlock.ToString());
                 }
             }
 
             var currentBranch = String.IsNullOrEmpty(ctx.Session.CurrentBranch) ? AgentSession.DefaultBranch : ctx.Session.CurrentBranch;
-
-            foreach (var toolName in apk.EnabledToolNames)
-            {
-                var schema = _toolSchemaProvider.GetToolSchema(toolName);
-
-                ctx.PromptKnowledgeProvider.AvailableToolSchemas.Add(schema);
-            }
 
             if (!ctx.Session.Kfrs.ContainsKey(currentBranch))
             {
@@ -165,6 +153,9 @@ Do not infer or assume facts outside this registry.
                 var kfrRegister = ctx.PromptKnowledgeProvider.GetOrCreateRegister("kfr", Models.Context.ContextClassification.Session);
                 kfrRegister.Add(kfrBlock);
             }
+
+            ctx.PromptKnowledgeProvider.AttachAvailbleTools(apk.AvailableTools);
+           
             return InvokeResult<IAgentPipelineContext>.Create(ctx);
         }
 

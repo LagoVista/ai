@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
+using LagoVista.AI.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -107,6 +109,51 @@ namespace LagoVista.AI.Helpers
 
                 sb.AppendLine();
             }
+
+            var text = sb.ToString().TrimEnd();
+
+            return string.IsNullOrWhiteSpace(text) ? null : text;
+        }
+
+        public static string BuildFromToolResults(List<AgentToolCallResult> results)
+        {
+            if(results == null || results.Count == 0)
+            {
+                return null;
+            }
+            var sb = new StringBuilder();
+
+            sb.AppendLine("[TOOL_RESULTS]");
+            sb.AppendLine();
+
+            foreach (var result in results)
+            {
+                sb.AppendLine(string.Format("- CallId: {0}", result.ToolCallId));
+                sb.AppendLine(string.Format("  Name: {0}", result.Name));
+
+
+                //if (!string.IsNullOrWhiteSpace(argumentsJson))
+                //{
+                //    sb.AppendLine("  ArgumentsJson:");
+                //    sb.AppendLine("    " + argumentsJson);
+                //}
+
+                if (!string.IsNullOrWhiteSpace(result.ResultJson))
+                {
+                    sb.AppendLine("  ResultJson:");
+                    sb.AppendLine("    " + result.ResultJson);
+                }
+
+                if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
+                {
+                    sb.AppendLine("  ErrorMessage:");
+                    sb.AppendLine("    " + result.ErrorMessage);
+                }
+
+                sb.AppendLine();
+            }
+
+            Console.WriteLine(sb.ToString());
 
             var text = sb.ToString().TrimEnd();
 

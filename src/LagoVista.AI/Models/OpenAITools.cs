@@ -1,6 +1,7 @@
 ﻿using LagoVista.AI.Models;
 using Microsoft.CodeAnalysis;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,6 +9,24 @@ using System.Text;
 
 namespace LagoVista.AI
 {
+    public class AvailableTool
+    {
+        public string Name { get; set; }
+        public string Summary { get; set; }
+    }
+
+    /// <summary>
+    /// Active Tool is a Tool that the LLM 
+    /// can run in it's current request
+    /// </summary>
+    public class ActiveTool
+    {
+        public string Name { get; set; }
+        public string ToolUsageMetaData { get; set; }
+    
+        public OpenAiToolDefinition Schama { get; set; }
+    }
+
     public sealed class OpenAiToolDefinition
     {
         [JsonProperty("type")]
@@ -15,18 +34,14 @@ namespace LagoVista.AI
 
         [JsonProperty("name")]
         public string Name { get; set; } = default!;
-
-        [JsonProperty("function")]
-        public OpenAiFunctionDefinition Function { get; set; } = default!;
-    }
-
-    public sealed class OpenAiFunctionDefinition
-    {
         [JsonProperty("description")]
         public string Description { get; set; }
 
         [JsonProperty("parameters")]
         public JsonSchemaObject Parameters { get; set; } = default!;
+
+        [JsonProperty("strict")]
+        public bool Strict { get; } = false;
     }
 
     public sealed class JsonSchemaObject
@@ -38,7 +53,7 @@ namespace LagoVista.AI
         public Dictionary<string, JsonSchemaProperty> Properties { get; set; } = new Dictionary<string, JsonSchemaProperty>();
 
         [JsonProperty("required")]
-        public IReadOnlyList<string> Required { get; set; }
+        public IReadOnlyList<string> Required { get; set; } = new List<string>();
 
         [JsonProperty("additionalProperties")]
         public bool AdditionalProperties { get; set; } = false;
@@ -52,10 +67,31 @@ namespace LagoVista.AI
         [JsonProperty("description")]
         public string Description { get; set; }
 
-        [JsonProperty("enum")]
+        [JsonProperty("enum", NullValueHandling=NullValueHandling.Ignore)]
         public IReadOnlyList<string> Enum { get; set; }
+
+        [JsonProperty("items", NullValueHandling = NullValueHandling.Ignore)]
+        public JsonScheamArray Items { get; set; }
     }
 
+
+    public sealed class JsonScheamArray
+    {
+        [JsonProperty("type")]
+        public string Type { get; set; } = "object";
+
+        [JsonProperty("properites")]
+        public List<JObject> Properties { get; set; } = new List<JObject>();
+    }
+
+
+    public sealed class JsonScheamArrayEntry
+    {
+        public string Name { get; set; }
+        public string Type { get; set; }
+        public string Description { get; set; }
+    }
+    
 
     public static class ToolSchema
     {
@@ -70,11 +106,8 @@ namespace LagoVista.AI
             return new OpenAiToolDefinition
             {
                 Name = name,
-                Function = new OpenAiFunctionDefinition
-                {
-                    Description = description,
-                    Parameters = schema
-                }
+                Description = description,
+                Parameters = schema
             };
         }
     }
@@ -121,6 +154,62 @@ namespace LagoVista.AI
 
             if (required)
                 schema.Require(name);
+        }
+
+        public static void Array(
+          this JsonSchemaObject schema,
+          string name,
+          string description,
+          params JsonScheamArrayEntry[] args)
+        {
+            schema.Properties[name] = new JsonSchemaProperty
+            {
+                Type = "array",
+                Description = description,
+                Items = new JsonScheamArray()
+            };
+
+            foreach(var arg in args)
+            {
+                schema.Properties[name].Items.Properties.Add(new JObject
+                {
+                    [arg.Name] = new JObject
+                    {
+                        ["type"] = arg.Type,
+                        ["description"] = arg.Description
+                    }
+                });
+            }
+
+            schema.Require(name);
+        }
+
+        public static void StringArray(
+         this JsonSchemaObject schema,
+         string name,
+         string description,
+         params JsonScheamArrayEntry[] args)
+        {
+            schema.Properties[name] = new JsonSchemaProperty
+            {
+                Type = "array",
+                Description = description,
+                Items = new JsonScheamArray() { Type = "string" }
+            };
+
+            //foreach (var arg in args)
+            //{
+            //    schema.Properties[name].Items.Properties.Add(new JObject
+            //    {
+            //        [arg.Name] = new JObject
+            //        {
+            //            ["type"] = arg.Type,
+            //            ["description"] = arg.Description
+            //        }
+            //    });
+            //}
+
+            schema.Require(name);
         }
 
         public static void Integer(

@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
+using LagoVista.Core;
 using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
@@ -36,7 +37,10 @@ namespace LagoVista.AI.Services.Tools
             return ToolSchema.Function(ToolName, "Add multiple chapters to an existing DDR in a single operation.", p =>
             {
                 p.String("identifier", "DDR identifier in TLA-### format, for example 'SYS-001'.", required: true);
-                p.Any("chapters", "array", "Array of chapters to create in order.", required: true);
+                p.Array("chapters", "Array of chapters to create in order.", 
+                    new JsonScheamArrayEntry() {  Name = "title", Type = "string", Description = "Title of the Chapter"},
+                    new JsonScheamArrayEntry() { Name = "summary", Type="string", Description = "Summary of the Chapter" }
+                    );
             });
         }
 
@@ -80,7 +84,7 @@ namespace LagoVista.AI.Services.Tools
 
                     var chapter = new DdrChapter
                     {
-                        Id = Guid.NewGuid().ToString("N"),
+                        Id = Guid.NewGuid().ToId(),
                         Title = title,
                         Summary = summary,
                         Details = string.Empty,
