@@ -72,7 +72,11 @@ namespace LagoVista.AI.Services
                 var sw = Stopwatch.StartNew();
                 var execResult = await tool.ExecuteAsync(call.ArgumentsJson, context);
 
-                var result = new AgentToolCallResult();
+                var result = new AgentToolCallResult()
+                {
+                    ToolCallId = call.ToolCallId,
+                    Name = call.Name,
+                };
 
                 if (!execResult.Successful)
                 {

@@ -10,13 +10,13 @@ namespace LagoVista.AI.Interfaces
         /// Returns JSON-serializable tool definitions for the given set of
         /// server tool names. Tool names that are not registered are ignored.
         /// </summary>
-        IReadOnlyList<object> GetToolSchemas(List<string> toolNames);
+        IReadOnlyList<OpenAiToolDefinition> GetToolSchemas(List<string> toolNames);
 
         /// <summary>
         /// Returns a single JSON-serializable tool definition for the given
         /// server tool name, or null if the tool is not registered or the
         /// schema cannot be resolved.
         /// </summary>
-        object GetToolSchema(string toolName);
+        OpenAiToolDefinition GetToolSchema(string toolName);
     }
 }

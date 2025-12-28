@@ -60,7 +60,7 @@ namespace LagoVista.AI.Helpers
             }
 
                 // Usage block – support both old (prompt/completion) and new (input/output) fields
-                var usage = root["usage"];
+            var usage = root["usage"];
             if (usage != null)
             {
                 var promptTokens =
@@ -292,9 +292,13 @@ namespace LagoVista.AI.Helpers
             ctx.ThisTurn.ReasoningTokens = response.Usage.ReasoningTokens;
             ctx.ThisTurn.CompletionTokens = response.Usage.CompletionTokens;
 
-            ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCalls = toolCalls;
-
-            ctx.SetResponsePayload(response);
+            if (toolCalls.Any())
+                ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCalls = toolCalls;
+            else
+            {
+                ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCalls.Clear();
+                ctx.SetResponsePayload(response);
+            }
 
             return Task.FromResult(InvokeResult<IAgentPipelineContext>.Create(ctx));
         }

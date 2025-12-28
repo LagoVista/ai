@@ -55,7 +55,7 @@
 //            var request = CreateRequest();
 
 //            var dto = _builder.Build(convCtx, request, string.Empty, string.Empty);
-//            Assert.That(dto.Input[0].Content[0].Type, Is.EqualTo("input_text"));
+//            Assert.That(dto.Input[0].Output[0].Type, Is.EqualTo("input_text"));
 //        }
 
 //        [Test]
@@ -74,8 +74,8 @@
 
 //            var systemMessage = dto.Input[0];
 //            Assert.That(systemMessage.Role, Is.EqualTo("system"));
-//            Assert.That(systemMessage.Content.Count, Is.EqualTo(2));
-//            Assert.That(systemMessage.Content[0].Text, Is.EqualTo("You are the Aptix Reasoner."));
+//            Assert.That(systemMessage.Output.Count, Is.EqualTo(2));
+//            Assert.That(systemMessage.Output[0].Text, Is.EqualTo("You are the Aptix Reasoner."));
 //        }
 
 //        [Test]
@@ -91,10 +91,10 @@
 
 //            var systemMessage = dto.Input[0];
 //            Assert.That(systemMessage.Role, Is.EqualTo("system"));
-//            Assert.That(systemMessage.Content.Count, Is.EqualTo(3));
+//            Assert.That(systemMessage.Output.Count, Is.EqualTo(3));
 
-//            Assert.That(systemMessage.Content[0].Text, Is.EqualTo("You are the Aptix Reasoner."));
-//            Assert.That(systemMessage.Content[1].Text, Is.EqualTo("You are working only with billing-related data."));
+//            Assert.That(systemMessage.Output[0].Text, Is.EqualTo("You are the Aptix Reasoner."));
+//            Assert.That(systemMessage.Output[1].Text, Is.EqualTo("You are working only with billing-related data."));
 //        }
 
 //        [Test]
@@ -113,11 +113,11 @@
 
 //            var systemMessage = dto.Input[0];
 //            Assert.That(systemMessage.Role, Is.EqualTo("system"));
-//            Assert.That(systemMessage.Content.Count, Is.EqualTo(4));
+//            Assert.That(systemMessage.Output.Count, Is.EqualTo(4));
 
-//            Assert.That(systemMessage.Content[0].Text, Is.EqualTo("You are the Aptix Reasoner."));
-//            Assert.That(systemMessage.Content[1].Text, Is.EqualTo("You are working only with billing-related data."));
-//            Assert.That(systemMessage.Content[3].Text, Is.EqualTo(toolUsageMetadataBlock));
+//            Assert.That(systemMessage.Output[0].Text, Is.EqualTo("You are the Aptix Reasoner."));
+//            Assert.That(systemMessage.Output[1].Text, Is.EqualTo("You are working only with billing-related data."));
+//            Assert.That(systemMessage.Output[3].Text, Is.EqualTo(toolUsageMetadataBlock));
 //        }
 
 //        [Test]
@@ -140,9 +140,9 @@
 //            Assert.That(systemMessage.Role, Is.EqualTo("system"));
 
 //            // No conversation-level system prompts; we should see just SystemPrompt + tool usage metadata
-//            Assert.That(systemMessage.Content.Count, Is.EqualTo(3));
-//            Assert.That(systemMessage.Content[0].Text, Is.EqualTo("You are working only with billing-related data."));
-//            Assert.That(systemMessage.Content[2].Text, Is.EqualTo(toolUsageMetadataBlock));
+//            Assert.That(systemMessage.Output.Count, Is.EqualTo(3));
+//            Assert.That(systemMessage.Output[0].Text, Is.EqualTo("You are working only with billing-related data."));
+//            Assert.That(systemMessage.Output[2].Text, Is.EqualTo(toolUsageMetadataBlock));
 //        }
 
 //        [Test]
@@ -161,9 +161,9 @@
 
 //            var systemMessage = dto.Input[0];
 //            Assert.That(systemMessage.Role, Is.EqualTo("system"));
-//            Assert.That(systemMessage.Content.Count, Is.EqualTo(3));
-//            Assert.That(systemMessage.Content[0].Text, Is.EqualTo("You are the Aptix Reasoner."));
-//            Assert.That(systemMessage.Content[1].Text, Is.EqualTo("Continuation-specific override."));
+//            Assert.That(systemMessage.Output.Count, Is.EqualTo(3));
+//            Assert.That(systemMessage.Output[0].Text, Is.EqualTo("You are the Aptix Reasoner."));
+//            Assert.That(systemMessage.Output[1].Text, Is.EqualTo("Continuation-specific override."));
 
 //            var userMessage = dto.Input[1];
 //            Assert.That(userMessage.Role, Is.EqualTo("user"));
@@ -179,9 +179,9 @@
 
 //            var userMessage = dto.Input[dto.Input.Count - 1];
 //            Assert.That(userMessage.Role, Is.EqualTo("user"));
-//            Assert.That(userMessage.Content.Count, Is.EqualTo(1));
+//            Assert.That(userMessage.Output.Count, Is.EqualTo(1));
 
-//            var text = userMessage.Content[0].Text;
+//            var text = userMessage.Output[0].Text;
 //            Assert.That(text, Does.Contain("[MODE: DDR_CREATION]"));
 //            Assert.That(text, Does.Contain("[INSTRUCTION]"));
 //            Assert.That(text, Does.Contain("Create a DDR."));
@@ -198,9 +198,9 @@
 
 //            var userMessage = dto.Input[dto.Input.Count - 1];
 //            Assert.That(userMessage.Role, Is.EqualTo("user"));
-//            Assert.That(userMessage.Content.Count, Is.EqualTo(2));
+//            Assert.That(userMessage.Output.Count, Is.EqualTo(2));
 
-//            var ctxItem = userMessage.Content[1];
+//            var ctxItem = userMessage.Output[1];
 //            Assert.That(ctxItem.Text, Is.EqualTo(ragContextBlock));
 //        }
 
@@ -299,10 +299,10 @@
 
 //            var userMessage = dto.Input[1];
 //            Assert.That(userMessage.Role, Is.EqualTo("user"));
-//            Assert.That(userMessage.Content.Count, Is.EqualTo(2));
+//            Assert.That(userMessage.Output.Count, Is.EqualTo(2));
 
-//            var instructionContent = userMessage.Content[0];
-//            var toolResultsContent = userMessage.Content[1];
+//            var instructionContent = userMessage.Output[0];
+//            var toolResultsContent = userMessage.Output[1];
 
 //            Assert.That(toolResultsContent.Text, Does.Contain("[TOOL_RESULTS]"));
 //            Assert.That(toolResultsContent.Text, Does.Contain("testing_ping_pong"));
@@ -322,10 +322,10 @@
 
 //            var systemMessage = dto.Input[0];
 //            Assert.That(systemMessage.Role, Is.EqualTo("system"));
-//            Assert.That(systemMessage.Content.Count, Is.EqualTo(3));
+//            Assert.That(systemMessage.Output.Count, Is.EqualTo(3));
 
-//            Assert.That(systemMessage.Content[0].Text, Is.EqualTo("You are the Aptix Reasoner."));
-//            Assert.That(systemMessage.Content[2].Text, Is.EqualTo(toolUsageMetadataBlock));
+//            Assert.That(systemMessage.Output[0].Text, Is.EqualTo("You are the Aptix Reasoner."));
+//            Assert.That(systemMessage.Output[2].Text, Is.EqualTo(toolUsageMetadataBlock));
 //        }
 
 //        [Test]
@@ -346,8 +346,8 @@
 
 //            var systemMessage = dto.Input[0];
 //            Assert.That(systemMessage.Role, Is.EqualTo("system"));
-//            Assert.That(systemMessage.Content.Count, Is.GreaterThanOrEqualTo(2));
-//            Assert.That(systemMessage.Content[systemMessage.Content.Count - 1].Text, Is.EqualTo(toolUsageMetadataBlock));
+//            Assert.That(systemMessage.Output.Count, Is.GreaterThanOrEqualTo(2));
+//            Assert.That(systemMessage.Output[systemMessage.Output.Count - 1].Text, Is.EqualTo(toolUsageMetadataBlock));
 
 //            var userMessage = dto.Input[1];
 //            Assert.That(userMessage.Role, Is.EqualTo("user"));

@@ -100,7 +100,7 @@ namespace LagoVista.AI.Services.Pipeline
             {
                 var schema = _toolSchemaProvider.GetToolSchema(toolName);
 
-                ctx.PromptKnowledgeProvider.AvailableToolSchemas.Add(toolName, schema);
+                ctx.PromptKnowledgeProvider.AvailableToolSchemas.Add(schema);
             }
 
             if (!ctx.Session.Kfrs.ContainsKey(currentBranch))

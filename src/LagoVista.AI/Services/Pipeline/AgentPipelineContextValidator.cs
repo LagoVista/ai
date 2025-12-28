@@ -476,18 +476,15 @@ namespace LagoVista.AI.Services.Pipeline
                 result.Errors.Add(new ErrorMessage("LLMClient PRE: ResponsePayload must be null."));
 
             // For tool continuation calls we can validate the tool manifest (when present).
-            if (ctx.Type == AgentPipelineContextTypes.ClientToolCallContinuation)
+            if (ctx.PromptKnowledgeProvider?.ToolCallManifest == null)
             {
-                if (ctx.PromptKnowledgeProvider?.ToolCallManifest == null)
-                {
-                    result.Errors.Add(new ErrorMessage("LLMClient PRE: ToolCallManifest must be populated for ClientToolCallContinuation."));
-                    return result;
-                }
-
-                var manifest = ValidateToolCallManifest(ctx.PromptKnowledgeProvider.ToolCallManifest);
-                if (!manifest.Successful) return manifest;
+                result.Errors.Add(new ErrorMessage("LLMClient PRE: ToolCallManifest must be populated for ClientToolCallContinuation."));
+                return result;
             }
 
+            var manifest = ValidateToolCallManifest(ctx.PromptKnowledgeProvider.ToolCallManifest);
+            if (!manifest.Successful) return manifest;
+           
             return result;
         }
 
@@ -495,22 +492,14 @@ namespace LagoVista.AI.Services.Pipeline
         {
             var result = new InvokeResult();
 
-            var hasPayload = ctx.ResponsePayload != null;
-            var hasClientToolCalls = ctx.HasClientToolCalls;
+            var hasResponsePayload = ctx.ResponsePayload != null;
+            var hasToolCalls = ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCalls.Any();
 
-            if (hasPayload && hasClientToolCalls)
-                result.Errors.Add(new ErrorMessage("LLMClient POST: ResponsePayload and client ToolCalls cannot both be present."));
+            if (hasResponsePayload && hasToolCalls)
+                result.Errors.Add(new ErrorMessage("LLMClient POST: Ouptut Text and client ToolCalls cannot both be present."));
 
-            if (!hasPayload && !hasClientToolCalls)
-                result.Errors.Add(new ErrorMessage("LLMClient POST: Must produce either a ResponsePayload (final) or client ToolCalls (tool continuation)."));
-
-            // If any tool calls exist after LLM, they must require client execution.
-            var toolCalls = ctx.PromptKnowledgeProvider?.ToolCallManifest?.ToolCalls;
-            if (toolCalls != null && toolCalls.Count > 0)
-            {
-                if (toolCalls.Any(tc => tc != null && !tc.RequiresClientExecution))
-                    result.Errors.Add(new ErrorMessage("LLMClient POST: All returned ToolCalls must require client execution."));
-            }
+            if (!hasResponsePayload && !hasToolCalls)
+                result.Errors.Add(new ErrorMessage("LLMClient POST: Must produce either a Output text or client ToolCalls (tool continuation)."));
 
             return result;
         }

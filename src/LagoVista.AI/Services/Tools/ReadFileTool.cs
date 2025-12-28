@@ -178,31 +178,14 @@ Error semantics:
             }
         }
 
-        public static object GetSchema() => new
+        public static OpenAiToolDefinition GetSchema()
         {
-            type = "function",
-            name = ToolName,
-            description = "Read a text source document from the Aptix cloud source store using a canonical DocPath string.",
-            parameters = new
+            return ToolSchema.Function(PingPongTool.ToolName, "Read a text source document from the Aptix cloud source store using a canonical DocPath string.", p =>
             {
-                type = "object",
-                properties = new
-                {
-                    path = new
-                    {
-                        type = "string",
-                        description = "Canonical DocPath string for the source document (taken directly from the RAG snippet header)."
-                    },
-                    maxBytes = new
-                    {
-                        type = "integer",
-                        minimum = 1,
-                        description = "Optional maximum number of bytes to return. If omitted, the entire file is returned."
-                    }
-                },
-                required = new[] { "path" }
-            }
-        };
+                p.String("path", "Canonical DocPath string for the source document (taken directly from the RAG snippet header).");
+                p.Integer("maxBytes", "Optional maximum number of bytes to return. If omitted, the entire file is returned.");
+            });
+        }
 
         private sealed class WorkspaceReadFileArgs
         {

@@ -49,7 +49,7 @@ namespace LagoVista.AI.Rag.Chunkers.Tests
         private static IReadOnlyDictionary<string, string> LoadResources()
         {
             // Uses ResxLabelScanner helper to load a single resource dictionary
-            // from the current directory (expects resources.resx in ./Content).
+            // from the current directory (expects resources.resx in ./Output).
             var scanner = new ResxLabelScanner(new Mock<IAdminLogger>().Object);
             return scanner.GetSingleResourceDictionary(".");
         }

@@ -110,11 +110,11 @@ namespace LagoVista.AI.Services
                 BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy);
 
             if (schemaMethod == null ||
-                schemaMethod.ReturnType != typeof(object) ||
+                schemaMethod.ReturnType != typeof(OpenAiToolDefinition) ||
                 schemaMethod.GetParameters().Length != 0)
             {
                 var msg =
-                    $"Tool '{toolType.FullName}' must declare: public static object GetSchema().";
+                    $"Tool '{toolType.FullName}' must declare: public static OpenAiToolDefinition GetSchema().";
 
                 _logger.AddError("[AgentToolRegistry_RegisterTool__MissingSchemaMethod]", msg);
                 throw new InvalidOperationException(msg);

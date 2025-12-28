@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using LagoVista.AI.Models;
+using Microsoft.CodeAnalysis;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,15 +13,15 @@ namespace LagoVista.AI
         [JsonProperty("type")]
         public string Type { get; set; } = "function";
 
+        [JsonProperty("name")]
+        public string Name { get; set; } = default!;
+
         [JsonProperty("function")]
         public OpenAiFunctionDefinition Function { get; set; } = default!;
     }
 
     public sealed class OpenAiFunctionDefinition
     {
-        [JsonProperty("name")]
-        public string Name { get; set; } = default!;
-
         [JsonProperty("description")]
         public string Description { get; set; }
 
@@ -67,9 +69,9 @@ namespace LagoVista.AI
 
             return new OpenAiToolDefinition
             {
+                Name = name,
                 Function = new OpenAiFunctionDefinition
                 {
-                    Name = name,
                     Description = description,
                     Parameters = schema
                 }

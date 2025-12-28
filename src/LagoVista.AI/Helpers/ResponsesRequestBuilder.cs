@@ -33,7 +33,7 @@ namespace LagoVista.AI.Helpers
         /// <param name="ragContextBlock">The pre-formatted RAG context block (may be null or empty).</param>
         /// <param name="toolUsageMetadataBlock">LLM-facing usage metadata block containing detailed instructions for all Aptix tools (may be null or empty).</param>
         /// <returns>ResponsesApiRequest representing the body for the /responses call.</returns>
-        public Task<InvokeResult< ResponsesApiRequest>> BuildAsync(IAgentPipelineContext ctx) 
+        public Task<InvokeResult<ResponsesApiRequest>> BuildAsync(IAgentPipelineContext ctx)
         {
 
             var dto = new ResponsesApiRequest
@@ -41,8 +41,8 @@ namespace LagoVista.AI.Helpers
                 Model = ctx.ConversationContext.ModelName,
                 Temperature = ctx.ConversationContext.Temperature,
                 Stream = ctx.Envelope.Stream,
-            };
-
+            };            
+           
             var isContinuation = !string.IsNullOrWhiteSpace(ctx.ThisTurn.PreviousOpenAIResponseId) && String.IsNullOrEmpty(ctx.PromptKnowledgeProvider.ToolCallManifest.ResultsJson);
 
             if (isContinuation)
@@ -94,7 +94,23 @@ namespace LagoVista.AI.Helpers
                     }
                 }
             }
-              
+
+            if (ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCallResults.Any())
+            {
+                var toolCallResults = new StringBuilder();
+                toolCallResults.AppendLine("[BEGIN TOOL CALL RESULTS]");
+                foreach (var result in ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCallResults)
+                {
+                    toolCallResults.AppendLine($"{result.ToolCallId} = {result.ResultJson}");
+                }
+                toolCallResults.AppendLine("[END TOOL CALL RESULTS]");
+
+                userMessage.Content.Add(new ResponsesMessageContent
+                {
+                    Text = toolCallResults.ToString()
+                });
+            }
+
             var instructionBlock =
                 "[MODE: " + ctx.Session.Mode + "]\n\n[INSTRUCTION]\n" + (ctx.Envelope.Instructions ?? string.Empty);
 
@@ -155,7 +171,7 @@ namespace LagoVista.AI.Helpers
 
             foreach(var tool in ctx.PromptKnowledgeProvider.AvailableToolSchemas)
             {
-                dto.Tools.Add(new  JObject(tool));    
+                dto.Tools.Add(tool);    
             }
 
             dto.Input.Add(systemMessage);
@@ -188,7 +204,7 @@ namespace LagoVista.AI.Helpers
 //                var systemMessage = new ResponsesMessage
 //                {
 //                    Role = "system",
-//                    Content = new List<ResponsesMessageContent>()
+//                    Output = new List<ResponsesMessageContent>()
 //                };
 
 //                // Boot / conversation-level prompts
@@ -198,7 +214,7 @@ namespace LagoVista.AI.Helpers
 //                    {
 //                        if (!string.IsNullOrWhiteSpace(systemPrompt))
 //                        {
-//                            systemMessage.Content.Add(new ResponsesMessageContent
+//                            systemMessage.Output.Add(new ResponsesMessageContent
 //                            {
 //                                Text = systemPrompt
 //                            });
@@ -209,13 +225,13 @@ namespace LagoVista.AI.Helpers
 //                // Optional per-request SystemPrompt
 //                if (!string.IsNullOrWhiteSpace(request.SystemPrompt))
 //                {
-//                    systemMessage.Content.Add(new ResponsesMessageContent
+//                    systemMessage.Output.Add(new ResponsesMessageContent
 //                    {
 //                        Text = request.SystemPrompt
 //                    });
 //                }
 
-//                systemMessage.Content.Add(new ResponsesMessageContent()
+//                systemMessage.Output.Add(new ResponsesMessageContent()
 //                {
 //                    Text = @"When generating an answer, follow this structure:
 
@@ -236,7 +252,7 @@ namespace LagoVista.AI.Helpers
 //                // Optional tool usage metadata for all tools
 //                if (!string.IsNullOrWhiteSpace(toolUsageMetadataBlock))
 //                {
-//                    systemMessage.Content.Add(new ResponsesMessageContent
+//                    systemMessage.Output.Add(new ResponsesMessageContent
 //                    {
 //                        Text = toolUsageMetadataBlock
 //                    });
@@ -252,13 +268,13 @@ namespace LagoVista.AI.Helpers
 //            var userMessage = new ResponsesMessage
 //            {
 //                Role = "user",
-//                Content = new List<ResponsesMessageContent>()
+//                Output = new List<ResponsesMessageContent>()
 //            };
 
 //            var instructionBlock =
 //                "[MODE: " + request.Mode + "]\n\n[INSTRUCTION]\n" + (request.Instruction ?? string.Empty);
 
-//            userMessage.Content.Add(new ResponsesMessageContent
+//            userMessage.Output.Add(new ResponsesMessageContent
 //            {
 //                Text = instructionBlock
 //            });
@@ -275,7 +291,7 @@ namespace LagoVista.AI.Helpers
 
 //                    var dataUrl = $"data:{img.MimeType};base64,{img.DataBase64}";
 
-//                    userMessage.Content.Add(new ResponsesMessageContent
+//                    userMessage.Output.Add(new ResponsesMessageContent
 //                    {
 //                        Type = "input_image",
 //                        ImageUrl = dataUrl
@@ -306,7 +322,7 @@ namespace LagoVista.AI.Helpers
 //                    sb.AppendLine();
 //                }
 
-//                userMessage.Content.Add(new ResponsesMessageContent
+//                userMessage.Output.Add(new ResponsesMessageContent
 //                {
 //                    Text = sb.ToString()
 //                });
@@ -314,7 +330,7 @@ namespace LagoVista.AI.Helpers
 
 //            if (!string.IsNullOrWhiteSpace(ragContextBlock))
 //            {
-//                userMessage.Content.Add(new ResponsesMessageContent
+//                userMessage.Output.Add(new ResponsesMessageContent
 //                {
 //                    Text = ragContextBlock
 //                });
@@ -325,7 +341,7 @@ namespace LagoVista.AI.Helpers
 //                var toolResultsText = ToolResultsTextBuilder.BuildFromToolResultsJson(request.ToolResultsJson);
 //                if (!string.IsNullOrWhiteSpace(toolResultsText))
 //                {
-//                    userMessage.Content.Add(new ResponsesMessageContent
+//                    userMessage.Output.Add(new ResponsesMessageContent
 //                    {
 //                        Text = toolResultsText
 //                    });

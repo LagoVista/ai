@@ -1,10 +1,12 @@
 // File: ./src/LagoVista.AI.Services/OpenAIResponsesClient.cs
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
+using LagoVista.Core.Exceptions;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json;
@@ -32,6 +34,31 @@ namespace LagoVista.AI.Services.OpenAI
             _validator = validator ?? throw new ArgumentNullException(nameof(validator));
         }
 
+        private async Task<InvokeResult<string>> BuildNonToolResultdRequest(IAgentPipelineContext ctx)
+        {
+            var req = await _builder.BuildAsync(ctx);
+            if (!req.Successful)
+                return InvokeResult<string>.FromInvokeResult(req.ToInvokeResult());
+
+            var json = JsonConvert.SerializeObject(req.Result);
+
+            return InvokeResult<string>.Create(json);
+        }
+
+        private Task<InvokeResult<string>> BuildToolResultdRequest(IAgentPipelineContext ctx)
+        {
+            try
+            {
+                var result = OpenAIToolResultRequest.FromResults(ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCallResults);
+                result.Model = ctx.ConversationContext.ModelName;
+                return Task.FromResult(InvokeResult<string>.Create( JsonConvert.SerializeObject(result)));
+            }
+            catch(InvalidOperationException ex)
+            {
+                return Task.FromResult(InvokeResult<string>.FromError(ex.Message));
+            }
+        }
+
         public async Task<InvokeResult<IAgentPipelineContext>> ExecuteAsync(IAgentPipelineContext ctx)
         {
             if (ctx == null) return InvokeResult<IAgentPipelineContext>.FromError("AgentPipelineContext cannot be null.", "OPENAI_CLIENT_NULL_CONTEXT");
@@ -39,17 +66,20 @@ namespace LagoVista.AI.Services.OpenAI
             var preValidation = _validator.ValidatePreStep(ctx, PipelineSteps.LLMClient);
             if (!preValidation.Successful) return InvokeResult<IAgentPipelineContext>.FromInvokeResult(preValidation);
 
-            var req = await _builder.BuildAsync(ctx);
-            if(!req.Successful)
-                return await FailAsync(ctx.Session.Id, req.ToInvokeResult(), "Request build failed.", ctx.CancellationToken);
+            var requestBuildResult = ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCallResults.Any() ?
+                await BuildToolResultdRequest(ctx) :
+                await BuildNonToolResultdRequest(ctx);
+       
+            if(!requestBuildResult.Successful) await FailAsync(ctx.Session.Id, requestBuildResult.ToInvokeResult(), "Response parse failed.", ctx.CancellationToken);
 
-            var reqJson = JsonConvert.SerializeObject(req.Result);
-            _log.Trace("[OpenAIResponsesClient__ExecuteAsync] Call LLM with JSON\r\n===== >>>>>\r\n" + reqJson + "\r\n===== >>>>>");
+            var requestJson = requestBuildResult.Result;
+
+            _log.Trace("[OpenAIResponsesClient__ExecuteAsync] Call LLM with JSON\r\n===== >>>>>\r\n" + requestJson + "\r\n===== >>>>>");
 
             await _events.PublishAsync(ctx.Session.Id, "LLMStarted", "in-progress", "Calling OpenAI model...", null, ctx.CancellationToken);
 
             var sw = Stopwatch.StartNew();
-            var invoke = await _invoker.InvokeAsync(ctx, reqJson);
+            var invoke = await _invoker.InvokeAsync(ctx, requestJson);
             if (!invoke.Successful) return await FailAsync(ctx.Session.Id, invoke.ToInvokeResult(), "LLM invoke failed.", ctx.CancellationToken);
 
             _log.Trace($"[OpenAIResponsesClient__ExecuteAsync] Response JSON in {sw.Elapsed.TotalMilliseconds}ms \r\n<<<<< =====\r\n" + invoke.Result + "\r\n<<<<< =====");

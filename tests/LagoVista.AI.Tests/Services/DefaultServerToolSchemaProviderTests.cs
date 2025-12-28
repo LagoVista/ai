@@ -81,8 +81,7 @@ namespace LagoVista.AI.Tests.Services
             Assert.That(schemas, Is.Not.Null);
             Assert.That(schemas.Count, Is.EqualTo(1));
 
-            var schema = schemas[0] as string;
-            Assert.That(schema, Is.EqualTo($"SCHEMA:{SchemaReturningTool.ToolName}"));
+            Assert.That(schemas[0].Name, Is.EqualTo(SchemaReturningTool.ToolName));
         }
 
         [Test]
@@ -110,11 +109,11 @@ namespace LagoVista.AI.Tests.Services
             var schemaStrings = new HashSet<string>();
             foreach (var s in schemas)
             {
-                schemaStrings.Add(s as string);
+                schemaStrings.Add(s.Name);
             }
 
-            Assert.That(schemaStrings, Does.Contain($"SCHEMA:{SchemaReturningTool.ToolName}"));
-            Assert.That(schemaStrings, Does.Contain($"SCHEMA:{AnotherSchemaReturningTool.ToolName}"));
+            Assert.That(schemaStrings, Does.Contain(SchemaReturningTool.ToolName));
+            Assert.That(schemaStrings, Does.Contain(AnotherSchemaReturningTool.ToolName));
         }
 
         #endregion
@@ -127,6 +126,7 @@ namespace LagoVista.AI.Tests.Services
         private sealed class SchemaReturningTool : IAgentTool
         {
             public const string ToolName = "tests_schema_tool";
+            public const string ToolSummary = "A first test tool for schema retrieval.";
 
             public string Name => ToolName;
 
@@ -134,11 +134,14 @@ namespace LagoVista.AI.Tests.Services
 
             public bool IsToolFullyExecutedOnServer => true;
 
-            public static object GetSchema()
+            public static OpenAiToolDefinition GetSchema()
             {
-                // Simple, easy-to-assert schema
-                return $"SCHEMA:{ToolName}";
+                return ToolSchema.Function(ToolName, "Creates a friendly greeting message using the user's name.", p =>
+                {
+                    p.String("name", "The user's name to include in the greeting.", required: true);
+                });
             }
+            
             public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
 
             public Task<InvokeResult<string>> ExecuteAsync(
@@ -157,15 +160,20 @@ namespace LagoVista.AI.Tests.Services
         {
             public const string ToolName = "tests_schema_tool_2";
 
+            public const string ToolSummary = "A second test tool for schema retrieval.";
+
             public bool IsToolFullyExecutedOnServer => true;
 
             public const string ToolUsageMetadata = "Valid Tool Meta Data";
 
             public string Name => ToolName;
 
-            public static object GetSchema()
+            public static OpenAiToolDefinition GetSchema()
             {
-                return $"SCHEMA:{ToolName}";
+                return ToolSchema.Function(ToolName, "Creates a friendly greeting message using the user's name.", p =>
+                {
+                    p.String("name", "The user's name to include in the greeting.", required: true);
+                });
             }
             public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
 

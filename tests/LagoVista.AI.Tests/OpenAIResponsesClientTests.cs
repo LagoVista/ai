@@ -62,7 +62,7 @@
 
 //                var response = new HttpResponseMessage(HttpStatusCode.OK)
 //                {
-//                    Content = new StringContent(sseBuilder.ToString(), Encoding.UTF8, "text/event-stream")
+//                    Output = new StringContent(sseBuilder.ToString(), Encoding.UTF8, "text/event-stream")
 //                };
 
 //                return Task.FromResult(response);
@@ -92,7 +92,7 @@
 
 //                var response = new HttpResponseMessage(HttpStatusCode.OK)
 //                {
-//                    Content = new StringContent(sseBuilder.ToString(), Encoding.UTF8, "text/event-stream")
+//                    Output = new StringContent(sseBuilder.ToString(), Encoding.UTF8, "text/event-stream")
 //                };
 
 //                return Task.FromResult(response);
@@ -115,7 +115,7 @@
 //                return new ResponsesApiRequest
 //                {
 //                    Model = conversationContext != null ? conversationContext.ModelName : "gpt-5.1",
-//                    Input =  new List<ResponsesMessage>() { new ResponsesMessage() { Content = new List<ResponsesMessageContent>() { new ResponsesMessageContent() { Text = (executeRequest != null ? executeRequest.Instruction : "") } } } } ,
+//                    Input =  new List<ResponsesMessage>() { new ResponsesMessage() { Output = new List<ResponsesMessageContent>() { new ResponsesMessageContent() { Text = (executeRequest != null ? executeRequest.Instruction : "") } } } } ,
 //                    Stream = true
 //                };
 //            }
@@ -272,7 +272,7 @@
 //            {
 //                var resp = new HttpResponseMessage(HttpStatusCode.InternalServerError)
 //                {
-//                    Content = new StringContent("{\"error\":\"boom\"}", Encoding.UTF8, "application/json")
+//                    Output = new StringContent("{\"error\":\"boom\"}", Encoding.UTF8, "application/json")
 //                };
 //                return Task.FromResult(resp);
 //            });
@@ -332,7 +332,7 @@
 //                httpCallCount++;
 //                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
 //                {
-//                    Content = new StringContent(string.Empty)
+//                    Output = new StringContent(string.Empty)
 //                });
 //            });
 
@@ -501,7 +501,7 @@
 
 //                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
 //                {
-//                    Content = new StringContent(json, Encoding.UTF8, "application/json")
+//                    Output = new StringContent(json, Encoding.UTF8, "application/json")
 //                });
 //            });
 

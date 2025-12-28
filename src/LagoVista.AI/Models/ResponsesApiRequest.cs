@@ -1,4 +1,7 @@
+using System;
 using System.Collections.Generic;
+using System.Diagnostics.Metrics;
+using LagoVista.Core.Models.ML;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -30,7 +33,7 @@ namespace LagoVista.AI.Models
         /// (VS Code extension) can define them freely.
         /// </summary>
         [JsonProperty("tools", NullValueHandling = NullValueHandling.Ignore)]
-        public List<JObject> Tools { get; set; }
+        public List<OpenAiToolDefinition> Tools { get; set; } = new List<OpenAiToolDefinition>();
 
         /// <summary>
         /// Optional tool choice hint (e.g., { type: "tool", name: "ddr_document" }).
@@ -62,7 +65,7 @@ namespace LagoVista.AI.Models
     public class ResponsesMessageContent
     {
         /// <summary>
-        /// Content type; for our usage we keep this as "input_text".
+        /// Output type; for our usage we keep this as "input_text".
         /// </summary>
         [JsonProperty("type")]
         public string Type { get; set; } = "input_text";
@@ -101,5 +104,97 @@ namespace LagoVista.AI.Models
         /// </summary>
         [JsonProperty("name")]
         public string Name { get; set; }
+    }
+
+    public sealed class OpenAIToolResultRequest
+    {
+        [JsonProperty("model")]
+        public string Model { get; set; }
+
+        [JsonProperty("input")]
+        public List<OpenAIToolResult> Inputs { get; set; } = new List<OpenAIToolResult>();
+    
+        public static OpenAIToolResultRequest FromResults(List<AgentToolCallResult> results)
+        {
+            var request = new OpenAIToolResultRequest();
+            foreach (var result in results)
+            {
+                request.Inputs.Add(OpenAIToolResult.FromResult(result));
+            }
+            return request;
+        }
+    }
+
+   
+    public sealed class OpenAIToolResult
+    {
+        [JsonProperty("type")]
+        public string Type { get; } = "custom_tool_call_output";
+
+        [JsonProperty("call_id")]
+        public string CallId { get; set; }
+
+        [JsonProperty("output")]
+        public List<OpenAIToolResultOutput> Output { get; set; }
+
+        public static OpenAIToolResult FromResult(AgentToolCallResult result)
+        {
+            if (String.IsNullOrEmpty(result.ToolCallId))
+                throw new InvalidOperationException("Missing tool call id");
+
+            var toolResult = new OpenAIToolResult
+            {
+                CallId = result.ToolCallId,
+                Output = new List<OpenAIToolResultOutput>() {  new OpenAIToolResultOutput() {  Text = result.ResultJson} }
+            };
+            return toolResult;
+        }
+    }
+
+
+    public sealed class OpenAIToolResultOutput
+    {
+        [JsonProperty("type")]
+        public string Type { get; } = "input_text";
+
+        [JsonProperty("text")]
+        public string Text { get; set; }
+    }
+
+    public sealed class OpenAIToolFinalResult
+    {
+        [JsonProperty("status")]
+        public string Status
+        {
+            get
+            {
+                if (Result != null)
+                    return "ok";
+
+                if (Error != null)
+                    return "error";
+
+                throw new InvalidOperationException("Tool result did not have error or result");
+            }
+        }
+
+        [JsonProperty("result")]
+        public JToken Result { get; set; }
+
+        [JsonProperty("error")]
+        public OpenAIToolResultError Error { get; set; }
+    }
+
+
+    public sealed class OpenAIToolResultError
+    {
+        [JsonProperty("code")]
+        public string Code { get; set; }
+
+        [JsonProperty("message")]
+        public string Message { get; set; }
+
+        [JsonProperty("retryable")]
+        public bool Retryable { get; set; }
     }
 }

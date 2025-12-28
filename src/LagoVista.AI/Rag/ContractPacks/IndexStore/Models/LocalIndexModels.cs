@@ -21,7 +21,7 @@ namespace LagoVista.AI.Rag.Models
         public string DocId { get; set; } = string.Empty;
 
         /// <summary>
-        /// Content hash from the last successful indexing run.
+        /// Output hash from the last successful indexing run.
         /// </summary>
         public string ContentHash { get; set; } = string.Empty;
 

@@ -24,9 +24,9 @@ namespace LagoVista.AI.Services
         /// Returns schemas for the specified set of tool names. Unrecognized
         /// tool names are ignored.
         /// </summary>
-        public IReadOnlyList<object> GetToolSchemas(List<string> toolNames)
+        public IReadOnlyList<OpenAiToolDefinition> GetToolSchemas(List<string> toolNames)
         {
-            var schemas = new List<object>();
+            var schemas = new List<OpenAiToolDefinition>();
 
             if (toolNames == null)
             {
@@ -62,7 +62,7 @@ namespace LagoVista.AI.Services
         /// Returns a single schema for the specified tool name, or null if the
         /// tool is not registered or a schema cannot be obtained.
         /// </summary>
-        public object GetToolSchema(string toolName)
+        public OpenAiToolDefinition GetToolSchema(string toolName)
         {
             if (string.IsNullOrWhiteSpace(toolName))
             {
@@ -79,7 +79,7 @@ namespace LagoVista.AI.Services
                 return null;
             }
 
-            var schemas = new List<object>();
+            var schemas = new List<OpenAiToolDefinition>();
             TryAddSchemaForTool(schemas, toolName, toolType);
 
             return schemas.FirstOrDefault();
@@ -88,7 +88,7 @@ namespace LagoVista.AI.Services
         /// <summary>
         /// Shared helper to reflect and add a schema for a single tool type.
         /// </summary>
-        private void TryAddSchemaForTool(ICollection<object> target, string toolName, Type toolType)
+        private void TryAddSchemaForTool(ICollection<OpenAiToolDefinition> target, string toolName, Type toolType)
         {
             try
             {
@@ -99,7 +99,7 @@ namespace LagoVista.AI.Services
                 // This *should* always be valid thanks to AgentToolRegistry.RegisterTool,
                 // but we keep a defensive check and log if it isn’t.
                 if (schemaMethod == null ||
-                    schemaMethod.ReturnType != typeof(object) ||
+                    schemaMethod.ReturnType != typeof(OpenAiToolDefinition) ||
                     schemaMethod.GetParameters().Length != 0)
                 {
                     _logger.AddError(
@@ -109,7 +109,7 @@ namespace LagoVista.AI.Services
                     return;
                 }
 
-                var schema = schemaMethod.Invoke(null, null);
+                var schema = schemaMethod.Invoke(null, null) as OpenAiToolDefinition;
                 if (schema != null)
                 {
                     target.Add(schema);
