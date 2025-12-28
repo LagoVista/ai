@@ -80,6 +80,8 @@ namespace LagoVista.AI.Rest
                         };
 
                         var result = await _agentRequestHandler.HandleAsync(request, OrgEntityHeader, UserEntityHeader, cancellationToken);
+                        await streamingContext.AddWorkflowAsync("processing completed, returning result");
+
                         if (streamingContext.Current != null)
                         {
                             await streamingContext.Current(new AgentStreamEvent

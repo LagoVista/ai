@@ -98,12 +98,8 @@ namespace LagoVista.AI.Helpers
                 }
             }
 
-            ctx.PromptKnowledgeProvider.ActiveTools.Add(new ActiveTool()
-            {
-                 Name = ActivateToolsTool.ToolName,
-                 Schama = ActivateToolsTool.GetSchema(),
-                 ToolUsageMetaData = ActivateToolsTool.ToolUsageMetadata
-            });
+            ctx.PromptKnowledgeProvider.ActiveTools.Add(new ActiveTool() {Name = ActivateToolsTool.ToolName, Schama = ActivateToolsTool.GetSchema(), ToolUsageMetaData = ActivateToolsTool.ToolUsageMetadata });
+            ctx.PromptKnowledgeProvider.ActiveTools.Add(new ActiveTool() { Name = AgentListModesTool.ToolName, Schama = AgentListModesTool.GetSchema(), ToolUsageMetaData = AgentListModesTool.ToolUsageMetadata });
 
             var loadedToolContent = new StringBuilder();
             loadedToolContent.AppendLine("[LOADED TOOLS]");
@@ -118,9 +114,6 @@ namespace LagoVista.AI.Helpers
             {
                 Text = loadedToolContent.ToString()
             });
-
-
-            Console.WriteLine(JsonConvert.SerializeObject(ctx.PromptKnowledgeProvider));
 
             // Available Tools are all the tools that could be used
             // with this mode, we need to let the LLM know about them.  
@@ -207,9 +200,7 @@ As soon as you know the tools you require to complete this request, you may stop
             {
                 dto.Tools.Add(tool.Schama);    
             }
-
-            ctx.PromptKnowledgeProvider.Reset();
-
+            
             if (ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCallResults.Any())
             {
                 var toolResultsText = ToolResultsTextBuilder.BuildFromToolResults(ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCallResults);
@@ -222,10 +213,11 @@ As soon as you know the tools you require to complete this request, you may stop
                 }
             }
 
-
             dto.Input.Add(systemMessage);
             dto.Input.Add(userMessage);
-         
+
+            ctx.PromptKnowledgeProvider.Reset();
+            
             return Task.FromResult(InvokeResult<ResponsesApiRequest>.Create(dto));
 
         }

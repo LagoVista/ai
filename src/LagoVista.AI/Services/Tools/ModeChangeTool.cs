@@ -1,5 +1,6 @@
 using System;
 using System.Drawing;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
@@ -19,11 +20,12 @@ namespace LagoVista.AI.Services.Tools
         public const string ToolName = "agent_change_mode";
 
         public const string ToolUsageMetadata =
-            @"Use this tool to change the current agent session mode, if it was explicilty stated
-             you can chnage modes immediately wihtout confirmation, however if the user wants
-             to do something better supported by a different mode you should ask them first.
-             after switching to the new mode, you should display the Welcome Message assocaited
-             with the new mode.";
+@"Use this tool to change the current agent session mode, if it was explicilty stated
+you can chnage modes immediately wihtout confirmation, however if the user wants
+to do something better supported by a different mode you should ask them first.
+after switching to the new mode, you should display the Welcome Message assocaited
+with the new mode.
+";
 
         private readonly IAgentSessionManager _sessionManager;
         private readonly IAdminLogger _logger;
@@ -56,6 +58,13 @@ namespace LagoVista.AI.Services.Tools
         {
             [JsonProperty("success")]
             public bool Success { get; set; }
+
+            [JsonProperty("errorMessage")]
+            public string ErrorMessage { get; set; }
+
+
+            [JsonProperty("canRetry")]
+            public bool CanRetry { get; set; }
 
             [JsonProperty("mode")]
             public string Mode { get; set; }
@@ -106,6 +115,21 @@ namespace LagoVista.AI.Services.Tools
                 {
                     return InvokeResult<string>.FromError(
                         "ModeChangeTool requires a non-empty 'reason' string explaining why the mode change is needed.");
+                }
+
+                var mode = ctx.AgentContext.AgentModes.SingleOrDefault(md => md.Key == args.Mode);
+                if(mode == null)
+                {
+                    var failedResult = new ModeChangeResult
+                    {
+                        Success = false,
+                        CanRetry = true,
+                        ErrorMessage = $"Mode [{args.Mode}] not found, available modes are {String.Join(",", ctx.AgentContext.AgentModes.Select(md => md.Key)) }"
+                    };
+
+   
+                    var modeChangeFailedJson = JsonConvert.SerializeObject(failedResult);
+                    return InvokeResult<string>.Create(modeChangeFailedJson);
                 }
 
                 var previousMode = ctx.Session.Mode;

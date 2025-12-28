@@ -17,7 +17,7 @@ namespace LagoVista.AI.Services
         private readonly IAdminLogger _logger;
         private readonly IAgentStreamingContext _agentStreamingContext;
      
-        private const int MaxReasoningIterations = 4;
+        private const int MaxReasoningIterations = 8;
 
         public AgentReasonerPipelineStep(ILLMClient llmClient, IAgentToolExecutor toolExecutor,
             IAgentPipelineContextValidator validator,

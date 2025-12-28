@@ -133,6 +133,7 @@ namespace LagoVista.AI.Services.OpenAI
                         return InvokeResult<string>.FromInvokeResult(finalResponse.ToInvokeResult());
                     }
 
+                    await _streamingUi.AddWorkflowAsync("we got it!");
                     return InvokeResult<string>.Create(finalResponse.Result);
                 }
             }
