@@ -20,7 +20,7 @@ namespace LagoVista.AI.Services.Tools
 
             _agentToolRegistry = toolRegistry;
 
-            adminLogger.Trace("[AgentToolRegistry_RegisterTool] - Start Register Server Tools - vvvv");
+            adminLogger.Trace("[AgentToolRegistry_RegisterTool] - Start Register Server Tools");
 
             toolRegistry.RegisterTool<ActivateToolsTool>();
 
@@ -107,9 +107,6 @@ namespace LagoVista.AI.Services.Tools
             services.AddScoped<IWorkspacePatchStore, InMemoryWorkspacePatchStore>();
             services.AddScoped<IWorkspaceWritePatchValidator, WorkspaceWritePatchValidator>();
             services.AddScoped<IWorkspacePatchBatchFactory, WorkspacePatchBatchFactory>();
-
-            adminLogger.Trace("[AgentToolRegistry_RegisterTool] - All server tools registered - ^^^");
-
         }
     }
 }

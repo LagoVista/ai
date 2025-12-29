@@ -745,4 +745,7 @@
   <data name="AgentToolBoxes_Title" xml:space="preserve">
     <value>Agent Tool Boxes</value>
   </data>
+  <data name="AgentSessionTurnStatuses_RolledBackTurn" xml:space="preserve">
+    <value>Rolled Back Turn</value>
+  </data>
 </root>

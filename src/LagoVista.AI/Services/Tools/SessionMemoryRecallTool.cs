@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -8,6 +9,7 @@ using LagoVista.AI.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json;
+using SixLabors.Fonts.Tables.AdvancedTypographic;
 
 namespace LagoVista.AI.Services.Tools
 {
@@ -53,26 +55,24 @@ namespace LagoVista.AI.Services.Tools
         private sealed class RecallResult
         {
             public List<RecallItem> Items { get; set; } = new List<RecallItem>();
-            public string SessionId { get; set; }
             public int Count { get; set; }
         }
 
-        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
         public async Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentToolExecutionContext context, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context)
         {
             if (context == null)
             {
-                return InvokeResult<string>.FromError("session_memory_recall requires a valid execution context.");
-            }
-
-            if (string.IsNullOrWhiteSpace(context.SessionId))
-            {
-                return InvokeResult<string>.FromError("session_memory_recall requires a sessionId in the execution context.");
+                return Task.FromResult(InvokeResult<string>.FromError("session_memory_recall requires a valid execution context."));
             }
 
             if (string.IsNullOrWhiteSpace(argumentsJson))
             {
-                return InvokeResult<string>.FromError("session_memory_recall requires a non-empty arguments object.");
+                return Task.FromResult(InvokeResult<string>.FromError("session_memory_recall requires a non-empty arguments object."));
             }
 
             try
@@ -83,31 +83,59 @@ namespace LagoVista.AI.Services.Tools
                 var hasKind = !string.IsNullOrWhiteSpace(args.Kind);
                 if (!hasIds && !hasTag && !hasKind)
                 {
-                    return InvokeResult<string>.FromError("session_memory_recall requires at least one of memoryIds, tag, or kind.");
+                    return Task.FromResult(InvokeResult<string>.FromError("session_memory_recall requires at least one of memoryIds, tag, or kind."));
                 }
 
                 var includeDetails = !args.IncludeDetails.HasValue || args.IncludeDetails.Value;
                 var ids = hasIds ? args.MemoryIds.Where(id => !string.IsNullOrWhiteSpace(id)).Select(id => id.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).ToList() : new List<string>();
-                var recall = await _agentSessionManager.RecallSessionMemoryNotesAsync(context.SessionId, ids, string.IsNullOrWhiteSpace(args.Tag) ? null : args.Tag.Trim(), string.IsNullOrWhiteSpace(args.Kind) ? null : args.Kind.Trim(), includeDetails, context.Org, context.User);
-                if (!recall.Successful)
+
+                IEnumerable<AgentSessionMemoryNote> query = context.Session.MemoryNotes;
+
+                if (ids.Count > 0) query = query.Where(n => !string.IsNullOrWhiteSpace(n.MemoryId) && ids.Contains(n.MemoryId, StringComparer.OrdinalIgnoreCase));
+
+                if (!string.IsNullOrWhiteSpace(args.Tag))
                 {
-                    return InvokeResult<string>.FromInvokeResult(recall.ToInvokeResult());
+                    var t = args.Tag.Trim();
+                    query = query.Where(n => n.Tags != null && n.Tags.Any(x => string.Equals(x, t, StringComparison.OrdinalIgnoreCase)));
+                }
+                if (!String.IsNullOrEmpty(args.Kind))
+                {
+                    var kindFilter = SessionMemoryStoreTool.ParseKind(args.Kind);
+                    query = query.Where(n => n.Kind != null && n.Kind.Value == kindFilter);
+                }
+                var results = query.OrderByDescending(n => n.CreationDate).ThenByDescending(n => n.MemoryId).ToList();
+
+                if (!includeDetails)
+                {
+                    results = results.Select(n => new AgentSessionMemoryNote
+                    {
+                        Id = n.Id,
+                        MemoryId = n.MemoryId,
+                        Title = n.Title,
+                        Summary = n.Summary,
+                        Details = null,
+                        Importance = n.Importance,
+                        Kind = n.Kind,
+                        Tags = n.Tags == null ? new List<string>() : new List<string>(n.Tags),
+                        CreationDate = n.CreationDate,
+                        CreatedByUser = n.CreatedByUser,
+                        TurnSourceId = n.TurnSourceId,
+                        SessionId = n.SessionId
+                    }).ToList();
                 }
 
-                var notes = recall.Result ?? new List<AgentSessionMemoryNote>();
-                var items = notes.Select(n => new RecallItem { MemoryId = n.MemoryId, Title = n.Title, Summary = n.Summary, Details = includeDetails ? n.Details : null, Kind = n.Kind?.Value.ToString(), Importance = n.Importance?.Value.ToString(), Tags = n.Tags ?? new List<string>(), CreationDate = n.CreationDate }).ToList();
+                var items = results.Select(n => new RecallItem { MemoryId = n.MemoryId, Title = n.Title, Summary = n.Summary, Details = includeDetails ? n.Details : null, Kind = n.Kind?.Value.ToString(), Importance = n.Importance?.Value.ToString(), Tags = n.Tags ?? new List<string>(), CreationDate = n.CreationDate }).ToList();
                 var payload = new RecallResult
                 {
                     Items = items,
-                    SessionId = context?.Request?.SessionId,
                     Count = items.Count
                 };
-                return InvokeResult<string>.Create(JsonConvert.SerializeObject(payload));
+                return Task.FromResult(InvokeResult<string>.Create(JsonConvert.SerializeObject(payload)));
             }
             catch (Exception ex)
             {
                 _logger.AddException("[SessionMemoryRecallTool_ExecuteAsync__Exception]", ex);
-                return InvokeResult<string>.FromError("session_memory_recall failed to process arguments.");
+                return Task.FromResult(InvokeResult<string>.FromError("session_memory_recall failed to process arguments."));
             }
         }
 

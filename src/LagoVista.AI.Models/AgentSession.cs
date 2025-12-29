@@ -27,6 +27,9 @@ namespace LagoVista.AI.Models
 
         [EnumLabel(AgentSessionTurn.AgentSessionTurnStatuses_Failed, AIResources.Names.Common_Status_Failed, typeof(AIResources))]
         Failed,
+
+        [EnumLabel(AgentSessionTurn.AgentSessionTurnStatuses_RolledBackTurn, AIResources.Names.AgentSessionTurnStatuses_RolledBackTurn, typeof(AIResources))]
+        RolledBackTurn,
     }
 
     public enum OperationKinds
@@ -221,6 +224,7 @@ namespace LagoVista.AI.Models
         public const string AgentSessionTurnStatuses_Completed = "completed";
         public const string AgentSessionTurnStatuses_Failed = "failed";
         public const string AgentSessionTurnStatuses_Aborted = "aborted";
+        public const string AgentSessionTurnStatuses_RolledBackTurn = "rolledbackturn";
 
         public string Id { get; set; } = Guid.NewGuid().ToId();
 

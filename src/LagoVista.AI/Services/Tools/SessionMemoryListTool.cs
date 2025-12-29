@@ -56,42 +56,40 @@ namespace LagoVista.AI.Services.Tools
             public int Count { get; set; }
         }
 
-        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
-        public async Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentToolExecutionContext context, CancellationToken cancellationToken = default)
+        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentToolExecutionContext context, CancellationToken cancellationToken = default)
+        {
+            throw new ArgumentNullException();
+        }
+
+
+
+        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context)
         {
             if (context == null)
             {
-                return InvokeResult<string>.FromError("session_memory_list requires a valid execution context.");
-            }
-
-            if (string.IsNullOrWhiteSpace(context.SessionId))
-            {
-                return InvokeResult<string>.FromError("session_memory_list requires a sessionId in the execution context.");
+                return Task.FromResult(InvokeResult<string>.FromError("session_memory_list requires a valid execution context."));
             }
 
             try
             {
                 var args = string.IsNullOrWhiteSpace(argumentsJson) ? new ListArgs() : (JsonConvert.DeserializeObject<ListArgs>(argumentsJson) ?? new ListArgs());
                 var limit = args.Limit.HasValue && args.Limit.Value > 0 ? args.Limit.Value : 50;
-                var list = await _agentSessionManager.ListSessionMemoryNotesAsync(context.SessionId, string.IsNullOrWhiteSpace(args.Tag) ? null : args.Tag.Trim(), string.IsNullOrWhiteSpace(args.Kind) ? null : args.Kind.Trim(), string.IsNullOrWhiteSpace(args.ImportanceMin) ? null : args.ImportanceMin.Trim(), limit, context.Org, context.User);
-                if (!list.Successful)
-                {
-                    return InvokeResult<string>.FromInvokeResult(list);
-                }
+                var list = context.Session.MemoryNotes;
+              
 
-                var items = (list.Model ?? new List<AgentSessionMemoryNote>()).Select(n => new ListItem { MemoryId = n.MemoryId, Title = n.Title, Summary = n.Summary, Kind = n.Kind?.Value.ToString(), Importance = n.Importance?.Value.ToString(), Tags = n.Tags ?? new List<string>(), CreationDate = n.CreationDate }).ToList();
+                var items = (list ?? new List<AgentSessionMemoryNote>()).Select(n => new ListItem { MemoryId = n.MemoryId, Title = n.Title, Summary = n.Summary, Kind = n.Kind?.Value.ToString(), Importance = n.Importance?.Value.ToString(), Tags = n.Tags ?? new List<string>(), CreationDate = n.CreationDate }).ToList();
                 var payload = new ListResult
                 {
                     Items = items,
-                    SessionId = context?.Request?.SessionId,
+                    SessionId = context.Session.Id,
                     Count = items.Count
                 };
-                return InvokeResult<string>.Create(JsonConvert.SerializeObject(payload));
+                return Task.FromResult(InvokeResult<string>.Create(JsonConvert.SerializeObject(payload)));
             }
             catch (Exception ex)
             {
                 _logger.AddException("[SessionMemoryListTool_ExecuteAsync__Exception]", ex);
-                return InvokeResult<string>.FromError("session_memory_list failed to process arguments.");
+                return Task.FromResult(InvokeResult<string>.FromError("session_memory_list failed to process arguments."));
             }
         }
 

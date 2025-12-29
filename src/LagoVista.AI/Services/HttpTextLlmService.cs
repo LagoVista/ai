@@ -137,7 +137,7 @@ namespace LagoVista.AI.Services
             {
                 httpResponse = await client.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false);
                 responseContent = await httpResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
-                _logger.Trace($"[{nameof(HttpTextLlmService)}__{nameof(ExecuteAsync)}__Recv]\r\n<<===\r\n{responseContent}\r\n<<===\r\n");
+                _logger.Trace($"[{nameof(HttpTextLlmService)}__{nameof(ExecuteAsync)}__Recv]\r\n[JSON.LLMTEXT]={responseContent.Replace("\r",String.Empty).Replace("\n", String.Empty)}");
             }
             catch (Exception ex)
             {

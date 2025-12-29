@@ -76,7 +76,7 @@ namespace LagoVista.AI.Services.OpenAI
 
             var requestJson = requestBuildResult.Result;
 
-            _log.Trace("[OpenAIResponsesClient__ExecuteAsync] Call LLM with JSON\r\n===== >>>>>\r\n" + requestJson + "\r\n===== >>>>>");
+            _log.Trace("[JSON.LLMREQUEST]=" + requestJson);
 
             await _events.PublishAsync(ctx.Session.Id, "LLMStarted", "in-progress", "Calling OpenAI model...", null, ctx.CancellationToken);
 
@@ -84,7 +84,7 @@ namespace LagoVista.AI.Services.OpenAI
             var invoke = await _invoker.InvokeAsync(ctx, requestJson);
             if (!invoke.Successful) return await FailAsync(ctx.Session.Id, invoke.ToInvokeResult(), "LLM invoke failed.", ctx.CancellationToken);
 
-            _log.Trace($"[OpenAIResponsesClient__ExecuteAsync] Response JSON in {sw.Elapsed.TotalMilliseconds}ms \r\n<<<<< =====\r\n" + invoke.Result + "\r\n<<<<< =====");
+            _log.Trace($"[JSON.LLMRESPONSE]=" + invoke.Result.Trim());
 
             var parsed = await _parser.ParseAsync(ctx, invoke.Result);
             if (!parsed.Successful) return await FailAsync(ctx.Session.Id, parsed.ToInvokeResult(), "Response parse failed.", ctx.CancellationToken);

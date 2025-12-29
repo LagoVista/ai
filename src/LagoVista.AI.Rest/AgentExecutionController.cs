@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using MongoDB.Bson;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
@@ -49,8 +50,7 @@ namespace LagoVista.AI.Rest
         {
             var requestJson = JsonConvert.SerializeObject(request);
             var sw = Stopwatch.StartNew();
-            Console.WriteLine($">>>> Received AgentExecuteRequest, size {(requestJson.Length / 1024.0).ToString("0.00")}kb \r\n{requestJson}\r\n");
-
+            _adminLogger.Trace($"[JSON.RAWAPIREQUEST]={requestJson}");
             var cancellationToken = HttpContext?.RequestAborted ?? CancellationToken.None;
 
             try
@@ -65,6 +65,7 @@ namespace LagoVista.AI.Rest
                         await Response.Body.FlushAsync();
                         streamingContext.Current = async ev =>
                         {
+
                             var json = JsonConvert.SerializeObject(
                                 ev,
                                 Formatting.None,
@@ -74,6 +75,7 @@ namespace LagoVista.AI.Rest
                                     NullValueHandling = NullValueHandling.Ignore
                                 });
 
+                    
                             await Response.WriteAsync(json, cancellationToken);
                             await Response.WriteAsync("\n", cancellationToken);
                             await Response.Body.FlushAsync(cancellationToken);
@@ -99,14 +101,11 @@ namespace LagoVista.AI.Rest
                     if (result.Successful)
                     {
                         var responseJSON = JsonConvert.SerializeObject(result.Result);
-                        Console.WriteLine($">>>> Handeed AgentExecuteReques in {sw.Elapsed.TotalSeconds.ToString("0.00")} seconds, response size:  {(responseJSON.Length / 1024.0).ToString("0.00")}kb\r\n====\r\n{responseJSON}\r\n");
-
+                        _adminLogger.Trace($"[JSON.RAWREQUEST]={responseJSON}");
                     }
-                    else
-                        Console.WriteLine($">>>> Handeed AgentExecuteRequest => FAILED: {result.Errors[0].Message}\r\n====\r\n");
-
-                        return new JsonResult(result);
-                    }           
+                   
+                    return new JsonResult(result);
+                }           
             }
             catch(OperationCanceledException)
             {
@@ -156,7 +155,7 @@ namespace LagoVista.AI.Rest
             }
             catch(Exception ex)
             {
-                _adminLogger.AddException("[AgentExecutionController_ExecuteAsync] - Unhandled Exception", ex);
+                _adminLogger.AddException("[AgentExecutionController_ExecuteAsync]", ex);
 
                 if (streamingContext.Current != null)
                 {
@@ -170,6 +169,12 @@ namespace LagoVista.AI.Rest
 
                 return new EmptyResult();
             }
+        }
+
+        [HttpGet("/api/ai/agent/session/{id}/rollback/{turnid}")]
+        public Task<InvokeResult<AgentSession>> RollbackAgentSessionTurn(string id, string turnid)
+        {
+            return _sessionManager.RollbackAsync(null, turnid, OrgEntityHeader, UserEntityHeader);
         }
 
         [HttpGet("/api/ai/agent/session/{sessionid}/branch/{turnid}")]

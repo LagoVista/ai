@@ -52,24 +52,28 @@ namespace LagoVista.AI.Services.Tools
             public string Message { get; set; }
         }
 
-        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
-        public async Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentToolExecutionContext context, CancellationToken cancellationToken = default)
+        public async Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentToolExecutionContext context, CancellationToken cancellationToken = default) => throw new NotImplementedException();
+
+
+        public async Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context)
         {
             if (string.IsNullOrWhiteSpace(argumentsJson))
                 return InvokeResult<string>.FromError("session_checkpoint_restore requires a non-empty arguments object.");
             if (context == null)
                 return InvokeResult<string>.FromError("session_checkpoint_restore requires a valid execution context.");
-            if (string.IsNullOrWhiteSpace(context.SessionId))
-                return InvokeResult<string>.FromError("session_checkpoint_restore requires a sessionId in the execution context.");
+           
             try
             {
                 var args = JsonConvert.DeserializeObject<Args>(argumentsJson) ?? new Args();
                 if (string.IsNullOrWhiteSpace(args.CheckpointId))
                     return InvokeResult<string>.FromError("session_checkpoint_restore requires 'checkpointId'.");
-                var sourceSessionId = context.SessionId;
-                var restored = await _sessions.RestoreSessionCheckpointAsync(sourceSessionId, args.CheckpointId.Trim(), context.Org, context.User);
+
+
+                var restored = await _sessions.RestoreSessionCheckpointAsync(context.Session, args.CheckpointId.Trim(), context.Envelope.Org, context.Envelope.User);
                 if (!restored.Successful)
                     return InvokeResult<string>.FromInvokeResult(restored.ToInvokeResult());
+                
+                
                 var newSession = restored.Result;
                 if (newSession == null || string.IsNullOrWhiteSpace(newSession.Id))
                     return InvokeResult<string>.FromError("session_checkpoint_restore did not return a new session.");
@@ -77,13 +81,13 @@ namespace LagoVista.AI.Services.Tools
                 {
                     Kind = "checkpoint_restore",
                     ResetConversationChain = true,
-                    SourceSessionId = sourceSessionId,
+                    SourceSessionId = context.Session.Id,
                     NewSessionId = newSession.Id,
                     CheckpointId = args.CheckpointId.Trim(),
                     RestoreTurnId = newSession.SourceTurnSourceId,
                     RestoreOperationId = newSession.RestoreOperationId,
                     RestoredOnUtc = newSession.RestoredOnUtc,
-                    SessionId = context?.Request?.SessionId,
+                    SessionId = context.Session.Id,
                     Message = $"Restored checkpoint {args.CheckpointId.Trim()} into a new branched session."};
                 return InvokeResult<string>.Create(JsonConvert.SerializeObject(payload));
             }

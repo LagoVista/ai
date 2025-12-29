@@ -9,6 +9,8 @@ using LagoVista.Core.Validation;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis.Operations;
+using LagoVista.IoT.Logging.Loggers;
 
 namespace LagoVista.AI.Helpers
 {
@@ -18,6 +20,13 @@ namespace LagoVista.AI.Helpers
     /// </summary>
     public class AgentExecuteResponseParser : IAgentExecuteResponseParser
     {
+        private readonly IAdminLogger _logger;
+
+        public AgentExecuteResponseParser(IAdminLogger logger)
+        {
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
+
         /// <summary>
         /// Parses the raw JSON string returned by the OpenAI /responses API into an AgentExecuteResponse.
         /// Conversation/agent/context identifiers and mode are taken from the AgentExecuteRequest.
@@ -25,282 +34,289 @@ namespace LagoVista.AI.Helpers
         /// <param name="rawJson">Raw JSON from the /responses call.</param>
         /// <param name="request">The AgentExecuteRequest used to initiate this call.</param>
         /// <returns>Populated AgentExecuteResponse.</returns>
-        public  Task<InvokeResult<IAgentPipelineContext>> ParseAsync(IAgentPipelineContext ctx, string rawJson)
+        public Task<InvokeResult<IAgentPipelineContext>> ParseAsync(IAgentPipelineContext ctx, string rawJson)
         {
             if (string.IsNullOrWhiteSpace(rawJson))
             {
                 return Task.FromResult(InvokeResult<IAgentPipelineContext>.FromError("[AgentExecuteResponseParser__Parse] Empty or null JSON payload."));
             }
 
+
+
             JObject root;
             try
             {
                 root = JObject.Parse(rawJson);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(rawJson);
-                return Task.FromResult(InvokeResult<IAgentPipelineContext>.FromError($"[AgentExecuteResponseParser__Parse] {ex.Message}"));
-            }
+           
+                var response = new ResponsePayload
+                {
 
-            var response = new ResponsePayload
-            {
-
-            };
+                };
 
 
-            var id = root["id"];
-            if (id == null)
-            {
-                return Task.FromResult(InvokeResult<IAgentPipelineContext>.FromError("[AgentExecuteResponseParser__Parse] Missing [id] Node."));
-            }
-            else
-            {
-                ctx.ThisTurn.OpenAIResponseId = id.Value<string>();
-            }
+                var id = root["id"];
+                if (id == null)
+                {
+                    return Task.FromResult(InvokeResult<IAgentPipelineContext>.FromError("[AgentExecuteResponseParser__Parse] Missing [id] Node."));
+                }
+                else
+                {
+                    ctx.ThisTurn.OpenAIResponseId = id.Value<string>();
+                }
 
                 // Usage block – support both old (prompt/completion) and new (input/output) fields
-            var usage = root["usage"];
-            if (usage != null)
-            {
-                var promptTokens =
-                    usage.Value<int?>("prompt_tokens") ??
-                    usage.Value<int?>("input_tokens");
-
-                var completionTokens =
-                    usage.Value<int?>("completion_tokens") ??
-                    usage.Value<int?>("output_tokens");
-
-                var totalTokens =
-                    usage.Value<int?>("total_tokens");
-
-                var promptTokenDetails = usage["prompt_tokens_details"];
-                if(promptTokenDetails != null)
+                var usage = root["usage"];
+                if (usage != null)
                 {
-                    var cachedTokens = promptTokenDetails.Value<int?>("cached_tokens");
-                    response.Usage.CachedTokends = cachedTokens ?? 0;    
+                    var promptTokens =
+                        usage.Value<int?>("prompt_tokens") ??
+                        usage.Value<int?>("input_tokens");
+
+                    var completionTokens =
+                        usage.Value<int?>("completion_tokens") ??
+                        usage.Value<int?>("output_tokens");
+
+                    var totalTokens =
+                        usage.Value<int?>("total_tokens");
+
+                    var promptTokenDetails = usage["prompt_tokens_details"];
+                    if (promptTokenDetails != null)
+                    {
+                        var cachedTokens = promptTokenDetails.Value<int?>("cached_tokens");
+                    }
+
+                    var completionTokenDetails = usage["prompt_tokens_details"];
+                    if (completionTokenDetails != null)
+                    {
+                        var reasoningTokens = completionTokenDetails.Value<int?>("reasoning_tokens");
+                        response.Usage.ReasoningTokens = reasoningTokens ?? 0;
+                    }
+                    response.Usage.PromptTokens = promptTokens ?? 0;
+                    response.Usage.CompletionTokens = completionTokens ?? 0;
+                    response.Usage.TotalTokens = totalTokens ?? (response.Usage.PromptTokens + response.Usage.CompletionTokens);
                 }
 
-                var completionTokenDetails = usage["prompt_tokens_details"];
-                if (completionTokenDetails != null)
+                // Extract output – allow both array and single-object shapes
+                var outputToken = root["output"];
+                JArray outputArray = null;
+
+                if (outputToken is JArray arr)
                 {
-                    var reasoningTokens = completionTokenDetails.Value<int?>("reasoning_tokens");
-                    response.Usage.ReasoningTokens = reasoningTokens ?? 0;
+                    outputArray = arr;
+                }
+                else if (outputToken is JObject singleObj)
+                {
+                    outputArray = new JArray(singleObj);
                 }
 
-                response.Usage.PromptTokens = promptTokens ?? 0;
-                response.Usage.CompletionTokens = completionTokens ?? 0;
-                response.Usage.TotalTokens = totalTokens ?? (response.Usage.PromptTokens + response.Usage.CompletionTokens);
-            }
-
-            // Extract output – allow both array and single-object shapes
-            var outputToken = root["output"];
-            JArray outputArray = null;
-
-            if (outputToken is JArray arr)
-            {
-                outputArray = arr;
-            }
-            else if (outputToken is JObject singleObj)
-            {
-                outputArray = new JArray(singleObj);
-            }
-
-            if (outputArray == null)
-            {
-                return Task.FromResult(InvokeResult<IAgentPipelineContext>.FromError("[AgentExecuteResponseParser__Parse] Missing [output] Node."));
-            }
-
-            var textSegments = new List<string>();
-            var toolCalls = new List<AgentToolCall>();
-            var finishReasons = new List<string>();
-
-            foreach (var item in outputArray)
-            {
-                var type = item.Value<string>("type");
-
-                switch (type)
+                if (outputArray == null)
                 {
-                    case "output_text":
-                        {
-                            // Legacy flat shape: output[] items are output_text
-                            var txt = item.Value<string>("text");
-                            if (!string.IsNullOrWhiteSpace(txt))
-                            {
-                                textSegments.Add(txt);
-                            }
+                    return Task.FromResult(InvokeResult<IAgentPipelineContext>.FromError("[AgentExecuteResponseParser__Parse] Missing [output] Node."));
+                }
 
-                            var fr = item.Value<string>("finish_reason");
-                            if (!string.IsNullOrWhiteSpace(fr))
-                            {
-                                finishReasons.Add(fr);
-                            }
-                            break;
-                        }
+                var textSegments = new List<string>();
+                var toolCalls = new List<AgentToolCall>();
+                var finishReasons = new List<string>();
 
-                    case "tool_call":
-                        {
-                            // Legacy flat tool_call shape
-                            var call = item["tool_call"];
-                            if (call != null)
+                foreach (var item in outputArray)
+                {
+                    var type = item.Value<string>("type");
+
+                    switch (type)
+                    {
+                        case "output_text":
                             {
-                                var agentCall = new AgentToolCall
+                                // Legacy flat shape: output[] items are output_text
+                                var txt = item.Value<string>("text");
+                                if (!string.IsNullOrWhiteSpace(txt))
                                 {
-                                    ToolCallId = call.Value<string>("id"),
-                                    Name = call.Value<string>("name"),
-                                    ArgumentsJson = call["arguments"]?.ToString(Formatting.None)
-                                };
+                                    textSegments.Add(txt);
+                                }
 
-                                toolCalls.Add(agentCall);
-
-                                var fr = call.Value<string>("finish_reason");
+                                var fr = item.Value<string>("finish_reason");
                                 if (!string.IsNullOrWhiteSpace(fr))
                                 {
                                     finishReasons.Add(fr);
                                 }
+                                break;
                             }
-                            break;
-                        }
 
-                    case "function_call":
-                        {
-                            // New Responses shape for tool calls in output[]
-                            // Example:
-                            // {
-                            //   "type": "function_call",
-                            //   "status": "completed",
-                            //   "arguments": "{\"message\":\"hello\",\"count\":0}",
-                            //   "call_id": "call_...",
-                            //   "name": "testing_ping_pong"
-                            // }
-
-                            string argsJson = null;
-                            var argsToken = item["arguments"];
-                            if (argsToken != null)
+                        case "tool_call":
                             {
-                                if (argsToken.Type == JTokenType.String)
+                                // Legacy flat tool_call shape
+                                var call = item["tool_call"];
+                                if (call != null)
                                 {
-                                    var rawArgs = argsToken.Value<string>();
-                                    if (!string.IsNullOrWhiteSpace(rawArgs))
+                                    var agentCall = new AgentToolCall
                                     {
-                                        try
-                                        {
-                                            argsJson = JToken.Parse(rawArgs).ToString(Formatting.None);
-                                        }
-                                        catch
-                                        {
-                                            // If it's not valid JSON, just keep the raw string.
-                                            argsJson = rawArgs;
-                                        }
+                                        ToolCallId = call.Value<string>("id"),
+                                        Name = call.Value<string>("name"),
+                                        ArgumentsJson = call["arguments"]?.ToString(Formatting.None)
+                                    };
+
+                                    toolCalls.Add(agentCall);
+
+                                    var fr = call.Value<string>("finish_reason");
+                                    if (!string.IsNullOrWhiteSpace(fr))
+                                    {
+                                        finishReasons.Add(fr);
                                     }
                                 }
-                                else
-                                {
-                                    argsJson = argsToken.ToString(Formatting.None);
-                                }
+                                break;
                             }
 
-                            var agentCall = new AgentToolCall
+                        case "function_call":
                             {
-                                ToolCallId = item.Value<string>("call_id"),
-                                Name = item.Value<string>("name"),
-                                ArgumentsJson = argsJson
-                            };
+                                // New Responses shape for tool calls in output[]
+                                // Example:
+                                // {
+                                //   "type": "function_call",
+                                //   "status": "completed",
+                                //   "arguments": "{\"message\":\"hello\",\"count\":0}",
+                                //   "call_id": "call_...",
+                                //   "name": "testing_ping_pong"
+                                // }
 
-                            toolCalls.Add(agentCall);
-
-                            var fr = item.Value<string>("finish_reason");
-                            if (!string.IsNullOrWhiteSpace(fr))
-                            {
-                                finishReasons.Add(fr);
-                            }
-
-                            break;
-                        }
-
-                    case "message":
-                        {
-                            // New Responses shape: output[] contains message objects with content[]
-                            var contentArray = item["content"] as JArray;
-                            if (contentArray != null)
-                            {
-                                foreach (var content in contentArray)
+                                string argsJson = null;
+                                var argsToken = item["arguments"];
+                                if (argsToken != null)
                                 {
-                                    var contentType = content.Value<string>("type");
-
-                                    if (string.Equals(contentType, "output_text", StringComparison.OrdinalIgnoreCase))
+                                    if (argsToken.Type == JTokenType.String)
                                     {
-                                        var txt = content.Value<string>("text");
-                                        if (!string.IsNullOrWhiteSpace(txt))
+                                        var rawArgs = argsToken.Value<string>();
+                                        if (!string.IsNullOrWhiteSpace(rawArgs))
                                         {
-                                            textSegments.Add(txt);
+                                            try
+                                            {
+                                                argsJson = JToken.Parse(rawArgs).ToString(Formatting.None);
+                                            }
+                                            catch
+                                            {
+                                                // If it's not valid JSON, just keep the raw string.
+                                                argsJson = rawArgs;
+                                            }
                                         }
                                     }
-                                    else if (string.Equals(contentType, "tool_call", StringComparison.OrdinalIgnoreCase))
+                                    else
                                     {
-                                        var call = content["tool_call"];
-                                        if (call != null)
+                                        argsJson = argsToken.ToString(Formatting.None);
+                                    }
+                                }
+
+                                var agentCall = new AgentToolCall
+                                {
+                                    ToolCallId = item.Value<string>("call_id"),
+                                    Name = item.Value<string>("name"),
+                                    ArgumentsJson = argsJson
+                                };
+
+                                toolCalls.Add(agentCall);
+
+                                var fr = item.Value<string>("finish_reason");
+                                if (!string.IsNullOrWhiteSpace(fr))
+                                {
+                                    finishReasons.Add(fr);
+                                }
+
+                                break;
+                            }
+
+                        case "message":
+                            {
+                                // New Responses shape: output[] contains message objects with content[]
+                                var contentArray = item["content"] as JArray;
+                                if (contentArray != null)
+                                {
+                                    foreach (var content in contentArray)
+                                    {
+                                        var contentType = content.Value<string>("type");
+
+                                        if (string.Equals(contentType, "output_text", StringComparison.OrdinalIgnoreCase))
                                         {
-                                            var agentCall = new AgentToolCall
+                                            var txt = content.Value<string>("text");
+                                            if (!string.IsNullOrWhiteSpace(txt))
                                             {
-                                                ToolCallId = call.Value<string>("id"),
-                                                Name = call.Value<string>("name"),
-                                                ArgumentsJson = call["arguments"]?.ToString(Formatting.None)
-                                            };
-
-                                            toolCalls.Add(agentCall);
-
-                                            var fr = call.Value<string>("finish_reason");
-                                            if (!string.IsNullOrWhiteSpace(fr))
+                                                textSegments.Add(txt);
+                                            }
+                                        }
+                                        else if (string.Equals(contentType, "tool_call", StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            var call = content["tool_call"];
+                                            if (call != null)
                                             {
-                                                finishReasons.Add(fr);
+                                                var agentCall = new AgentToolCall
+                                                {
+                                                    ToolCallId = call.Value<string>("id"),
+                                                    Name = call.Value<string>("name"),
+                                                    ArgumentsJson = call["arguments"]?.ToString(Formatting.None)
+                                                };
+
+                                                toolCalls.Add(agentCall);
+
+                                                var fr = call.Value<string>("finish_reason");
+                                                if (!string.IsNullOrWhiteSpace(fr))
+                                                {
+                                                    finishReasons.Add(fr);
+                                                }
                                             }
                                         }
                                     }
                                 }
+
+                                var frMsg = item.Value<string>("finish_reason");
+                                if (!string.IsNullOrWhiteSpace(frMsg))
+                                {
+                                    finishReasons.Add(frMsg);
+                                }
+
+                                break;
                             }
 
-                            var frMsg = item.Value<string>("finish_reason");
-                            if (!string.IsNullOrWhiteSpace(frMsg))
+                        default:
                             {
-                                finishReasons.Add(frMsg);
+                                // e.g. "reasoning" items or other types we don't currently surface
+                                var fr = item.Value<string>("finish_reason");
+                                if (!string.IsNullOrWhiteSpace(fr))
+                                {
+                                    finishReasons.Add(fr);
+                                }
+                                break;
                             }
-
-                            break;
-                        }
-
-                    default:
-                        {
-                            // e.g. "reasoning" items or other types we don't currently surface
-                            var fr = item.Value<string>("finish_reason");
-                            if (!string.IsNullOrWhiteSpace(fr))
-                            {
-                                finishReasons.Add(fr);
-                            }
-                            break;
-                        }
+                    }
                 }
+
+                response.PrimaryOutputText = textSegments.Count > 0
+                    ? string.Join("\n\n", textSegments)
+                    : null;
+
+                ctx.ThisTurn.PromptTokens = response.Usage.PromptTokens;
+                ctx.ThisTurn.CachedTokens = response.Usage.CachedTokends;
+                ctx.ThisTurn.TotalTokens = response.Usage.TotalTokens;
+                ctx.ThisTurn.ReasoningTokens = response.Usage.ReasoningTokens;
+                ctx.ThisTurn.CompletionTokens = response.Usage.CompletionTokens;
+              
+                if (String.IsNullOrEmpty(response.PrimaryOutputText) && ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCalls.Count > 0)
+                    ctx.ThisTurn.AgentAnswerSummary = "tool call - likely will be replaced by final output";
+                else if (!String.IsNullOrEmpty(response.PrimaryOutputText))
+                    ctx.ThisTurn.AgentAnswerSummary = response.PrimaryOutputText.Substring(0, Math.Min(255, response.PrimaryOutputText.Length));
+                else
+                    Task.FromResult(InvokeResult<IAgentPipelineContext>.FromError("[AgentExecuteResponseParser__Parse] No output text or tool calls found in response."));
+
+                if (toolCalls.Any())
+                    ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCalls = toolCalls;
+                else
+                {
+                    ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCalls.Clear();
+                    ctx.SetResponsePayload(response);
+                }
+
+                return Task.FromResult(InvokeResult<IAgentPipelineContext>.Create(ctx));
             }
-
-            response.PrimaryOutputText = textSegments.Count > 0
-                ? string.Join("\n\n", textSegments)
-                : null;
-
-            ctx.ThisTurn.PromptTokens = response.Usage.PromptTokens;
-            ctx.ThisTurn.CachedTokens = response.Usage.CachedTokends;
-            ctx.ThisTurn.TotalTokens = response.Usage.TotalTokens;
-            ctx.ThisTurn.ReasoningTokens = response.Usage.ReasoningTokens;
-            ctx.ThisTurn.CompletionTokens = response.Usage.CompletionTokens;
-
-            if (toolCalls.Any())
-                ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCalls = toolCalls;
-            else
+            catch (Exception ex)
             {
-                ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCalls.Clear();
-                ctx.SetResponsePayload(response);
+                _logger.AddException("[AgentExecuteResponseParser__Parse]", ex);
+                return Task.FromResult(InvokeResult<IAgentPipelineContext>.FromError($"[AgentExecuteResponseParser__Parse] {ex.Message}"));
             }
-
-            return Task.FromResult(InvokeResult<IAgentPipelineContext>.Create(ctx));
         }
     }
 }

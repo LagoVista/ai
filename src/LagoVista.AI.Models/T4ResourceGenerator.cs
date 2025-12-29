@@ -1,4 +1,4 @@
-﻿/*12/27/2025 1:11:19 PM*/
+﻿/*12/29/2025 11:24:55 AM*/
 using System.Globalization;
 using System.Reflection;
 
@@ -114,6 +114,9 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:AgentSessions_Title
 
 		public static string AgentSessions_Title { get { return GetResourceString("AgentSessions_Title"); } }
+//Resources:AIResources:AgentSessionTurnStatuses_RolledBackTurn
+
+		public static string AgentSessionTurnStatuses_RolledBackTurn { get { return GetResourceString("AgentSessionTurnStatuses_RolledBackTurn"); } }
 //Resources:AIResources:AgentToolBox_Description
 
 		public static string AgentToolBox_Description { get { return GetResourceString("AgentToolBox_Description"); } }
@@ -701,6 +704,7 @@ namespace LagoVista.AI.Models.Resources
 			public const string AgentSession_Help = "AgentSession_Help";
 			public const string AgentSession_Title = "AgentSession_Title";
 			public const string AgentSessions_Title = "AgentSessions_Title";
+			public const string AgentSessionTurnStatuses_RolledBackTurn = "AgentSessionTurnStatuses_RolledBackTurn";
 			public const string AgentToolBox_Description = "AgentToolBox_Description";
 			public const string AgentToolBox_Help = "AgentToolBox_Help";
 			public const string AgentToolBox_SummaryInstructions = "AgentToolBox_SummaryInstructions";

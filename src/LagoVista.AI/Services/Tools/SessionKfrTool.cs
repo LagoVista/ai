@@ -122,51 +122,53 @@ Conflict Handling:
             public string SessionId { get; set; }
         }
 
-        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
-        public async Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentToolExecutionContext context, CancellationToken cancellationToken = default)
+        private Task<InvokeResult<string>> Fail(string message)
+        {
+            return Task.FromResult(InvokeResult<string>.FromError(message));
+        }
+
+
+        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentToolExecutionContext context, CancellationToken cancellationToken = default) => throw new ArgumentNullException();
+
+        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) 
         {
             if (context == null)
-                return InvokeResult<string>.FromError("session_kfr requires a valid execution context.");
-            if (string.IsNullOrWhiteSpace(context.SessionId))
-                return InvokeResult<string>.FromError("session_kfr requires a sessionId in the execution context.");
+                return Fail("session_kfr requires a valid execution context.");
             try
             {
+                if(String.IsNullOrEmpty(context.Session.CurrentBranch))
+                    context.Session.CurrentBranch = AgentSession.DefaultBranch;
+
                 var args = string.IsNullOrWhiteSpace(argumentsJson) ? new Args() : JsonConvert.DeserializeObject<Args>(argumentsJson) ?? new Args();
                 var op = args.Operation?.Trim().ToLowerInvariant();
                 if (string.IsNullOrWhiteSpace(op))
-                    return InvokeResult<string>.FromError("session_kfr requires 'operation' (list|clear|upsert).");
+                    return Fail("session_kfr requires 'operation' (list|clear|upsert).");
                 if (op == "list")
                 {
-                    var session = await _sessions.GetAgentSessionAsync(context.SessionId, context.Org, context.User);
-                    var items = session.Kfrs[session.CurrentBranch].Where(k => k.IsActive).ToList() ?? new List<AgentSessionKfrEntry>();
-                    return InvokeResult<string>.Create(JsonConvert.SerializeObject(new Result { Operation = "list", Items = items, SessionId = context.SessionId }));
+                    var items = context.Session.Kfrs[context.Session.CurrentBranch].Where(k => k.IsActive).ToList() ?? new List<AgentSessionKfrEntry>();
+                    return Task.FromResult(InvokeResult<string>.Create((JsonConvert.SerializeObject(new Result { Operation = "list", Items = items, SessionId = context.Session.Id }))));
                 }
 
                 if (op == "clear")
                 {
-                    var session = await _sessions.GetAgentSessionAsync(context.SessionId, context.Org, context.User);
-                    session?.Kfrs[session.Mode]?.Clear();
-                    await _sessions.UpdateKFRsAsync(session.Id, session.Mode, session.Kfrs[session.Mode], context.Org, context.User);
-                    return InvokeResult<string>.Create(JsonConvert.SerializeObject(new Result { Operation = "clear", Items = new List<AgentSessionKfrEntry>(), SessionId = context.SessionId }));
+                     context.Session.Kfrs[context.Session.Mode]?.Clear();
+                    return Task.FromResult(InvokeResult<string>.Create(JsonConvert.SerializeObject(new Result { Operation = "clear", Items = new List<AgentSessionKfrEntry>(), SessionId = context.Session.Id })));
                 }
 
                 if (op == "upsert")
                 {
                     if (args.Entry == null)
-                        return InvokeResult<string>.FromError("session_kfr upsert requires 'entry'.");
+                        return Fail("session_kfr upsert requires 'entry'.");
                     if (!Enum.TryParse<KfrKind>(args.Entry.Kind, true, out var kind))
-                        return InvokeResult<string>.FromError($"Invalid KFR kind '{args.Entry.Kind}'.");
-                    var session = await _sessions.GetAgentSessionAsync(context.SessionId, context.Org, context.User);
-                    if (session == null)
-                        return InvokeResult<string>.FromError("session_kfr could not load the current session.");
-                    if (session.Kfrs == null)
-                        return InvokeResult<string>.FromError("session_kfr session has no KFR store initialized.");
-                    if (string.IsNullOrWhiteSpace(session.CurrentBranch))
-                        session.CurrentBranch = AgentSession.DefaultBranch;
-                    if (!session.Kfrs.TryGetValue(session.CurrentBranch, out var list) || list == null)
+                        return Fail($"Invalid KFR kind '{args.Entry.Kind}'.");
+                    
+                    if (context.Session.Kfrs == null)
+                        context.Session.Kfrs = new Dictionary<string, List<AgentSessionKfrEntry>>(StringComparer.OrdinalIgnoreCase);    
+
+                    if (!context.Session.Kfrs.TryGetValue(context.Session.CurrentBranch, out var list) || list == null)
                     {
                         list = new List<AgentSessionKfrEntry>();
-                        session.Kfrs[session.CurrentBranch] = list;
+                        context.Session.Kfrs[context.Session.CurrentBranch] = list;
                     }
 
                     var timeStamp = DateTime.UtcNow.ToJSONString();
@@ -226,25 +228,21 @@ Conflict Handling:
                     }
 
                     // Persist just the current branch KFRs (per your pattern)
-                    await _sessions.UpdateKFRsAsync(session.Id, session.Mode, session.Kfrs[session.CurrentBranch], context.Org, context.User);
-                    return InvokeResult<string>.Create(JsonConvert.SerializeObject(new Result { Operation = "upsert", Items = new List<AgentSessionKfrEntry> { entry }, SessionId = context.SessionId }));
+                    return Task.FromResult(InvokeResult<string>.Create(JsonConvert.SerializeObject(new Result { Operation = "upsert", Items = new List<AgentSessionKfrEntry> { entry }, SessionId = context.Session.Id })));
                 }
                 else if (op == "evict")
                 {
                     // Validate input
                     var ids = args.KfrIds?.Where(id => !string.IsNullOrWhiteSpace(id)).Select(id => id.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).ToList() ?? new List<string>();
                     if (ids.Count == 0)
-                        return InvokeResult<string>.FromError("session_kfr evict requires 'kfrIds' (one or more KFR ids).");
+                        return Fail("session_kfr evict requires 'kfrIds' (one or more KFR ids).");
                     var force = args.Force.HasValue && args.Force.Value;
-                    var session = await _sessions.GetAgentSessionAsync(context.SessionId, context.Org, context.User);
-                    if (session == null)
-                        return InvokeResult<string>.FromError("session_kfr could not load the current session.");
-                    const string branchKey = "main";
-                    session.Kfrs ??= new Dictionary<string, List<AgentSessionKfrEntry>>(StringComparer.OrdinalIgnoreCase);
-                    if (!session.Kfrs.TryGetValue(branchKey, out var branchList) || branchList == null)
+                  
+                    context.Session.Kfrs ??= new Dictionary<string, List<AgentSessionKfrEntry>>(StringComparer.OrdinalIgnoreCase);
+                    if (!context.Session.Kfrs.TryGetValue(context.Session.CurrentBranch, out var branchList) || branchList == null)
                     {
                         // Nothing to evict, treat as successful no-op
-                        return InvokeResult<string>.Create(JsonConvert.SerializeObject(new Result { Operation = "evict", Items = new List<AgentSessionKfrEntry>(), SessionId = context.SessionId }));
+                        return Task.FromResult(InvokeResult<string>.Create(JsonConvert.SerializeObject(new Result { Operation = "evict", Items = new List<AgentSessionKfrEntry>(), SessionId = context.Session.Id })));
                     }
 
                     // Find matching active entries
@@ -252,7 +250,7 @@ Conflict Handling:
                     if (matches.Count == 0)
                     {
                         // No matches, treat as successful no-op
-                        return InvokeResult<string>.Create(JsonConvert.SerializeObject(new Result { Operation = "evict", Items = new List<AgentSessionKfrEntry>(), SessionId = context.SessionId }));
+                        return Task.FromResult(InvokeResult<string>.Create(JsonConvert.SerializeObject(new Result { Operation = "evict", Items = new List<AgentSessionKfrEntry>(), SessionId = context.Session.Id })));
                     }
 
                     // Enforce resolution gate unless forced
@@ -260,7 +258,7 @@ Conflict Handling:
                     if (blocked.Count > 0 && !force)
                     {
                         var blockedIds = string.Join(", ", blocked.Select(b => b.KfrId));
-                        return InvokeResult<string>.FromError($"session_kfr evict refused: the following KFR entries require resolution: {blockedIds}. " + "Set force=true to dismiss/evict anyway.");
+                        return Fail($"session_kfr evict refused: the following KFR entries require resolution: {blockedIds}. " + "Set force=true to dismiss/evict anyway.");
                     }
 
                     // Soft-evict
@@ -270,16 +268,15 @@ Conflict Handling:
                         m.LastUpdatedDate = DateTime.UtcNow.ToString("o");
                     }
 
-                    await _sessions.UpdateKFRsAsync(session.Id, session.Mode, session.Kfrs[session.Mode], context.Org, context.User);
-                    return InvokeResult<string>.Create(JsonConvert.SerializeObject(new Result { Operation = "evict", Items = matches, SessionId = context.SessionId }));
+                    return Task.FromResult(InvokeResult<string>.Create(JsonConvert.SerializeObject(new Result { Operation = "evict", Items = matches, SessionId = context.Session.Id })));
                 }
 
-                return InvokeResult<string>.FromError($"Unsupported session_kfr operation '{args.Operation}'.");
+                return Fail($"Unsupported session_kfr operation '{args.Operation}'.");
             }
             catch (Exception ex)
             {
                 _logger.AddException("[SessionKfrTool_ExecuteAsync__Exception]", ex);
-                return InvokeResult<string>.FromError("session_kfr failed to process request.");
+                return Fail("session_kfr failed to process request.");
             }
         }
 

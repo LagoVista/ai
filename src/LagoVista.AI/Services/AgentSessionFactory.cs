@@ -61,7 +61,9 @@ namespace LagoVista.AI.Services
                 CreationDate = now,
                 StatusTimeStamp = now,
                 InstructionSummary = BuildInstructionSummary(ctx.Envelope.Instructions),
-                SessionId = session.Id
+                SessionId = session.Id,
+                Mode = session.Mode
+
             };
 
             return turn;

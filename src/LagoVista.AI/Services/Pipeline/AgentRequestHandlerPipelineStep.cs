@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
@@ -100,6 +101,9 @@ namespace LagoVista.AI.Services.Pipeline
             {
                 _adminLogger.Trace($"[AgentRequestHandlerPipelineStep__Handle] - Success");
              
+                ctx.ThisTurn.Status = EntityHeader<AgentSessionTurnStatuses>.Create(AgentSessionTurnStatuses.Completed);
+                ctx.ThisTurn.ExecutionMs = sw.Elapsed.TotalMilliseconds;
+
                 await _agentSessionManager.UpdateSessionAsync(result.Result.Session, org, user);
                 ctx.LogDetails(_adminLogger, PipelineSteps.RequestHandler, sw.Elapsed);
 
@@ -113,7 +117,13 @@ namespace LagoVista.AI.Services.Pipeline
             {
                 _adminLogger.Trace($"[AgentRequestHandlerPipelineStep__Handle] - Failed: {result.ErrorMessage}");
                 if (ctx.Session != null) // failed path will check to see if we have a session, if we do, save it for diagnostics
+                {
+                    ctx.ThisTurn.Status = EntityHeader<AgentSessionTurnStatuses>.Create(AgentSessionTurnStatuses.Failed);
+                    ctx.ThisTurn.Errors.AddRange(result.Errors.Select(er => er.Message));
+                    ctx.ThisTurn.ExecutionMs = sw.Elapsed.TotalMilliseconds;
+
                     await _agentSessionManager.UpdateSessionAsync(ctx.Session, org, user);
+                }
 
                 ctx.LogStepErrorDetails(_adminLogger, PipelineSteps.RequestHandler, result.ToInvokeResult(), sw.Elapsed);
                 return InvokeResult<AgentExecuteResponse>.FromInvokeResult(result.ToInvokeResult());

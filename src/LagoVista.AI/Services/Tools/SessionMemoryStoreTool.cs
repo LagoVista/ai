@@ -126,7 +126,7 @@ namespace LagoVista.AI.Services.Tools
             }
         }
 
-        private static AgentSessionMemoryNoteImportance ParseImportance(string importance)
+        public static AgentSessionMemoryNoteImportance ParseImportance(string importance)
         {
             if (string.IsNullOrWhiteSpace(importance))
                 return AgentSessionMemoryNoteImportance.Normal;
@@ -145,7 +145,7 @@ namespace LagoVista.AI.Services.Tools
             }
         }
 
-        private static AgentSessionMemoryNoteKinds ParseKind(string kind)
+        public static AgentSessionMemoryNoteKinds ParseKind(string kind)
         {
             if (string.IsNullOrWhiteSpace(kind))
                 return AgentSessionMemoryNoteKinds.Decision;
