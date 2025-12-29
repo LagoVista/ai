@@ -115,7 +115,7 @@ namespace LagoVista.AI.Services.Tools
         {
             return ToolSchema.Function(ToolName, "Recall (play back) session memory notes by id/tag/kind.", p =>
             {
-                p.Any("memoryIds", "array", "Optional list of memory ids to recall (e.g., MEM-0042).");
+                p.StringArray("memoryIds", "Optional list of memory ids to recall (e.g., MEM-0042).");
                 p.String("tag", "Optional tag filter.");
                 p.String("kind", "Optional kind filter: invariant|decision|constraint|fact|todo|gotcha.");
                 p.Boolean("includeDetails", "Whether to include details (default true).", required: true);

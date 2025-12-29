@@ -78,6 +78,8 @@ namespace LagoVista.AI.Services.Tools
             toolRegistry.RegisterTool<SessionMemoryRecallTool>();
             toolRegistry.RegisterTool<SessionMemoryStoreTool>();
 
+            toolRegistry.RegisterTool<SessionKfrTool>();
+
             // --- Chapter Tools ---
             toolRegistry.RegisterTool<AddChapterAgentTool>();
             toolRegistry.RegisterTool<AddChaptersAgentTool>();

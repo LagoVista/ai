@@ -169,7 +169,7 @@ namespace LagoVista.AI.Services
   
             AddInstructions(pack.KindCatalog[KnowledgeKind.AgentContextInstructions].SessionKnowledge, KnowledgeKind.AgentContextInstructions, agentContext.Instructions);
             AddInstructions(pack.KindCatalog[KnowledgeKind.ConversationContextInstructions].SessionKnowledge, KnowledgeKind.ConversationContextInstructions, conversation.Instructions);
-            AddInstructions(pack.KindCatalog[KnowledgeKind.ModeInstructions].SessionKnowledge, KnowledgeKind.ModeInstructions, agentContext.Instructions);
+            AddInstructions(pack.KindCatalog[KnowledgeKind.ModeInstructions].SessionKnowledge, KnowledgeKind.ModeInstructions, agentMode.Instructions);
 
             // Populate SessionKnowledge tools as the primary tools in V1.
             // Consumers can migrate items to ConsumableKnowledge as turn-scoped patterns mature.

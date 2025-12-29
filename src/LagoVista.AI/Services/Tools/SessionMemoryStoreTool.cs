@@ -57,8 +57,13 @@ namespace LagoVista.AI.Services.Tools
             public string CreationDate { get; set; }
         }
 
-        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
         public async Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentToolExecutionContext context, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        public async Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context)
         {
             if (string.IsNullOrWhiteSpace(argumentsJson))
             {
@@ -68,11 +73,6 @@ namespace LagoVista.AI.Services.Tools
             if (context == null)
             {
                 return InvokeResult<string>.FromError("session_memory_store requires a valid execution context.");
-            }
-
-            if (string.IsNullOrWhiteSpace(context.SessionId))
-            {
-                return InvokeResult<string>.FromError("session_memory_store requires a sessionId in the execution context.");
             }
 
             try
@@ -91,42 +91,38 @@ namespace LagoVista.AI.Services.Tools
                 var tags = (args.Tags ?? new List<string>()).Where(t => !string.IsNullOrWhiteSpace(t)).Select(t => t.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
                 var note = new AgentSessionMemoryNote
                 {
+                    Id = Guid.NewGuid().ToId(),
                     Title = args.Title.Trim(),
                     Summary = args.Summary.Trim(),
                     Details = string.IsNullOrWhiteSpace(args.Details) ? null : args.Details,
                     Tags = tags,
-                    SessionId = context.Request.SessionId,
-                    TurnSourceId = context.CurrentTurnId,
-                    CreationDate = DateTime.UtcNow.ToString("o"),
-                    CreatedByUser = context?.User
+                    SessionId = context.Session.Id,
+                    TurnSourceId = context.ThisTurn.Id,
+                    CreationDate = context.TimeStamp,
+                    CreatedByUser = context.Envelope.User
                 };
                 note.Kind = EntityHeader<AgentSessionMemoryNoteKinds>.Create(ParseKind(args.Kind));
                 note.Importance = EntityHeader<AgentSessionMemoryNoteImportance>.Create(ParseImportance(args.Importance));
-                var addResult = await _agentSessionManager.AddSessionMemoryNoteAsync(context.SessionId, note, context.Org, context.User);
-                if (!addResult.Successful)
-                {
-                    return InvokeResult<string>.FromInvokeResult(addResult.ToInvokeResult());
-                }
+                context.Session.MemoryNotes.Add(note);
 
-                var stored = addResult.Result;
                 var payload = new StoreResult
                 {
-                    MemoryId = stored?.MemoryId,
-                    Title = stored?.Title,
-                    Summary = stored?.Summary,
-                    Kind = stored?.Kind?.Value.ToString(),
-                    Importance = stored?.Importance?.Value.ToString(),
-                    Tags = stored?.Tags ?? new List<string>(),
-                    SessionId = context.Request?.SessionId,
-                    TurnSourceId = stored.TurnSourceId,
-                    CreationDate = stored.CreationDate
+                    MemoryId = note.MemoryId,
+                    Title = note.Title,
+                    Summary = note.Summary,
+                    Kind = note.Kind.Text,
+                    Importance = note.Importance.Text,
+                    Tags = note.Tags ?? new List<string>(),
+                    SessionId = context.Session.Id,
+                    TurnSourceId = context.ThisTurn.Id,
+                    CreationDate = context.TimeStamp
                 };
                 return InvokeResult<string>.Create(JsonConvert.SerializeObject(payload));
             }
             catch (Exception ex)
             {
                 _logger.AddException("[SessionMemoryStoreTool_ExecuteAsync__Exception]", ex);
-                return InvokeResult<string>.FromError("session_memory_store failed to process arguments.");
+                return InvokeResult<string>.FromError($"session_memory_store failed to process arguments - {ex.Message}");
             }
         }
 
@@ -179,7 +175,7 @@ namespace LagoVista.AI.Services.Tools
                 p.String("title", "Short title for the memory note.", required: true);
                 p.String("summary", "1-2 line summary (the marker).", required: true);
                 p.String("details", "Optional longer details; may include snippets.");
-                p.Any("tags", "array", "Optional tags (e.g., safety, parser, invariant).");
+                p.StringArray("tags", "Optional tags (e.g., safety, parser, invariant).");
                 p.String("importance", "Importance: low|normal|high|critical (default normal).");
                 p.String("kind", "Kind: invariant|decision|constraint|fact|todo|gotcha (default decision).");
             });

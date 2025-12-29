@@ -283,13 +283,19 @@ Conflict Handling:
             }
         }
 
+
         public static OpenAiToolDefinition GetSchema()
         {
             return ToolSchema.Function(ToolName, "Manage the Known Facts Registry (KFR) for the current session.", p =>
             {
                 p.String("operation", "Operation to perform: list | clear | upsert | evict.", required: true);
-                p.Any("entry", "object", "");
-                p.Any("kfrIds", "array", "KFR ids to evict (used with operation=evict).");
+                p.Array("entry", "list of entries for our kfr", 
+                    new JsonScheamArrayEntry() { Name = "kfrId", Description="generated id of kfr, for new kfrs, do not supply one will be generated", Type="string",  },
+                    new JsonScheamArrayEntry() { Name = "kind", Description = "kind of kfr, must be one of (goal, plan, activeContract, constraint, openQuestion)", Type = "string", },
+                    new JsonScheamArrayEntry() { Name = "value", Description = "generated id of kfr", Type = "string", },
+                    new JsonScheamArrayEntry() { Name = "requiresResolution", Description = "generated id of kfr", Type = "bool", }
+                    );
+                p.StringArray("kfrIds", "KFR ids to evict (used with operation=evict).");
                 p.Boolean("force", "If true, allow evicting entries that require resolution (used with operation=evict).");
             });
         }
