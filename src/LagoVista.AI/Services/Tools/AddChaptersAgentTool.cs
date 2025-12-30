@@ -37,7 +37,7 @@ namespace LagoVista.AI.Services.Tools
             return ToolSchema.Function(ToolName, "Add multiple chapters to an existing DDR in a single operation.", p =>
             {
                 p.String("identifier", "DDR identifier in TLA-### format, for example 'SYS-001'.", required: true);
-                p.Array("chapters", "Array of chapters to create in order.", 
+                p.ObjectArray("chapters", "Array of chapters to create in order.", 
                     new JsonScheamArrayEntry() {  Name = "title", Type = "string", Description = "Title of the Chapter"},
                     new JsonScheamArrayEntry() { Name = "summary", Type="string", Description = "Summary of the Chapter" }
                     );

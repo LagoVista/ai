@@ -373,6 +373,9 @@ namespace LagoVista.AI.Models
 
     public sealed class AgentSessionKfrEntry
     {
+        public string CreatedByUser { get; set; }
+        public string CreatedByUserId { get; set; }
+
         public string KfrId { get; set; }
 
         public KfrKind Kind { get; set; }

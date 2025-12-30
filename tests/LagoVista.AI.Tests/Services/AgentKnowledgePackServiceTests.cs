@@ -7,6 +7,8 @@ using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
 using LagoVista.AI.Services;
 using LagoVista.Core.Validation;
+using LagoVista.IoT.Logging.Loggers;
+using LagoVista.IoT.Logging.Utils;
 using Moq;
 using NUnit.Framework;
 
@@ -21,7 +23,7 @@ namespace LagoVista.AI.Tests.Services
 
         private AgentKnowledgePackService CreateSut()
         {
-            return new AgentKnowledgePackService(_ddr.Object, _tbRepo.Object, _usageProvider.Object);
+            return new AgentKnowledgePackService(_ddr.Object, _tbRepo.Object, _usageProvider.Object, new AdminLogger(new ConsoleLogWriter()));
         }
 
         [SetUp]

@@ -8,6 +8,7 @@ using LagoVista.AI.Interfaces.Pipeline;
 using LagoVista.AI.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
+using Newtonsoft.Json;
 
 namespace LagoVista.AI.Services.Pipeline
 {
@@ -155,6 +156,8 @@ Do not infer or assume facts outside this registry.
             }
 
             ctx.PromptKnowledgeProvider.AttachAvailbleTools(apk.AvailableTools);
+
+            _adminLogger.Trace($"[JSON.PKP]={JsonConvert.SerializeObject(ctx.PromptKnowledgeProvider)}");
            
             return InvokeResult<IAgentPipelineContext>.Create(ctx);
         }

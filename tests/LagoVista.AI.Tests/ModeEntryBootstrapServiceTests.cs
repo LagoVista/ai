@@ -47,7 +47,7 @@
 //            var executor = new FakeToolExecutor();
 //            var svc = new ModeEntryBootstrapService(executor, new AdminLogger(new ConsoleLogWriter()));
 
-//            var mode = new AgentMode { Key = "DDR", BootStrapTool = Array.Empty<BootStrapTool>() };
+//            var mode = new AgentMode { Key = "DDR", BootStrapTool = ObjectArray.Empty<BootStrapTool>() };
 //            var req = new ModeEntryBootstrapRequest
 //            {
 //                Mode = mode,

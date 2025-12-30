@@ -78,7 +78,11 @@ namespace LagoVista.AI.Services.Tools
             toolRegistry.RegisterTool<SessionMemoryRecallTool>();
             toolRegistry.RegisterTool<SessionMemoryStoreTool>();
 
-            toolRegistry.RegisterTool<SessionKfrTool>();
+            // -- KFR (Known Fact Registry Tools)
+            toolRegistry.RegisterTool<SessionKfrClearTool>();
+            toolRegistry.RegisterTool<SessionKfrEvictTool>();
+            toolRegistry.RegisterTool<SessionKfrListTool>();
+            toolRegistry.RegisterTool<SessionKfrUpsertTool>();
 
             // --- Chapter Tools ---
             toolRegistry.RegisterTool<AddChapterAgentTool>();

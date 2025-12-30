@@ -57,6 +57,9 @@ namespace LagoVista.AI
 
         [JsonProperty("additionalProperties")]
         public bool AdditionalProperties { get; set; } = false;
+
+        [JsonExtensionData]
+        public IDictionary<string, JToken> ExtensionData { get; set; } = new Dictionary<string, JToken>();
     }
 
     public sealed class JsonSchemaProperty
@@ -67,20 +70,51 @@ namespace LagoVista.AI
         [JsonProperty("description")]
         public string Description { get; set; }
 
-        [JsonProperty("enum", NullValueHandling=NullValueHandling.Ignore)]
+        [JsonProperty("enum", NullValueHandling = NullValueHandling.Ignore)]
         public IReadOnlyList<string> Enum { get; set; }
 
         [JsonProperty("items", NullValueHandling = NullValueHandling.Ignore)]
-        public JsonScheamArray Items { get; set; }
+        public JsonSchemaNode Items { get; set; }
+
+        [JsonExtensionData]
+        public IDictionary<string, JToken> ExtensionData { get; set; } = new Dictionary<string, JToken>();
     }
 
+
+
+    public sealed class JsonSchemaNode
+    {
+        [JsonProperty("type")]
+        public string Type { get; set; }
+
+        [JsonProperty("description", NullValueHandling = NullValueHandling.Ignore)]
+        public string Description { get; set; }
+
+        [JsonProperty("enum", NullValueHandling = NullValueHandling.Ignore)]
+        public IReadOnlyList<string> Enum { get; set; }
+
+        [JsonProperty("properties", NullValueHandling = NullValueHandling.Ignore)]
+        public Dictionary<string, JsonSchemaProperty> Properties { get; set; }
+
+        [JsonProperty("required", NullValueHandling = NullValueHandling.Ignore)]
+        public IReadOnlyList<string> Required { get; set; }
+
+        [JsonProperty("additionalProperties", NullValueHandling = NullValueHandling.Ignore)]
+        public bool? AdditionalProperties { get; set; }
+
+        [JsonProperty("items", NullValueHandling = NullValueHandling.Ignore)]
+        public JsonSchemaNode Items { get; set; }
+
+        [JsonExtensionData]
+        public IDictionary<string, JToken> ExtensionData { get; set; } = new Dictionary<string, JToken>();
+    }
 
     public sealed class JsonScheamArray
     {
         [JsonProperty("type")]
         public string Type { get; set; } = "object";
 
-        [JsonProperty("properites")]
+        [JsonProperty("properties")]
         public List<JObject> Properties { get; set; } = new List<JObject>();
     }
 
@@ -156,30 +190,33 @@ namespace LagoVista.AI
                 schema.Require(name);
         }
 
-        public static void Array(
+        public static void ObjectArray(
           this JsonSchemaObject schema,
           string name,
           string description,
           params JsonScheamArrayEntry[] args)
         {
+            var itemProps = new Dictionary<string, JsonSchemaProperty>();
+            foreach (var f in args)
+            {
+                itemProps[f.Name] = new JsonSchemaProperty
+                {
+                    Type = f.Type,
+                    Description = f.Description
+                };
+            }
+
             schema.Properties[name] = new JsonSchemaProperty
             {
                 Type = "array",
                 Description = description,
-                Items = new JsonScheamArray()
-            };
-
-            foreach(var arg in args)
-            {
-                schema.Properties[name].Items.Properties.Add(new JObject
+                Items = new JsonSchemaNode
                 {
-                    [arg.Name] = new JObject
-                    {
-                        ["type"] = arg.Type,
-                        ["description"] = arg.Description
-                    }
-                });
-            }
+                    Type = "object",
+                    AdditionalProperties = false,
+                    Properties = itemProps
+                }
+            };
 
             schema.Require(name);
         }
@@ -194,7 +231,7 @@ namespace LagoVista.AI
             {
                 Type = "array",
                 Description = description,
-                Items = new JsonScheamArray() { Type = "string" }
+                Items = new JsonSchemaNode { Type = "string" }
             };
 
             //foreach (var arg in args)
@@ -267,6 +304,73 @@ namespace LagoVista.AI
                 list.Add(name);
 
             schema.Required = list;
+        }
+
+        public static void AddKeyword(this JsonSchemaObject schema, string keyword, JToken value)
+       => schema.ExtensionData[keyword] = value;
+
+        public static void AddKeyword(this JsonSchemaProperty prop, string keyword, JToken value)
+            => prop.ExtensionData[keyword] = value;
+
+        public static void MinItems(this JsonSchemaObject schema, string arrayPropName, int minItems)
+        {
+            if (!schema.Properties.TryGetValue(arrayPropName, out var prop))
+                throw new InvalidOperationException($"Property '{arrayPropName}' not found.");
+
+            prop.AddKeyword("minItems", minItems);
+        }
+
+        public static void Const(this JsonSchemaProperty prop, string value)
+            => prop.AddKeyword("const", value);
+
+        public sealed class OneOfBuilder
+        {
+            private readonly List<JObject> _branches = new List<JObject>();
+
+            internal IReadOnlyList<JObject> Build() => _branches;
+
+            public OneOfBuilder Operation(
+                string op,
+                IEnumerable<string> required = null,
+                params (string prop, int minItems)[] minItems)
+            {
+                var props = new JObject
+                {
+                    ["operation"] = new JObject { ["const"] = op }
+                };
+
+                // Add branch-only constraints (e.g., minItems) for existing top-level props
+                if (minItems != null)
+                {
+                    foreach (var (prop, n) in minItems)
+                        props[prop] = new JObject { ["minItems"] = n };
+                }
+
+                var branch = new JObject
+                {
+                    ["properties"] = props
+                };
+
+                var req = (required ?? Enumerable.Empty<string>()).Distinct().ToList();
+                if (!req.Contains("operation"))
+                    req.Insert(0, "operation");
+
+                branch["required"] = new JArray(req);
+
+                _branches.Add(branch);
+                return this;
+            }
+        }
+
+        public static void OneOf(this JsonSchemaObject schema, Action<OneOfBuilder> build)
+        {
+            if (schema == null) throw new ArgumentNullException(nameof(schema));
+            if (build == null) throw new ArgumentNullException(nameof(build));
+
+            var b = new OneOfBuilder();
+            build(b);
+
+            schema.ExtensionData["oneOf"] = new JArray(b.Build());
         }
     }
 }

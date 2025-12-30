@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
 using LagoVista.Core.Validation;
+using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json;
+using RingCentral;
 
 namespace LagoVista.AI.Services
 {
@@ -30,12 +32,14 @@ namespace LagoVista.AI.Services
         private readonly IDdrConsumptionFieldProvider _ddrConsumption;
         private readonly IServerToolUsageMetadataProvider _toolUsageMetaData;
         private readonly IAgentToolBoxRepo _toolBoxRepo;
+        private readonly IAdminLogger _adminLogger;
 
-        public AgentKnowledgePackService(IDdrConsumptionFieldProvider ddrConsumption, IAgentToolBoxRepo toolBoxRepo, IServerToolUsageMetadataProvider toolUsageMetaData)
+        public AgentKnowledgePackService(IDdrConsumptionFieldProvider ddrConsumption, IAgentToolBoxRepo toolBoxRepo, IServerToolUsageMetadataProvider toolUsageMetaData, IAdminLogger adminLogger)
         {
             _ddrConsumption = ddrConsumption ?? throw new ArgumentNullException(nameof(ddrConsumption));
             _toolUsageMetaData = toolUsageMetaData ?? throw new ArgumentNullException(nameof(toolUsageMetaData));
             _toolBoxRepo = toolBoxRepo ?? throw new ArgumentNullException(nameof(toolBoxRepo));
+            _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
         }
 
         public async Task<InvokeResult<AgentKnowledgePack>> CreateAsync(
@@ -80,6 +84,8 @@ namespace LagoVista.AI.Services
             {
                 var toolBox = await _toolBoxRepo.GetAgentToolBoxAsync(tb.Id);
                 AddRangeDistinctInOrder(toolNames, toolBox.Tools.Select(tl => tl.Id));
+                instructionIds.AddRange(toolBox.InstructionDdrs.Select(tl => tl.Id));
+                referenceIds.AddRange(toolBox.ReferenceDdrs.Select(tl => tl.Id));
             }
 
             AddRangeDistinctInOrder(instructionIds, agentContext.AgentInstructionDdrs);
@@ -177,6 +183,8 @@ namespace LagoVista.AI.Services
             AddDdrItems(pack.KindCatalog[KnowledgeKind.Reference].SessionKnowledge, KnowledgeKind.Reference, referenceIds, resolvedReferences.Result);
 
             AddToolItems(pack.AvailableTools, toolNames);
+
+            _adminLogger.Trace($"[JSON.AKP]={JsonConvert.SerializeObject(pack)}");
 
             return InvokeResult<AgentKnowledgePack>.Create(pack);
         }
