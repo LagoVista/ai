@@ -58,33 +58,35 @@ namespace LagoVista.AI.Rest
 
                 if (request.Streaming)
                 {
-                        Response.StatusCode = 200;
-                        Response.ContentType = "application/x-ndjson";
-                        Response.Headers.CacheControl = "no-cache";
-                        Response.Headers["X-Accel-Buffering"] = "no";
-                        await Response.Body.FlushAsync();
-                        streamingContext.Current = async ev =>
-                        {
+                    Response.StatusCode = 200;
+                    Response.ContentType = "application/x-ndjson";
+                    Response.Headers.CacheControl = "no-cache";
+                    Response.Headers["X-Accel-Buffering"] = "no";
+                    await Response.Body.FlushAsync();
+                    streamingContext.Current = async ev =>
+                    {
 
-                            var json = JsonConvert.SerializeObject(
-                                ev,
-                                Formatting.None,
-                                new JsonSerializerSettings
-                                {
-                                    ContractResolver = new CamelCasePropertyNamesContractResolver(),
-                                    NullValueHandling = NullValueHandling.Ignore
-                                });
+                        var json = JsonConvert.SerializeObject(
+                            ev,
+                            Formatting.None,
+                            new JsonSerializerSettings
+                            {
+                                ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                                NullValueHandling = NullValueHandling.Ignore
+                            });
 
                     
-                            await Response.WriteAsync(json, cancellationToken);
-                            await Response.WriteAsync("\n", cancellationToken);
-                            await Response.Body.FlushAsync(cancellationToken);
-                        };
+                        await Response.WriteAsync(json, cancellationToken);
+                        await Response.WriteAsync("\n", cancellationToken);
+                        await Response.Body.FlushAsync(cancellationToken);
+                    };
 
-                        var result = await _agentRequestHandler.HandleAsync(request, OrgEntityHeader, UserEntityHeader, cancellationToken);
-                        await streamingContext.AddWorkflowAsync("processing completed, returning result");
+                    var result = await _agentRequestHandler.HandleAsync(request, OrgEntityHeader, UserEntityHeader, cancellationToken);
+                    await streamingContext.AddWorkflowAsync("processing completed, returning result");
+                    var responseJson = JsonConvert.SerializeObject(result);
+                    _adminLogger.Trace($"[JSON.RAWAPIRESPONSE]={responseJson}");
 
-                        if (streamingContext.Current != null)
+                    if (streamingContext.Current != null)
                         {
                             await streamingContext.Current(new AgentStreamEvent
                             {
