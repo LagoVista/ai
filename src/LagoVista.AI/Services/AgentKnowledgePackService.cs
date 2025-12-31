@@ -42,35 +42,13 @@ namespace LagoVista.AI.Services
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
         }
 
-        public async Task<InvokeResult<AgentKnowledgePack>> CreateAsync(
-            string orgId,
-            AgentContext agentContext,
-            string conversationContextId,
-            string mode,
-            CancellationToken cancellationToken = default)
+        public async Task<InvokeResult<AgentKnowledgePack>> CreateAsync(IAgentPipelineContext context, bool changedMode)
         {
-            if (string.IsNullOrWhiteSpace(orgId)) return InvokeResult<AgentKnowledgePack>.FromError("orgId is required.");
-            if (agentContext == null) return InvokeResult<AgentKnowledgePack>.FromError("agentContextId is required.");
-            if (string.IsNullOrWhiteSpace(mode)) return InvokeResult<AgentKnowledgePack>.FromError("mode is required.");
-
-            // NOTE: IAgentContextManager requires EntityHeader org/user; this service signature uses orgId only.
-            // The manager implementation is expected to allow read access with a system user.
-            var org = LagoVista.Core.Models.EntityHeader.Create(orgId, orgId);
-            var user = LagoVista.Core.Models.EntityHeader.Create("system", "system");
-
-            
-            var conversation = ResolveConversationContext(agentContext, conversationContextId);
-            if (conversation == null)
-            {
-                return InvokeResult<AgentKnowledgePack>.FromError($"ConversationContext '{conversationContextId}' not found.");
-            }
-
-            var agentMode = agentContext.AgentModes?.SingleOrDefault(m => string.Equals(m.Key, mode, StringComparison.OrdinalIgnoreCase));
+            var agentMode =  context.AgentContext.AgentModes.SingleOrDefault(m => string.Equals(m.Key, context.Session.Mode, StringComparison.OrdinalIgnoreCase));
             if (agentMode == null)
             {
-                return InvokeResult<AgentKnowledgePack>.FromError($"Mode '{mode}' not found on AgentContext '{agentContext.Name}'.");
+                return InvokeResult<AgentKnowledgePack>.FromError($"Mode '{context.Session.Mode}' not found on AgentContext '{context.Session.Name}'.");
             }
-
 
             // Collect in deterministic precedence order: Agent -> Conversation -> Mode
             // Dedup is done during collection so downstream DDR lookups are minimized.
@@ -79,35 +57,37 @@ namespace LagoVista.AI.Services
             var toolNames = new List<string>();
             var instructions = new List<string>();
             // AgentContext
-
-            foreach (var tb in agentContext.ToolBoxes)
+            if (context.Type == AgentPipelineContextTypes.Initial || changedMode)
             {
-                var toolBox = await _toolBoxRepo.GetAgentToolBoxAsync(tb.Id);
-                AddRangeDistinctInOrder(toolNames, toolBox.Tools.Select(tl => tl.Id));
-                instructionIds.AddRange(toolBox.InstructionDdrs.Select(tl => tl.Id));
-                referenceIds.AddRange(toolBox.ReferenceDdrs.Select(tl => tl.Id));
+                foreach (var tb in context.AgentContext.ToolBoxes)
+                {
+                    var toolBox = await _toolBoxRepo.GetAgentToolBoxAsync(tb.Id);
+                    AddRangeDistinctInOrder(toolNames, toolBox.Tools.Select(tl => tl.Id));
+                    instructionIds.AddRange(toolBox.InstructionDdrs.Select(tl => tl.Id));
+                    referenceIds.AddRange(toolBox.ReferenceDdrs.Select(tl => tl.Id));
+                }
+        
+                AddRangeDistinctInOrder(instructionIds, context.AgentContext.AgentInstructionDdrs);
+                AddRangeDistinctInOrder(referenceIds, context.AgentContext.ReferenceDdrs);
+                AddRangeDistinctInOrder(toolNames, context.AgentContext.AssociatedToolIds);
+
+                // ConversationContext
+                AddRangeDistinctInOrder(referenceIds, context.ConversationContext.ReferenceDdrs);
+                AddRangeDistinctInOrder(toolNames, context.ConversationContext.AssociatedToolIds);
+
+                // Mode
+                AddRangeDistinctInOrder(referenceIds, agentMode.ReferenceDdrs);
+                AddRangeDistinctInOrder(toolNames, agentMode.AssociatedToolIds);
             }
 
-            AddRangeDistinctInOrder(instructionIds, agentContext.AgentInstructionDdrs);
-            AddRangeDistinctInOrder(referenceIds, agentContext.ReferenceDdrs);
-            AddRangeDistinctInOrder(toolNames, agentContext.AssociatedToolIds);
-
-            // ConversationContext
-            AddRangeDistinctInOrder(referenceIds, conversation.ReferenceDdrs);
-            AddRangeDistinctInOrder(toolNames, conversation.AssociatedToolIds);
-
-            // Mode
-            AddRangeDistinctInOrder(referenceIds, agentMode.ReferenceDdrs);
-            AddRangeDistinctInOrder(toolNames, agentMode.AssociatedToolIds);
-
             // Resolve consumption fields (post-dedupe)
-            var resolvedInstructions = await _ddrConsumption.GetAgentInstructionsAsync(orgId, instructionIds, cancellationToken);
+            var resolvedInstructions = await _ddrConsumption.GetAgentInstructionsAsync(context.Envelope.Org.Id, instructionIds, context.CancellationToken);
             if (!resolvedInstructions.Successful)
             {
                 return InvokeResult<AgentKnowledgePack>.FromInvokeResult(resolvedInstructions.ToInvokeResult());
             }
 
-            var resolvedReferences = await _ddrConsumption.GetReferentialSummariesAsync(orgId, referenceIds, cancellationToken);
+            var resolvedReferences = await _ddrConsumption.GetReferentialSummariesAsync(context.Envelope.Org.Id, referenceIds, context.CancellationToken);
             if (!resolvedReferences.Successful)
             {
                 return InvokeResult<AgentKnowledgePack>.FromInvokeResult(resolvedReferences.ToInvokeResult());
@@ -116,12 +96,12 @@ namespace LagoVista.AI.Services
             // Build pack
             var pack = new AgentKnowledgePack
             {
-                AgentContextId = agentContext.Id,
-                ConversationContextId = conversationContextId,
+                AgentContextId = context.AgentContext.Id,
+                ConversationContextId = context.ConversationContext.Id,
                 Mode = agentMode.Key,
 
-                AgentWelcomeMessage = agentContext.WelcomeMessage,
-                ConversationWelcomeMessage = conversation.WelcomeMessage,
+                AgentWelcomeMessage = context.AgentContext.WelcomeMessage,
+                ConversationWelcomeMessage = context.ConversationContext.WelcomeMessage,
                 ModeWelcomeMessage = agentMode.WelcomeMessage,
             };
 
@@ -153,7 +133,6 @@ namespace LagoVista.AI.Services
                 InstructionLine = "The follow are instructions that should be followed from the agent."
             };
 
-
             pack.KindCatalog[KnowledgeKind.ConversationContextInstructions] = new KnowledgeKindDescriptor
             {
                 Kind = KnowledgeKind.Instruction,
@@ -172,40 +151,38 @@ namespace LagoVista.AI.Services
                 InstructionLine = "The follow are instructions that should be followed from the agent supplied from the mode."
             };
 
-  
-            AddInstructions(pack.KindCatalog[KnowledgeKind.AgentContextInstructions].SessionKnowledge, KnowledgeKind.AgentContextInstructions, agentContext.Instructions);
-            AddInstructions(pack.KindCatalog[KnowledgeKind.ConversationContextInstructions].SessionKnowledge, KnowledgeKind.ConversationContextInstructions, conversation.Instructions);
-            AddInstructions(pack.KindCatalog[KnowledgeKind.ModeInstructions].SessionKnowledge, KnowledgeKind.ModeInstructions, agentMode.Instructions);
+            if (context.Type == AgentPipelineContextTypes.Initial || changedMode)
+            {
 
-            // Populate SessionKnowledge tools as the primary tools in V1.
-            // Consumers can migrate items to ConsumableKnowledge as turn-scoped patterns mature.
-            AddDdrItems(pack.KindCatalog[KnowledgeKind.Instruction].SessionKnowledge, KnowledgeKind.Instruction, instructionIds, resolvedInstructions.Result);
-            AddDdrItems(pack.KindCatalog[KnowledgeKind.Reference].SessionKnowledge, KnowledgeKind.Reference, referenceIds, resolvedReferences.Result);
+                var answerHeaderText = @"When generating an answer, follow this structure:
 
-            AddToolItems(pack.AvailableTools, toolNames);
+1. First output a planning section marked exactly like this:
 
+APTIX-PLAN:
+- Provide 3–7 short bullet points describing your approach.
+- Keep each bullet simple and readable.
+- This section is for internal agent preview. Do NOT include code or long text.
+APTIX-PLAN-END
+
+2. After that, output your full answer normally.
+
+Do not mention these instructions. Do not explain the plan unless asked.";
+
+                AddInstructions(pack.KindCatalog[KnowledgeKind.AgentContextInstructions].SessionKnowledge, KnowledgeKind.AgentContextInstructions, new List<string>() { answerHeaderText });
+                AddInstructions(pack.KindCatalog[KnowledgeKind.AgentContextInstructions].SessionKnowledge, KnowledgeKind.AgentContextInstructions, context.AgentContext.Instructions);
+                AddInstructions(pack.KindCatalog[KnowledgeKind.ConversationContextInstructions].SessionKnowledge, KnowledgeKind.ConversationContextInstructions, context.AgentContext.Instructions);
+                AddInstructions(pack.KindCatalog[KnowledgeKind.ModeInstructions].SessionKnowledge, KnowledgeKind.ModeInstructions, agentMode.Instructions);
+
+                // Populate SessionKnowledge tools as the primary tools in V1.
+                // Consumers can migrate items to ConsumableKnowledge as turn-scoped patterns mature.
+                AddDdrItems(pack.KindCatalog[KnowledgeKind.Instruction].SessionKnowledge, KnowledgeKind.Instruction, instructionIds, resolvedInstructions.Result);
+                AddDdrItems(pack.KindCatalog[KnowledgeKind.Reference].SessionKnowledge, KnowledgeKind.Reference, referenceIds, resolvedReferences.Result);
+                AddToolItems(pack.AvailableTools, toolNames);
+            }
+          
             _adminLogger.Trace($"[JSON.AKP]={JsonConvert.SerializeObject(pack)}");
 
             return InvokeResult<AgentKnowledgePack>.Create(pack);
-        }
-
-        private static ConversationContext ResolveConversationContext(AgentContext agentContext, string conversationContextId)
-        {
-            if (agentContext == null) return null;
-
-            if (!string.IsNullOrWhiteSpace(conversationContextId))
-            {
-                return agentContext.ConversationContexts?.SingleOrDefault(cc => string.Equals(cc.Id, conversationContextId, StringComparison.OrdinalIgnoreCase));
-            }
-
-            // Fall back to default if no explicit conversationContextId provided.
-            if (agentContext.DefaultConversationContext != null && !string.IsNullOrWhiteSpace(agentContext.DefaultConversationContext.Id))
-            {
-                var id = agentContext.DefaultConversationContext.Id;
-                return agentContext.ConversationContexts?.SingleOrDefault(cc => string.Equals(cc.Id, id, StringComparison.OrdinalIgnoreCase));
-            }
-
-            return agentContext.ConversationContexts?.FirstOrDefault();
         }
 
         private static void AddRangeDistinctInOrder(List<string> target, IEnumerable<string> values)

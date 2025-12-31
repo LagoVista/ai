@@ -3,13 +3,10 @@ using System.Linq;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using LagoVista.Core.AI.Models;
-using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.Operations;
 using LagoVista.IoT.Logging.Loggers;
 
 namespace LagoVista.AI.Helpers
@@ -21,10 +18,14 @@ namespace LagoVista.AI.Helpers
     public class AgentExecuteResponseParser : IAgentExecuteResponseParser
     {
         private readonly IAdminLogger _logger;
+        private readonly IAgentTurnChatHistoryRepo _turnHistoryRepo;
+        private readonly IAgentTurnTranscriptStore _transcriptStore;
 
-        public AgentExecuteResponseParser(IAdminLogger logger)
+        public AgentExecuteResponseParser(IAdminLogger logger, IAgentTurnTranscriptStore transcriptStore, IAgentTurnChatHistoryRepo turnHistoryRepo)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _transcriptStore = transcriptStore ?? throw new ArgumentNullException(nameof(transcriptStore));
+            _turnHistoryRepo = turnHistoryRepo ?? throw new ArgumentNullException(nameof(turnHistoryRepo));
         }
 
         /// <summary>
@@ -34,11 +35,11 @@ namespace LagoVista.AI.Helpers
         /// <param name="rawJson">Raw JSON from the /responses call.</param>
         /// <param name="request">The AgentExecuteRequest used to initiate this call.</param>
         /// <returns>Populated AgentExecuteResponse.</returns>
-        public Task<InvokeResult<IAgentPipelineContext>> ParseAsync(IAgentPipelineContext ctx, string rawJson)
+        public async Task<InvokeResult<IAgentPipelineContext>> ParseAsync(IAgentPipelineContext ctx, string rawJson)
         {
             if (string.IsNullOrWhiteSpace(rawJson))
             {
-                return Task.FromResult(InvokeResult<IAgentPipelineContext>.FromError("[AgentExecuteResponseParser__Parse] Empty or null JSON payload."));
+                return InvokeResult<IAgentPipelineContext>.FromError("[AgentExecuteResponseParser__Parse] Empty or null JSON payload.");
             }
 
 
@@ -57,7 +58,7 @@ namespace LagoVista.AI.Helpers
                 var id = root["id"];
                 if (id == null)
                 {
-                    return Task.FromResult(InvokeResult<IAgentPipelineContext>.FromError("[AgentExecuteResponseParser__Parse] Missing [id] Node."));
+                    return InvokeResult<IAgentPipelineContext>.FromError("[AgentExecuteResponseParser__Parse] Missing [id] Node.");
                 }
                 else
                 {
@@ -111,7 +112,7 @@ namespace LagoVista.AI.Helpers
 
                 if (outputArray == null)
                 {
-                    return Task.FromResult(InvokeResult<IAgentPipelineContext>.FromError("[AgentExecuteResponseParser__Parse] Missing [output] Node."));
+                    return InvokeResult<IAgentPipelineContext>.FromError("[AgentExecuteResponseParser__Parse] Missing [output] Node.");
                 }
 
                 var textSegments = new List<string>();
@@ -294,13 +295,29 @@ namespace LagoVista.AI.Helpers
                 ctx.ThisTurn.TotalTokens = response.Usage.TotalTokens;
                 ctx.ThisTurn.ReasoningTokens = response.Usage.ReasoningTokens;
                 ctx.ThisTurn.CompletionTokens = response.Usage.CompletionTokens;
-              
+
+                ctx.ThisTurn.OpenAIResponseBlobUrl = (await _transcriptStore.SaveTurnResponseAsync(ctx.Envelope.Org.Id, ctx.Session.Id, ctx.ThisTurn.Id, rawJson.Trim(), ctx.CancellationToken)).Result.ToString();
+
+
                 if (String.IsNullOrEmpty(response.PrimaryOutputText) && ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCalls.Count > 0)
                     ctx.ThisTurn.AgentAnswerSummary = "tool call - likely will be replaced by final output";
                 else if (!String.IsNullOrEmpty(response.PrimaryOutputText))
-                    ctx.ThisTurn.AgentAnswerSummary = response.PrimaryOutputText.Substring(0, Math.Min(255, response.PrimaryOutputText.Length));
+                {
+                    var finalOutput = response.PrimaryOutputText;
+                    if(finalOutput.Contains("APTIX-PLAN-END"))
+                        finalOutput = finalOutput.Substring(finalOutput.IndexOf("APTIX-PLAN-END") + "APTIX-PLAN-END".Length).Trim();
+
+                    var userInput = string.IsNullOrEmpty(ctx.Envelope.Instructions) ? "file upload" : ctx.Envelope.Instructions;
+
+                    await _turnHistoryRepo.AddTurnAsync(ctx.Envelope.Org.Id, ctx.Session.Id, ctx.ThisTurn.Id, userInput, finalOutput);
+
+                    if (finalOutput.Length > 1024)
+                        finalOutput = finalOutput.Substring(1024);
+
+                    ctx.ThisTurn.AgentAnswerSummary = finalOutput;
+                }
                 else
-                    Task.FromResult(InvokeResult<IAgentPipelineContext>.FromError("[AgentExecuteResponseParser__Parse] No output text or tool calls found in response."));
+                    InvokeResult<IAgentPipelineContext>.FromError("[AgentExecuteResponseParser__Parse] No output text or tool calls found in response.");
 
                 if (toolCalls.Any())
                     ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCalls = toolCalls;
@@ -310,12 +327,12 @@ namespace LagoVista.AI.Helpers
                     ctx.SetResponsePayload(response);
                 }
 
-                return Task.FromResult(InvokeResult<IAgentPipelineContext>.Create(ctx));
+                return InvokeResult<IAgentPipelineContext>.Create(ctx);
             }
             catch (Exception ex)
             {
                 _logger.AddException("[AgentExecuteResponseParser__Parse]", ex);
-                return Task.FromResult(InvokeResult<IAgentPipelineContext>.FromError($"[AgentExecuteResponseParser__Parse] {ex.Message}"));
+                return InvokeResult<IAgentPipelineContext>.FromError($"[AgentExecuteResponseParser__Parse] {ex.Message}");
             }
         }
     }

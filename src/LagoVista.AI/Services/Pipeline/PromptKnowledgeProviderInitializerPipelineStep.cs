@@ -53,7 +53,7 @@ namespace LagoVista.AI.Services.Pipeline
 
         protected override async Task<InvokeResult<IAgentPipelineContext>> ExecuteStepAsync(IAgentPipelineContext ctx)
         {
-            var apkResult = await _apkProvider.CreateAsync(ctx.Envelope.Org.Id, ctx.AgentContext, ctx.Envelope.ConversationContextId, ctx.Session.Mode);
+            var apkResult = await _apkProvider.CreateAsync(ctx, false);
             var apk = apkResult.Result;
 
             foreach(var key in apk.KindCatalog.Keys)

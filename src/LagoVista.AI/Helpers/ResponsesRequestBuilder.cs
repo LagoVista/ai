@@ -56,22 +56,6 @@ namespace LagoVista.AI.Helpers
             }
 
 
-            systemMessage.Content.Add(new ResponsesMessageContent()
-            {
-                Text = @"When generating an answer, follow this structure:
-
-            1. First output a planning section marked exactly like this:
-
-            APTIX-PLAN:
-            - Provide 3–7 short bullet points describing your approach.
-            - Keep each bullet simple and readable.
-            - This section is for internal agent preview. Do NOT include code or long text.
-            APTIX-PLAN-END
-
-            2. After that, output your full answer normally.
-
-            Do not mention these instructions. Do not explain the plan unless asked."
-            });
 
             foreach (var register in ctx.PromptKnowledgeProvider.Registers)
             {
@@ -102,8 +86,9 @@ namespace LagoVista.AI.Helpers
             ctx.PromptKnowledgeProvider.ActiveTools.Add(new ActiveTool() { Name = AgentListModesTool.ToolName, Schama = AgentListModesTool.GetSchema(), ToolUsageMetaData = AgentListModesTool.ToolUsageMetadata });
 
             var loadedToolContent = new StringBuilder();
-            loadedToolContent.AppendLine("[LOADED TOOLS]");
-            loadedToolContent.AppendLine("These tools are available to assist you in completing the request.");
+            loadedToolContent.AppendLine("## ACTIVE TOOLS");
+            loadedToolContent.AppendLine(@"These tools are currently active and ready and can immediately be used.
+There are additional tools that are available and can be loaded with the actives_tools tool that have previously been identified.");
 
             foreach (var tool in ctx.PromptKnowledgeProvider.ActiveTools)
             {
@@ -122,9 +107,9 @@ namespace LagoVista.AI.Helpers
             var tools = ctx.PromptKnowledgeProvider.AvailableTools.Where( tl => !activeTools.Contains(tl.Name));
             if (tools.Any()) {
                 var bldr = new StringBuilder();
-                bldr.AppendLine("[AVAILABLE TOOLS]");
-                bldr.AppendLine(@"The following tools are available.  
-Tools are not provided by default.
+                bldr.AppendLine("## AVAILABLE TOOLS");
+                bldr.AppendLine(@"The following tools are available but not loaded.  
+Some tools are not provided by default.
 If any of these tools are useful to process the request, you may request them with the activate_tools tool.  
 As soon as you know the tools you require to complete this request, you may stop reasoning the request will be replayed with the requested tools.");
         

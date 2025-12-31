@@ -102,11 +102,6 @@ namespace LagoVista.AI.Models
 
         public List<ModeHistory> ModeHistory { get; set; } = new List<ModeHistory>();
 
-        /// <summary>
-        /// Durable, user-approved session memory notes (invariants, decisions, constraints, etc.) that can be paged in later.
-        /// (Long term memory)
-        /// </summary>
-        public List<AgentSessionMemoryNote> MemoryNotes { get; set; } = new List<AgentSessionMemoryNote>();
 
         /// <summary>
         /// List of KFRs (Short Term Memory for Session)
@@ -181,6 +176,8 @@ namespace LagoVista.AI.Models
         public string MemoryId { get; set; }
 
         public string Title { get; set; }
+
+        public string OrgId { get; set; }
 
         /// <summary>
         /// 1-2 line summary that acts as the "marker" in the conversation.

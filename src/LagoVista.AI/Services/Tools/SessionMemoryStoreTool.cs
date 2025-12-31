@@ -1,12 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
+using LagoVista.AI.Services.Qdrant;
 using LagoVista.Core;
+using LagoVista.Core.AI.Models;
+using LagoVista.Core.Interfaces;
 using LagoVista.Core.Models;
+using LagoVista.Core.Utils.Types.Nuviot.RagIndexing;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json;
@@ -21,17 +26,24 @@ namespace LagoVista.AI.Services.Tools
     public sealed class SessionMemoryStoreTool : IAgentTool
     {
         private readonly IAdminLogger _logger;
-        private readonly IAgentSessionManager _agentSessionManager;
+        private readonly IMemoryNoteRepo _memoryNoteRepo;
+        private readonly IQdrantClient _qdrantClient;
+        private readonly IEmbedder _embedder;
+        private readonly ISerialNumberManager _serialNumberManager;
+
         public string Name => ToolName;
         public bool IsToolFullyExecutedOnServer => true;
 
         public const string ToolUsageMetadata = "Store a durable session memory note only when the user explicitly asks to remember/save/write something down. Returns a short MemoryId and a one-line summary of what was stored.";
         public const string ToolName = "session_memory_store";
         public const string ToolSummary = "save a session memory note";
-        public SessionMemoryStoreTool(IAdminLogger logger, IAgentSessionManager agentSessionManager)
+        public SessionMemoryStoreTool(IEmbedder embeder, IQdrantClient qdrantClient, IAdminLogger logger, IMemoryNoteRepo memoryNoteRepo, ISerialNumberManager serialNumberManager)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _agentSessionManager = agentSessionManager ?? throw new ArgumentNullException(nameof(agentSessionManager));
+            _memoryNoteRepo = memoryNoteRepo ?? throw new ArgumentNullException(nameof(memoryNoteRepo));
+            _embedder = embeder ?? throw new ArgumentNullException(nameof(embeder));
+            _qdrantClient = qdrantClient ?? throw new ArgumentNullException(nameof(qdrantClient));
+            _serialNumberManager = serialNumberManager ?? throw new ArgumentNullException(nameof(serialNumberManager));
         }
 
         private sealed class StoreArgs
@@ -57,7 +69,7 @@ namespace LagoVista.AI.Services.Tools
             public string CreationDate { get; set; }
         }
 
-        public async Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentToolExecutionContext context, CancellationToken cancellationToken = default)
+        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentToolExecutionContext context, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }
@@ -88,6 +100,8 @@ namespace LagoVista.AI.Services.Tools
                     return InvokeResult<string>.FromError("session_memory_store requires 'summary' (1-2 lines).");
                 }
 
+                var sn = await _serialNumberManager.GenerateSerialNumber(context.Envelope.Org.Id, "MEMNOTE","NA", 100);
+
                 var tags = (args.Tags ?? new List<string>()).Where(t => !string.IsNullOrWhiteSpace(t)).Select(t => t.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
                 var note = new AgentSessionMemoryNote
                 {
@@ -96,6 +110,7 @@ namespace LagoVista.AI.Services.Tools
                     Summary = args.Summary.Trim(),
                     Details = string.IsNullOrWhiteSpace(args.Details) ? null : args.Details,
                     Tags = tags,
+                    MemoryId = $"MEM-{sn:00000000}",
                     SessionId = context.Session.Id,
                     TurnSourceId = context.ThisTurn.Id,
                     CreationDate = context.TimeStamp,
@@ -103,7 +118,8 @@ namespace LagoVista.AI.Services.Tools
                 };
                 note.Kind = EntityHeader<AgentSessionMemoryNoteKinds>.Create(ParseKind(args.Kind));
                 note.Importance = EntityHeader<AgentSessionMemoryNoteImportance>.Create(ParseImportance(args.Importance));
-                context.Session.MemoryNotes.Add(note);
+
+                await _memoryNoteRepo.AddMemoryNoteAsync(note);
 
                 var payload = new StoreResult
                 {
@@ -117,6 +133,32 @@ namespace LagoVista.AI.Services.Tools
                     TurnSourceId = context.ThisTurn.Id,
                     CreationDate = context.TimeStamp
                 };
+
+                var vector = await _embedder.EmbedAsync(note.Summary);
+
+                var point = new RagPoint()
+                {
+                    PointId = Guid.NewGuid().ToString(),
+                    Vector = vector.Result.Vector,
+                    Payload = new RagVectorPayload()
+                    {
+                        DocId = note.Id,
+                        OrgNamespace = context.Envelope.Org.Id,
+                        Repo = "n/a",
+                        RepoBranch = "n/a",
+                        CommitSha = "n/a",
+                        Title = note.Title,
+                        SectionKey = "MemoryNote",
+                        EmbeddingModel = vector.Result.EmbeddingModel,
+                        BusinessDomainKey = "General",
+                        ContentTypeId = RagContentType.Spec,
+                        Subtype = "memory_note",
+                        SubtypeFlavor = "Default",
+                        Language = "en-US",
+                    }
+                };
+
+                await _qdrantClient.UpsertAsync(context.AgentContext.VectorDatabaseCollectionName, new[] { point }, context.CancellationToken);
                 return InvokeResult<string>.Create(JsonConvert.SerializeObject(payload));
             }
             catch (Exception ex)
@@ -174,7 +216,7 @@ namespace LagoVista.AI.Services.Tools
             {
                 p.String("title", "Short title for the memory note.", required: true);
                 p.String("summary", "1-2 line summary (the marker).", required: true);
-                p.String("details", "Optional longer details; may include snippets.");
+                p.String("details", "Optional longer details; may include snippets.", required: true);
                 p.StringArray("tags", "Optional tags (e.g., safety, parser, invariant).");
                 p.String("importance", "Importance: low|normal|high|critical (default normal).");
                 p.String("kind", "Kind: invariant|decision|constraint|fact|todo|gotcha (default decision).");

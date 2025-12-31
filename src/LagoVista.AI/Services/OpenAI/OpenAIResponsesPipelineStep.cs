@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
-using LagoVista.Core.Exceptions;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json;
@@ -21,10 +20,11 @@ namespace LagoVista.AI.Services.OpenAI
         private readonly ILLMEventPublisher _events;
         private readonly IOpenAIResponsesExecutor _invoker;
         private readonly IAgentPipelineContextValidator _validator;
+        private readonly IAgentTurnTranscriptStore _transcriptStore;
 
         public OpenAIResponsesClientPipelineStap(
             IOpenAISettings settings, IAdminLogger log, IResponsesRequestBuilder builder, IAgentExecuteResponseParser parser,
-            IAgentPipelineContextValidator validator, ILLMEventPublisher events, IOpenAIResponsesExecutor invoker)
+            IAgentTurnTranscriptStore transcriptStore, IAgentPipelineContextValidator validator, ILLMEventPublisher events, IOpenAIResponsesExecutor invoker)
         {
             _log = log ?? throw new ArgumentNullException(nameof(log));
             _builder = builder ?? throw new ArgumentNullException(nameof(builder));
@@ -32,31 +32,7 @@ namespace LagoVista.AI.Services.OpenAI
             _events = events ?? throw new ArgumentNullException(nameof(events));
             _invoker = invoker ?? throw new ArgumentNullException(nameof(invoker));
             _validator = validator ?? throw new ArgumentNullException(nameof(validator));
-        }
-
-        private async Task<InvokeResult<string>> BuildNonToolResultdRequest(IAgentPipelineContext ctx)
-        {
-            var req = await _builder.BuildAsync(ctx);
-            if (!req.Successful)
-                return InvokeResult<string>.FromInvokeResult(req.ToInvokeResult());
-
-            var json = JsonConvert.SerializeObject(req.Result);
-
-            return InvokeResult<string>.Create(json);
-        }
-
-        private Task<InvokeResult<string>> BuildToolResultdRequest(IAgentPipelineContext ctx)
-        {
-            try
-            {
-                var result = OpenAIToolResultRequest.FromResults(ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCallResults);
-                result.Model = ctx.ConversationContext.ModelName;
-                return Task.FromResult(InvokeResult<string>.Create( JsonConvert.SerializeObject(result)));
-            }
-            catch(InvalidOperationException ex)
-            {
-                return Task.FromResult(InvokeResult<string>.FromError(ex.Message));
-            }
+            _transcriptStore = transcriptStore ?? throw new ArgumentNullException(nameof(transcriptStore));
         }
 
         public async Task<InvokeResult<IAgentPipelineContext>> ExecuteAsync(IAgentPipelineContext ctx)
@@ -66,15 +42,11 @@ namespace LagoVista.AI.Services.OpenAI
             var preValidation = _validator.ValidatePreStep(ctx, PipelineSteps.LLMClient);
             if (!preValidation.Successful) return InvokeResult<IAgentPipelineContext>.FromInvokeResult(preValidation);
 
-            //var requestBuildResult = ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCallResults.Any() ?
-            //    await BuildToolResultdRequest(ctx) :
-            //    await BuildNonToolResultdRequest(ctx);
+            var req = await _builder.BuildAsync(ctx);
+            if (!req.Successful) return InvokeResult<IAgentPipelineContext>.FromInvokeResult(req.ToInvokeResult());
 
-            var requestBuildResult = await BuildNonToolResultdRequest(ctx);
-
-            if(!requestBuildResult.Successful) await FailAsync(ctx.Session.Id, requestBuildResult.ToInvokeResult(), "Response parse failed.", ctx.CancellationToken);
-
-            var requestJson = requestBuildResult.Result;
+            var requestJson = JsonConvert.SerializeObject(req.Result);
+            ctx.ThisTurn.OpenAIRequestBlobUrl = (await _transcriptStore.SaveTurnRequestAsync(ctx.Envelope.Org.Id, ctx.Session.Id, ctx.ThisTurn.Id, requestJson, ctx.CancellationToken)).Result.ToString();
 
             _log.Trace($"[JSON.LLMREQUEST]={requestJson}");
 

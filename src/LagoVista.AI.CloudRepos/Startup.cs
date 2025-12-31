@@ -38,6 +38,8 @@ namespace LagoVista.AI.CloudRepos
             services.AddSingleton<IDdrConsumptionFieldProvider, DdrRepo>();
             services.AddSingleton<IAgentToolBoxRepo, AgentToolBoxRepo>();
             services.AddSingleton<IToolCallManifestRepo,  ToolCallManifestRepo>();
+            services.AddSingleton<IAgentTurnChatHistoryRepo, AgentTurnChatHistoryRepo>();
+            services.AddSingleton<IMemoryNoteRepo, MemoryNoteRepo>();
         }
     }
 }

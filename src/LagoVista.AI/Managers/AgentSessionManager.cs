@@ -290,14 +290,13 @@ namespace LagoVista.AI.Managers
                 SourceTurnSourceId = anchorTurnId,
                 BranchedSessionId = branchedSession.Id,
                 TurnsCopiedCount = branchedSession.Turns?.Count ?? 0,
-                MemoryNotesCopiedCount = branchedSession.MemoryNotes?.Count ?? 0,
                 CheckpointsCopiedCount = branchedSession.Checkpoints?.Count ?? 0,
                 ActiveFileRefsCopiedCount = (branchedSession.Turns ?? new List<AgentSessionTurn>()).Sum(t => t.ActiveFileRefs?.Count ?? 0),
                 ChunkRefsCopiedCount = (branchedSession.Turns ?? new List<AgentSessionTurn>()).Sum(t => t.ChunkRefs?.Count ?? 0),
                 CreatedByUser = user,
                 SessionId = branchedSession.Turns?.LastOrDefault()?.SessionId,
                 Summary = $"Restored {cp.CheckpointId} from session {sourceSession.Id} to new session {branchedSession.Id}.",
-                Details = $"Restore checkpoint '{cp.CheckpointId}' (turn '{anchorTurnId}'). Created branched session '{branchedSession.Id}' with {branchedSession.Turns?.Count ?? 0} turns and {branchedSession.MemoryNotes?.Count ?? 0} memory notes."
+                Details = $"Restore checkpoint '{cp.CheckpointId}' (turn '{anchorTurnId}'). Created branched session '{branchedSession.Id}' with {branchedSession.Turns?.Count ?? 0} turns."
             };
 
             branchedSession.RestoreReports.Add(report);

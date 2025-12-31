@@ -12,11 +12,6 @@ namespace LagoVista.AI.Interfaces
     /// </summary>
     public interface IAgentKnowledgePackService
     {
-        Task<InvokeResult<AgentKnowledgePack>> CreateAsync(
-            string orgId,
-            AgentContext agentContext,
-            string conversationContextId,
-            string mode,
-            CancellationToken cancellationToken = default);
+        Task<InvokeResult<AgentKnowledgePack>> CreateAsync(IAgentPipelineContext context, bool changedMode);
     }
 }

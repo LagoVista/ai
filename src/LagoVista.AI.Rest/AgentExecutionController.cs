@@ -191,7 +191,6 @@ namespace LagoVista.AI.Rest
             return _sessionManager.GetAgentSessionsForUserAsync(UserEntityHeader.Id, GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
         }
 
-
         [HttpGet("/api/ai/agent/session/{id}")]
         public async Task<InvokeResult<AgentSession>> GetSession(string id)
         {
