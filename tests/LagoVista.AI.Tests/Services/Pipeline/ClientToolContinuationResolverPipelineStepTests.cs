@@ -82,7 +82,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
         {
             return new Envelope(
                 agentContextId: null,
-                conversationContextId: null,
+                roleId: null,
                 sessionId: "sess_1",
                 thisTurnId: "turn_1",
                 previousTurnid: "prev_i",

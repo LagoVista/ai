@@ -37,7 +37,7 @@ namespace LagoVista.AI.Services.OpenAI
             if (instruction == null) instruction = string.Empty;
 
 
-            var conversationCtx = agentContext.DefaultConversationContext == null ? agentContext.ConversationContexts.FirstOrDefault() : agentContext.ConversationContexts.SingleOrDefault(ctx => ctx.Id == agentContext.DefaultConversationContext.Id);
+            var conversationCtx = agentContext.DefaultRole == null ? agentContext.Roles.FirstOrDefault() : agentContext.Roles.SingleOrDefault(ctx => ctx.Id == agentContext.DefaultRole.Id);
 
             if (conversationCtx == null)
             {

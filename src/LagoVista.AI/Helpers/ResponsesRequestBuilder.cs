@@ -20,7 +20,7 @@ namespace LagoVista.AI.Helpers
     /// following AGN-003 (Aptix Responses API Request Construction).
     ///
     /// Combines:
-    /// - ConversationContext (model, system/boot prompt, temperature)
+    /// - AgentContextRoles (model, system/boot prompt, temperature)
     /// - AgentExecuteRequest (mode, instruction, continuation id, tools, tool results, optional SystemPrompt)
     /// - ragContextBlock (pre-formatted [CONTEXT] block per AGN-002)
     /// - toolUsageMetadataBlock (LLM-facing usage metadata for ALL server tools)
@@ -47,8 +47,8 @@ namespace LagoVista.AI.Helpers
 
             var dto = new ResponsesApiRequest
             {
-                Model = ctx.ConversationContext.ModelName,
-                Temperature = ctx.ConversationContext.Temperature,
+                Model = ctx.Role.ModelName,
+                Temperature = ctx.Role.Temperature,
                 Stream = ctx.Envelope.Stream,
             };
 

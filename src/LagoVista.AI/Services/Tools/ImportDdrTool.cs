@@ -74,12 +74,10 @@ if the DDR Type is ambigous or can't be deterined you must stop and confirm the 
 Derived field generation rules:
 
 If type == ""Instruction"":
-- You MUST include: humanSummary, condensedDdrContent, ragIndexCard, agentInstructions
-- You MUST NOT include: referentialSummary
+- You MUST include: humanSummary, condensedDdrContent, ragIndexCard, agentInstructions, referentialSummary
 
 If type == ""Referential"":
-- You MUST include: humanSummary, condensedDdrContent, ragIndexCard, referentialSummary
-- You MUST NOT include: AgentInstructions
+- You MUST include: humanSummary, condensedDdrContent, ragIndexCard, agentInstructions, referentialSummary
 
 If type == ""Generation"":
 - You MUST include: humanSummary, condensedDdrContent, ragIndexCard
@@ -117,6 +115,8 @@ referentialSummary (Referential only):
 - Ultra-condensed awareness marker suitable for injection alongside many other referential summaries
 - Must include the DDR ID verbatim
 - Must be extremely short and token-efficient
+- Must state what the DDR defines or governs (one short clause)
+- Must indicate when the DDR becomes relevant (phase or trigger), using descriptive language only
 - Must NOT contain procedural steps
 - Must NOT contain normative keywords (MUST, MUST NOT, SHOULD, MAY)
 
@@ -459,7 +459,7 @@ Additional rules:
                 var finalStatus = parsed.Status ?? args.Status;
                 var ddr = new DetailedDesignReview
                 {
-                    DdrIdentifier = parsed.Identifier,
+                    DdrIdentifier = $"{parsed.Tla}-{parsed.Index.Value:000000}",
                     CreatedBy = context.User,
                     Key = parsed.Identifier.ToLower().Replace("-", String.Empty),
                     LastUpdatedBy = context.User,
@@ -542,7 +542,7 @@ Additional rules:
             }
         }
 
-        private static ImportDdrParsed ParseMarkdown(string markdown)
+        private  ImportDdrParsed ParseMarkdown(string markdown)
         {
             // This is intentionally best-effort and geared toward the TUL-011 example.
             // Anything not found remains null and should be confirmed with user.
@@ -637,19 +637,28 @@ Additional rules:
             return h1.Trim();
         }
 
-        private static bool TryParseIdentifier(string identifier, out string tla, out int index)
+        private bool TryParseIdentifier(string identifier, out string tla, out int index)
         {
             tla = null;
             index = 0;
             if (string.IsNullOrWhiteSpace(identifier))
+            {
+                _logger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "[ImportDdrTool_TryParseIdentifier]", "Identifier not provided.");
                 return false;
+            }
             // Accept formats like TUL-011, TUL_011, TUL011 (last one optional if you want).
             var m = Regex.Match(identifier.Trim(), @"^(?<tla>[A-Za-z]{2,10})[-_](?<idx>\d{1,6})$");
             if (!m.Success)
+            {
+                _logger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "[ImportDdrTool_TryParseIdentifier]", $"No match on identifier: {identifier}.");
                 return false;
+            }
             tla = m.Groups["tla"].Value.ToUpperInvariant();
+
+
             if (!int.TryParse(m.Groups["idx"].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out index))
             {
+                _logger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "[ImportDdrTool_TryParseIdentifier]", $"Could not identify index: {identifier}.");
                 return false;
             }
 

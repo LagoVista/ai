@@ -77,7 +77,15 @@ namespace LagoVista.AI.Models
 
         public EntityHeader AgentContext { get; set; }
 
+        [Obsolete]
         public EntityHeader ConversationContext { get; set; }
+
+       
+        private EntityHeader _role;
+#pragma warning disable CS0612 // Type or member is obsolete
+        public EntityHeader Role { get => _role ?? ConversationContext; set => _role = value; }
+#pragma warning restore CS0612 // Type or member is obsolete
+
 
         public Dictionary<string, string> DdrCache { get; set; } = new Dictionary<string, string>();
 
@@ -141,8 +149,8 @@ namespace LagoVista.AI.Models
             summary.DiscussionsTotal = Turns.Count;
             summary.AgentContextId = AgentContext?.Id;
             summary.AgentContextName = AgentContext?.Text;
-            summary.ConversationContextName = ConversationContext?.Text;
-            summary.ConversationContextId = ConversationContext?.Id;
+            summary.RoleContextName = Role?.Text;
+            summary.RoleContextId = Role?.Id;
             summary.TurnCount = Turns.Count;
             summary.Mode = Mode;
             summary.ModeSetTimestamp = ModeSetTimestamp;
@@ -429,11 +437,11 @@ namespace LagoVista.AI.Models
     {
         public string AgentContextId { get; set; }
 
-        public string ConversationContextId { get; set; }
+        public string RoleContextId { get; set; }
 
         public string AgentContextName { get; set; }
 
-        public string ConversationContextName { get; set; }
+        public string RoleContextName { get; set; }
 
         public string LastTurnStatus { get; set; }
 

@@ -11,9 +11,9 @@
 //    [TestFixture]
 //    public class ResponsesRequestBuilderTests
 //    {
-//        private ConversationContext CreateConversationContext()
+//        private AgentContextRoles CreateConversationContext()
 //        {
-//            return new ConversationContext
+//            return new AgentContextRoles
 //            {
 //                Id = "conv-ctx-1",
 //                Name = "Test Conversation Context",
@@ -34,11 +34,11 @@
 //            return new AgentExecuteRequest
 //            {
 //                SessionId = "conv-1",
-//                Mode = mode,
+//                ModeKey = mode,
 //                Instruction = instruction,
 //                ResponseContinuationId = previousResponseId,
 //                AgentContext = new EntityHeader { Id = "agent-ctx", Text = "Agent Ctx" },
-//                ConversationContext = new EntityHeader { Id = "conv-ctx-1", Text = "Conv Ctx" },
+//                AgentContextRoles = new EntityHeader { Id = "conv-ctx-1", Text = "Conv Ctx" },
 //                ToolsJson = toolsJson,
 //                ToolChoiceName = toolChoiceName,
 //                ToolResultsJson = toolResultsJson,
@@ -73,7 +73,7 @@
 //            Assert.That(dto.Input.Count, Is.GreaterThanOrEqualTo(2));
 
 //            var systemMessage = dto.Input[0];
-//            Assert.That(systemMessage.Role, Is.EqualTo("system"));
+//            Assert.That(systemMessage.RoleId, Is.EqualTo("system"));
 //            Assert.That(systemMessage.Output.Count, Is.EqualTo(2));
 //            Assert.That(systemMessage.Output[0].Text, Is.EqualTo("You are the Aptix Reasoner."));
 //        }
@@ -90,7 +90,7 @@
 //            Assert.That(dto.Input.Count, Is.GreaterThanOrEqualTo(2));
 
 //            var systemMessage = dto.Input[0];
-//            Assert.That(systemMessage.Role, Is.EqualTo("system"));
+//            Assert.That(systemMessage.RoleId, Is.EqualTo("system"));
 //            Assert.That(systemMessage.Output.Count, Is.EqualTo(3));
 
 //            Assert.That(systemMessage.Output[0].Text, Is.EqualTo("You are the Aptix Reasoner."));
@@ -112,7 +112,7 @@
 //            Assert.That(dto.Input.Count, Is.GreaterThanOrEqualTo(2));
 
 //            var systemMessage = dto.Input[0];
-//            Assert.That(systemMessage.Role, Is.EqualTo("system"));
+//            Assert.That(systemMessage.RoleId, Is.EqualTo("system"));
 //            Assert.That(systemMessage.Output.Count, Is.EqualTo(4));
 
 //            Assert.That(systemMessage.Output[0].Text, Is.EqualTo("You are the Aptix Reasoner."));
@@ -137,7 +137,7 @@
 //            Assert.That(dto.Input.Count, Is.GreaterThanOrEqualTo(2));
 
 //            var systemMessage = dto.Input[0];
-//            Assert.That(systemMessage.Role, Is.EqualTo("system"));
+//            Assert.That(systemMessage.RoleId, Is.EqualTo("system"));
 
 //            // No conversation-level system prompts; we should see just SystemPrompt + tool usage metadata
 //            Assert.That(systemMessage.Output.Count, Is.EqualTo(3));
@@ -160,13 +160,13 @@
 //            Assert.That(dto.Input.Count, Is.EqualTo(2));
 
 //            var systemMessage = dto.Input[0];
-//            Assert.That(systemMessage.Role, Is.EqualTo("system"));
+//            Assert.That(systemMessage.RoleId, Is.EqualTo("system"));
 //            Assert.That(systemMessage.Output.Count, Is.EqualTo(3));
 //            Assert.That(systemMessage.Output[0].Text, Is.EqualTo("You are the Aptix Reasoner."));
 //            Assert.That(systemMessage.Output[1].Text, Is.EqualTo("Continuation-specific override."));
 
 //            var userMessage = dto.Input[1];
-//            Assert.That(userMessage.Role, Is.EqualTo("user"));
+//            Assert.That(userMessage.RoleId, Is.EqualTo("user"));
 //        }
 
 //        [Test]
@@ -178,7 +178,7 @@
 //            var dto = _builder.Build(convCtx, request, string.Empty, string.Empty);
 
 //            var userMessage = dto.Input[dto.Input.Count - 1];
-//            Assert.That(userMessage.Role, Is.EqualTo("user"));
+//            Assert.That(userMessage.RoleId, Is.EqualTo("user"));
 //            Assert.That(userMessage.Output.Count, Is.EqualTo(1));
 
 //            var text = userMessage.Output[0].Text;
@@ -197,7 +197,7 @@
 //            var dto = _builder.Build(convCtx, request, ragContextBlock, string.Empty);
 
 //            var userMessage = dto.Input[dto.Input.Count - 1];
-//            Assert.That(userMessage.Role, Is.EqualTo("user"));
+//            Assert.That(userMessage.RoleId, Is.EqualTo("user"));
 //            Assert.That(userMessage.Output.Count, Is.EqualTo(2));
 
 //            var ctxItem = userMessage.Output[1];
@@ -298,7 +298,7 @@
 //            Assert.That(dto.Input.Count, Is.EqualTo(2));
 
 //            var userMessage = dto.Input[1];
-//            Assert.That(userMessage.Role, Is.EqualTo("user"));
+//            Assert.That(userMessage.RoleId, Is.EqualTo("user"));
 //            Assert.That(userMessage.Output.Count, Is.EqualTo(2));
 
 //            var instructionContent = userMessage.Output[0];
@@ -321,7 +321,7 @@
 //            Assert.That(dto.Input.Count, Is.GreaterThanOrEqualTo(2));
 
 //            var systemMessage = dto.Input[0];
-//            Assert.That(systemMessage.Role, Is.EqualTo("system"));
+//            Assert.That(systemMessage.RoleId, Is.EqualTo("system"));
 //            Assert.That(systemMessage.Output.Count, Is.EqualTo(3));
 
 //            Assert.That(systemMessage.Output[0].Text, Is.EqualTo("You are the Aptix Reasoner."));
@@ -345,12 +345,12 @@
 //            Assert.That(dto.Input.Count, Is.EqualTo(2));
 
 //            var systemMessage = dto.Input[0];
-//            Assert.That(systemMessage.Role, Is.EqualTo("system"));
+//            Assert.That(systemMessage.RoleId, Is.EqualTo("system"));
 //            Assert.That(systemMessage.Output.Count, Is.GreaterThanOrEqualTo(2));
 //            Assert.That(systemMessage.Output[systemMessage.Output.Count - 1].Text, Is.EqualTo(toolUsageMetadataBlock));
 
 //            var userMessage = dto.Input[1];
-//            Assert.That(userMessage.Role, Is.EqualTo("user"));
+//            Assert.That(userMessage.RoleId, Is.EqualTo("user"));
 //        }
 
 //        [Test]

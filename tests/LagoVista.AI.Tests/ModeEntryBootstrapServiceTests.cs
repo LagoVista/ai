@@ -50,7 +50,7 @@
 //            var mode = new AgentMode { Key = "DDR", BootStrapTool = ObjectArray.Empty<BootStrapTool>() };
 //            var req = new ModeEntryBootstrapRequest
 //            {
-//                Mode = mode,
+//                ModeKey = mode,
 //                ModeKey = "DDR",
 //                ToolContext = new AgentToolExecutionContext()
 //            };
@@ -82,7 +82,7 @@
 
 //            var req = new ModeEntryBootstrapRequest
 //            {
-//                Mode = mode,
+//                ModeKey = mode,
 //                ModeKey = "DDR",
 //                ToolContext = new AgentToolExecutionContext()
 //            };
@@ -128,7 +128,7 @@
 
 //            var req = new ModeEntryBootstrapRequest
 //            {
-//                Mode = mode,
+//                ModeKey = mode,
 //                ModeKey = "DDR",
 //                ToolContext = new AgentToolExecutionContext()
 //            };
@@ -159,7 +159,7 @@
 
 //            var req = new ModeEntryBootstrapRequest
 //            {
-//                Mode = mode,
+//                ModeKey = mode,
 //                ModeKey = "DDR",
 //                ToolContext = new AgentToolExecutionContext()
 //            };
@@ -196,7 +196,7 @@
 
 //            var req = new ModeEntryBootstrapRequest
 //            {
-//                Mode = mode,
+//                ModeKey = mode,
 //                ModeKey = "DDR",
 //                ToolContext = new AgentToolExecutionContext()
 //            };

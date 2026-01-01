@@ -523,34 +523,34 @@
   <data name="AgentContext_LlmProvider_Select" xml:space="preserve">
     <value>-select llm provider-</value>
   </data>
-  <data name="AgentContext_ConversationContext_Title" xml:space="preserve">
+  <data name="AgentContext_Role_Title" xml:space="preserve">
     <value>Conversation Context</value>
   </data>
-  <data name="AgentContext_ConversationContext_Description" xml:space="preserve">
+  <data name="AgentContext_Role_Description" xml:space="preserve">
     <value>Define how the large language model should behave within this conversation, including its role, identity, and how it generates responses.</value>
   </data>
-  <data name="AgentContext_ConversationContext_ModelName" xml:space="preserve">
+  <data name="AgentContext_Role_ModelName" xml:space="preserve">
     <value>Model Name</value>
   </data>
-  <data name="AgentContext_ConversationContext_Temperature" xml:space="preserve">
+  <data name="AgentContext_Role_Temperature" xml:space="preserve">
     <value>Temperature</value>
   </data>
-  <data name="AgentContext_ConversationContext_System" xml:space="preserve">
+  <data name="AgentContext_Role_System" xml:space="preserve">
     <value>System</value>
   </data>
-  <data name="AgentContext_ConversationContext_System_Help" xml:space="preserve">
+  <data name="AgentContext_Role_System_Help" xml:space="preserve">
     <value>The system is used to instruct the LLM on how to generate the context.  This defines the AI’s identity, role, and behavioral rules before any user input is considered.  It is the “governing policy” for the model. </value>
   </data>
-  <data name=" AgentContext_ConversationContext_Temperature_Help" xml:space="preserve">
+  <data name="AgentContext_Role_Temperature_Help" xml:space="preserve">
     <value>Temperature controls how random or deterministic a language model is when generating responses. It affects how “creative” the model’s word choices are.</value>
   </data>
-  <data name="AgentContext_ConversationContexts" xml:space="preserve">
+  <data name="AgentContext_Roles" xml:space="preserve">
     <value>Conversation Contexts</value>
   </data>
-  <data name="AgentContext_DefaultConversationContext" xml:space="preserve">
+  <data name="AgentContext_DefaultRole" xml:space="preserve">
     <value>Default Conversation Context</value>
   </data>
-  <data name="AgentContext_DefaultConversationContext_Select" xml:space="preserve">
+  <data name="AgentContext_DefaultRole_Select" xml:space="preserve">
     <value>-select default conversation context-</value>
   </data>
   <data name="AiAgentContexts_Title" xml:space="preserve">
@@ -747,5 +747,11 @@
   </data>
   <data name="AgentSessionTurnStatuses_RolledBackTurn" xml:space="preserve">
     <value>Rolled Back Turn</value>
+  </data>
+  <data name="AgentContext_Role_Persona_Instructions" xml:space="preserve">
+    <value>Persona Instructions</value>
+  </data>
+  <data name="AgentContext_Role_WelcomeMessage" xml:space="preserve">
+    <value>Welcome Message</value>
   </data>
 </root>

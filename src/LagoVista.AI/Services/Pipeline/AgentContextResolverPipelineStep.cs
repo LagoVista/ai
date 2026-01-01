@@ -46,20 +46,20 @@ namespace LagoVista.AI.Services.Pipeline
 
             var agentContext = await _contextManager.GetAgentContextWithSecretsAsync(agentContextId, ctx.Envelope.Org, ctx.Envelope.User);
 
-            var conversationContextId = ctx.Envelope.ConversationContextId ?? agentContext.DefaultConversationContext?.Id;
-            if(String.IsNullOrEmpty(conversationContextId) && agentContext.ConversationContexts.Any())
+            var roleId = ctx.Envelope.RoleId ?? agentContext.DefaultRole?.Id;
+            if(String.IsNullOrEmpty(roleId) && agentContext.Roles.Any())
             {
-                conversationContextId = agentContext.ConversationContexts.First().Id;
+                roleId = agentContext.Roles.First().Id;
             }
 
-            if (string.IsNullOrWhiteSpace(conversationContextId))
+            if (string.IsNullOrWhiteSpace(roleId))
             {
                 return InvokeResult<IAgentPipelineContext>.FromError(
                 "ConversationContextId not found.",
                 "AGENT_CTX_RESOLVER_CONVERSATION_CONTEXT_ID_NOT_AVAILABLE");
             }
 
-            var conversationContext = agentContext.ConversationContexts.FirstOrDefault(ctx => ctx.Id == conversationContextId); 
+            var conversationContext = agentContext.Roles.FirstOrDefault(ctx => ctx.Id == roleId); 
             if (conversationContext == null)
             {
                 return InvokeResult<IAgentPipelineContext>.FromError(

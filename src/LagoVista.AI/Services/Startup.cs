@@ -1,5 +1,6 @@
 ﻿using LagoVista.AI.Helpers;
 using LagoVista.AI.Interfaces;
+using LagoVista.AI.Interfaces.Services;
 using LagoVista.AI.Services.Hashing;
 using LagoVista.Core.Interfaces;
 using LagoVista.IoT.Logging.Loggers;
@@ -20,6 +21,7 @@ namespace LagoVista.AI.Services
             services.AddScoped<ILLMEventPublisher, LlmEventPublisher>();
             services.AddScoped<IAgentExecuteResponseBuilder, AgentExecuteResponseBuilder>();
             services.AddScoped<ILLMWorkflowNarrator, LlmWorkflowNarrator>();
+            services.AddScoped<IPromptKnowledgeProvider, PromptKnowledgeProvider>();
             Pipeline.Startup.ConfigureServices(services, adminLogger);
             Qdrant.Startup.ConfigureServices(services, adminLogger);
         }

@@ -171,7 +171,7 @@ namespace LagoVista.AI.Services.Pipeline
             switch (ctx.Type)
             {
                 case AgentPipelineContextTypes.Initial:
-                    if (!String.IsNullOrEmpty(ctx.Envelope?.ConversationContextId) && String.IsNullOrEmpty(ctx.Envelope?.AgentContextId))
+                    if (!String.IsNullOrEmpty(ctx.Envelope?.RoleId) && String.IsNullOrEmpty(ctx.Envelope?.AgentContextId))
                         result.Errors.Add(new ErrorMessage("ConversationContextId must be empty when AgentContextId is not provided."));
 
                     if (step < PipelineSteps.AgentSessionCreator && !postStep)
@@ -281,7 +281,7 @@ namespace LagoVista.AI.Services.Pipeline
             if (ctx.AgentContext == null)
                 result.Errors.Add(new ErrorMessage("AgentContextResolver POST: ctx.AgentContext must be populated."));
 
-            if (ctx.ConversationContext == null)
+            if (ctx.Role == null)
                 result.Errors.Add(new ErrorMessage("AgentContextResolver POST: ctx.ConversationContext must be populated."));
 
             return result;
@@ -291,11 +291,11 @@ namespace LagoVista.AI.Services.Pipeline
         {
             var result = new InvokeResult();
 
-            // You locked this: AgentContext/ConversationContext should be null pre and post.
+            // You locked this: AgentContext/AgentContextRoles should be null pre and post.
             if (ctx.AgentContext != null)
                 result.Errors.Add(new ErrorMessage("ClientToolContinuationResolver PRE: ctx.AgentContext must be null."));
 
-            if (ctx.ConversationContext != null)
+            if (ctx.Role != null)
                 result.Errors.Add(new ErrorMessage("ClientToolContinuationResolver PRE: ctx.ConversationContext must be null."));
 
             if (ctx.Session == null)
@@ -317,7 +317,7 @@ namespace LagoVista.AI.Services.Pipeline
             if (ctx.AgentContext != null)
                 result.Errors.Add(new ErrorMessage("ClientToolContinuationResolver POST: ctx.AgentContext must be null."));
 
-            if (ctx.ConversationContext != null)
+            if (ctx.Role != null)
                 result.Errors.Add(new ErrorMessage("ClientToolContinuationResolver POST: ctx.ConversationContext must be null."));
 
             if (ctx.Session == null)
@@ -355,7 +355,7 @@ namespace LagoVista.AI.Services.Pipeline
             if (ctx.AgentContext == null)
                 result.Errors.Add(new ErrorMessage("AgentSessionCreator PRE: ctx.AgentContext must be populated."));
 
-            if (ctx.ConversationContext == null)
+            if (ctx.Role == null)
                 result.Errors.Add(new ErrorMessage("AgentSessionCreator PRE: ctx.ConversationContext must be populated."));
 
             if (ctx.Session != null)
@@ -406,7 +406,7 @@ namespace LagoVista.AI.Services.Pipeline
             if (ctx.AgentContext == null)
                 result.Errors.Add(new ErrorMessage("AgentContextLoader POST: ctx.AgentContext must be populated."));
 
-            if (ctx.ConversationContext == null)
+            if (ctx.Role == null)
                 result.Errors.Add(new ErrorMessage("AgentContextLoader POST: ctx.ConversationContext must be populated."));
 
             return result;
@@ -425,7 +425,7 @@ namespace LagoVista.AI.Services.Pipeline
             if (ctx.AgentContext == null)
                 result.Errors.Add(new ErrorMessage("PromptContentProvider PRE: ctx.AgentContext must be populated."));
 
-            if (ctx.ConversationContext == null)
+            if (ctx.Role == null)
                 result.Errors.Add(new ErrorMessage("PromptContentProvider PRE: ctx.ConversationContext must be populated."));
 
             // If tool continuation, ToolCallManifest must be non-null.
@@ -454,7 +454,7 @@ namespace LagoVista.AI.Services.Pipeline
             if (ctx.AgentContext == null)
                 result.Errors.Add(new ErrorMessage("Reasoner PRE: ctx.AgentContext must be populated."));
 
-            if (ctx.ConversationContext == null)
+            if (ctx.Role == null)
                 result.Errors.Add(new ErrorMessage("Reasoner PRE: ctx.ConversationContext must be populated."));
 
             if (ctx.PromptKnowledgeProvider == null)

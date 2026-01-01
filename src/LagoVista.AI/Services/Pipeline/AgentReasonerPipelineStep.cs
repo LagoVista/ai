@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Pipeline;
+using LagoVista.AI.Interfaces.Services;
 using LagoVista.AI.Models;
 using LagoVista.AI.Services.Pipeline;
 using LagoVista.Core.Validation;
@@ -16,16 +17,17 @@ namespace LagoVista.AI.Services
         private readonly IAgentToolExecutor _toolExecutor;
         private readonly IAdminLogger _logger;
         private readonly IAgentStreamingContext _agentStreamingContext;
-     
+        private readonly IPromptKnowledgeProvider _pkpService;
         private const int MaxReasoningIterations = 8;
 
         public AgentReasonerPipelineStep(ILLMClient llmClient, IAgentToolExecutor toolExecutor,
-            IAgentPipelineContextValidator validator,
+            IAgentPipelineContextValidator validator, IPromptKnowledgeProvider pkpService,
             IAdminLogger logger, IAgentStreamingContext agentStreamingContext) : base(validator, logger)
         {
             _llmClient = llmClient ?? throw new ArgumentNullException(nameof(llmClient));
             _toolExecutor = toolExecutor ?? throw new ArgumentNullException(nameof(toolExecutor));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _pkpService = pkpService ?? throw new ArgumentNullException(nameof(pkpService));
             _agentStreamingContext = agentStreamingContext ?? throw new ArgumentNullException(nameof(agentStreamingContext));
         }
 
@@ -46,6 +48,8 @@ namespace LagoVista.AI.Services
                     return llmResult;
 
                 ctx = llmResult.Result;
+
+                var originalMode = ctx.Session.Mode;
 
                 foreach (var toolCall in ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCalls)
                 {
@@ -68,6 +72,13 @@ namespace LagoVista.AI.Services
                 if (llmResult.Result.HasClientToolCalls)
                 {
                     return InvokeResult<IAgentPipelineContext>.Create(ctx);
+                }
+
+                if(originalMode != ctx.Session.Mode)
+                {
+                    _logger.Trace($"[AgentReasonerPipelineStep__AgentReasonerPipelineStep] - Mode Change Detected Populate PKP {originalMode} -> {ctx.Session.Mode}");
+                   var pkpResult = await _pkpService.PopulateAsync(ctx, true);
+                   if(!pkpResult.Successful) return InvokeResult<IAgentPipelineContext>.FromInvokeResult(pkpResult.ToInvokeResult());
                 }
             }
 

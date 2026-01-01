@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using LagoVista.AI.Models;
 using LagoVista.Core.Validation;
 
 namespace LagoVista.AI.Interfaces
@@ -16,12 +17,7 @@ namespace LagoVista.AI.Interfaces
     /// </summary>
     public interface IDdrConsumptionFieldProvider
     {
-        Task<InvokeResult<IDictionary<string, string>>> GetAgentInstructionsAsync(
-            string orgId,
-            IEnumerable<string> ddrIds,
-            CancellationToken cancellationToken = default);
-
-        Task<InvokeResult<IDictionary<string, string>>> GetReferentialSummariesAsync(
+        Task<InvokeResult<IDictionary<string, DdrModelFields>>> GetDdrModelSummaryAsync(
             string orgId,
             IEnumerable<string> ddrIds,
             CancellationToken cancellationToken = default);

@@ -142,7 +142,7 @@ namespace LagoVista.AI.AgentClient
             return invokeResult.Result;
         }
 
-        public Task<AgentExecuteResponse> AskAsync(EntityHeader agentContext, EntityHeader conversationContext,
+        public Task<AgentExecuteResponse> AskAsync(EntityHeader agentContext, EntityHeader role,
             string instruction, string? SessionId = null, string? workspaceId = null, string? repo = null,
             string? language = null, string? ragScope = null, IEnumerable<InputArtifact>? activeFiles = null,
             CancellationToken cancellationToken = default)
@@ -160,7 +160,7 @@ namespace LagoVista.AI.AgentClient
             var request = new AgentExecuteRequest
             {
                 AgentContextId = agentContext.Id,
-                ConversationContextId = conversationContext.Id,
+                RoleId = role.Id,
                 Instruction = instruction,
                 WorkspaceId = workspaceId,
                 Repo = repo,
@@ -174,7 +174,7 @@ namespace LagoVista.AI.AgentClient
             return ExecuteAsync(request, cancellationToken);
         }
 
-        public Task<AgentExecuteResponse> EditAsync(EntityHeader agentContext, EntityHeader conversationContext,
+        public Task<AgentExecuteResponse> EditAsync(EntityHeader agentContext, EntityHeader role,
             string instruction, IEnumerable<InputArtifact> activeFiles, string? SessionId = null,
             string? workspaceId = null, string? repo = null, string? language = null, string? ragScope = null,
             CancellationToken cancellationToken = default)
@@ -197,7 +197,7 @@ namespace LagoVista.AI.AgentClient
             var request = new AgentExecuteRequest
             {
                 AgentContextId = agentContext.Id,
-                ConversationContextId = conversationContext.Id,
+                RoleId = role.Id,
                 SessionId = SessionId,
                 Instruction = instruction,
                 WorkspaceId = workspaceId,

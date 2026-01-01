@@ -62,13 +62,14 @@ namespace LagoVista.AI.Models
         [FormField(LabelResource: AIResources.Names.VectorDatabase_OpenAPI_Token, HelpResource: AIResources.Names.VectorDatabase_OpenAPI_Token_Help, SecureIdFieldName: nameof(LlmApiKeySecretId), FieldType: FieldTypes.Secret, ResourceType: typeof(AIResources))]
         public string LlmApiKey { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.AgentContext_DefaultConversationContext, PickerProviderFieldName: nameof(ConversationContexts), WaterMark: AIResources.Names.AgentContext_DefaultConversationContext_Select, FieldType: FieldTypes.EntityHeaderPicker,
+        [FormField(LabelResource: AIResources.Names.AgentContext_DefaultRole, PickerProviderFieldName: nameof(Roles), WaterMark: AIResources.Names.AgentContext_DefaultRole_Select, FieldType: FieldTypes.EntityHeaderPicker,
             ResourceType: typeof(AIResources))]
-        public EntityHeader DefaultConversationContext { get; set; }
+        public EntityHeader DefaultRole { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.AgentContext_ConversationContexts, HelpResource: AIResources.Names.AgentContext_ConversationContext_Description, FieldType: FieldTypes.ChildListInline, FactoryUrl: "/api/ai/agent/conversation/context/factory",
+        [FormField(LabelResource: AIResources.Names.AgentContext_Roles, HelpResource: AIResources.Names.AgentContext_Role_Description, FieldType: FieldTypes.ChildListInline, FactoryUrl: "/api/ai/agent/conversation/context/factory",
             ResourceType: typeof(AIResources))]
-        public List<ConversationContext> ConversationContexts { get; set; } = new List<ConversationContext>();
+        public List<AgentContextRoles> Roles { get; set; } = new List<AgentContextRoles>();
+
 
         [FormField(LabelResource: AIResources.Names.AgentContext_MaxTokenCount, HelpResource: AIResources.Names.AgentContext_MaxTokenCount_Help, FieldType: FieldTypes.Integer, ResourceType: typeof(AIResources))]
         public int MaxTokenCount { get; set; } = 400000;
@@ -168,8 +169,8 @@ namespace LagoVista.AI.Models
                 nameof(EmbeddingModel),
                 nameof(MaxTokenCount),
                 nameof(CompletionReservePercent),
-                nameof(DefaultConversationContext),
-                nameof(ConversationContexts),
+                nameof(DefaultRole),
+                nameof(Roles),
             };
         }
 
@@ -182,35 +183,31 @@ namespace LagoVista.AI.Models
         }
     }
 
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.AgentContext_ConversationContext_Title, AIResources.Names.AgentContext_ConversationContext_Description, AIResources.Names.AgentContext_ConversationContext_Description, EntityDescriptionAttribute.EntityTypes.ChildObject, typeof(AIResources),
+    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.AgentContext_Role_Title, AIResources.Names.AgentContext_Role_Description, AIResources.Names.AgentContext_Role_Description, EntityDescriptionAttribute.EntityTypes.ChildObject, typeof(AIResources),
     FactoryUrl: "/api/ai/agent/conversation/context/factory")]
-    public class ConversationContext : IFormDescriptor, IValidateable, IConversationContext
+    public class AgentContextRoles : IFormDescriptor, IValidateable
     {
         public string Id { get; set; } = Guid.NewGuid().ToId();
 
         [FormField(LabelResource: AIResources.Names.Common_Name, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
         public string Name { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.AgentContext_ConversationContext_ModelName, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
-        public string ModelName { get; set; } = "gpt-5";
+        [FormField(LabelResource: AIResources.Names.AgentContext_Role_ModelName, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
+        public string ModelName { get; set; } = "gpt-5.2";
 
-        [FormField(LabelResource: AIResources.Names.AgentContext_ConversationContext_System, HelpResource: AIResources.Names.AgentContext_ConversationContext_System_Help,
-            FieldType: FieldTypes.MultiLineText, IsRequired: true, ResourceType: typeof(AIResources))]
-        public List<string> SystemPrompts { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.AgentContext_ConversationContext_Temperature, HelpResource: AIResources.Names.AgentContext_ConversationContext_Temperature_Help,
+        [FormField(LabelResource: AIResources.Names.AgentContext_Role_Temperature, HelpResource: AIResources.Names.AgentContext_Role_Temperature_Help,
             FieldType: FieldTypes.Decimal, IsRequired: true, ResourceType: typeof(AIResources))]
         public float Temperature { get; set; } = 0.5f;
+
+        [FormField(LabelResource: AIResources.Names.AgentContext_Role_Persona_Instructions, FieldType: FieldTypes.MultiLineText, IsRequired: true, ResourceType: typeof(AIResources))]
+        public string PersonaInstructions { get; set; }
 
         /// <summary>
         /// Optional welcome message shown when entering this mode.
         /// </summary>
+        [FormField(LabelResource: AIResources.Names.AgentContext_Role_WelcomeMessage, FieldType: FieldTypes.MultiLineText, IsRequired: true, ResourceType: typeof(AIResources))]
         public string WelcomeMessage { get; set; }
-
-        /// <summary>
-        /// Instructions to be sent over with the initial turn
-        /// </summary>
-        public string BoolstrapInstructions { get; set; }
 
         /// <summary>
         /// Mode-specific behavior instructions for the LLM when this
@@ -228,14 +225,6 @@ namespace LagoVista.AI.Models
         /// </summary>
         public string[] AssociatedToolIds { get; set; } = Array.Empty<string>();
 
-        /// <summary>
-        /// Optional grouping hints for UI or LLM reasoning, e.g. "authoring",
-        /// "read-only", "diagnostics".
-        /// </summary>
-        public string[] ToolGroupHints { get; set; } = Array.Empty<string>();
-
-
-        public List<string> Instructions { get; set; } = new List<string>();
 
         public List<EntityHeader> ToolBoxes { get; set; } = new List<EntityHeader>();
 
@@ -251,6 +240,8 @@ namespace LagoVista.AI.Models
                 nameof(Name),
                 nameof(ModelName),
                 nameof(Temperature),
+                nameof(WelcomeMessage),
+                nameof(PersonaInstructions),
             };
         }
     }

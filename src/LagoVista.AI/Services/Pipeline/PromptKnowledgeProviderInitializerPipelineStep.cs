@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Pipeline;
+using LagoVista.AI.Interfaces.Services;
 using LagoVista.AI.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
@@ -17,7 +18,7 @@ namespace LagoVista.AI.Services.Pipeline
     ///
     /// Expects:
     /// - <see cref="AgentPipelineContext.Session"/>, <see cref="AgentPipelineContext.ThisTurn"/>, and <see cref="AgentPipelineContext.Request"/> are present.
-    /// - <see cref="AgentPipelineContext.AgentContext"/> and (optionally) <see cref="AgentPipelineContext.ConversationContext"/> are resolved.
+    /// - <see cref="AgentPipelineContext.AgentContext"/> and (optionally) <see cref="AgentPipelineContext.Role"/> are resolved.
     ///
     /// Updates:
     /// - Initializes session/mode-based context providers required by downstream execution (RAG, tool catalogs, prompt inputs, etc.).
@@ -33,147 +34,23 @@ namespace LagoVista.AI.Services.Pipeline
     /// </summary>
     public sealed class PromptKnowledgeProviderInitializerPipelineStep : PipelineStep, IPromptKnowledgeProviderInitializerPipelineStep
     {
-        private readonly IAdminLogger _adminLogger;
-        private readonly IAgentKnowledgePackService _apkProvider;
-        private readonly IServerToolSchemaProvider _toolSchemaProvider;
+        private readonly IPromptKnowledgeProvider _pkpService;
 
         public PromptKnowledgeProviderInitializerPipelineStep(
             IAgentReasonerPipelineStep next,
-            IAgentKnowledgePackService apkProvider,
             IAgentPipelineContextValidator validator,
-            IServerToolSchemaProvider toolSchemaProvider,
+            IPromptKnowledgeProvider pkpService,
             IAdminLogger adminLogger) : base(next, validator, adminLogger)
         {
-            _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
-            _apkProvider = apkProvider ?? throw new ArgumentNullException(nameof(apkProvider));
-            _toolSchemaProvider = toolSchemaProvider ?? throw new ArgumentNullException(nameof(toolSchemaProvider));
+            _pkpService = pkpService?? throw new ArgumentNullException(nameof(pkpService));
         }
 
         protected override PipelineSteps StepType => PipelineSteps.PromptKnowledgeProviderInitializer;
 
         protected override async Task<InvokeResult<IAgentPipelineContext>> ExecuteStepAsync(IAgentPipelineContext ctx)
         {
-            var apkResult = await _apkProvider.CreateAsync(ctx, false);
-            var apk = apkResult.Result;
-
-            foreach(var key in apk.KindCatalog.Keys)
-            {
-                var items = apk.KindCatalog[key];
-
-                if (items.ConsumableKnowledge.Items.Any())
-                {
-                    var register = ctx.PromptKnowledgeProvider.GetOrCreateRegister(key.ToString(), Models.Context.ContextClassification.Consumable);
-                    var contentBlock = new StringBuilder();
-                    contentBlock.AppendLine(items.BeginMarker);
-                    contentBlock.AppendLine(items.InstructionLine);
-                    foreach (var content in items.ConsumableKnowledge.Items)
-                    {
-                        contentBlock.AppendLine(content.Content);
-                    }
-                    contentBlock.AppendLine(items.EndMarker);
-                    register.Add(contentBlock.ToString());
-                }
-
-                if (items.SessionKnowledge.Items.Any())
-                {
-                    var register = ctx.PromptKnowledgeProvider.GetOrCreateRegister(key.ToString(), Models.Context.ContextClassification.Session);
-                    var contentBlock = new StringBuilder();
-                    contentBlock.AppendLine(items.BeginMarker);
-                    contentBlock.AppendLine(items.InstructionLine);
-                    foreach (var content in items.SessionKnowledge.Items)
-                    {
-                        contentBlock.AppendLine(content.Content);
-                    }
-                    contentBlock.AppendLine(items.EndMarker);
-
-                    register.Add(contentBlock.ToString());
-                }
-            }
-
-            var currentBranch = String.IsNullOrEmpty(ctx.Session.CurrentBranch) ? AgentSession.DefaultBranch : ctx.Session.CurrentBranch;
-
-            if (!ctx.Session.Kfrs.ContainsKey(currentBranch))
-            {
-                var kfrBlock = @$"
-## BEGIN Known Facts Registry (KFR) — Active Working Memory
-
-These entries are authoritative for near-term correctness.
-They may be replaced or removed at any time.
-
-Do not infer or assume facts outside this registry.
-
-### Goal (single)
- - empty
-
-### Plan (single)
- - empty
-
-### ActiveContracts
- - empty
-
-### Constraints
- - empty
-
-### OpenQuestions (RequiresResolution)
- - empty
-
-## END Known Facts Registry (KFR) — Active Working Memory
-";
-                var kfrRegister = ctx.PromptKnowledgeProvider.GetOrCreateRegister("kfr", Models.Context.ContextClassification.Session);
-                kfrRegister.Add(kfrBlock);
-            }
-            else
-            {
-                var branchKfrs = ctx.Session.Kfrs[ctx.Session.CurrentBranch];
-
-                var kfrBlock = @$"
-## BEGIN Known Facts Registry (KFR) — Active Working Memory
-
-These entries are authoritative for near-term correctness.
-They may be replaced or removed at any time.
-
-Do not infer or assume facts outside this registry.
-
-### Goal (single)
-{BuildKfrSection(branchKfrs.Where(kfr => kfr.Kind == KfrKind.Goal && kfr.IsActive))}
-
-### Plan (single)
-{BuildKfrSection(branchKfrs.Where(kfr => kfr.Kind == KfrKind.Plan && kfr.IsActive))}
-
-### ActiveContracts
-{BuildKfrSection(branchKfrs.Where(kfr => kfr.Kind == KfrKind.ActiveContract && kfr.IsActive))}
-
-### Constraints
-{BuildKfrSection(branchKfrs.Where(kfr => kfr.Kind == KfrKind.Constraint && kfr.IsActive))}
-
-### OpenQuestions (RequiresResolution)
-{BuildKfrSection(branchKfrs.Where(kfr => kfr.Kind == KfrKind.OpenQuestion && kfr.IsActive))}
-
-## END Known Facts Registry (KFR) — Active Working Memory
-";
-                var kfrRegister = ctx.PromptKnowledgeProvider.GetOrCreateRegister("kfr", Models.Context.ContextClassification.Session);
-                kfrRegister.Add(kfrBlock);
-            }
-
-            ctx.PromptKnowledgeProvider.AttachAvailbleTools(apk.AvailableTools);
-
-            _adminLogger.Trace($"[JSON.PKP]={JsonConvert.SerializeObject(ctx.PromptKnowledgeProvider)}");
-           
-            return InvokeResult<IAgentPipelineContext>.Create(ctx);
+            return await _pkpService.PopulateAsync(ctx, false);
         }
-
-        private string BuildKfrSection(IEnumerable<AgentSessionKfrEntry> entries)
-        {
-            if (!entries.Any())
-                return " - empty";
-
-            var builder = new StringBuilder();
-            foreach(var entry in entries)
-            {
-                builder.AppendLine($"- {entry.Value}");
-            }
-
-            return builder.ToString();
-        }
+ 
     }
 }

@@ -64,18 +64,18 @@ When to use:
 - When comparing Active File content with cloud or indexed copies.
 ";
         public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
-        public async Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentToolExecutionContext context, CancellationToken cancellationToken = default)
+        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentToolExecutionContext context, CancellationToken cancellationToken = default)
         {
             if (cancellationToken.IsCancellationRequested)
             {
                 var cancelledPayload = JsonConvert.SerializeObject(new CodeHashNormalizedResponse { Success = false, ErrorCode = "CANCELLED", ErrorMessage = "code_hash_normalized execution was cancelled before processing.", DocPath = null, Label = null, Hash = null, ContentLength = 0 });
-                return InvokeResult<string>.Create(cancelledPayload);
+                return Task.FromResult( InvokeResult<string>.Create(cancelledPayload));
             }
 
             if (string.IsNullOrWhiteSpace(argumentsJson))
             {
                 var missingArgsPayload = JsonConvert.SerializeObject(new CodeHashNormalizedResponse { Success = false, ErrorCode = "MISSING_ARGUMENTS", ErrorMessage = "code_hash_normalized requires a non-empty JSON arguments payload.", DocPath = null, Label = null, Hash = null, ContentLength = 0 });
-                return InvokeResult<string>.Create(missingArgsPayload);
+                return Task.FromResult(InvokeResult<string>.Create(missingArgsPayload));
             }
 
             CodeHashNormalizedArgs args;
@@ -87,13 +87,13 @@ When to use:
             {
                 _logger.AddException("[code_hash_normalized_Deserialize]", ex);
                 var errorPayload = JsonConvert.SerializeObject(new CodeHashNormalizedResponse { Success = false, ErrorCode = "DESERIALIZATION_ERROR", ErrorMessage = "Unable to deserialize code_hash_normalized arguments.", DocPath = null, Label = null, Hash = null, ContentLength = 0 });
-                return InvokeResult<string>.Create(errorPayload);
+                return Task.FromResult(InvokeResult<string>.Create(errorPayload));
             }
 
             if (args.Content == null)
             {
                 var validationPayload = JsonConvert.SerializeObject(new CodeHashNormalizedResponse { Success = false, ErrorCode = "MISSING_CONTENT", ErrorMessage = "code_hash_normalized requires a 'content' field. The field may be an empty string but it must be present.", DocPath = args.DocPath, Label = args.Label, Hash = null, ContentLength = 0 });
-                return InvokeResult<string>.Create(validationPayload);
+                return Task.FromResult(InvokeResult<string>.Create(validationPayload));
             }
 
             try
@@ -113,13 +113,13 @@ When to use:
                     Label = args.Label
                 };
                 var json = JsonConvert.SerializeObject(response);
-                return InvokeResult<string>.Create(json);
+                return Task.FromResult(InvokeResult<string>.Create(json));
             }
             catch (Exception ex)
             {
                 _logger.AddException("[code_hash_normalized_Execute]", ex);
                 var errorPayload = JsonConvert.SerializeObject(new CodeHashNormalizedResponse { Success = false, ErrorCode = "UNEXPECTED_ERROR", ErrorMessage = "code_hash_normalized failed to process arguments.", DocPath = args.DocPath, Label = args.Label, Hash = null, ContentLength = 0 });
-                return InvokeResult<string>.Create(errorPayload);
+                return Task.FromResult(InvokeResult<string>.Create(errorPayload));
             }
         }
     }

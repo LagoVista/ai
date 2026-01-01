@@ -109,7 +109,7 @@
 
 //        private sealed class FakeResponsesRequestBuilder : IResponsesRequestBuilder
 //        {
-//            public ResponsesApiRequest Build(ConversationContext conversationContext, AgentExecuteRequest executeRequest, string ragContextBlock, string toolUsageBlock)
+//            public ResponsesApiRequest Build(AgentContextRoles conversationContext, AgentExecuteRequest executeRequest, string ragContextBlock, string toolUsageBlock)
 //            {
 //                // Minimal shape; the tests' fake handlers don't care about request payload.
 //                return new ResponsesApiRequest
@@ -167,9 +167,9 @@
 //            };
 //        }
 
-//        private static ConversationContext CreateConversationContext()
+//        private static AgentContextRoles CreateConversationContext()
 //        {
-//            return new ConversationContext
+//            return new AgentContextRoles
 //            {
 //                Id = "conv-ctx-1",
 //                Name = "Test Conversation Context",
@@ -184,10 +184,10 @@
 //            return new AgentExecuteRequest
 //            {
 //                SessionId = "conv-1",
-//                Mode = "TEST_MODE",
+//                ModeKey = "TEST_MODE",
 //                Instruction = "Say hello to the world.",
 //                AgentContext = new EntityHeader { Id = "agent-1", Text = "Test Agent" },
-//                ConversationContext = new EntityHeader { Id = "conv-ctx-1", Text = "Test Conversation Context" }
+//                AgentContextRoles = new EntityHeader { Id = "conv-ctx-1", Text = "Test Conversation Context" }
 //            };
 //        }
 
@@ -200,7 +200,7 @@
 //                User = new EntityHeader { Id = "user-1", Text = "User 1" },
 //                RagContextBlock = string.Empty,
 //                AgentContext = CreateAgentContext(),
-//                ConversationContext = CreateConversationContext(),
+//                AgentContextRoles = CreateConversationContext(),
 //                Request = CreateExecuteRequest(),
 //                ThisTurn = new AgentSessionTurn { Id = "turn-1" }
 //            };

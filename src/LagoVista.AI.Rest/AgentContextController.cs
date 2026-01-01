@@ -81,9 +81,9 @@ namespace LagoVista.AI.Rest
         }
 
         [HttpGet("/api/ai/agent/conversation/context/factory")]
-        public DetailResponse<ConversationContext> CreateConversationContext()
+        public DetailResponse<AgentContextRoles> CreateConversationContext()
         {
-            var result = DetailResponse<ConversationContext>.Create();
+            var result = DetailResponse<AgentContextRoles>.Create();
             return result;
         }
     }

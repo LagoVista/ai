@@ -162,7 +162,7 @@
 //        {
 //            // Agent: A,B + tools t1,t2
 //            // Conversation: B,C + tools t2,t3
-//            // Mode: C,D + tools t3,t4
+//            // ModeKey: C,D + tools t3,t4
 //            var agentContext = BuildAgentContext(
 //                welcomeAgent: "wa",
 //                conversationContexts: new[]
@@ -314,7 +314,7 @@
 //        }
 
 //        private static AgentContext BuildAgentContext(
-//            IEnumerable<ConversationContext> conversationContexts = null,
+//            IEnumerable<AgentContextRoles> conversationContexts = null,
 //            IEnumerable<AgentMode> modes = null,
 //            string welcomeAgent = null,
 //            IEnumerable<string> agentInstructionDdrs = null,
@@ -328,22 +328,22 @@
 //                AgentInstructionDdrs = (agentInstructionDdrs ?? Array.Empty<string>()).ToArray(),
 //                ReferenceDdrs = (referenceDdrs ?? Array.Empty<string>()).ToArray(),
 //                AssociatedToolIds = (toolIds ?? Array.Empty<string>()).ToArray(),
-//                ConversationContexts = conversationContexts == null ? new List<ConversationContext>() : conversationContexts.ToList(),
+//                ConversationContexts = conversationContexts == null ? new List<AgentContextRoles>() : conversationContexts.ToList(),
 //                AgentModes = modes == null ? new List<AgentMode>() : modes.ToList(),
-//                DefaultConversationContext = defaultConversationId == null
+//                DefaultRole = defaultConversationId == null
 //                    ? null
 //                    : LagoVista.Core.Models.EntityHeader.Create(defaultConversationId, defaultConversationId)
 //            };
 //        }
 
-//        private static ConversationContext BuildConversationContext(
+//        private static AgentContextRoles BuildConversationContext(
 //            string id,
 //            string welcome = null,
 //            IEnumerable<string> instructionDdrs = null,
 //            IEnumerable<string> referenceDdrs = null,
 //            IEnumerable<string> toolIds = null)
 //        {
-//            return new ConversationContext
+//            return new AgentContextRoles
 //            {
 //                Id = id,
 //                Name = id,

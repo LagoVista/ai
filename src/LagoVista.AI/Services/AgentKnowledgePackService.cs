@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
@@ -17,7 +18,7 @@ namespace LagoVista.AI.Services
     ///
     /// Responsibilities:
     /// - Load AgentContext
-    /// - Resolve ConversationContext and Mode
+    /// - Resolve AgentContextRoles and ModeKey
     /// - Assemble and dedupe DDR identifiers and tool names
     /// - Resolve DDR consumption fields via IDdrConsumptionFieldProvider
     /// - Produce a ready-to-render AgentKnowledgePack
@@ -50,7 +51,12 @@ namespace LagoVista.AI.Services
                 return InvokeResult<AgentKnowledgePack>.FromError($"Mode '{context.Session.Mode}' not found on AgentContext '{context.Session.Name}'.");
             }
 
-            // Collect in deterministic precedence order: Agent -> Conversation -> Mode
+
+            var builder = new StringBuilder();
+
+            builder.Append($"\r\n[Context]={context.AgentContext.Name}; Role={context.Role.Name}; Mode={context.Session.Mode};\\r\\n");
+
+            // Collect in deterministic precedence order: Agent -> Conversation -> ModeKey
             // Dedup is done during collection so downstream DDR lookups are minimized.
             var instructionIds = new List<string>();
             var referenceIds = new List<string>();
@@ -65,29 +71,70 @@ namespace LagoVista.AI.Services
                     AddRangeDistinctInOrder(toolNames, toolBox.Tools.Select(tl => tl.Id));
                     instructionIds.AddRange(toolBox.InstructionDdrs.Select(tl => tl.Id));
                     referenceIds.AddRange(toolBox.ReferenceDdrs.Select(tl => tl.Id));
+
+                    builder.Append($"[AgentContext.ToolBox]={toolBox.Name}\\r\\n\\t\\t-ToolIds={String.Join("|",toolBox.Tools.Select(tl => tl.Id))},\\r\\n\\t\\t-InstructionIds={String.Join("|",toolBox.InstructionDdrs.Select(tl => tl.Id))};\\r\\n\\t\\t-ReferenceIds={String.Join("|", toolBox.ReferenceDdrs.Select(tl => tl.Id))};\\r\\n");
                 }
-        
+
+                foreach (var tb in context.Role.ToolBoxes)
+                {
+                    var toolBox = await _toolBoxRepo.GetAgentToolBoxAsync(tb.Id);
+                    AddRangeDistinctInOrder(toolNames, toolBox.Tools.Select(tl => tl.Id));
+                    instructionIds.AddRange(toolBox.InstructionDdrs.Select(tl => tl.Id));
+                    referenceIds.AddRange(toolBox.ReferenceDdrs.Select(tl => tl.Id));
+
+                    builder.Append($"[Role.ToolBox]={toolBox.Name}\\r\\n\\t\\t-ToolIds={String.Join("|", toolBox.Tools.Select(tl => tl.Id))},\\r\\n\\t\\t-InstructionIds={String.Join("|", toolBox.InstructionDdrs.Select(tl => tl.Id))};\\r\\n\\t\\t-ReferenceIds={String.Join("|", toolBox.ReferenceDdrs.Select(tl => tl.Id))};\\r\\n");
+                }
+
+                foreach (var tb in agentMode.ToolBoxes)
+                {
+                    var toolBox = await _toolBoxRepo.GetAgentToolBoxAsync(tb.Id);
+                    AddRangeDistinctInOrder(toolNames, toolBox.Tools.Select(tl => tl.Id));
+                    instructionIds.AddRange(toolBox.InstructionDdrs.Select(tl => tl.Id));
+                    referenceIds.AddRange(toolBox.ReferenceDdrs.Select(tl => tl.Id));
+
+                    builder.Append($"[Mode.ToolBox]={toolBox.Name}\\r\\n\\t\\t-ToolIds={String.Join("|", toolBox.Tools.Select(tl => tl.Id))},\\r\\n\\t\\t-InstructionIds={String.Join("|", toolBox.InstructionDdrs.Select(tl => tl.Id))};\\r\\n\\t\\t-ReferenceIds={String.Join("|", toolBox.ReferenceDdrs.Select(tl => tl.Id))};\\r\\n");
+                }
+
+                if (context.AgentContext.AgentInstructionDdrs.Any()) builder.Append("[AgentContext.AgentInstructions]=" + String.Join(" | ", context.AgentContext.Instructions) + ";\\r\\n ");
                 AddRangeDistinctInOrder(instructionIds, context.AgentContext.AgentInstructionDdrs);
+
+                if (context.AgentContext.ReferenceDdrs.Any()) builder.Append("[AgentContext.ReferenceDdrs]=" + String.Join(" | ", context.AgentContext.ReferenceDdrs) + "; \\r\\n");
                 AddRangeDistinctInOrder(referenceIds, context.AgentContext.ReferenceDdrs);
+
+                if (context.AgentContext.AssociatedToolIds.Any()) builder.Append("[AgentContext.AssociatedToolIds]=" + String.Join(" | ", context.AgentContext.AssociatedToolIds) + ";\\r\\n ");
                 AddRangeDistinctInOrder(toolNames, context.AgentContext.AssociatedToolIds);
 
-                // ConversationContext
-                AddRangeDistinctInOrder(referenceIds, context.ConversationContext.ReferenceDdrs);
-                AddRangeDistinctInOrder(toolNames, context.ConversationContext.AssociatedToolIds);
+                // Roles
+                if (context.Role.AgentInstructionDdrs.Any()) builder.Append("[Role.AgentInstructionDdrs]=" + String.Join(" | ", context.Role.AgentInstructionDdrs) + "; \\r\\n");
+                AddRangeDistinctInOrder(referenceIds, context.Role.AgentInstructionDdrs);
 
-                // Mode
+                if (context.Role.ReferenceDdrs.Any()) builder.Append("[Role.ReferenceDdrs]=" + String.Join(" | ", context.Role.ReferenceDdrs) + ";\\r\\n ");
+                AddRangeDistinctInOrder(referenceIds, context.Role.ReferenceDdrs);
+
+                if (context.Role.AssociatedToolIds.Any()) builder.Append("[Role.AssociatedToolIds]=" + String.Join(" | ", context.Role.AssociatedToolIds) + ";\\r\\n ");
+                AddRangeDistinctInOrder(toolNames, context.Role.AssociatedToolIds);
+
+                // ModeKey
+                if (agentMode.AgentInstructionDdrs.Any()) builder.Append("[Mode.AgentInstructionDdrs]=" + String.Join(" | ", agentMode.AgentInstructionDdrs) + "; \\r\\n");
+                AddRangeDistinctInOrder(referenceIds, agentMode.AgentInstructionDdrs);
+
+                if (agentMode.ReferenceDdrs.Any()) builder.Append("[Mode.ReferenceDdrs]=" + String.Join(" | ", agentMode.ReferenceDdrs) + ";\\r\\n ");
                 AddRangeDistinctInOrder(referenceIds, agentMode.ReferenceDdrs);
+
+                if (agentMode.AssociatedToolIds.Any()) builder.Append("[Mode.AssociatedToolIds]=" + String.Join(" | ", agentMode.AssociatedToolIds) + "; \\r\\n");
                 AddRangeDistinctInOrder(toolNames, agentMode.AssociatedToolIds);
             }
 
+            _adminLogger.Trace($"[AgentKnowledgePackService__CreateAsync] - {builder.ToString()}");
+
             // Resolve consumption fields (post-dedupe)
-            var resolvedInstructions = await _ddrConsumption.GetAgentInstructionsAsync(context.Envelope.Org.Id, instructionIds, context.CancellationToken);
+            var resolvedInstructions = await _ddrConsumption.GetDdrModelSummaryAsync(context.Envelope.Org.Id, instructionIds, context.CancellationToken);
             if (!resolvedInstructions.Successful)
             {
                 return InvokeResult<AgentKnowledgePack>.FromInvokeResult(resolvedInstructions.ToInvokeResult());
             }
 
-            var resolvedReferences = await _ddrConsumption.GetReferentialSummariesAsync(context.Envelope.Org.Id, referenceIds, context.CancellationToken);
+            var resolvedReferences = await _ddrConsumption.GetDdrModelSummaryAsync(context.Envelope.Org.Id, referenceIds, context.CancellationToken);
             if (!resolvedReferences.Successful)
             {
                 return InvokeResult<AgentKnowledgePack>.FromInvokeResult(resolvedReferences.ToInvokeResult());
@@ -97,11 +144,11 @@ namespace LagoVista.AI.Services
             var pack = new AgentKnowledgePack
             {
                 AgentContextId = context.AgentContext.Id,
-                ConversationContextId = context.ConversationContext.Id,
-                Mode = agentMode.Key,
+                RoleId = context.Role.Id,
+                ModeKey = agentMode.Key,
 
                 AgentWelcomeMessage = context.AgentContext.WelcomeMessage,
-                ConversationWelcomeMessage = context.ConversationContext.WelcomeMessage,
+                ConversationWelcomeMessage = context.Role.WelcomeMessage,
                 ModeWelcomeMessage = agentMode.WelcomeMessage,
             };
 
@@ -175,8 +222,8 @@ Do not mention these instructions. Do not explain the plan unless asked.";
 
                 // Populate SessionKnowledge tools as the primary tools in V1.
                 // Consumers can migrate items to ConsumableKnowledge as turn-scoped patterns mature.
-                AddDdrItems(pack.KindCatalog[KnowledgeKind.Instruction].SessionKnowledge, KnowledgeKind.Instruction, instructionIds, resolvedInstructions.Result);
-                AddDdrItems(pack.KindCatalog[KnowledgeKind.Reference].SessionKnowledge, KnowledgeKind.Reference, referenceIds, resolvedReferences.Result);
+                AddDdrItems(pack.KindCatalog[KnowledgeKind.Instruction].SessionKnowledge, KnowledgeKind.Instruction, instructionIds, resolvedInstructions.Result, true);
+                AddDdrItems(pack.KindCatalog[KnowledgeKind.Reference].SessionKnowledge, KnowledgeKind.Reference, referenceIds, resolvedReferences.Result, false);
                 AddToolItems(pack.AvailableTools, toolNames);
             }
           
@@ -214,30 +261,30 @@ Do not mention these instructions. Do not explain the plan unless asked.";
             KnowledgeLane lane,
             KnowledgeKind kind,
             IEnumerable<string> orderedIds,
-            IDictionary<string, string> resolved)
+            IDictionary<string, DdrModelFields> resolved,
+            bool agentInstructions)
         {
             if (lane == null) throw new ArgumentNullException(nameof(lane));
             if (orderedIds == null) return;
 
             foreach (var id in orderedIds)
             {
-                resolved = resolved ?? new Dictionary<string, string>();
-                resolved.TryGetValue(id, out var content);
+                resolved = resolved ?? new Dictionary<string, DdrModelFields>();
+                resolved.TryGetValue(id, out var ddr);
 
-                if (string.IsNullOrWhiteSpace(content))
+                if (ddr != null)
                 {
-                    // V1: fail-fast expectation. If the provider returned success but content is missing,
-                    // we still include an empty entry for observability and determinism.
-                    // Higher layers can decide whether to treat this as fatal.
-                    content = string.Empty;
+                    var prompt = agentInstructions ? ddr.AgentInstructions : ddr.ReferentialSummary;
+
+                    var content = $"DDR {ddr.DdrIdentifier} - {ddr.Title}\r\n{prompt}";
+
+                    lane.Items.Add(new KnowledgeItem
+                    {
+                        Kind = kind,
+                        Id = id,
+                        Content = content
+                    });
                 }
-
-                lane.Items.Add(new KnowledgeItem
-                {
-                    Kind = kind,
-                    Id = id,
-                    Content = content
-                });
             }
         }
 

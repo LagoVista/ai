@@ -207,7 +207,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
         }
 
         [Test]
-        public async Task HandleAsync_WhenDownstreamStepFails_ShouldNotPersistSession_AndReturnsFailure()
+        public void HandleAsync_WhenDownstreamStepFails_ShouldNotPersistSession_AndReturnsFailure()
         {
             // This test is intentionally expected to FAIL until production code is fixed.
             // Current implementation always calls UpdateSessionAsync(result.Result.Session, ...)
@@ -227,7 +227,6 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             validator.Setup(val => val.ValidatePostStep(It.IsAny<IAgentPipelineContext>(), It.IsAny<PipelineSteps>())).Returns(InvokeResult.Success);
             validator.Setup(val => val.ValidatePreStep(It.IsAny<IAgentPipelineContext>(), It.IsAny<PipelineSteps>())).Returns(InvokeResult.Success);
             validator.Setup(val => val.ValidateToolCallManifest(It.IsAny<ToolCallManifest>())).Returns(InvokeResult.Success);
-
 
             // Return a failure with no Result.
             contextProvider
@@ -272,7 +271,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
         }
 
         [Test]
-        public async Task HandleAsync_WhenContextTypeIsUnknown_ShouldReturnFailure_NotThrow()
+        public void HandleAsync_WhenContextTypeIsUnknown_ShouldReturnFailure_NotThrow()
         {
             // This test is intentionally expected to FAIL until production code is fixed.
             // Today, an unknown ctx.Type can leave 'result' null and cause a NullReferenceException.

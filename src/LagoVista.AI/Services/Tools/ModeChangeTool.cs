@@ -85,14 +85,14 @@ with the new mode.
             throw new NotImplementedException();
         }
 
-        public async Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext ctx)
+        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext ctx)
 
         {
             Console.WriteLine($"----\r\n{argumentsJson}\r\n---");
 
             if (string.IsNullOrWhiteSpace(argumentsJson))
             {
-                return InvokeResult<string>.FromError("ModeChangeTool requires a non-empty arguments object.");
+                return Task.FromResult(InvokeResult<string>.FromError("ModeChangeTool requires a non-empty arguments object."));
             }
           
             try
@@ -101,20 +101,17 @@ with the new mode.
 
                 if (string.IsNullOrWhiteSpace(args.Mode))
                 {
-                    return InvokeResult<string>.FromError(
-                        "ModeChangeTool requires a non-empty 'mode' string.");
+                    return Task.FromResult(InvokeResult<string>.FromError("ModeChangeTool requires a non-empty 'mode' string."));
                 }
 
                 if (!args.Branch.HasValue)
                 {
-                    return InvokeResult<string>.FromError(
-                        "ModeChangeTool requires a 'branch' boolean flag.");
+                    return Task.FromResult(InvokeResult<string>.FromError("ModeChangeTool requires a 'branch' boolean flag."));
                 }
 
                 if (string.IsNullOrWhiteSpace(args.Reason))
                 {
-                    return InvokeResult<string>.FromError(
-                        "ModeChangeTool requires a non-empty 'reason' string explaining why the mode change is needed.");
+                    return Task.FromResult(InvokeResult<string>.FromError( "ModeChangeTool requires a non-empty 'reason' string explaining why the mode change is needed."));
                 }
 
                 var mode = ctx.AgentContext.AgentModes.SingleOrDefault(md => md.Key == args.Mode);
@@ -129,7 +126,7 @@ with the new mode.
 
    
                     var modeChangeFailedJson = JsonConvert.SerializeObject(failedResult);
-                    return InvokeResult<string>.Create(modeChangeFailedJson);
+                    return Task.FromResult(InvokeResult<string>.Create(modeChangeFailedJson));
                 }
 
                 var previousMode = ctx.Session.Mode;
@@ -158,14 +155,13 @@ with the new mode.
                 _logger.Trace($"[ModeChangeTool_ExecuteAsync] - Changed mode via tool from {previousMode} to {args.Mode}"); 
 
                 var json = JsonConvert.SerializeObject(result);
-                return InvokeResult<string>.Create(json);
+                return Task.FromResult(InvokeResult<string>.Create(json));
             }
             catch (Exception ex)
             {
                 _logger.AddException("[ModeChangeTool_ExecuteAsync__Exception]", ex);
 
-                return InvokeResult<string>.FromError(
-                    "ModeChangeTool failed to change the session mode.");
+                return Task.FromResult(InvokeResult<string>.FromError( "ModeChangeTool failed to change the session mode." + ex.Message));
             }
         }
 

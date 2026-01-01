@@ -6,7 +6,7 @@ using LagoVista.Core.Validation;
 namespace LagoVista.AI.Interfaces
 {
     /// <summary>
-    /// Creates Agent Knowledge Packs (AKPs) for a given Org + AgentContext + ConversationContext + Mode.
+    /// Creates Agent Knowledge Packs (AKPs) for a given Org + AgentContext + AgentContextRoles + ModeKey.
     ///
     /// This service is responsible for assembling and resolving DDR consumption fields into AKP items.
     /// </summary>

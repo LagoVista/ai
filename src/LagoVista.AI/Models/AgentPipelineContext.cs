@@ -8,6 +8,7 @@ using LagoVista.IoT.Logging.Loggers;
 using RingCentral;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Security.Policy;
 using System.Threading;
@@ -46,7 +47,7 @@ namespace LagoVista.AI.Models
 
             var hasToolResults = request.ToolResults?.Any() ?? false;
 
-            Envelope = new Envelope(request.AgentContextId, request.ConversationContextId, request.SessionId, request.TurnId, null, request.Instruction, 
+            Envelope = new Envelope(request.AgentContextId, request.RoleId, request.SessionId, request.TurnId, null, request.Instruction, 
                 request.Streaming, request.ToolResults, request.ClipboardImages, request.InputArtifacts, request.RagScope, org, user);
 
             if (String.IsNullOrEmpty(request.SessionId) && String.IsNullOrEmpty(request.TurnId) && !hasToolResults)
@@ -109,19 +110,18 @@ namespace LagoVista.AI.Models
         public AgentSessionTurn ThisTurn { get; private set; }
         public AgentSessionTurn PreviousTurn { get; private set; }
 
-        public void AttachAgentContext(AgentContext context, ConversationContext conversationContext)
+        public void AttachAgentContext(AgentContext context, AgentContextRoles role)
         {
             AgentContext = context ?? throw new ArgumentNullException(nameof(context));
-            ConversationContext = conversationContext ?? throw new ArgumentNullException(nameof(conversationContext));
+            Role = role ?? throw new ArgumentNullException(nameof(role));
             RefreshEnvelope();
         }
 
         // Loaded context objects
         public AgentContext AgentContext { get; private set; }
- 
-        public ConversationContext ConversationContext { get; private set; }
 
-    
+        public AgentContextRoles Role { get; private set; }
+
         public bool HasPendingToolCalls
         {
             get => PromptKnowledgeProvider.ToolCallManifest.ToolCalls.Any();
@@ -156,7 +156,7 @@ namespace LagoVista.AI.Models
             return new AgentToolExecutionContext()
             {
                 AgentContext = AgentContext,
-                ConversationContext = ConversationContext,
+                Role = Role,
                 Org = Envelope.Org,
                 User = Envelope.User,
                 SessionId = Envelope.SessionId,
@@ -189,7 +189,7 @@ namespace LagoVista.AI.Models
             var existing = Envelope;
 
             // turn is a litte interesting on the envelope, if we have it coming in we don't ovwrwrite it because on new turns it will be null
-            Envelope = new Envelope(AgentContext?.Id ?? existing.AgentContextId, ConversationContext?.Id ?? existing.ConversationContextId , Session?.Id ?? existing.SessionId, 
+            Envelope = new Envelope(AgentContext?.Id ?? existing.AgentContextId, Role?.Id ?? existing.RoleId, Session?.Id ?? existing.SessionId, 
                                     PreviousTurn?.Id ?? existing.PreviousTurnId, ThisTurn?.Id ?? existing.ThisTurnId, existing.Instructions, existing.Stream, existing.ToolResults, existing.ClipBoardImages,
                                     existing.InputArtifacts, existing.RagScope, existing.Org, existing.User);
         }
@@ -229,12 +229,12 @@ namespace LagoVista.AI.Models
 
     public class Envelope
     {
-        public Envelope(string agentContextId, string conversationContextId, string sessionId, string previousTurnid, string thisTurnId, string instructions, bool stream,
+        public Envelope(string agentContextId, string roleId, string sessionId, string previousTurnid, string thisTurnId, string instructions, bool stream,
                         IEnumerable<ToolResultSubmission> toolResults, IEnumerable<ClipboardImage> clipboardImages, IEnumerable<InputArtifact> inputArtifacts,
                         RagScope ragScope, EntityHeader org, EntityHeader user)
         {
             AgentContextId = agentContextId;
-            ConversationContextId = conversationContextId;
+            RoleId = roleId;
             SessionId = sessionId;
             PreviousTurnId = previousTurnid;
             ThisTurnId = thisTurnId;
@@ -256,7 +256,7 @@ namespace LagoVista.AI.Models
 
         public string Instructions { get; }
         public string AgentContextId { get; }
-        public string ConversationContextId { get; }
+        public string RoleId { get; }
         public string SessionId { get; }
         public string PreviousTurnId { get; }
         public string ThisTurnId { get; set; }

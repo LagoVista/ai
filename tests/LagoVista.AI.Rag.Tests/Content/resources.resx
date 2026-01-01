@@ -537,9 +537,6 @@
   <data name="AgentContext_ConversationContext_System_Help" xml:space="preserve">
     <value>The system is used to instruct the LLM on how to generate the context.  This defines the AI’s identity, role, and behavioral rules before any user input is considered.  It is the “governing policy” for the model. </value>
   </data>
-  <data name=" AgentContext_ConversationContext_Temperature_Help" xml:space="preserve">
-    <value>Temperature controls how random or deterministic a language model is when generating responses. It affects how “creative” the model’s word choices are.</value>
-  </data>
   <data name="AgentContext_ConversationContexts" xml:space="preserve">
     <value>Conversation Contexts</value>
   </data>

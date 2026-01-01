@@ -38,6 +38,7 @@ namespace LagoVista.AI.Models.Context
 
         public void Reset()
         {
+            ClearConsumables();
             ActiveTools.Clear();
             ToolCallManifest.ToolCallResults.Clear();
             ToolCallManifest.ToolCalls.Clear();

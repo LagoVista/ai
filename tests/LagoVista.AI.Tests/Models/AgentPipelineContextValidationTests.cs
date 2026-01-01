@@ -29,7 +29,7 @@ namespace LagoVista.AI.Tests.Models
                 InputArtifacts = new List<InputArtifact>(),
                 RagScope = null,
                 AgentContextId = null,
-                ConversationContextId = null,
+                RoleId = null,
                 Streaming = false
             };
 

@@ -116,7 +116,14 @@ namespace LagoVista.AI.Models
         public string LastDurableSummaryTimestamp { get; set; }
 
         public List<DdrContentDiscoveryArtifact> ContentDiscoveryArtifacts { get; set; } = new List<DdrContentDiscoveryArtifact>();
-
     }
 
+    public class DdrModelFields
+    {
+        public string Id { get; set; }
+        public string DdrIdentifier { get; set; }
+        public string Title { get; set; }
+        public string ReferentialSummary { get; set; }
+        public string AgentInstructions { get; set; }
+    }
 }

@@ -4,6 +4,7 @@ using LagoVista.AI.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using System;
+using System.ComponentModel;
 
 namespace LagoVista.AI.Interfaces
 {
@@ -47,7 +48,8 @@ namespace LagoVista.AI.Interfaces
         ResponsePayload ResponsePayload { get; }
 
         AgentContext AgentContext { get; }
-        ConversationContext ConversationContext { get; }
+
+        AgentContextRoles Role { get; }
 
         PromptKnowledgeProvider PromptKnowledgeProvider { get; }
         CompositionTrace Trace { get; }
@@ -58,7 +60,7 @@ namespace LagoVista.AI.Interfaces
         bool HasClientToolCalls { get; }
 
         string ToolManifestId { get; }
-        void AttachAgentContext(AgentContext context, ConversationContext conversationContext);
+        void AttachAgentContext(AgentContext context, AgentContextRoles conversationContext);
         void AttachSession(AgentSession session, AgentSessionTurn thisTurn);
         void AttachSession(AgentSession session, AgentSessionTurn previousSessoin, AgentSessionTurn thisTurn);
         void AttachToolManifest(ToolCallManifest toolManifest);

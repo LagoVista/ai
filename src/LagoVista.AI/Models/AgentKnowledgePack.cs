@@ -4,7 +4,7 @@ namespace LagoVista.AI.Models
 {
     /// <summary>
     /// Agent Knowledge Pack (AKP) - a materialized, ready-to-render snapshot of
-    /// knowledge assembled from AgentContext + ConversationContext + Mode.
+    /// knowledge assembled from AgentContext + AgentContextRoles + ModeKey.
     ///
     /// Note: AKPs are not session-locked; they may change between turns.
     /// </summary>
@@ -12,8 +12,8 @@ namespace LagoVista.AI.Models
     {
         // Identity
         public string AgentContextId { get; set; }
-        public string ConversationContextId { get; set; }
-        public string Mode { get; set; }
+        public string RoleId { get; set; }
+        public string ModeKey { get; set; }
 
         // Welcome messages (plain text, optional)
         public string AgentWelcomeMessage { get; set; }

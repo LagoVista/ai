@@ -7,6 +7,7 @@ using LagoVista.Core.Models;
 using LagoVista.Core.Models.UIMetaData;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,26 +31,17 @@ namespace LagoVista.AI.CloudRepos
             _shouldConsolidateCollections = settings.ShouldConsolidateCollections;
         }
 
-        private static String GetDdrInstructionKey(DetailedDesignReview ddr)
-        {
-            return $"ddr_{ddr.OwnerOrganization.Id}_instructional_{ddr.DdrIdentifier.Replace("-","_")}".ToLower();
-        }
 
-        private static String GetDdrReferenceKey(DetailedDesignReview ddr)
+        private static String GetDdrKey(DetailedDesignReview ddr)
         {
-            return $"ddr_{ddr.OwnerOrganization.Id}_refernential_{ddr.DdrIdentifier.Replace("-", "_")}".ToLower();
+            return $"ddr_{ddr.OwnerOrganization.Id}_{ddr.DdrIdentifier.Replace("-", "_")}".ToLower();
         }
 
         protected override bool ShouldConsolidateCollections => _shouldConsolidateCollections;
 
         public async Task AddDdrAsync(DetailedDesignReview ddr)
         {
-            if (!String.IsNullOrEmpty(ddr.AgentInstructions))
-                await _cacheProvider.AddAsync(GetDdrInstructionKey(ddr), ddr.AgentInstructions);
-
-            if (!String.IsNullOrEmpty(ddr.ReferentialSummary))
-                await _cacheProvider.AddAsync(GetDdrReferenceKey(ddr), ddr.ReferentialSummary);
-
+            await _cacheProvider.AddAsync(GetDdrKey(ddr), ddr.AgentInstructions);
             await CreateDocumentAsync(ddr);
         }
 
@@ -58,20 +50,20 @@ namespace LagoVista.AI.CloudRepos
             return DeleteDocumentAsync(ddrId);
         }
 
-        public async Task<InvokeResult<IDictionary<string, string>>> GetAgentInstructionsAsync(string orgId, IEnumerable<string> ddrIds, CancellationToken cancellationToken = default)
+        public async Task<InvokeResult<IDictionary<string, DdrModelFields>>> GetDdrModelSummaryAsync(string orgId, IEnumerable<string> ddrIds, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(orgId))
-                return InvokeResult<IDictionary<string, string>>.FromError("orgId is required.");
+                return InvokeResult<IDictionary<string, DdrModelFields>>.FromError("orgId is required.");
 
             if (ddrIds == null)
-                return InvokeResult<IDictionary<string, string>>.Create(new Dictionary<string, string>());
+                return InvokeResult<IDictionary<string, DdrModelFields>>.Create(new Dictionary<string, DdrModelFields>());
 
             var ids = ddrIds.Where(id => !string.IsNullOrWhiteSpace(id))
                             .Distinct(StringComparer.OrdinalIgnoreCase)
                             .ToArray();
 
             if (ids.Length == 0)
-                return InvokeResult<IDictionary<string, string>>.Create(new Dictionary<string, string>());
+                return InvokeResult<IDictionary<string, DdrModelFields>>.Create(new Dictionary<string, DdrModelFields>());
 
             // Build Redis keys for all requested DDR IDs (batch).
             var cacheKeyByDdrId = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -85,7 +77,7 @@ namespace LagoVista.AI.CloudRepos
             var cached = await _cacheProvider.GetManyAsync(cacheKeyByDdrId.Values);
 
             // 2) Map cache hits back to DDR IDs
-            var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var result = new Dictionary<string, DdrModelFields>(StringComparer.OrdinalIgnoreCase);
             var missingIds = new List<string>();
 
             foreach (var id in ids)
@@ -95,7 +87,7 @@ namespace LagoVista.AI.CloudRepos
 
                 if (!string.IsNullOrWhiteSpace(value))
                 {
-                    result[id] = value;
+                    result[id] = JsonConvert.DeserializeObject< DdrModelFields>(value);
                 }
                 else
                 {
@@ -114,24 +106,31 @@ namespace LagoVista.AI.CloudRepos
                 if (notFound.Length > 0)
                 {
                     _logger.AddError("[DdrRepo_GetAgentInstructionsAsync]", $"Could not find DDR(s) by TLA: {string.Join(", ", notFound)} org: {orgId}.");
-                    return InvokeResult<IDictionary<string, string>>.FromError($"DDR(s) not found: {string.Join(", ", notFound)}");
+                    return InvokeResult<IDictionary<string, DdrModelFields>>.FromError($"DDR(s) not found: {string.Join(", ", notFound)}");
                 }
 
                 foreach (var ddr in ddrs)
                 {
                     if (cancellationToken.IsCancellationRequested)
-                        return InvokeResult<IDictionary<string, string>>.FromError("Operation canceled.");
+                        return InvokeResult<IDictionary<string, DdrModelFields>>.FromError("Operation canceled.");
 
-                    var content = ddr.AgentInstructions ?? string.Empty;
+                    var content = new DdrModelFields()
+                    {
+                        Id = ddr.Id,
+                        DdrIdentifier = ddr.DdrIdentifier,
+                        Title = ddr.Title,
+                        AgentInstructions = ddr.AgentInstructions,
+                        ReferentialSummary = ddr.ReferentialSummary
+                    };
+
                     result[ddr.DdrIdentifier] = content;
 
                     // Backfill cache only when non-empty (consistent with Add/Update behavior).
-                    if (!string.IsNullOrWhiteSpace(content))
-                        await _cacheProvider.AddAsync(GetDdrInstructionKey(ddr), content);
+                    await _cacheProvider.AddAsync(GetDdrKey(ddr), JsonConvert.SerializeObject(content));
                 }
             }
 
-            return InvokeResult<IDictionary<string, string>>.Create(result);
+            return InvokeResult<IDictionary<string, DdrModelFields>>.Create(result);
         }
 
 
@@ -168,95 +167,11 @@ namespace LagoVista.AI.CloudRepos
             return QuerySummaryDescendingAsync<DetailedDesignReviewSummary, DetailedDesignReview>(qry => qry.OwnerOrganization.Id == org.Id && qry.Tla == tla, qry => qry.LastUpdatedDate, listRequest);
         }
 
-        public async Task<InvokeResult<IDictionary<string, string>>> GetReferentialSummariesAsync(
-     string orgId,
-     IEnumerable<string> ddrIds,
-     CancellationToken cancellationToken = default)
-        {
-            if (string.IsNullOrWhiteSpace(orgId))
-                return InvokeResult<IDictionary<string, string>>.FromError("orgId is required.");
-
-            if (ddrIds == null)
-                return InvokeResult<IDictionary<string, string>>.Create(new Dictionary<string, string>());
-
-            var ids = ddrIds.Where(id => !string.IsNullOrWhiteSpace(id))
-                            .Distinct(StringComparer.OrdinalIgnoreCase)
-                            .ToArray();
-
-            if (ids.Length == 0)
-                return InvokeResult<IDictionary<string, string>>.Create(new Dictionary<string, string>());
-
-            // Build Redis keys for all requested DDR IDs (batch).
-            var cacheKeyByDdrId = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var id in ids)
-            {
-                // NOTE: key name matches existing implementation (includes current spelling).
-                var key = $"ddr_{orgId}_refernential_{id.Replace("-", "_")}".ToLower();
-                cacheKeyByDdrId[id] = key;
-            }
-
-            // 1) Batch fetch from cache
-            var cached = await _cacheProvider.GetManyAsync(cacheKeyByDdrId.Values);
-
-            // 2) Map cache hits back to DDR IDs
-            var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            var missingIds = new List<string>();
-
-            foreach (var id in ids)
-            {
-                var cacheKey = cacheKeyByDdrId[id];
-                cached.TryGetValue(cacheKey, out var value);
-
-                if (!string.IsNullOrWhiteSpace(value))
-                {
-                    result[id] = value;
-                }
-                else
-                {
-                    missingIds.Add(id);
-                }
-            }
-
-            // 3) Fill cache misses from DocumentDB and backfill cache
-            if (missingIds.Count > 0)
-            {
-                var ddrs = await GetDdrs(missingIds.ToArray(), orgId);
-
-                // Fail-fast if any requested DDR wasn't found
-                var foundIds = new HashSet<string>(ddrs.Select(d => d.DdrIdentifier), StringComparer.OrdinalIgnoreCase);
-                var notFound = missingIds.Where(id => !foundIds.Contains(id)).ToArray();
-                if (notFound.Length > 0)
-                {
-                    _logger.AddError("[DdrRepo_GetReferentialSummariesAsync]", $"Could not find DDR(s) by TLA: {string.Join(", ", notFound)} org: {orgId}.");
-                    return InvokeResult<IDictionary<string, string>>.FromError($"DDR(s) not found: {string.Join(", ", notFound)}");
-                }
-
-                foreach (var ddr in ddrs)
-                {
-                    if (cancellationToken.IsCancellationRequested)
-                        return InvokeResult<IDictionary<string, string>>.FromError("Operation canceled.");
-
-                    var content = ddr.ReferentialSummary ?? string.Empty;
-                    result[ddr.DdrIdentifier] = content;
-
-                    // Backfill cache only when non-empty (consistent with Add/Update behavior).
-                    if (!string.IsNullOrWhiteSpace(content))
-                        await _cacheProvider.AddAsync(GetDdrReferenceKey(ddr), content);
-                }
-            }
-
-            return InvokeResult<IDictionary<string, string>>.Create(result);
-        }
-
+ 
 
         public async Task UpdateDdrAsync(DetailedDesignReview ddr)
         {
-            if (!String.IsNullOrEmpty(ddr.AgentInstructions))
-                await _cacheProvider.AddAsync(GetDdrInstructionKey(ddr), ddr.AgentInstructions);
-
-            if (!String.IsNullOrEmpty(ddr.ReferentialSummary))
-                await _cacheProvider.AddAsync(GetDdrReferenceKey(ddr), ddr.ReferentialSummary);
-
+            await _cacheProvider.AddAsync(GetDdrKey(ddr), ddr.AgentInstructions);
             await UpsertDocumentAsync(ddr);
         }
     }

@@ -16,9 +16,9 @@
 //            return new AgentExecuteRequest
 //            {
 //                SessionId = "conv-1",
-//                Mode = "TEST_MODE",
+//                ModeKey = "TEST_MODE",
 //                AgentContext = new EntityHeader { Id = "agent-ctx", Text = "Agent Ctx" },
-//                ConversationContext = new EntityHeader { Id = "conv-ctx", Text = "Conv Ctx" }
+//                AgentContextRoles = new EntityHeader { Id = "conv-ctx", Text = "Conv Ctx" }
 //            };
 //        }
 

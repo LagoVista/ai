@@ -242,7 +242,7 @@ namespace LagoVista.AI.Models
                 Assert.That(llmRel.ToModel, Is.EqualTo("LlmProviders"));
                 Assert.That(llmRel.Cardinality, Is.EqualTo("OneToOne"));
 
-                // ----- DefaultConversationContext: plain EntityHeader (One-to-One) -----
+                // ----- DefaultRole: plain EntityHeader (One-to-One) -----
                 var defaultRef = description.EntityHeaderRefs
                     .Single(r => r.PropertyName == "DefaultConversationContext");
 

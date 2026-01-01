@@ -27,7 +27,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             public ResponsePayload ResponsePayload { get; set; }
 
             public AgentContext AgentContext { get; set; }
-            public ConversationContext ConversationContext { get; set; }
+            public AgentContextRoles Role { get; set; }
 
             public PromptKnowledgeProvider PromptKnowledgeProvider { get; set; } = new PromptKnowledgeProvider();
             public CompositionTrace Trace { get; set; } = new CompositionTrace();
@@ -46,10 +46,10 @@ namespace LagoVista.AI.Tests.Services.Pipeline
 
             public AgentToolExecutionContext ToToolContext() => new AgentToolExecutionContext();
 
-            public void AttachAgentContext(AgentContext context, ConversationContext conversationContext)
+            public void AttachAgentContext(AgentContext context, AgentContextRoles role)
             {
                 AgentContext = context;
-                ConversationContext = conversationContext;
+                Role = role;
             }
 
             public void AttachSession(AgentSession session, AgentSessionTurn turn)

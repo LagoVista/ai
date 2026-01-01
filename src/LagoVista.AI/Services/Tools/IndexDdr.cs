@@ -26,12 +26,11 @@ namespace LagoVista.AI.Services.Tools
     public sealed class IndexDdrTool : IAgentTool
     {
         private readonly IAdminLogger _logger;
-        private readonly ISourceFileProcessor _processor;
         private readonly IDdrManager _ddrManager;
         private readonly IOrganizationManager _orgManager;
         private readonly IQdrantClient _qdrantClient;
         private readonly IEmbedder _embedder;
-        public const string ToolSummary = "uused to index a ddr into vector database for RAG";
+        public const string ToolSummary = "used to index a ddr into vector database for RAG";
         public string Name => ToolName;
         public bool IsToolFullyExecutedOnServer => true;
 

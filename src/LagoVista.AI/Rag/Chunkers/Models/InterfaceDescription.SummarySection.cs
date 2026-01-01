@@ -30,7 +30,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
 
             // NOTE: These property names assume InterfaceDescription exposes
             // InterfaceName, Namespace, FullName, IsGeneric, GenericArity,
-            // Role, PrimaryEntity, LinesStart/LinesEnd, and Methods
+            // RoleId, PrimaryEntity, LinesStart/LinesEnd, and Methods
             // (list of InterfaceMethodDescription). Adjust if needed.
 
             var symbol = string.IsNullOrWhiteSpace(InterfaceName) ? "(unknown-interface)" : InterfaceName;

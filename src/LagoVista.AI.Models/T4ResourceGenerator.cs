@@ -1,4 +1,4 @@
-﻿/*12/29/2025 11:24:55 AM*/
+﻿/*1/1/2026 6:21:06 PM*/
 using System.Globalization;
 using System.Reflection;
 
@@ -60,36 +60,12 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:AgentContext_CompletionReservePercent_Help
 
 		public static string AgentContext_CompletionReservePercent_Help { get { return GetResourceString("AgentContext_CompletionReservePercent_Help"); } }
-//Resources:AIResources:AgentContext_ConversationContext_Description
+//Resources:AIResources:AgentContext_DefaultRole
 
-		public static string AgentContext_ConversationContext_Description { get { return GetResourceString("AgentContext_ConversationContext_Description"); } }
-//Resources:AIResources:AgentContext_ConversationContext_ModelName
+		public static string AgentContext_DefaultRole { get { return GetResourceString("AgentContext_DefaultRole"); } }
+//Resources:AIResources:AgentContext_DefaultRole_Select
 
-		public static string AgentContext_ConversationContext_ModelName { get { return GetResourceString("AgentContext_ConversationContext_ModelName"); } }
-//Resources:AIResources:AgentContext_ConversationContext_System
-
-		public static string AgentContext_ConversationContext_System { get { return GetResourceString("AgentContext_ConversationContext_System"); } }
-//Resources:AIResources:AgentContext_ConversationContext_System_Help
-
-		public static string AgentContext_ConversationContext_System_Help { get { return GetResourceString("AgentContext_ConversationContext_System_Help"); } }
-//Resources:AIResources:AgentContext_ConversationContext_Temperature
-
-		public static string AgentContext_ConversationContext_Temperature { get { return GetResourceString("AgentContext_ConversationContext_Temperature"); } }
-//Resources:AIResources:AgentContext_ConversationContext_Temperature_Help
-
-		public static string AgentContext_ConversationContext_Temperature_Help { get { return GetResourceString("AgentContext_ConversationContext_Temperature_Help"); } }
-//Resources:AIResources:AgentContext_ConversationContext_Title
-
-		public static string AgentContext_ConversationContext_Title { get { return GetResourceString("AgentContext_ConversationContext_Title"); } }
-//Resources:AIResources:AgentContext_ConversationContexts
-
-		public static string AgentContext_ConversationContexts { get { return GetResourceString("AgentContext_ConversationContexts"); } }
-//Resources:AIResources:AgentContext_DefaultConversationContext
-
-		public static string AgentContext_DefaultConversationContext { get { return GetResourceString("AgentContext_DefaultConversationContext"); } }
-//Resources:AIResources:AgentContext_DefaultConversationContext_Select
-
-		public static string AgentContext_DefaultConversationContext_Select { get { return GetResourceString("AgentContext_DefaultConversationContext_Select"); } }
+		public static string AgentContext_DefaultRole_Select { get { return GetResourceString("AgentContext_DefaultRole_Select"); } }
 //Resources:AIResources:AgentContext_LlmProvider
 
 		public static string AgentContext_LlmProvider { get { return GetResourceString("AgentContext_LlmProvider"); } }
@@ -102,6 +78,36 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:AgentContext_MaxTokenCount_Help
 
 		public static string AgentContext_MaxTokenCount_Help { get { return GetResourceString("AgentContext_MaxTokenCount_Help"); } }
+//Resources:AIResources:AgentContext_Role_Description
+
+		public static string AgentContext_Role_Description { get { return GetResourceString("AgentContext_Role_Description"); } }
+//Resources:AIResources:AgentContext_Role_ModelName
+
+		public static string AgentContext_Role_ModelName { get { return GetResourceString("AgentContext_Role_ModelName"); } }
+//Resources:AIResources:AgentContext_Role_Persona_Instructions
+
+		public static string AgentContext_Role_Persona_Instructions { get { return GetResourceString("AgentContext_Role_Persona_Instructions"); } }
+//Resources:AIResources:AgentContext_Role_System
+
+		public static string AgentContext_Role_System { get { return GetResourceString("AgentContext_Role_System"); } }
+//Resources:AIResources:AgentContext_Role_System_Help
+
+		public static string AgentContext_Role_System_Help { get { return GetResourceString("AgentContext_Role_System_Help"); } }
+//Resources:AIResources:AgentContext_Role_Temperature
+
+		public static string AgentContext_Role_Temperature { get { return GetResourceString("AgentContext_Role_Temperature"); } }
+//Resources:AIResources:AgentContext_Role_Temperature_Help
+
+		public static string AgentContext_Role_Temperature_Help { get { return GetResourceString("AgentContext_Role_Temperature_Help"); } }
+//Resources:AIResources:AgentContext_Role_Title
+
+		public static string AgentContext_Role_Title { get { return GetResourceString("AgentContext_Role_Title"); } }
+//Resources:AIResources:AgentContext_Role_WelcomeMessage
+
+		public static string AgentContext_Role_WelcomeMessage { get { return GetResourceString("AgentContext_Role_WelcomeMessage"); } }
+//Resources:AIResources:AgentContext_Roles
+
+		public static string AgentContext_Roles { get { return GetResourceString("AgentContext_Roles"); } }
 //Resources:AIResources:AgentSession_Description
 
 		public static string AgentSession_Description { get { return GetResourceString("AgentSession_Description"); } }
@@ -686,20 +692,22 @@ namespace LagoVista.AI.Models.Resources
 		{
 			public const string AgentContext_CompletionReservePercent = "AgentContext_CompletionReservePercent";
 			public const string AgentContext_CompletionReservePercent_Help = "AgentContext_CompletionReservePercent_Help";
-			public const string AgentContext_ConversationContext_Description = "AgentContext_ConversationContext_Description";
-			public const string AgentContext_ConversationContext_ModelName = "AgentContext_ConversationContext_ModelName";
-			public const string AgentContext_ConversationContext_System = "AgentContext_ConversationContext_System";
-			public const string AgentContext_ConversationContext_System_Help = "AgentContext_ConversationContext_System_Help";
-			public const string AgentContext_ConversationContext_Temperature = "AgentContext_ConversationContext_Temperature";
-			public const string AgentContext_ConversationContext_Temperature_Help = "AgentContext_ConversationContext_Temperature_Help";
-			public const string AgentContext_ConversationContext_Title = "AgentContext_ConversationContext_Title";
-			public const string AgentContext_ConversationContexts = "AgentContext_ConversationContexts";
-			public const string AgentContext_DefaultConversationContext = "AgentContext_DefaultConversationContext";
-			public const string AgentContext_DefaultConversationContext_Select = "AgentContext_DefaultConversationContext_Select";
+			public const string AgentContext_DefaultRole = "AgentContext_DefaultRole";
+			public const string AgentContext_DefaultRole_Select = "AgentContext_DefaultRole_Select";
 			public const string AgentContext_LlmProvider = "AgentContext_LlmProvider";
 			public const string AgentContext_LlmProvider_Select = "AgentContext_LlmProvider_Select";
 			public const string AgentContext_MaxTokenCount = "AgentContext_MaxTokenCount";
 			public const string AgentContext_MaxTokenCount_Help = "AgentContext_MaxTokenCount_Help";
+			public const string AgentContext_Role_Description = "AgentContext_Role_Description";
+			public const string AgentContext_Role_ModelName = "AgentContext_Role_ModelName";
+			public const string AgentContext_Role_Persona_Instructions = "AgentContext_Role_Persona_Instructions";
+			public const string AgentContext_Role_System = "AgentContext_Role_System";
+			public const string AgentContext_Role_System_Help = "AgentContext_Role_System_Help";
+			public const string AgentContext_Role_Temperature = "AgentContext_Role_Temperature";
+			public const string AgentContext_Role_Temperature_Help = "AgentContext_Role_Temperature_Help";
+			public const string AgentContext_Role_Title = "AgentContext_Role_Title";
+			public const string AgentContext_Role_WelcomeMessage = "AgentContext_Role_WelcomeMessage";
+			public const string AgentContext_Roles = "AgentContext_Roles";
 			public const string AgentSession_Description = "AgentSession_Description";
 			public const string AgentSession_Help = "AgentSession_Help";
 			public const string AgentSession_Title = "AgentSession_Title";
