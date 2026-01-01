@@ -110,6 +110,7 @@ namespace LagoVista.AI.Services.Tools
                     Summary = args.Summary.Trim(),
                     Details = string.IsNullOrWhiteSpace(args.Details) ? null : args.Details,
                     Tags = tags,
+                    OrgId = context.Envelope.Org.Id,
                     MemoryId = $"MEM-{sn:00000000}",
                     SessionId = context.Session.Id,
                     TurnSourceId = context.ThisTurn.Id,

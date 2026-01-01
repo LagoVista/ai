@@ -89,7 +89,7 @@ namespace LagoVista.AI.Services.Tools
             catch (Exception ex)
             {
                 _logger.AddException("[SessionMemoryListTool_ExecuteAsync__Exception]", ex);
-                return InvokeResult<string>.FromError("session_memory_list failed to process arguments.");
+                return InvokeResult<string>.FromError($"session_memory_list failed to process arguments {ex.Message}.");
             }
         }
 

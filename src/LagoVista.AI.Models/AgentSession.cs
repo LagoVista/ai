@@ -7,6 +7,7 @@ using LagoVista.Core.Validation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Headers;
 
 
 namespace LagoVista.AI.Models
@@ -285,6 +286,38 @@ namespace LagoVista.AI.Models
         public int TotalTokens { get; set; }
         public int ReasoningTokens { get; set; }
         public int CachedTokens { get; set; }
+
+        public List<AgentSessionTurnIteration> Iterations { get; set; } = new List<AgentSessionTurnIteration>();        
+    }
+
+    public class AgentSessionTurnIteration
+    {
+        public string Id { get; set; } = Guid.NewGuid().ToId();
+        public int Index { get; set; }
+
+        public double ExecutionMs { get; set; }
+
+        public EntityHeader<AgentSessionTurnStatuses> Status { get; set; } = EntityHeader<AgentSessionTurnStatuses>.Create(AgentSessionTurnStatuses.New);
+        public string PreviousOpenAIResponseId { get; set; }
+        public string OpenAiResponseId { get; set; }
+        public int PromptTokens { get; set; }
+        public int CompletionTokens { get; set; }
+        public int TotalTokens { get; set; }
+        public int ReasoningTokens { get; set; }
+        public int CachedTokens { get; set; }
+        public List<string> ToolCalls { get; set; }
+        public List<string> Errors { get; set; } = new List<string>();
+
+        public string OpenAIRequestBlobUrl { get; set; }
+
+        public string OpenAIResponseBlobUrl { get; set; }
+
+
+        /// <summary>
+        /// Timestamp of the last status change for this turn.
+        /// </summary>
+        public string StatusTimeStamp { get; set; }
+
     }
 
     public class AgentSessionChunkRef

@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using LagoVista.Core.Validation;
 using LagoVista.AI.Services.Tools;
 using LagoVista.AI.Managers;
+using LagoVista.IoT.Logging.Loggers;
 
 namespace LagoVista.AI.Helpers
 {
@@ -26,6 +27,12 @@ namespace LagoVista.AI.Helpers
     /// </summary>
     public class ResponsesRequestBuilder : IResponsesRequestBuilder
     {
+        private readonly IAdminLogger _adminLogger;
+        public ResponsesRequestBuilder(IAdminLogger adminLogger)
+        {
+            _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
+        }
+
         /// <summary>
         /// Build the /responses request object as a strongly-typed DTO.
         /// The caller can serialize this with Json.NET and POST it to the API.
@@ -45,17 +52,28 @@ namespace LagoVista.AI.Helpers
                 Stream = ctx.Envelope.Stream,
             };
 
-            var systemMessage = new ResponsesMessage("system");
-            var userMessage = new ResponsesMessage("user");
+            var systemMessage = new ResponsesInputMessage("system");
+            var userMessage = new ResponsesInputMessage("user");
 
             var isContinuation = !string.IsNullOrWhiteSpace(ctx.ThisTurn.PreviousOpenAIResponseId);
 
-            if (isContinuation && !ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCallResults.Any())
+           // if (isContinuation && !ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCallResults.Any())
+            if(isContinuation || ctx.ThisTurn.Iterations.Any())
             {
-                dto.PreviousResponseId = ctx.ThisTurn.PreviousOpenAIResponseId;
+                var lastIteration = ctx.ThisTurn.Iterations.LastOrDefault();
+                var previousResponseId = lastIteration == null ? ctx.ThisTurn.PreviousOpenAIResponseId : lastIteration.OpenAiResponseId;
+
+                if(String.IsNullOrEmpty(previousResponseId))
+                    return Task.FromResult(InvokeResult<ResponsesApiRequest>.FromError("Cannot continue response, previous response ID is missing."));
+
+                dto.PreviousResponseId = previousResponseId;
+
+                _adminLogger.Trace($"[Builder_Response_Chain] Previous Response Id {previousResponseId}.");
             }
-
-
+            else
+            {
+                _adminLogger.Trace($"[Builder_Response_Chain] No Previous Respons Id");
+            }
 
             foreach (var register in ctx.PromptKnowledgeProvider.Registers)
             {
@@ -188,12 +206,14 @@ As soon as you know the tools you require to complete this request, you may stop
             
             if (ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCallResults.Any())
             {
-                var toolResultsText = ToolResultsTextBuilder.BuildFromToolResults(ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCallResults);
-                if (!string.IsNullOrWhiteSpace(toolResultsText))
+           
+                var toolResults = ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCallResults;
+                foreach (var result in toolResults)
                 {
-                    userMessage.Content.Add(new ResponsesMessageContent
+                    dto.Input.Add(new ResponsesFunctionCallOutput
                     {
-                        Text = toolResultsText
+                        CallId = result.ToolCallId,
+                        Output = result.ResultJson, 
                     });
                 }
             }

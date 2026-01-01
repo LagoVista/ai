@@ -137,7 +137,7 @@ namespace LagoVista.AI.Services.Tools
             catch (Exception ex)
             {
                 _logger.AddException("[SessionMemoryRecallTool_ExecuteAsync__Exception]", ex);
-                return InvokeResult<string>.FromError("session_memory_recall failed to process arguments.");
+                return InvokeResult<string>.FromError($"session_memory_recall failed to process arguments {ex.Message}.");
             }
         }
 

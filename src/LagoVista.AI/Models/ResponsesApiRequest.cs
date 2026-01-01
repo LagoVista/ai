@@ -26,9 +26,9 @@ namespace LagoVista.AI.Models
         public string PreviousResponseId { get; set; }
 
         [JsonProperty("input")]
-        public List<ResponsesMessage> Input { get; set; } = new List<ResponsesMessage>();
+        public List<ResponsesInputItem> Input { get; set; } = new List<ResponsesInputItem>();
 
-        /// <summary>
+        /// <summary>Z
         /// Tools passed to /responses; kept as raw JSON objects so the client
         /// (VS Code extension) can define them freely.
         /// </summary>
@@ -60,6 +60,42 @@ namespace LagoVista.AI.Models
 
         [JsonProperty("content")]
         public List<ResponsesMessageContent> Content { get; set; } = new List<ResponsesMessageContent>();
+    }
+
+    public abstract class ResponsesInputItem
+    {
+        [JsonProperty("type")]
+        public abstract string Type { get; }
+    }
+
+    // normal message item
+    public sealed class ResponsesInputMessage : ResponsesInputItem
+    {
+        public ResponsesInputMessage(string role)
+        {
+            Role = role;
+        }
+
+        public override string Type => "message";
+
+        [JsonProperty("role")]
+        public string Role { get; set; }
+
+        [JsonProperty("content")]
+        public List<ResponsesMessageContent> Content { get; set; } = new List<ResponsesMessageContent>();
+    }
+
+    // tool output item
+    public sealed class ResponsesFunctionCallOutput : ResponsesInputItem
+    {
+        public override string Type => "function_call_output";
+
+        [JsonProperty("call_id")]
+        public string CallId { get; set; }
+
+        // usually a string (often JSON)
+        [JsonProperty("output")]
+        public string Output { get; set; }
     }
 
     public class ResponsesMessageContent

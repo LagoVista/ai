@@ -2,21 +2,21 @@
 <package>
   <metadata>
     <id>LagoVista.AI.Models</id>
-    <version>3.0.3148.0821</version>
+    <version>3.0.3151.1034</version>
     <authors>Software Logistics, LLC</authors>
     <owners>Software Logistics, LLC</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <projectUrl>https://www.nuviot.com</projectUrl>
     <iconUrl>http://bytemaster.blob.core.windows.net/icons/LagoVistaIcon.png</iconUrl>
     <description>Provides Models for the NuvAI Platform.</description>
-    <copyright>Copyright Software Logistics - 2025</copyright>
+    <copyright>Copyright Software Logistics - 2026</copyright>
     <tags>LagoVista HomeAutomation IoT AI Machine Learning</tags>
     <icon>LagoVistaIcon.png</icon>
-    <releaseNotes>Build Date: 12/29/2025 1:21:28 PM UTC</releaseNotes>
+    <releaseNotes>Build Date: 1/1/2026 3:34:02 PM UTC</releaseNotes>
     <repository url="https://www.github.com/lagovista" type="git" branch="master"></repository>
     <dependencies>
       <group targetFramework="netstandard2.0">
-        <dependency id="LagoVista.Core" version="3.0.3148.0600" />
+        <dependency id="LagoVista.Core" version="3.0.3151.1017" />
       </group>
     </dependencies>
   </metadata>

@@ -32,7 +32,7 @@ namespace LagoVista.AI.CloudRepos
             var nodes = await GetByParitionIdAsync(sessionId);
 
             if (nodes.Select(nd => nd.OrgId != orgId).Any())
-                throw new NotAuthorizedException("unauthorized org access.");
+                throw new NotAuthorizedException("unauthorized org access");
 
             return ListResponse<AgentSessionMemoryNote>.Create(nodes.Select(nd => nd.ToNotes()));
         }

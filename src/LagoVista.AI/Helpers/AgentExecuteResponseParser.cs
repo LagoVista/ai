@@ -286,9 +286,7 @@ namespace LagoVista.AI.Helpers
                     }
                 }
 
-                response.PrimaryOutputText = textSegments.Count > 0
-                    ? string.Join("\n\n", textSegments)
-                    : null;
+                response.PrimaryOutputText = textSegments.Count > 0 ? string.Join("\n\n", textSegments) : null;
 
                 ctx.ThisTurn.PromptTokens = response.Usage.PromptTokens;
                 ctx.ThisTurn.CachedTokens = response.Usage.CachedTokends;
@@ -298,6 +296,31 @@ namespace LagoVista.AI.Helpers
 
                 ctx.ThisTurn.OpenAIResponseBlobUrl = (await _transcriptStore.SaveTurnResponseAsync(ctx.Envelope.Org.Id, ctx.Session.Id, ctx.ThisTurn.Id, rawJson.Trim(), ctx.CancellationToken)).Result.ToString();
 
+                var lastIteration = ctx.ThisTurn.Iterations.LastOrDefault();
+
+                var previousResponseId = lastIteration == null ? ctx.ThisTurn.PreviousOpenAIResponseId : lastIteration.OpenAiResponseId;
+
+                if (String.IsNullOrWhiteSpace(previousResponseId))
+                    previousResponseId = "-none-";
+
+                _logger.Trace($"[Builder_Response_Chain] {previousResponseId} - {id} {response.Usage.PromptTokens}, {response.Usage.CompletionTokens}, {response.Usage.TotalTokens}");
+
+                var iteration = new AgentSessionTurnIteration()
+                {
+                    Index = ctx.ThisTurn.Iterations.Count + 1,
+                    PromptTokens = response.Usage.PromptTokens,
+                    OpenAIResponseBlobUrl = ctx.ThisTurn.OpenAIResponseBlobUrl,
+                    OpenAIRequestBlobUrl = ctx.ThisTurn.OpenAIRequestBlobUrl,
+                    OpenAiResponseId = ctx.ThisTurn.OpenAIResponseId,
+                    CachedTokens = response.Usage.CachedTokends,
+                    TotalTokens = response.Usage.TotalTokens,
+                    ReasoningTokens = response.Usage.ReasoningTokens,
+                    CompletionTokens = response.Usage.CompletionTokens,
+                    Status =  Core.Models.EntityHeader<AgentSessionTurnStatuses>.Create(AgentSessionTurnStatuses.Completed),
+                    ToolCalls = ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCalls.Select(tc => tc.Name).ToList()
+                };
+
+                ctx.ThisTurn.Iterations.Add(iteration);
 
                 if (String.IsNullOrEmpty(response.PrimaryOutputText) && ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCalls.Count > 0)
                     ctx.ThisTurn.AgentAnswerSummary = "tool call - likely will be replaced by final output";
