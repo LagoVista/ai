@@ -41,7 +41,7 @@ namespace LagoVista.AI.Rest
 
         /// <summary>
         /// Execute an Aptix agent request using the configured AgentContext
-        /// and AgentContextRoles. This is the endpoint used by the Aptix CLI
+        /// and AgentContextRole. This is the endpoint used by the Aptix CLI
         /// and other clients. The payload is normalized by AgentRequestHandler
         /// and dispatched to the orchestrator.
         /// </summary>

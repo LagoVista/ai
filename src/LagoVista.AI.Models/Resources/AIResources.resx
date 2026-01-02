@@ -524,7 +524,7 @@
     <value>-select llm provider-</value>
   </data>
   <data name="AgentContext_Role_Title" xml:space="preserve">
-    <value>Conversation Context</value>
+    <value>Role</value>
   </data>
   <data name="AgentContext_Role_Description" xml:space="preserve">
     <value>Define how the large language model should behave within this conversation, including its role, identity, and how it generates responses.</value>
@@ -545,7 +545,7 @@
     <value>Temperature controls how random or deterministic a language model is when generating responses. It affects how “creative” the model’s word choices are.</value>
   </data>
   <data name="AgentContext_Roles" xml:space="preserve">
-    <value>Conversation Contexts</value>
+    <value>Roles</value>
   </data>
   <data name="AgentContext_DefaultRole" xml:space="preserve">
     <value>Default Conversation Context</value>
@@ -753,5 +753,245 @@
   </data>
   <data name="AgentContext_Role_WelcomeMessage" xml:space="preserve">
     <value>Welcome Message</value>
+  </data>
+  <data name="PersonaDefinition_DisplayName" xml:space="preserve">
+    <value>Display Name</value>
+  </data>
+  <data name="PersonaDefinition_ToneStyle" xml:space="preserve">
+    <value>Tone</value>
+  </data>
+  <data name="PersonaDefinition_VerbosityLevel" xml:space="preserve">
+    <value>Verbosity</value>
+  </data>
+  <data name="PersonaDefinition_ReflectionLevel" xml:space="preserve">
+    <value>Reflection</value>
+  </data>
+  <data name="PersonaDefinition_SuggestionStyle" xml:space="preserve">
+    <value>Suggestions</value>
+  </data>
+  <data name="PersonaDefinition_ConfirmationStrictness" xml:space="preserve">
+    <value>Confirmations</value>
+  </data>
+  <data name="PersonaDefinition_HumorLevel" xml:space="preserve">
+    <value>Humor</value>
+  </data>
+  <data name="PersonaDefinition_Notes" xml:space="preserve">
+    <value>Notes</value>
+  </data>
+  <data name="ToneStyle_Neutral" xml:space="preserve">
+    <value>Neutral</value>
+  </data>
+  <data name="ToneStyle_Conversational" xml:space="preserve">
+    <value>Conversational</value>
+  </data>
+  <data name="ToneStyle_Warm" xml:space="preserve">
+    <value>Warm</value>
+  </data>
+  <data name="ToneStyle_Direct" xml:space="preserve">
+    <value>Direct</value>
+  </data>
+  <data name="VerbosityLevel_UltraConcise" xml:space="preserve">
+    <value>Ultra concise</value>
+  </data>
+  <data name="VerbosityLevel_Concise" xml:space="preserve">
+    <value>Concise</value>
+  </data>
+  <data name="VerbosityLevel_Normal" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="VerbosityLevel_Thorough" xml:space="preserve">
+    <value>Thorough</value>
+  </data>
+  <data name="ReflectionLevel_None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="ReflectionLevel_Light" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="ReflectionLevel_Normal" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="SuggestionStyle_ReactiveOnly" xml:space="preserve">
+    <value>Reactive only</value>
+  </data>
+  <data name="SuggestionStyle_OfferOptions" xml:space="preserve">
+    <value>Offer options</value>
+  </data>
+  <data name="SuggestionStyle_Proactive" xml:space="preserve">
+    <value>Proactive</value>
+  </data>
+  <data name="ConfirmationStrictness_Low" xml:space="preserve">
+    <value>Low</value>
+  </data>
+  <data name="ConfirmationStrictness_Normal" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="ConfirmationStrictness_High" xml:space="preserve">
+    <value>High</value>
+  </data>
+  <data name="HumorLevel_Off" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="HumorLevel_Light" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="AgentContext_Modes" xml:space="preserve">
+    <value>Modes</value>
+  </data>
+  <data name="Agent_Context_Mode_Title" xml:space="preserve">
+    <value>Agent Modes</value>
+  </data>
+  <data name="AgentContext_Mode_Help" xml:space="preserve">
+    <value>Modes define a group of activities that can be performed on an agent.</value>
+  </data>
+  <data name="AgentContext_Mode_Description" xml:space="preserve">
+    <value>Modes define a group of activities that can be performed on an agent.</value>
+  </data>
+  <data name="AgentContext_Mode_Title" xml:space="preserve">
+    <value>Mode</value>
+  </data>
+  <data name="Common_Status_Active" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="Common_Status_Experimental" xml:space="preserve">
+    <value>Experimental</value>
+  </data>
+  <data name="AgentMode_AgentModeStaus_Obsolete" xml:space="preserve">
+    <value>Obsolete</value>
+  </data>
+  <data name="AgentMode_AgentModeStaus_Deprecated" xml:space="preserve">
+    <value>Deprecated</value>
+  </data>
+  <data name="AgentMode_Key" xml:space="preserve">
+    <value>Key</value>
+  </data>
+  <data name="AgentMode_Key_Help" xml:space="preserve">
+    <value>Human-readable key used in prompts and mode switching (for example, “General” or “DDR Authoring”).</value>
+  </data>
+  <data name="AgentMode_DisplayName" xml:space="preserve">
+    <value>Display name</value>
+  </data>
+  <data name="AgentMode_DisplayName_Help" xml:space="preserve">
+    <value>Name shown in UI surfaces. This may match the Key.</value>
+  </data>
+  <data name="AgentMode_Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="AgentMode_Description_Help" xml:space="preserve">
+    <value>Short description of what this mode is and covers.</value>
+  </data>
+  <data name="AgentMode_WhenToUse" xml:space="preserve">
+    <value>When to use</value>
+  </data>
+  <data name="AgentMode_WhenToUse_Help" xml:space="preserve">
+    <value>One-line summary describing when this mode should be used.</value>
+  </data>
+  <data name="AgentMode_WelcomeMessage" xml:space="preserve">
+    <value>Welcome message</value>
+  </data>
+  <data name="AgentMode_WelcomeMessage_Help" xml:space="preserve">
+    <value>Optional message shown when entering this mode.</value>
+  </data>
+  <data name="AgentMode_BootstrapInstructions" xml:space="preserve">
+    <value>Bootstrap instructions</value>
+  </data>
+  <data name="AgentMode_BootstrapInstructions_Help" xml:space="preserve">
+    <value>Instructions included on the initial turn or when switching into this mode.</value>
+  </data>
+  <data name="AgentMode_AgentInstructionDdrs" xml:space="preserve">
+    <value>Agent instruction DDRs</value>
+  </data>
+  <data name="AgentMode_AgentInstructionDdrs_Help" xml:space="preserve">
+    <value>Mode-specific DDRs that define how the LLM should behave while this mode is active.</value>
+  </data>
+  <data name="AgentMode_ReferenceDdrs" xml:space="preserve">
+    <value>Reference DDRs</value>
+  </data>
+  <data name="AgentMode_ReferenceDdrs_Help" xml:space="preserve">
+    <value>DDRs providing patterns, practices, and standards used during reasoning.</value>
+  </data>
+  <data name="AgentMode_BehaviorHints" xml:space="preserve">
+    <value>Behavior hints</value>
+  </data>
+  <data name="AgentMode_BehaviorHints_Help" xml:space="preserve">
+    <value>Structured hints such as “preferStructuredOutput” or “avoidDestructiveTools”.</value>
+  </data>
+  <data name="AgentMode_HumanRoleHints" xml:space="preserve">
+    <value>Human role hints</value>
+  </data>
+  <data name="AgentMode_HumanRoleHints_Help" xml:space="preserve">
+    <value>Hints describing the human’s role when operating in this mode.</value>
+  </data>
+  <data name="AgentMode_AssociatedToolIds" xml:space="preserve">
+    <value>Enabled tools</value>
+  </data>
+  <data name="AgentMode_AssociatedToolIds_Help" xml:space="preserve">
+    <value>Tool identifiers that are enabled when this mode is active.</value>
+  </data>
+  <data name="AgentMode_ToolGroupHints" xml:space="preserve">
+    <value>Tool group hints</value>
+  </data>
+  <data name="AgentMode_ToolGroupHints_Help" xml:space="preserve">
+    <value>Optional grouping hints for UI presentation or LLM reasoning.</value>
+  </data>
+  <data name="AgentMode_RagScopeHints" xml:space="preserve">
+    <value>RAG scope hints</value>
+  </data>
+  <data name="AgentMode_RagScopeHints_Help" xml:space="preserve">
+    <value>Hints controlling retrieval scope and tag preferences for RAG.</value>
+  </data>
+  <data name="AgentMode_StrongSignals" xml:space="preserve">
+    <value>Strong signals</value>
+  </data>
+  <data name="AgentMode_StrongSignals_Help" xml:space="preserve">
+    <value>Phrases strongly associated with this mode.</value>
+  </data>
+  <data name="AgentMode_PreloadDDRs" xml:space="preserve">
+    <value>Preload DDRs</value>
+  </data>
+  <data name="AgentMode_PreloadDDRs_Help" xml:space="preserve">
+    <value>DDRs that should be loaded automatically when entering this mode.</value>
+  </data>
+  <data name="AgentMode_WeakSignals" xml:space="preserve">
+    <value>Weak signals</value>
+  </data>
+  <data name="AgentMode_WeakSignals_Help" xml:space="preserve">
+    <value>Weaker phrases or hints that may suggest this mode.</value>
+  </data>
+  <data name="AgentMode_ExampleUtterances" xml:space="preserve">
+    <value>Example utterances</value>
+  </data>
+  <data name="AgentMode_ExampleUtterances_Help" xml:space="preserve">
+    <value>Representative user utterances that clearly belong to this mode.</value>
+  </data>
+  <data name="AgentMode_Instructions" xml:space="preserve">
+    <value>Instructions</value>
+  </data>
+  <data name="AgentMode_Instructions_Help" xml:space="preserve">
+    <value>Ordered instructions applied when this mode is active.</value>
+  </data>
+  <data name="AgentMode_Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="AgentMode_Status_Help" xml:space="preserve">
+    <value>Lifecycle status of the mode (active, experimental, or deprecated).</value>
+  </data>
+  <data name="AgentMode_ToolBoxes" xml:space="preserve">
+    <value>Tool boxes</value>
+  </data>
+  <data name="AgentMode_ToolBoxes_Help" xml:space="preserve">
+    <value>Collections of tools grouped for use within this mode.</value>
+  </data>
+  <data name="AgentMode_Version" xml:space="preserve">
+    <value>Version</value>
+  </data>
+  <data name="AgentMode_Version_Help" xml:space="preserve">
+    <value>Simple version identifier such as “v1” or “v1.1”.</value>
+  </data>
+  <data name="AgentMode_IsDefault" xml:space="preserve">
+    <value>Default mode</value>
+  </data>
+  <data name="AgentMode_IsDefault_Help" xml:space="preserve">
+    <value>Indicates whether this mode is the default when no explicit mode is selected.</value>
   </data>
 </root>

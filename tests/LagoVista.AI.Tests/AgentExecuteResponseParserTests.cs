@@ -18,7 +18,7 @@
 //                SessionId = "conv-1",
 //                ModeKey = "TEST_MODE",
 //                AgentContext = new EntityHeader { Id = "agent-ctx", Text = "Agent Ctx" },
-//                AgentContextRoles = new EntityHeader { Id = "conv-ctx", Text = "Conv Ctx" }
+//                AgentContextRole = new EntityHeader { Id = "conv-ctx", Text = "Conv Ctx" }
 //            };
 //        }
 

@@ -67,12 +67,10 @@ namespace LagoVista.AI.Services.Tools
                 BehaviorHints = args["behavior_hints"]?.ToObject<string[]>() ?? Array.Empty<string>(),
                 HumanRoleHints = args["human_role_hints"]?.ToObject<string[]>() ?? Array.Empty<string>(),
                 AssociatedToolIds = args["associated_tool_ids"]?.ToObject<string[]>() ?? Array.Empty<string>(),
-                ToolGroupHints = args["tool_group_hints"]?.ToObject<string[]>() ?? Array.Empty<string>(),
                 RagScopeHints = args["rag_scope_hints"]?.ToObject<string[]>() ?? Array.Empty<string>(),
                 StrongSignals = args["strong_signals"]?.ToObject<string[]>() ?? Array.Empty<string>(),
                 WeakSignals = args["weak_signals"]?.ToObject<string[]>() ?? Array.Empty<string>(),
                 ExampleUtterances = args["example_utterances"]?.ToObject<string[]>() ?? Array.Empty<string>(),
-                Status = args.Value<string>("status")!,
                 Version = args.Value<string>("version")!,
                 IsDefault = args.Value<bool?>("is_default") ?? false
             };
@@ -88,7 +86,7 @@ namespace LagoVista.AI.Services.Tools
                     display_name = summary.DisplayName,
                     description = summary.Description,
                     when_to_use = summary.WhenToUse,
-                    status = summary.Status,
+                    status = summary.ModeStatus,
                     version = summary.Version,
                     is_default = summary.IsDefault
                 },

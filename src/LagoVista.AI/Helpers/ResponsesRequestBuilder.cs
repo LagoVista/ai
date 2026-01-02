@@ -20,7 +20,7 @@ namespace LagoVista.AI.Helpers
     /// following AGN-003 (Aptix Responses API Request Construction).
     ///
     /// Combines:
-    /// - AgentContextRoles (model, system/boot prompt, temperature)
+    /// - AgentContextRole (model, system/boot prompt, temperature)
     /// - AgentExecuteRequest (mode, instruction, continuation id, tools, tool results, optional SystemPrompt)
     /// - ragContextBlock (pre-formatted [CONTEXT] block per AGN-002)
     /// - toolUsageMetadataBlock (LLM-facing usage metadata for ALL server tools)

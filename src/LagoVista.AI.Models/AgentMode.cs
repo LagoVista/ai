@@ -1,4 +1,8 @@
-﻿using LagoVista.Core.Models;
+﻿using LagoVista.AI.Models.Resources;
+using LagoVista.Core;
+using LagoVista.Core.Attributes;
+using LagoVista.Core.Interfaces;
+using LagoVista.Core.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -10,134 +14,109 @@ namespace LagoVista.AI.Models
     /// Backed by AGN-013. Instances are immutable at runtime and
     /// loaded into the Agent Mode Catalog at startup.
     /// </summary>
-    public sealed class AgentMode
+    /// 
+
+    public enum AgentModeStatuses
     {
+        [EnumLabel(AgentMode.AgentMode_AgentModeStaus_New, AIResources.Names.Common_Status_Active, typeof(AIResources))]
+        New,
+        [EnumLabel(AgentMode.AgentMode_AgentModeStaus_Experimental, AIResources.Names.Common_Status_Experimental, typeof(AIResources))]
+        Experimental,
+        [EnumLabel(AgentMode.AgentMode_AgentModeStaus_Active, AIResources.Names.Common_Status_Active, typeof(AIResources))]
+        Active,
+        [EnumLabel(AgentMode.AgentMode_AgentModeStaus_Deprecated, AIResources.Names.AgentMode_AgentModeStaus_Deprecated, typeof(AIResources))]
+        Deprecated,
+        [EnumLabel(AgentMode.AgentMode_AgentModeStaus_Obsolete, AIResources.Names.AgentMode_AgentModeStaus_Obsolete, typeof(AIResources))]
+        Obsolete
+    }
+
+
+    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.AgentContext_Mode_Title, AIResources.Names.AgentContext_Mode_Description, AIResources.Names.AgentContext_Mode_Description, EntityDescriptionAttribute.EntityTypes.ChildObject, typeof(AIResources),
+    FactoryUrl: "/api/ai/agentcontext/mode/factory")]
+    public sealed class AgentMode : IFormDescriptor, IFormDescriptorCol2
+    {
+        public const string AgentMode_AgentModeStaus_New = "new";
+        public const string AgentMode_AgentModeStaus_Experimental = "experimental";
+        public const string AgentMode_AgentModeStaus_Active = "active";
+        public const string AgentMode_AgentModeStaus_Deprecated = "deprecated";
+        public const string AgentMode_AgentModeStaus_Obsolete = "obsolete";
+
         // 3.1 Identity & UI Metadata
 
-        /// <summary>
-        /// Canonical immutable key. GUID with hyphens removed.
-        /// </summary>
-        public string Id { get; set; }
+        public string Id { get; set; } = Guid.NewGuid().ToId();
 
-        /// <summary>
-        /// Human-readable key, e.g. "General", "DDR Authoring".
-        /// Used in prompts and mode switching.
-        /// </summary>
+        [FormField(LabelResource: AIResources.Names.AgentMode_Key, HelpResource: AIResources.Names.AgentMode_Key_Help, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
         public string Key { get; set; }
 
-        /// <summary>
-        /// Display name for UI surfaces. May match Key.
-        /// </summary>
+        [FormField(LabelResource: AIResources.Names.AgentMode_DisplayName, HelpResource: AIResources.Names.AgentMode_DisplayName_Help, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
         public string DisplayName { get; set; }
 
-        /// <summary>
-        /// Short description of what this mode is and covers.
-        /// </summary>
+        [FormField(LabelResource: AIResources.Names.AgentMode_Description, HelpResource: AIResources.Names.AgentMode_Description_Help, FieldType: FieldTypes.MultiLineText, IsRequired: true, ResourceType: typeof(AIResources))]
         public string Description { get; set; }
 
-        /// <summary>
-        /// One-line "when to use this mode" summary used in the
-        /// Mode Catalog System Prompt Block.
-        /// </summary>
+        [FormField(LabelResource: AIResources.Names.AgentMode_WhenToUse, HelpResource: AIResources.Names.AgentMode_WhenToUse_Help, FieldType: FieldTypes.Text, ResourceType: typeof(AIResources))]
         public string WhenToUse { get; set; }
+        [FormField(LabelResource: AIResources.Names.Common_Icon, FieldType: FieldTypes.Icon, ResourceType: typeof(AIResources))]
+        public string Icon { get; set; } = "icon-ae-database-3";
+
 
         // 3.2 User Interaction Metadata
 
-        /// <summary>
-        /// Optional welcome message shown when entering this mode.
-        /// </summary>
+        [FormField(LabelResource: AIResources.Names.AgentMode_WelcomeMessage, HelpResource: AIResources.Names.AgentMode_WelcomeMessage_Help, FieldType: FieldTypes.MultiLineText, ResourceType: typeof(AIResources))]
         public string WelcomeMessage { get; set; }
 
-        /// <summary>
-        /// Instructions to be included upon iniital turn or mode change.
-        /// </summary>
-        public string BoolstrapInstructions { get; set; }
+        [FormField(LabelResource: AIResources.Names.AgentMode_BootstrapInstructions, HelpResource: AIResources.Names.AgentMode_BootstrapInstructions_Help, FieldType: FieldTypes.MultiLineText, ResourceType: typeof(AIResources))]
+        public string BootstrapInstructions { get; set; }
 
-        /// <summary>
-        /// Mode-specific behavior instructions for the LLM when this
-        /// mode is active (go into the Active Mode Behavior Block).
-        /// </summary>
+        [FormField(LabelResource: AIResources.Names.AgentMode_AgentInstructionDdrs, HelpResource: AIResources.Names.AgentMode_AgentInstructionDdrs_Help, FieldType: FieldTypes.StringList, ResourceType: typeof(AIResources))]
         public string[] AgentInstructionDdrs { get; set; } = Array.Empty<string>();
 
-        /// <summary>
-        /// DDR's that produce patterns, practices and standards that can be used when the LLM reasons.
-        /// </summary>
+        [FormField(LabelResource: AIResources.Names.AgentMode_ReferenceDdrs, HelpResource: AIResources.Names.AgentMode_ReferenceDdrs_Help, FieldType: FieldTypes.StringList, ResourceType: typeof(AIResources))]
         public string[] ReferenceDdrs { get; set; } = Array.Empty<string>();
 
-        /// <summary>
-        /// Optional structured hints like "preferStructuredOutput",
-        /// "avoidDestructiveTools", etc.
-        /// </summary>
+        [FormField(LabelResource: AIResources.Names.AgentMode_BehaviorHints, HelpResource: AIResources.Names.AgentMode_BehaviorHints_Help, FieldType: FieldTypes.StringList, ResourceType: typeof(AIResources))]
         public string[] BehaviorHints { get; set; } = Array.Empty<string>();
 
-        /// <summary>
-        /// Hints about the human's role in this mode, e.g.
-        /// "The human is authoring DDRs", "The human is designing workflows".
-        /// </summary>
+        [FormField(LabelResource: AIResources.Names.AgentMode_HumanRoleHints, HelpResource: AIResources.Names.AgentMode_HumanRoleHints_Help, FieldType: FieldTypes.StringList, ResourceType: typeof(AIResources))]
         public string[] HumanRoleHints { get; set; } = Array.Empty<string>();
 
         // 3.3 Tools
 
-        /// <summary>
-        /// Tool IDs that are enabled when this mode is active.
-        /// </summary>
+        [FormField(LabelResource: AIResources.Names.AgentMode_AssociatedToolIds, HelpResource: AIResources.Names.AgentMode_AssociatedToolIds_Help, FieldType: FieldTypes.StringList, ResourceType: typeof(AIResources))]
         public string[] AssociatedToolIds { get; set; } = Array.Empty<string>();
-
-        /// <summary>
-        /// Optional grouping hints for UI or LLM reasoning, e.g. "authoring",
-        /// "read-only", "diagnostics".
-        /// </summary>
-        public string[] ToolGroupHints { get; set; } = Array.Empty<string>();
 
         // 3.4 RAG Scoping Metadata
 
-        /// <summary>
-        /// Simple hints for RAG collection and tag preferences, e.g.
-        /// "boost:DDR_DDRs", "exclude:telemetry".
-        /// </summary>
+        [FormField(LabelResource: AIResources.Names.AgentMode_RagScopeHints, HelpResource: AIResources.Names.AgentMode_RagScopeHints_Help, FieldType: FieldTypes.StringList, ResourceType: typeof(AIResources))]
         public string[] RagScopeHints { get; set; } = Array.Empty<string>();
 
         // 3.5 Recognition Metadata
 
-        /// <summary>
-        /// Phrases strongly associated with this mode.
-        /// </summary>
+        [FormField(LabelResource: AIResources.Names.AgentMode_StrongSignals, HelpResource: AIResources.Names.AgentMode_StrongSignals_Help, FieldType: FieldTypes.StringList, ResourceType: typeof(AIResources))]
         public string[] StrongSignals { get; set; } = Array.Empty<string>();
 
-        /// <summary>
-        /// DDR's that should be loaded upon transition to the mode.
-        /// </summary>
-        public string[] PreloadDDRs { get; set; } = Array.Empty<string>();
-
-        /// <summary>
-        /// Weaker hints that might lean toward this mode.
-        /// </summary>
+        [FormField(LabelResource: AIResources.Names.AgentMode_WeakSignals, HelpResource: AIResources.Names.AgentMode_WeakSignals_Help, FieldType: FieldTypes.StringList, ResourceType: typeof(AIResources))]
         public string[] WeakSignals { get; set; } = Array.Empty<string>();
 
-        /// <summary>
-        /// Representative user utterances that clearly belong to this mode.
-        /// </summary>
+        [FormField(LabelResource: AIResources.Names.AgentMode_ExampleUtterances, HelpResource: AIResources.Names.AgentMode_ExampleUtterances_Help, FieldType: FieldTypes.StringList, ResourceType: typeof(AIResources))]
         public string[] ExampleUtterances { get; set; } = Array.Empty<string>();
 
-
+        [FormField(LabelResource: AIResources.Names.AgentMode_Instructions, HelpResource: AIResources.Names.AgentMode_Instructions_Help, FieldType: FieldTypes.StringList, ResourceType: typeof(AIResources))]
         public List<string> Instructions { get; set; } = new List<string>();
+
         // 3.6 Lifecycle Metadata
 
-        /// <summary>
-        /// "active", "experimental", or "deprecated".
-        /// </summary>
-        public string Status { get; set; }
+        [FormField(LabelResource: AIResources.Names.AgentMode_Status, HelpResource: AIResources.Names.AgentMode_Status_Help, EnumType: typeof(AgentModeStatuses),
+            FieldType: FieldTypes.Picker, IsRequired: true, ResourceType: typeof(AIResources))]
+        public EntityHeader<AgentModeStatuses> ModeStatus { get; set; } = EntityHeader<AgentModeStatuses>.Create(AgentModeStatuses.New);
 
+        [FormField(LabelResource: AIResources.Names.AgentMode_ToolBoxes, HelpResource: AIResources.Names.AgentMode_ToolBoxes_Help, FieldType: FieldTypes.ChildListInlinePicker, ResourceType: typeof(AIResources))]
         public List<EntityHeader> ToolBoxes { get; set; } = new List<EntityHeader>();
 
-        /// <summary>
-        /// Simple version string, e.g. "v1", "v1.1".
-        /// </summary>
-        public string Version { get; set; }
+        [FormField(LabelResource: AIResources.Names.AgentMode_Version, HelpResource: AIResources.Names.AgentMode_Version_Help, IsRequired:true, FieldType: FieldTypes.Text, ResourceType: typeof(AIResources))]
+        public string Version { get; set; } = "1.0.0";
 
-        /// <summary>
-        /// True if this is the default mode when no explicit mode is set.
-        /// </summary>
+        [FormField(LabelResource: AIResources.Names.AgentMode_IsDefault, HelpResource: AIResources.Names.AgentMode_IsDefault_Help, FieldType: FieldTypes.CheckBox, ResourceType: typeof(AIResources))]
         public bool IsDefault { get; set; }
 
         public AgentModeSummary CreateSummary()
@@ -150,11 +129,42 @@ namespace LagoVista.AI.Models
                 Description = this.Description ?? this.WhenToUse,
                 SystemPromptSummary = this.WhenToUse,
                 IsDefault = this.IsDefault,
-                Status = this.Status,
+                ModeStatus = this.ModeStatus.Text,
                 Version = this.Version,
                 WhenToUse = this.WhenToUse,
                 HumanRoleHints = this.HumanRoleHints ?? Array.Empty<string>(),
                 ExampleUtterances = this.ExampleUtterances ?? Array.Empty<string>()
+            };
+        }
+
+        public List<string> GetFormFields()
+        {
+            return new List<string>()
+            {
+                nameof(DisplayName),
+                nameof(Key),
+                nameof(Icon),
+                nameof(IsDefault),
+                nameof(Version),
+                nameof(ModeStatus),
+                nameof(Description),
+                nameof(WhenToUse),
+                nameof(WelcomeMessage),
+                nameof(BootstrapInstructions),
+            };
+        }
+
+        public List<string> GetFormFieldsCol2()
+        {
+            return new List<string>()
+            {
+                nameof(BehaviorHints),
+                nameof(HumanRoleHints),
+                nameof(RagScopeHints),
+                nameof(StrongSignals),
+                nameof(WeakSignals),
+                nameof(ExampleUtterances),
+                nameof(Instructions),
             };
         }
     }
@@ -175,7 +185,7 @@ namespace LagoVista.AI.Models
         public string Key { get; set; }
         public string DisplayName { get; set; }
         public string Description { get; set; }
-        public string Status { get; set; }
+        public string ModeStatus { get; set; }
         public string WhenToUse { get; set; }
         public string Version { get; set; }
         public string SystemPromptSummary { get; set; }

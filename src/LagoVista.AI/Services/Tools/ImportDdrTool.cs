@@ -455,7 +455,7 @@ Additional rules:
                 var timeStamp = DateTime.UtcNow.ToJSONString();
                 // Prefer parsed.Title if present, otherwise args.Title
                 var finalTitle = parsed.Title ?? args.Title;
-                // Prefer parsed.Status if present, otherwise args.Status
+                // Prefer parsed.ModeStatus if present, otherwise args.ModeStatus
                 var finalStatus = parsed.Status ?? args.Status;
                 var ddr = new DetailedDesignReview
                 {
@@ -563,7 +563,7 @@ Additional rules:
                 title = TryParseTitleFromH1(markdown);
             }
 
-            // Status line example: **Status:** Approved
+            // ModeStatus line example: **ModeStatus:** Approved
             var status = MatchFirst(markdown, @"(?mi)^\*\*Status:\*\*\s*(?<v>.+?)\s*$");
             // Optional summary: not present in TUL-011; keep best-effort.
             // If you standardize a SummaryInstructions field later, add it here.

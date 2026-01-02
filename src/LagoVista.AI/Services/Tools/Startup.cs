@@ -94,7 +94,7 @@ namespace LagoVista.AI.Services.Tools
             toolRegistry.RegisterTool<ReorderChaptersAgentTool>();
             toolRegistry.RegisterTool<DeleteChapterAgentTool>();
 
-            // --- DDR Status & Approval ---
+            // --- DDR ModeStatus & Approval ---
             toolRegistry.RegisterTool<SetDdrStatusAgentTool>();
             toolRegistry.RegisterTool<ApproveDdrAgentTool>();
 

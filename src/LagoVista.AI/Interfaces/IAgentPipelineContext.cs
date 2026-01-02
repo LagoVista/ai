@@ -49,7 +49,7 @@ namespace LagoVista.AI.Interfaces
 
         AgentContext AgentContext { get; }
 
-        AgentContextRoles Role { get; }
+        AgentContextRole Role { get; }
 
         PromptKnowledgeProvider PromptKnowledgeProvider { get; }
         CompositionTrace Trace { get; }
@@ -60,7 +60,7 @@ namespace LagoVista.AI.Interfaces
         bool HasClientToolCalls { get; }
 
         string ToolManifestId { get; }
-        void AttachAgentContext(AgentContext context, AgentContextRoles conversationContext);
+        void AttachAgentContext(AgentContext context, AgentContextRole conversationContext);
         void AttachSession(AgentSession session, AgentSessionTurn thisTurn);
         void AttachSession(AgentSession session, AgentSessionTurn previousSessoin, AgentSessionTurn thisTurn);
         void AttachToolManifest(ToolCallManifest toolManifest);

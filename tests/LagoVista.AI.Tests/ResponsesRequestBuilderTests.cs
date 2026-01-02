@@ -11,9 +11,9 @@
 //    [TestFixture]
 //    public class ResponsesRequestBuilderTests
 //    {
-//        private AgentContextRoles CreateConversationContext()
+//        private AgentContextRole CreateConversationContext()
 //        {
-//            return new AgentContextRoles
+//            return new AgentContextRole
 //            {
 //                Id = "conv-ctx-1",
 //                Name = "Test Conversation Context",
@@ -38,7 +38,7 @@
 //                Instruction = instruction,
 //                ResponseContinuationId = previousResponseId,
 //                AgentContext = new EntityHeader { Id = "agent-ctx", Text = "Agent Ctx" },
-//                AgentContextRoles = new EntityHeader { Id = "conv-ctx-1", Text = "Conv Ctx" },
+//                AgentContextRole = new EntityHeader { Id = "conv-ctx-1", Text = "Conv Ctx" },
 //                ToolsJson = toolsJson,
 //                ToolChoiceName = toolChoiceName,
 //                ToolResultsJson = toolResultsJson,

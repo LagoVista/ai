@@ -104,8 +104,7 @@ namespace LagoVista.AI.Managers
                 },
                 BehaviorHints = new[] { "preferConversationalTone" },
                 HumanRoleHints = new[] { "The human is seeking general information and assistance." },
-                AssociatedToolIds = new[] { "agent_hello_world", "agent_hello_world_client", "add_agent_mode", "update_agent_mode" },
-                ToolGroupHints = new[] { "general_tools", "workspace" },
+                AssociatedToolIds = new[] { "activate_tools", "list_agent_modes" },
                 RagScopeHints = Array.Empty<string>(),
                 StrongSignals = Array.Empty<string>(),
                 WeakSignals = Array.Empty<string>(),
@@ -116,8 +115,6 @@ namespace LagoVista.AI.Managers
                     "Propose a minimal patch to fix naming and add a comment.",
                     "Flag any security issues in this handler."
                 },
-                Status = "active",
-                Version = "v1",
                 IsDefault = true
             };
 

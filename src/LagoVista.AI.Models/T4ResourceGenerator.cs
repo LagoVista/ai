@@ -1,8 +1,8 @@
-﻿/*1/1/2026 6:21:06 PM*/
+﻿/*1/2/2026 7:56:28 AM*/
 using System.Globalization;
 using System.Reflection;
 
-//Resources:AIResources:AgentContext_CompletionReservePercent
+//Resources:AIResources:Agent_Context_Mode_Title
 namespace LagoVista.AI.Models.Resources
 {
 	public class AIResources
@@ -56,6 +56,9 @@ namespace LagoVista.AI.Models.Resources
 			return new HtmlString(str);
         }*/
 		
+		public static string Agent_Context_Mode_Title { get { return GetResourceString("Agent_Context_Mode_Title"); } }
+//Resources:AIResources:AgentContext_CompletionReservePercent
+
 		public static string AgentContext_CompletionReservePercent { get { return GetResourceString("AgentContext_CompletionReservePercent"); } }
 //Resources:AIResources:AgentContext_CompletionReservePercent_Help
 
@@ -78,6 +81,18 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:AgentContext_MaxTokenCount_Help
 
 		public static string AgentContext_MaxTokenCount_Help { get { return GetResourceString("AgentContext_MaxTokenCount_Help"); } }
+//Resources:AIResources:AgentContext_Mode_Description
+
+		public static string AgentContext_Mode_Description { get { return GetResourceString("AgentContext_Mode_Description"); } }
+//Resources:AIResources:AgentContext_Mode_Help
+
+		public static string AgentContext_Mode_Help { get { return GetResourceString("AgentContext_Mode_Help"); } }
+//Resources:AIResources:AgentContext_Mode_Title
+
+		public static string AgentContext_Mode_Title { get { return GetResourceString("AgentContext_Mode_Title"); } }
+//Resources:AIResources:AgentContext_Modes
+
+		public static string AgentContext_Modes { get { return GetResourceString("AgentContext_Modes"); } }
 //Resources:AIResources:AgentContext_Role_Description
 
 		public static string AgentContext_Role_Description { get { return GetResourceString("AgentContext_Role_Description"); } }
@@ -108,6 +123,144 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:AgentContext_Roles
 
 		public static string AgentContext_Roles { get { return GetResourceString("AgentContext_Roles"); } }
+//Resources:AIResources:AgentMode_AgentInstructionDdrs
+
+		public static string AgentMode_AgentInstructionDdrs { get { return GetResourceString("AgentMode_AgentInstructionDdrs"); } }
+//Resources:AIResources:AgentMode_AgentInstructionDdrs_Help
+
+		public static string AgentMode_AgentInstructionDdrs_Help { get { return GetResourceString("AgentMode_AgentInstructionDdrs_Help"); } }
+//Resources:AIResources:AgentMode_AgentModeStaus_Deprecated
+
+		public static string AgentMode_AgentModeStaus_Deprecated { get { return GetResourceString("AgentMode_AgentModeStaus_Deprecated"); } }
+//Resources:AIResources:AgentMode_AgentModeStaus_Obsolete
+
+		public static string AgentMode_AgentModeStaus_Obsolete { get { return GetResourceString("AgentMode_AgentModeStaus_Obsolete"); } }
+//Resources:AIResources:AgentMode_AssociatedToolIds
+
+		public static string AgentMode_AssociatedToolIds { get { return GetResourceString("AgentMode_AssociatedToolIds"); } }
+//Resources:AIResources:AgentMode_AssociatedToolIds_Help
+
+		public static string AgentMode_AssociatedToolIds_Help { get { return GetResourceString("AgentMode_AssociatedToolIds_Help"); } }
+//Resources:AIResources:AgentMode_BehaviorHints
+
+		public static string AgentMode_BehaviorHints { get { return GetResourceString("AgentMode_BehaviorHints"); } }
+//Resources:AIResources:AgentMode_BehaviorHints_Help
+
+		public static string AgentMode_BehaviorHints_Help { get { return GetResourceString("AgentMode_BehaviorHints_Help"); } }
+//Resources:AIResources:AgentMode_BootstrapInstructions
+
+		public static string AgentMode_BootstrapInstructions { get { return GetResourceString("AgentMode_BootstrapInstructions"); } }
+//Resources:AIResources:AgentMode_BootstrapInstructions_Help
+
+		public static string AgentMode_BootstrapInstructions_Help { get { return GetResourceString("AgentMode_BootstrapInstructions_Help"); } }
+//Resources:AIResources:AgentMode_Description
+
+		public static string AgentMode_Description { get { return GetResourceString("AgentMode_Description"); } }
+//Resources:AIResources:AgentMode_Description_Help
+
+		public static string AgentMode_Description_Help { get { return GetResourceString("AgentMode_Description_Help"); } }
+//Resources:AIResources:AgentMode_DisplayName
+
+		public static string AgentMode_DisplayName { get { return GetResourceString("AgentMode_DisplayName"); } }
+//Resources:AIResources:AgentMode_DisplayName_Help
+
+		public static string AgentMode_DisplayName_Help { get { return GetResourceString("AgentMode_DisplayName_Help"); } }
+//Resources:AIResources:AgentMode_ExampleUtterances
+
+		public static string AgentMode_ExampleUtterances { get { return GetResourceString("AgentMode_ExampleUtterances"); } }
+//Resources:AIResources:AgentMode_ExampleUtterances_Help
+
+		public static string AgentMode_ExampleUtterances_Help { get { return GetResourceString("AgentMode_ExampleUtterances_Help"); } }
+//Resources:AIResources:AgentMode_HumanRoleHints
+
+		public static string AgentMode_HumanRoleHints { get { return GetResourceString("AgentMode_HumanRoleHints"); } }
+//Resources:AIResources:AgentMode_HumanRoleHints_Help
+
+		public static string AgentMode_HumanRoleHints_Help { get { return GetResourceString("AgentMode_HumanRoleHints_Help"); } }
+//Resources:AIResources:AgentMode_Instructions
+
+		public static string AgentMode_Instructions { get { return GetResourceString("AgentMode_Instructions"); } }
+//Resources:AIResources:AgentMode_Instructions_Help
+
+		public static string AgentMode_Instructions_Help { get { return GetResourceString("AgentMode_Instructions_Help"); } }
+//Resources:AIResources:AgentMode_IsDefault
+
+		public static string AgentMode_IsDefault { get { return GetResourceString("AgentMode_IsDefault"); } }
+//Resources:AIResources:AgentMode_IsDefault_Help
+
+		public static string AgentMode_IsDefault_Help { get { return GetResourceString("AgentMode_IsDefault_Help"); } }
+//Resources:AIResources:AgentMode_Key
+
+		public static string AgentMode_Key { get { return GetResourceString("AgentMode_Key"); } }
+//Resources:AIResources:AgentMode_Key_Help
+
+		public static string AgentMode_Key_Help { get { return GetResourceString("AgentMode_Key_Help"); } }
+//Resources:AIResources:AgentMode_PreloadDDRs
+
+		public static string AgentMode_PreloadDDRs { get { return GetResourceString("AgentMode_PreloadDDRs"); } }
+//Resources:AIResources:AgentMode_PreloadDDRs_Help
+
+		public static string AgentMode_PreloadDDRs_Help { get { return GetResourceString("AgentMode_PreloadDDRs_Help"); } }
+//Resources:AIResources:AgentMode_RagScopeHints
+
+		public static string AgentMode_RagScopeHints { get { return GetResourceString("AgentMode_RagScopeHints"); } }
+//Resources:AIResources:AgentMode_RagScopeHints_Help
+
+		public static string AgentMode_RagScopeHints_Help { get { return GetResourceString("AgentMode_RagScopeHints_Help"); } }
+//Resources:AIResources:AgentMode_ReferenceDdrs
+
+		public static string AgentMode_ReferenceDdrs { get { return GetResourceString("AgentMode_ReferenceDdrs"); } }
+//Resources:AIResources:AgentMode_ReferenceDdrs_Help
+
+		public static string AgentMode_ReferenceDdrs_Help { get { return GetResourceString("AgentMode_ReferenceDdrs_Help"); } }
+//Resources:AIResources:AgentMode_Status
+
+		public static string AgentMode_Status { get { return GetResourceString("AgentMode_Status"); } }
+//Resources:AIResources:AgentMode_Status_Help
+
+		public static string AgentMode_Status_Help { get { return GetResourceString("AgentMode_Status_Help"); } }
+//Resources:AIResources:AgentMode_StrongSignals
+
+		public static string AgentMode_StrongSignals { get { return GetResourceString("AgentMode_StrongSignals"); } }
+//Resources:AIResources:AgentMode_StrongSignals_Help
+
+		public static string AgentMode_StrongSignals_Help { get { return GetResourceString("AgentMode_StrongSignals_Help"); } }
+//Resources:AIResources:AgentMode_ToolBoxes
+
+		public static string AgentMode_ToolBoxes { get { return GetResourceString("AgentMode_ToolBoxes"); } }
+//Resources:AIResources:AgentMode_ToolBoxes_Help
+
+		public static string AgentMode_ToolBoxes_Help { get { return GetResourceString("AgentMode_ToolBoxes_Help"); } }
+//Resources:AIResources:AgentMode_ToolGroupHints
+
+		public static string AgentMode_ToolGroupHints { get { return GetResourceString("AgentMode_ToolGroupHints"); } }
+//Resources:AIResources:AgentMode_ToolGroupHints_Help
+
+		public static string AgentMode_ToolGroupHints_Help { get { return GetResourceString("AgentMode_ToolGroupHints_Help"); } }
+//Resources:AIResources:AgentMode_Version
+
+		public static string AgentMode_Version { get { return GetResourceString("AgentMode_Version"); } }
+//Resources:AIResources:AgentMode_Version_Help
+
+		public static string AgentMode_Version_Help { get { return GetResourceString("AgentMode_Version_Help"); } }
+//Resources:AIResources:AgentMode_WeakSignals
+
+		public static string AgentMode_WeakSignals { get { return GetResourceString("AgentMode_WeakSignals"); } }
+//Resources:AIResources:AgentMode_WeakSignals_Help
+
+		public static string AgentMode_WeakSignals_Help { get { return GetResourceString("AgentMode_WeakSignals_Help"); } }
+//Resources:AIResources:AgentMode_WelcomeMessage
+
+		public static string AgentMode_WelcomeMessage { get { return GetResourceString("AgentMode_WelcomeMessage"); } }
+//Resources:AIResources:AgentMode_WelcomeMessage_Help
+
+		public static string AgentMode_WelcomeMessage_Help { get { return GetResourceString("AgentMode_WelcomeMessage_Help"); } }
+//Resources:AIResources:AgentMode_WhenToUse
+
+		public static string AgentMode_WhenToUse { get { return GetResourceString("AgentMode_WhenToUse"); } }
+//Resources:AIResources:AgentMode_WhenToUse_Help
+
+		public static string AgentMode_WhenToUse_Help { get { return GetResourceString("AgentMode_WhenToUse_Help"); } }
 //Resources:AIResources:AgentSession_Description
 
 		public static string AgentSession_Description { get { return GetResourceString("AgentSession_Description"); } }
@@ -198,9 +351,15 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:Common_Status_Aborted
 
 		public static string Common_Status_Aborted { get { return GetResourceString("Common_Status_Aborted"); } }
+//Resources:AIResources:Common_Status_Active
+
+		public static string Common_Status_Active { get { return GetResourceString("Common_Status_Active"); } }
 //Resources:AIResources:Common_Status_Completed
 
 		public static string Common_Status_Completed { get { return GetResourceString("Common_Status_Completed"); } }
+//Resources:AIResources:Common_Status_Experimental
+
+		public static string Common_Status_Experimental { get { return GetResourceString("Common_Status_Experimental"); } }
 //Resources:AIResources:Common_Status_Failed
 
 		public static string Common_Status_Failed { get { return GetResourceString("Common_Status_Failed"); } }
@@ -210,6 +369,15 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:Common_Status_Pending
 
 		public static string Common_Status_Pending { get { return GetResourceString("Common_Status_Pending"); } }
+//Resources:AIResources:ConfirmationStrictness_High
+
+		public static string ConfirmationStrictness_High { get { return GetResourceString("ConfirmationStrictness_High"); } }
+//Resources:AIResources:ConfirmationStrictness_Low
+
+		public static string ConfirmationStrictness_Low { get { return GetResourceString("ConfirmationStrictness_Low"); } }
+//Resources:AIResources:ConfirmationStrictness_Normal
+
+		public static string ConfirmationStrictness_Normal { get { return GetResourceString("ConfirmationStrictness_Normal"); } }
 //Resources:AIResources:DDR_Chapter
 
 		public static string DDR_Chapter { get { return GetResourceString("DDR_Chapter"); } }
@@ -261,6 +429,12 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:Experiment_Title
 
 		public static string Experiment_Title { get { return GetResourceString("Experiment_Title"); } }
+//Resources:AIResources:HumorLevel_Light
+
+		public static string HumorLevel_Light { get { return GetResourceString("HumorLevel_Light"); } }
+//Resources:AIResources:HumorLevel_Off
+
+		public static string HumorLevel_Off { get { return GetResourceString("HumorLevel_Off"); } }
 //Resources:AIResources:InputType_DataPoints
 
 		public static string InputType_DataPoints { get { return GetResourceString("InputType_DataPoints"); } }
@@ -537,6 +711,30 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:OperationKind_Text
 
 		public static string OperationKind_Text { get { return GetResourceString("OperationKind_Text"); } }
+//Resources:AIResources:PersonaDefinition_ConfirmationStrictness
+
+		public static string PersonaDefinition_ConfirmationStrictness { get { return GetResourceString("PersonaDefinition_ConfirmationStrictness"); } }
+//Resources:AIResources:PersonaDefinition_DisplayName
+
+		public static string PersonaDefinition_DisplayName { get { return GetResourceString("PersonaDefinition_DisplayName"); } }
+//Resources:AIResources:PersonaDefinition_HumorLevel
+
+		public static string PersonaDefinition_HumorLevel { get { return GetResourceString("PersonaDefinition_HumorLevel"); } }
+//Resources:AIResources:PersonaDefinition_Notes
+
+		public static string PersonaDefinition_Notes { get { return GetResourceString("PersonaDefinition_Notes"); } }
+//Resources:AIResources:PersonaDefinition_ReflectionLevel
+
+		public static string PersonaDefinition_ReflectionLevel { get { return GetResourceString("PersonaDefinition_ReflectionLevel"); } }
+//Resources:AIResources:PersonaDefinition_SuggestionStyle
+
+		public static string PersonaDefinition_SuggestionStyle { get { return GetResourceString("PersonaDefinition_SuggestionStyle"); } }
+//Resources:AIResources:PersonaDefinition_ToneStyle
+
+		public static string PersonaDefinition_ToneStyle { get { return GetResourceString("PersonaDefinition_ToneStyle"); } }
+//Resources:AIResources:PersonaDefinition_VerbosityLevel
+
+		public static string PersonaDefinition_VerbosityLevel { get { return GetResourceString("PersonaDefinition_VerbosityLevel"); } }
 //Resources:AIResources:Preprocessor_ClassName
 
 		public static string Preprocessor_ClassName { get { return GetResourceString("Preprocessor_ClassName"); } }
@@ -564,6 +762,15 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:PreprocessorSetting_Value
 
 		public static string PreprocessorSetting_Value { get { return GetResourceString("PreprocessorSetting_Value"); } }
+//Resources:AIResources:ReflectionLevel_Light
+
+		public static string ReflectionLevel_Light { get { return GetResourceString("ReflectionLevel_Light"); } }
+//Resources:AIResources:ReflectionLevel_None
+
+		public static string ReflectionLevel_None { get { return GetResourceString("ReflectionLevel_None"); } }
+//Resources:AIResources:ReflectionLevel_Normal
+
+		public static string ReflectionLevel_Normal { get { return GetResourceString("ReflectionLevel_Normal"); } }
 //Resources:AIResources:SourceOrganization_AppId
 
 		public static string SourceOrganization_AppId { get { return GetResourceString("SourceOrganization_AppId"); } }
@@ -633,6 +840,27 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:SourceOrganizationRepository_Title
 
 		public static string SourceOrganizationRepository_Title { get { return GetResourceString("SourceOrganizationRepository_Title"); } }
+//Resources:AIResources:SuggestionStyle_OfferOptions
+
+		public static string SuggestionStyle_OfferOptions { get { return GetResourceString("SuggestionStyle_OfferOptions"); } }
+//Resources:AIResources:SuggestionStyle_Proactive
+
+		public static string SuggestionStyle_Proactive { get { return GetResourceString("SuggestionStyle_Proactive"); } }
+//Resources:AIResources:SuggestionStyle_ReactiveOnly
+
+		public static string SuggestionStyle_ReactiveOnly { get { return GetResourceString("SuggestionStyle_ReactiveOnly"); } }
+//Resources:AIResources:ToneStyle_Conversational
+
+		public static string ToneStyle_Conversational { get { return GetResourceString("ToneStyle_Conversational"); } }
+//Resources:AIResources:ToneStyle_Direct
+
+		public static string ToneStyle_Direct { get { return GetResourceString("ToneStyle_Direct"); } }
+//Resources:AIResources:ToneStyle_Neutral
+
+		public static string ToneStyle_Neutral { get { return GetResourceString("ToneStyle_Neutral"); } }
+//Resources:AIResources:ToneStyle_Warm
+
+		public static string ToneStyle_Warm { get { return GetResourceString("ToneStyle_Warm"); } }
 //Resources:AIResources:TrainingDataSet_Description
 
 		public static string TrainingDataSet_Description { get { return GetResourceString("TrainingDataSet_Description"); } }
@@ -687,9 +915,22 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:VectorDB_LLMEmbeddingModelName
 
 		public static string VectorDB_LLMEmbeddingModelName { get { return GetResourceString("VectorDB_LLMEmbeddingModelName"); } }
+//Resources:AIResources:VerbosityLevel_Concise
+
+		public static string VerbosityLevel_Concise { get { return GetResourceString("VerbosityLevel_Concise"); } }
+//Resources:AIResources:VerbosityLevel_Normal
+
+		public static string VerbosityLevel_Normal { get { return GetResourceString("VerbosityLevel_Normal"); } }
+//Resources:AIResources:VerbosityLevel_Thorough
+
+		public static string VerbosityLevel_Thorough { get { return GetResourceString("VerbosityLevel_Thorough"); } }
+//Resources:AIResources:VerbosityLevel_UltraConcise
+
+		public static string VerbosityLevel_UltraConcise { get { return GetResourceString("VerbosityLevel_UltraConcise"); } }
 
 		public static class Names
 		{
+			public const string Agent_Context_Mode_Title = "Agent_Context_Mode_Title";
 			public const string AgentContext_CompletionReservePercent = "AgentContext_CompletionReservePercent";
 			public const string AgentContext_CompletionReservePercent_Help = "AgentContext_CompletionReservePercent_Help";
 			public const string AgentContext_DefaultRole = "AgentContext_DefaultRole";
@@ -698,6 +939,10 @@ namespace LagoVista.AI.Models.Resources
 			public const string AgentContext_LlmProvider_Select = "AgentContext_LlmProvider_Select";
 			public const string AgentContext_MaxTokenCount = "AgentContext_MaxTokenCount";
 			public const string AgentContext_MaxTokenCount_Help = "AgentContext_MaxTokenCount_Help";
+			public const string AgentContext_Mode_Description = "AgentContext_Mode_Description";
+			public const string AgentContext_Mode_Help = "AgentContext_Mode_Help";
+			public const string AgentContext_Mode_Title = "AgentContext_Mode_Title";
+			public const string AgentContext_Modes = "AgentContext_Modes";
 			public const string AgentContext_Role_Description = "AgentContext_Role_Description";
 			public const string AgentContext_Role_ModelName = "AgentContext_Role_ModelName";
 			public const string AgentContext_Role_Persona_Instructions = "AgentContext_Role_Persona_Instructions";
@@ -708,6 +953,52 @@ namespace LagoVista.AI.Models.Resources
 			public const string AgentContext_Role_Title = "AgentContext_Role_Title";
 			public const string AgentContext_Role_WelcomeMessage = "AgentContext_Role_WelcomeMessage";
 			public const string AgentContext_Roles = "AgentContext_Roles";
+			public const string AgentMode_AgentInstructionDdrs = "AgentMode_AgentInstructionDdrs";
+			public const string AgentMode_AgentInstructionDdrs_Help = "AgentMode_AgentInstructionDdrs_Help";
+			public const string AgentMode_AgentModeStaus_Deprecated = "AgentMode_AgentModeStaus_Deprecated";
+			public const string AgentMode_AgentModeStaus_Obsolete = "AgentMode_AgentModeStaus_Obsolete";
+			public const string AgentMode_AssociatedToolIds = "AgentMode_AssociatedToolIds";
+			public const string AgentMode_AssociatedToolIds_Help = "AgentMode_AssociatedToolIds_Help";
+			public const string AgentMode_BehaviorHints = "AgentMode_BehaviorHints";
+			public const string AgentMode_BehaviorHints_Help = "AgentMode_BehaviorHints_Help";
+			public const string AgentMode_BootstrapInstructions = "AgentMode_BootstrapInstructions";
+			public const string AgentMode_BootstrapInstructions_Help = "AgentMode_BootstrapInstructions_Help";
+			public const string AgentMode_Description = "AgentMode_Description";
+			public const string AgentMode_Description_Help = "AgentMode_Description_Help";
+			public const string AgentMode_DisplayName = "AgentMode_DisplayName";
+			public const string AgentMode_DisplayName_Help = "AgentMode_DisplayName_Help";
+			public const string AgentMode_ExampleUtterances = "AgentMode_ExampleUtterances";
+			public const string AgentMode_ExampleUtterances_Help = "AgentMode_ExampleUtterances_Help";
+			public const string AgentMode_HumanRoleHints = "AgentMode_HumanRoleHints";
+			public const string AgentMode_HumanRoleHints_Help = "AgentMode_HumanRoleHints_Help";
+			public const string AgentMode_Instructions = "AgentMode_Instructions";
+			public const string AgentMode_Instructions_Help = "AgentMode_Instructions_Help";
+			public const string AgentMode_IsDefault = "AgentMode_IsDefault";
+			public const string AgentMode_IsDefault_Help = "AgentMode_IsDefault_Help";
+			public const string AgentMode_Key = "AgentMode_Key";
+			public const string AgentMode_Key_Help = "AgentMode_Key_Help";
+			public const string AgentMode_PreloadDDRs = "AgentMode_PreloadDDRs";
+			public const string AgentMode_PreloadDDRs_Help = "AgentMode_PreloadDDRs_Help";
+			public const string AgentMode_RagScopeHints = "AgentMode_RagScopeHints";
+			public const string AgentMode_RagScopeHints_Help = "AgentMode_RagScopeHints_Help";
+			public const string AgentMode_ReferenceDdrs = "AgentMode_ReferenceDdrs";
+			public const string AgentMode_ReferenceDdrs_Help = "AgentMode_ReferenceDdrs_Help";
+			public const string AgentMode_Status = "AgentMode_Status";
+			public const string AgentMode_Status_Help = "AgentMode_Status_Help";
+			public const string AgentMode_StrongSignals = "AgentMode_StrongSignals";
+			public const string AgentMode_StrongSignals_Help = "AgentMode_StrongSignals_Help";
+			public const string AgentMode_ToolBoxes = "AgentMode_ToolBoxes";
+			public const string AgentMode_ToolBoxes_Help = "AgentMode_ToolBoxes_Help";
+			public const string AgentMode_ToolGroupHints = "AgentMode_ToolGroupHints";
+			public const string AgentMode_ToolGroupHints_Help = "AgentMode_ToolGroupHints_Help";
+			public const string AgentMode_Version = "AgentMode_Version";
+			public const string AgentMode_Version_Help = "AgentMode_Version_Help";
+			public const string AgentMode_WeakSignals = "AgentMode_WeakSignals";
+			public const string AgentMode_WeakSignals_Help = "AgentMode_WeakSignals_Help";
+			public const string AgentMode_WelcomeMessage = "AgentMode_WelcomeMessage";
+			public const string AgentMode_WelcomeMessage_Help = "AgentMode_WelcomeMessage_Help";
+			public const string AgentMode_WhenToUse = "AgentMode_WhenToUse";
+			public const string AgentMode_WhenToUse_Help = "AgentMode_WhenToUse_Help";
 			public const string AgentSession_Description = "AgentSession_Description";
 			public const string AgentSession_Help = "AgentSession_Help";
 			public const string AgentSession_Title = "AgentSession_Title";
@@ -738,10 +1029,15 @@ namespace LagoVista.AI.Models.Resources
 			public const string Common_Notes = "Common_Notes";
 			public const string Common_SelectCategory = "Common_SelectCategory";
 			public const string Common_Status_Aborted = "Common_Status_Aborted";
+			public const string Common_Status_Active = "Common_Status_Active";
 			public const string Common_Status_Completed = "Common_Status_Completed";
+			public const string Common_Status_Experimental = "Common_Status_Experimental";
 			public const string Common_Status_Failed = "Common_Status_Failed";
 			public const string Common_Status_New = "Common_Status_New";
 			public const string Common_Status_Pending = "Common_Status_Pending";
+			public const string ConfirmationStrictness_High = "ConfirmationStrictness_High";
+			public const string ConfirmationStrictness_Low = "ConfirmationStrictness_Low";
+			public const string ConfirmationStrictness_Normal = "ConfirmationStrictness_Normal";
 			public const string DDR_Chapter = "DDR_Chapter";
 			public const string DDR_Chapter_Description = "DDR_Chapter_Description";
 			public const string DDR_Chapter_Help = "DDR_Chapter_Help";
@@ -759,6 +1055,8 @@ namespace LagoVista.AI.Models.Resources
 			public const string Experiment_Description = "Experiment_Description";
 			public const string Experiment_Instructions = "Experiment_Instructions";
 			public const string Experiment_Title = "Experiment_Title";
+			public const string HumorLevel_Light = "HumorLevel_Light";
+			public const string HumorLevel_Off = "HumorLevel_Off";
 			public const string InputType_DataPoints = "InputType_DataPoints";
 			public const string InputType_Image = "InputType_Image";
 			public const string Label_Description = "Label_Description";
@@ -851,6 +1149,14 @@ namespace LagoVista.AI.Models.Resources
 			public const string OperationKind_Domain = "OperationKind_Domain";
 			public const string OperationKind_Image = "OperationKind_Image";
 			public const string OperationKind_Text = "OperationKind_Text";
+			public const string PersonaDefinition_ConfirmationStrictness = "PersonaDefinition_ConfirmationStrictness";
+			public const string PersonaDefinition_DisplayName = "PersonaDefinition_DisplayName";
+			public const string PersonaDefinition_HumorLevel = "PersonaDefinition_HumorLevel";
+			public const string PersonaDefinition_Notes = "PersonaDefinition_Notes";
+			public const string PersonaDefinition_ReflectionLevel = "PersonaDefinition_ReflectionLevel";
+			public const string PersonaDefinition_SuggestionStyle = "PersonaDefinition_SuggestionStyle";
+			public const string PersonaDefinition_ToneStyle = "PersonaDefinition_ToneStyle";
+			public const string PersonaDefinition_VerbosityLevel = "PersonaDefinition_VerbosityLevel";
 			public const string Preprocessor_ClassName = "Preprocessor_ClassName";
 			public const string Preprocessor_Description = "Preprocessor_Description";
 			public const string Preprocessor_Help = "Preprocessor_Help";
@@ -860,6 +1166,9 @@ namespace LagoVista.AI.Models.Resources
 			public const string PreprocessorSetting_Help = "PreprocessorSetting_Help";
 			public const string PreprocessorSetting_Title = "PreprocessorSetting_Title";
 			public const string PreprocessorSetting_Value = "PreprocessorSetting_Value";
+			public const string ReflectionLevel_Light = "ReflectionLevel_Light";
+			public const string ReflectionLevel_None = "ReflectionLevel_None";
+			public const string ReflectionLevel_Normal = "ReflectionLevel_Normal";
 			public const string SourceOrganization_AppId = "SourceOrganization_AppId";
 			public const string SourceOrganization_AppId_Help = "SourceOrganization_AppId_Help";
 			public const string SourceOrganization_Help = "SourceOrganization_Help";
@@ -883,6 +1192,13 @@ namespace LagoVista.AI.Models.Resources
 			public const string SourceOrganizationRepository_RepoPath = "SourceOrganizationRepository_RepoPath";
 			public const string SourceOrganizationRepository_RepoPath_Help = "SourceOrganizationRepository_RepoPath_Help";
 			public const string SourceOrganizationRepository_Title = "SourceOrganizationRepository_Title";
+			public const string SuggestionStyle_OfferOptions = "SuggestionStyle_OfferOptions";
+			public const string SuggestionStyle_Proactive = "SuggestionStyle_Proactive";
+			public const string SuggestionStyle_ReactiveOnly = "SuggestionStyle_ReactiveOnly";
+			public const string ToneStyle_Conversational = "ToneStyle_Conversational";
+			public const string ToneStyle_Direct = "ToneStyle_Direct";
+			public const string ToneStyle_Neutral = "ToneStyle_Neutral";
+			public const string ToneStyle_Warm = "ToneStyle_Warm";
 			public const string TrainingDataSet_Description = "TrainingDataSet_Description";
 			public const string TrainingDataSet_Help = "TrainingDataSet_Help";
 			public const string TrainingDataSet_Title = "TrainingDataSet_Title";
@@ -901,6 +1217,10 @@ namespace LagoVista.AI.Models.Resources
 			public const string VectorDatabase_Uri = "VectorDatabase_Uri";
 			public const string VectorDatabases_Title = "VectorDatabases_Title";
 			public const string VectorDB_LLMEmbeddingModelName = "VectorDB_LLMEmbeddingModelName";
+			public const string VerbosityLevel_Concise = "VerbosityLevel_Concise";
+			public const string VerbosityLevel_Normal = "VerbosityLevel_Normal";
+			public const string VerbosityLevel_Thorough = "VerbosityLevel_Thorough";
+			public const string VerbosityLevel_UltraConcise = "VerbosityLevel_UltraConcise";
 		}
 	}
 }

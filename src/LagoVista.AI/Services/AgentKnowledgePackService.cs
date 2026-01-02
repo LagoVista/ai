@@ -18,7 +18,7 @@ namespace LagoVista.AI.Services
     ///
     /// Responsibilities:
     /// - Load AgentContext
-    /// - Resolve AgentContextRoles and ModeKey
+    /// - Resolve AgentContextRole and ModeKey
     /// - Assemble and dedupe DDR identifiers and tool names
     /// - Resolve DDR consumption fields via IDdrConsumptionFieldProvider
     /// - Produce a ready-to-render AgentKnowledgePack

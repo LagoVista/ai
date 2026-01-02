@@ -78,12 +78,10 @@ namespace LagoVista.AI.Services.Tools
             existing.BehaviorHints = args["behavior_hints"]?.ToObject<string[]>() ?? Array.Empty<string>();
             existing.HumanRoleHints = args["human_role_hints"]?.ToObject<string[]>() ?? Array.Empty<string>();
             existing.AssociatedToolIds = args["associated_tool_ids"]?.ToObject<string[]>() ?? Array.Empty<string>();
-            existing.ToolGroupHints = args["tool_group_hints"]?.ToObject<string[]>() ?? Array.Empty<string>();
             existing.RagScopeHints = args["rag_scope_hints"]?.ToObject<string[]>() ?? Array.Empty<string>();
             existing.StrongSignals = args["strong_signals"]?.ToObject<string[]>() ?? Array.Empty<string>();
             existing.WeakSignals = args["weak_signals"]?.ToObject<string[]>() ?? Array.Empty<string>();
             existing.ExampleUtterances = args["example_utterances"]?.ToObject<string[]>() ?? Array.Empty<string>();
-            existing.Status = args.Value<string>("status")!;
             existing.Version = args.Value<string>("version")!;
             existing.IsDefault = args.Value<bool?>("is_default") ?? existing.IsDefault;
             await _agentContextManager.UpdateAgentContextAsync(agentContext, context.Org, context.User);
@@ -98,7 +96,6 @@ namespace LagoVista.AI.Services.Tools
                     display_name = summary.DisplayName,
                     description = summary.Description,
                     when_to_use = summary.WhenToUse,
-                    status = summary.Status,
                     version = summary.Version,
                     is_default = summary.IsDefault
                 },

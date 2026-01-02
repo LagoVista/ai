@@ -7,7 +7,7 @@ namespace LagoVista.AI.Models
     public class AgentToolExecutionContext
     {
         public AgentContext AgentContext { get; set; }
-        public AgentContextRoles Role { get; set; }
+        public AgentContextRole Role { get; set; }
         public AgentExecuteRequest Request { get; set; }
         public string SessionId { get; set; }
         public string CurrentTurnId { get; set; }

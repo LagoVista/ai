@@ -110,7 +110,6 @@ namespace LagoVista.AI
             services.AddSingleton<ITitleDescriptionReviewService, TitleDescriptionReviewService>();
 
             services.AddSingleton<ITitleDescriptionRefinementOrchestrator, TitleDescriptionRefinementOrchestrator>();
-            services.AddSingleton<IDdrInstructionsProvider, DdrInstructionsProvider>();
-        }
+         }
     }
 }

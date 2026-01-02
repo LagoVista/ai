@@ -109,7 +109,7 @@
 
 //        private sealed class FakeResponsesRequestBuilder : IResponsesRequestBuilder
 //        {
-//            public ResponsesApiRequest Build(AgentContextRoles conversationContext, AgentExecuteRequest executeRequest, string ragContextBlock, string toolUsageBlock)
+//            public ResponsesApiRequest Build(AgentContextRole conversationContext, AgentExecuteRequest executeRequest, string ragContextBlock, string toolUsageBlock)
 //            {
 //                // Minimal shape; the tests' fake handlers don't care about request payload.
 //                return new ResponsesApiRequest
@@ -167,9 +167,9 @@
 //            };
 //        }
 
-//        private static AgentContextRoles CreateConversationContext()
+//        private static AgentContextRole CreateConversationContext()
 //        {
-//            return new AgentContextRoles
+//            return new AgentContextRole
 //            {
 //                Id = "conv-ctx-1",
 //                Name = "Test Conversation Context",
@@ -187,7 +187,7 @@
 //                ModeKey = "TEST_MODE",
 //                Instruction = "Say hello to the world.",
 //                AgentContext = new EntityHeader { Id = "agent-1", Text = "Test Agent" },
-//                AgentContextRoles = new EntityHeader { Id = "conv-ctx-1", Text = "Test Conversation Context" }
+//                AgentContextRole = new EntityHeader { Id = "conv-ctx-1", Text = "Test Conversation Context" }
 //            };
 //        }
 
@@ -200,7 +200,7 @@
 //                User = new EntityHeader { Id = "user-1", Text = "User 1" },
 //                RagContextBlock = string.Empty,
 //                AgentContext = CreateAgentContext(),
-//                AgentContextRoles = CreateConversationContext(),
+//                AgentContextRole = CreateConversationContext(),
 //                Request = CreateExecuteRequest(),
 //                ThisTurn = new AgentSessionTurn { Id = "turn-1" }
 //            };

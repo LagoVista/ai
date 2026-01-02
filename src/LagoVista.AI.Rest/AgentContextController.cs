@@ -81,9 +81,17 @@ namespace LagoVista.AI.Rest
         }
 
         [HttpGet("/api/ai/agentcontext/role/factory")]
-        public DetailResponse<AgentContextRoles> CreateRole()
+        public DetailResponse<AgentContextRole> CreateRole()
         {
-            var result = DetailResponse<AgentContextRoles>.Create();
+            var result = DetailResponse<AgentContextRole>.Create();
+            return result;
+        }
+
+
+        [HttpGet("/api/ai/agentcontext/mode/factory")]
+        public DetailResponse<AgentMode> CreateMode()
+        {
+            var result = DetailResponse<AgentMode>.Create();
             return result;
         }
     }

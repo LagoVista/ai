@@ -74,7 +74,6 @@ try{
 
 		bool namesapceIsChanging = newNamespace != currentNamespace;
 		bool classIsChanging = namesapceIsChanging || newClass != currentClass;
-		 
 		//Close out current class if class is changing and there is a current class
 		if(classIsChanging && currentClass != "")
 		{

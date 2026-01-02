@@ -5,17 +5,12 @@
 using LagoVista.AI.Models.Resources;
 using LagoVista.Core;
 using LagoVista.Core.Attributes;
-using LagoVista.Core.Exceptions;
 using LagoVista.Core.Interfaces;
 using LagoVista.Core.Models;
 using LagoVista.Core.Models.UIMetaData;
-using LagoVista.Core.PlatformSupport;
 using LagoVista.Core.Validation;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
 
 namespace LagoVista.AI.Models
 {
@@ -66,9 +61,9 @@ namespace LagoVista.AI.Models
             ResourceType: typeof(AIResources))]
         public EntityHeader DefaultRole { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.AgentContext_Roles, HelpResource: AIResources.Names.AgentContext_Role_Description, FieldType: FieldTypes.ChildListInline, FactoryUrl: "/api/ai/agentcontext/role/factory",
+        [FormField(LabelResource: AIResources.Names.AgentContext_Roles, HelpResource: AIResources.Names.AgentContext_Role_Description, FieldType: FieldTypes.ChildList, FactoryUrl: "/api/ai/agentcontext/role/factory",
             ResourceType: typeof(AIResources))]
-        public List<AgentContextRoles> Roles { get; set; } = new List<AgentContextRoles>();
+        public List<AgentContextRole> Roles { get; set; } = new List<AgentContextRole>();
 
 
         [FormField(LabelResource: AIResources.Names.AgentContext_MaxTokenCount, HelpResource: AIResources.Names.AgentContext_MaxTokenCount_Help, FieldType: FieldTypes.Integer, ResourceType: typeof(AIResources))]
@@ -114,6 +109,8 @@ namespace LagoVista.AI.Models
         /// </summary>
         public string[] ToolGroupHints { get; set; } = Array.Empty<string>();
 
+        [FormField(LabelResource: AIResources.Names.AgentContext_Modes, HelpResource: AIResources.Names.AgentContext_Mode_Help, FieldType: FieldTypes.ChildList, FactoryUrl: "/api/ai/agentcontext/mode/factory",
+           ResourceType: typeof(AIResources))]
         public List<AgentMode> AgentModes { get; set; } = new List<AgentMode>();
 
         ISummaryData ISummaryFactory.CreateSummary()
@@ -171,6 +168,7 @@ namespace LagoVista.AI.Models
                 nameof(CompletionReservePercent),
                 nameof(DefaultRole),
                 nameof(Roles),
+                nameof(AgentModes),
             };
         }
 
@@ -185,7 +183,7 @@ namespace LagoVista.AI.Models
 
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.AgentContext_Role_Title, AIResources.Names.AgentContext_Role_Description, AIResources.Names.AgentContext_Role_Description, EntityDescriptionAttribute.EntityTypes.ChildObject, typeof(AIResources),
     FactoryUrl: "/api/ai/agentcontext/role/factory")]
-    public class AgentContextRoles : IFormDescriptor, IValidateable
+    public class AgentContextRole : IFormDescriptor, IValidateable
     {
         public string Id { get; set; } = Guid.NewGuid().ToId();
 
@@ -200,13 +198,13 @@ namespace LagoVista.AI.Models
             FieldType: FieldTypes.Decimal, IsRequired: true, ResourceType: typeof(AIResources))]
         public float Temperature { get; set; } = 0.5f;
 
-        [FormField(LabelResource: AIResources.Names.AgentContext_Role_Persona_Instructions, FieldType: FieldTypes.MultiLineText, IsRequired: true, ResourceType: typeof(AIResources))]
+        [FormField(LabelResource: AIResources.Names.AgentContext_Role_Persona_Instructions, FieldType: FieldTypes.MultiLineText, IsRequired: false, ResourceType: typeof(AIResources))]
         public string PersonaInstructions { get; set; }
 
         /// <summary>
         /// Optional welcome message shown when entering this mode.
         /// </summary>
-        [FormField(LabelResource: AIResources.Names.AgentContext_Role_WelcomeMessage, FieldType: FieldTypes.MultiLineText, IsRequired: true, ResourceType: typeof(AIResources))]
+        [FormField(LabelResource: AIResources.Names.AgentContext_Role_WelcomeMessage, FieldType: FieldTypes.MultiLineText, IsRequired: false, ResourceType: typeof(AIResources))]
         public string WelcomeMessage { get; set; }
 
         /// <summary>

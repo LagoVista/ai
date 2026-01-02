@@ -314,7 +314,7 @@
 //        }
 
 //        private static AgentContext BuildAgentContext(
-//            IEnumerable<AgentContextRoles> conversationContexts = null,
+//            IEnumerable<AgentContextRole> conversationContexts = null,
 //            IEnumerable<AgentMode> modes = null,
 //            string welcomeAgent = null,
 //            IEnumerable<string> agentInstructionDdrs = null,
@@ -328,7 +328,7 @@
 //                AgentInstructionDdrs = (agentInstructionDdrs ?? Array.Empty<string>()).ToArray(),
 //                ReferenceDdrs = (referenceDdrs ?? Array.Empty<string>()).ToArray(),
 //                AssociatedToolIds = (toolIds ?? Array.Empty<string>()).ToArray(),
-//                ConversationContexts = conversationContexts == null ? new List<AgentContextRoles>() : conversationContexts.ToList(),
+//                ConversationContexts = conversationContexts == null ? new List<AgentContextRole>() : conversationContexts.ToList(),
 //                AgentModes = modes == null ? new List<AgentMode>() : modes.ToList(),
 //                DefaultRole = defaultConversationId == null
 //                    ? null
@@ -336,14 +336,14 @@
 //            };
 //        }
 
-//        private static AgentContextRoles BuildConversationContext(
+//        private static AgentContextRole BuildConversationContext(
 //            string id,
 //            string welcome = null,
 //            IEnumerable<string> instructionDdrs = null,
 //            IEnumerable<string> referenceDdrs = null,
 //            IEnumerable<string> toolIds = null)
 //        {
-//            return new AgentContextRoles
+//            return new AgentContextRole
 //            {
 //                Id = id,
 //                Name = id,

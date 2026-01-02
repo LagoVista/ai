@@ -291,7 +291,7 @@ namespace LagoVista.AI.Services.Pipeline
         {
             var result = new InvokeResult();
 
-            // You locked this: AgentContext/AgentContextRoles should be null pre and post.
+            // You locked this: AgentContext/AgentContextRole should be null pre and post.
             if (ctx.AgentContext != null)
                 result.Errors.Add(new ErrorMessage("ClientToolContinuationResolver PRE: ctx.AgentContext must be null."));
 

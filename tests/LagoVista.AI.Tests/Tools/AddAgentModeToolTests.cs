@@ -94,7 +94,7 @@ namespace LagoVista.AI.Tests.Tools
             Assert.That(capturedMode.Description, Is.EqualTo("Helps author and refine DDR specs."));
             Assert.That(capturedMode.WhenToUse, Is.EqualTo("Use when working on DDRs."));
             Assert.That(capturedMode.WelcomeMessage, Is.EqualTo("You are now in DDR Authoring mode."));
-            Assert.That(capturedMode.Status, Is.EqualTo("active"));
+            Assert.That(capturedMode.ModeStatus, Is.EqualTo("active"));
             Assert.That(capturedMode.Version, Is.EqualTo("v1.0"));
             Assert.That(capturedMode.IsDefault, Is.False);
 
@@ -107,7 +107,6 @@ namespace LagoVista.AI.Tests.Tools
             Assert.That(capturedMode.BehaviorHints, Is.EqualTo(new[] { "preferStructuredOutput" }));
             Assert.That(capturedMode.HumanRoleHints, Is.EqualTo(new[] { "The human is the DDR owner." }));
             Assert.That(capturedMode.AssociatedToolIds, Is.EqualTo(new[] { "tul-001.code_search", "tul-002.ddr_lookup" }));
-            Assert.That(capturedMode.ToolGroupHints, Is.EqualTo(new[] { "authoring" }));
             Assert.That(capturedMode.RagScopeHints, Is.EqualTo(new[] { "boost:DDR_DDRs" }));
             Assert.That(capturedMode.StrongSignals, Is.EqualTo(new[] { "DDR", "Design Decision Record" }));
             Assert.That(capturedMode.WeakSignals, Is.EqualTo(new[] { "requirements doc" }));
@@ -168,7 +167,7 @@ namespace LagoVista.AI.Tests.Tools
             Assert.That(capturedMode.DisplayName, Is.EqualTo("General"));
             Assert.That(capturedMode.Description, Is.EqualTo("General purpose assistant."));
             Assert.That(capturedMode.WhenToUse, Is.EqualTo("Use for everyday questions."));
-            Assert.That(capturedMode.Status, Is.EqualTo("active"));
+            Assert.That(capturedMode.ModeStatus, Is.EqualTo("active"));
             Assert.That(capturedMode.Version, Is.EqualTo("v1"));
             Assert.That(capturedMode.IsDefault, Is.True);
 
@@ -177,7 +176,6 @@ namespace LagoVista.AI.Tests.Tools
             Assert.That(capturedMode.BehaviorHints, Is.Empty);
             Assert.That(capturedMode.HumanRoleHints, Is.Empty);
             Assert.That(capturedMode.AssociatedToolIds, Is.Empty);
-            Assert.That(capturedMode.ToolGroupHints, Is.Empty);
             Assert.That(capturedMode.RagScopeHints, Is.Empty);
             Assert.That(capturedMode.StrongSignals, Is.Empty);
             Assert.That(capturedMode.WeakSignals, Is.Empty);

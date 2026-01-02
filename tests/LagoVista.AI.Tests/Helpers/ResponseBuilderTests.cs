@@ -31,7 +31,7 @@ namespace LagoVista.AI.Tests.Helpers
             public ResponsePayload ResponsePayload { get; set; }
 
             public AgentContext AgentContext { get; set; }
-            public AgentContextRoles Role { get; set; }
+            public AgentContextRole Role { get; set; }
 
             public PromptKnowledgeProvider PromptKnowledgeProvider { get; set; }
             public CompositionTrace Trace { get; set; }
@@ -48,7 +48,7 @@ namespace LagoVista.AI.Tests.Helpers
 
             public AgentToolExecutionContext ToToolContext() => new AgentToolExecutionContext();
 
-            public void AttachAgentContext(AgentContext context, AgentContextRoles conversationContext)
+            public void AttachAgentContext(AgentContext context, AgentContextRole conversationContext)
             {
                 AgentContext = context;
                 Role = conversationContext;

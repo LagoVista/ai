@@ -86,7 +86,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 return result;
             }
 
-            // Optional: **Status:** line
+            // Optional: **ModeStatus:** line
             var status = TryExtractMetaValue(lines, "Status");
 
             var description = new DdrDescription
@@ -115,7 +115,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
         private static string TryExtractMetaValue(string[] lines, string label)
         {
             // Looks for lines like:  "**Title:** DocId Generation Strategy"
-            // or                    "**Status:** Accepted"
+            // or                    "**ModeStatus:** Accepted"
             var pattern = $"^\\s*\\*\\*{label}:\\*\\*\\s*(?<value>.+)\\s*$";
             var regex = new Regex(pattern);
 
