@@ -61,7 +61,7 @@ namespace LagoVista.AI.Models
             ResourceType: typeof(AIResources))]
         public EntityHeader DefaultRole { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.AgentContext_Roles, HelpResource: AIResources.Names.AgentContext_Role_Description, FieldType: FieldTypes.ChildList, FactoryUrl: "/api/ai/agentcontext/role/factory",
+        [FormField(LabelResource: AIResources.Names.AgentContext_Roles, HelpResource: AIResources.Names.AgentContext_Role_Description,AllowAddChild:true, CanAddRows: true, FieldType: FieldTypes.ChildList, FactoryUrl: "/api/ai/agentcontext/role/factory",
             ResourceType: typeof(AIResources))]
         public List<AgentContextRole> Roles { get; set; } = new List<AgentContextRole>();
 
@@ -109,7 +109,7 @@ namespace LagoVista.AI.Models
         /// </summary>
         public string[] ToolGroupHints { get; set; } = Array.Empty<string>();
 
-        [FormField(LabelResource: AIResources.Names.AgentContext_Modes, HelpResource: AIResources.Names.AgentContext_Mode_Help, FieldType: FieldTypes.ChildList, FactoryUrl: "/api/ai/agentcontext/mode/factory",
+        [FormField(LabelResource: AIResources.Names.AgentContext_Modes, HelpResource: AIResources.Names.AgentContext_Mode_Help, ChildListDisplayMember: nameof(AgentMode.DisplayName), AllowAddChild: true, CanAddRows: true, FieldType: FieldTypes.ChildList, FactoryUrl: "/api/ai/agentcontext/mode/factory",
            ResourceType: typeof(AIResources))]
         public List<AgentMode> AgentModes { get; set; } = new List<AgentMode>();
 
@@ -177,69 +177,6 @@ namespace LagoVista.AI.Models
             return new List<string>()
             {
                 nameof(Description)
-            };
-        }
-    }
-
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.AgentContext_Role_Title, AIResources.Names.AgentContext_Role_Description, AIResources.Names.AgentContext_Role_Description, EntityDescriptionAttribute.EntityTypes.ChildObject, typeof(AIResources),
-    FactoryUrl: "/api/ai/agentcontext/role/factory")]
-    public class AgentContextRole : IFormDescriptor, IValidateable
-    {
-        public string Id { get; set; } = Guid.NewGuid().ToId();
-
-        [FormField(LabelResource: AIResources.Names.Common_Name, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
-        public string Name { get; set; }
-
-        [FormField(LabelResource: AIResources.Names.AgentContext_Role_ModelName, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
-        public string ModelName { get; set; } = "gpt-5.2";
-
-
-        [FormField(LabelResource: AIResources.Names.AgentContext_Role_Temperature, HelpResource: AIResources.Names.AgentContext_Role_Temperature_Help,
-            FieldType: FieldTypes.Decimal, IsRequired: true, ResourceType: typeof(AIResources))]
-        public float Temperature { get; set; } = 0.5f;
-
-        [FormField(LabelResource: AIResources.Names.AgentContext_Role_Persona_Instructions, FieldType: FieldTypes.MultiLineText, IsRequired: false, ResourceType: typeof(AIResources))]
-        public string PersonaInstructions { get; set; }
-
-        /// <summary>
-        /// Optional welcome message shown when entering this mode.
-        /// </summary>
-        [FormField(LabelResource: AIResources.Names.AgentContext_Role_WelcomeMessage, FieldType: FieldTypes.MultiLineText, IsRequired: false, ResourceType: typeof(AIResources))]
-        public string WelcomeMessage { get; set; }
-
-        /// <summary>
-        /// Mode-specific behavior instructions for the LLM when this
-        /// mode is active (go into the Active Mode Behavior Block).
-        /// </summary>
-        public string[] AgentInstructionDdrs { get; set; } = Array.Empty<string>();
-
-        /// <summary>
-        /// DDR's that produce patterns, practices and standards that can be used when the LLM reasons.
-        /// </summary>
-        public string[] ReferenceDdrs { get; set; } = Array.Empty<string>();
-
-        /// <summary>
-        /// Tool IDs that are enabled when this mode is active.
-        /// </summary>
-        public string[] AssociatedToolIds { get; set; } = Array.Empty<string>();
-
-
-        public List<EntityHeader> ToolBoxes { get; set; } = new List<EntityHeader>();
-
-        public EntityHeader ToEntityHeader()
-        {
-            return EntityHeader.Create(Id, Name);
-        }
-
-        public List<string> GetFormFields()
-        {
-            return new List<string>()
-            {
-                nameof(Name),
-                nameof(ModelName),
-                nameof(Temperature),
-                nameof(WelcomeMessage),
-                nameof(PersonaInstructions),
             };
         }
     }

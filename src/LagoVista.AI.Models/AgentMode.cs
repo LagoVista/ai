@@ -54,7 +54,7 @@ namespace LagoVista.AI.Models
         [FormField(LabelResource: AIResources.Names.AgentMode_Description, HelpResource: AIResources.Names.AgentMode_Description_Help, FieldType: FieldTypes.MultiLineText, IsRequired: true, ResourceType: typeof(AIResources))]
         public string Description { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.AgentMode_WhenToUse, HelpResource: AIResources.Names.AgentMode_WhenToUse_Help, FieldType: FieldTypes.Text, ResourceType: typeof(AIResources))]
+        [FormField(LabelResource: AIResources.Names.AgentMode_WhenToUse, HelpResource: AIResources.Names.AgentMode_WhenToUse_Help, FieldType: FieldTypes.MultiLineText, ResourceType: typeof(AIResources))]
         public string WhenToUse { get; set; }
         [FormField(LabelResource: AIResources.Names.Common_Icon, FieldType: FieldTypes.Icon, ResourceType: typeof(AIResources))]
         public string Icon { get; set; } = "icon-ae-database-3";
