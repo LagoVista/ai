@@ -37,13 +37,13 @@ namespace LagoVista.AI.Services.OpenAI
             if (instruction == null) instruction = string.Empty;
 
 
-            var conversationCtx = agentContext.DefaultRole == null ? agentContext.Roles.FirstOrDefault() : agentContext.Roles.SingleOrDefault(ctx => ctx.Id == agentContext.DefaultRole.Id);
+            var role = agentContext.DefaultRole == null ? agentContext.Roles.FirstOrDefault() : agentContext.Roles.SingleOrDefault(ctx => ctx.Id == agentContext.DefaultRole.Id);
 
-            if (conversationCtx == null)
+            if (role == null)
             {
                 _adminLogger.AddError(
                     "[OpenAISessionNamingService_GenerateNameAsync]",
-                    "AgentContext missing DefaultConversationContext.");
+                    "AgentContext missing DefaultRole.");
 
                 return TruncateFallback(instruction);
             }

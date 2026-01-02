@@ -28,13 +28,13 @@ namespace LagoVista.AI.Services.Pipeline
         {
             var agentContext = await _contextManager.GetAgentContextWithSecretsAsync(ctx.Session.AgentContext.Id, ctx.Envelope.Org, ctx.Envelope.User);
 
-            var conversationContext = agentContext.Roles.SingleOrDefault(cc => cc.Id == ctx.Session.Role.Id);
-            if(conversationContext == null)
+            var role = agentContext.Roles.SingleOrDefault(cc => cc.Id == ctx.Session.Role.Id);
+            if(role == null)
             {
                 return InvokeResult<IAgentPipelineContext>.FromError("Conversation Context specified in session not found in Agent Context.", "AGENT_CTX_LOADER_CONVERSATION_CONTEXT_NOT_FOUND_IN_AGENT_CONTEXT");
             }
 
-            ctx.AttachAgentContext(agentContext, conversationContext);
+            ctx.AttachAgentContext(agentContext, role);
          
             return InvokeResult<IAgentPipelineContext>.Create(ctx);  
         }

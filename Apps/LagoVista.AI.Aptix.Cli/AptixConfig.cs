@@ -8,9 +8,9 @@ namespace LagoVista.AI.Aptix.Cli
 
         public string AgentContextName { get; set; }
 
-        public string ConversationContextId { get; set; }
+        public string RoleId { get; set; }
 
-        public string ConversationContextName { get; set; }
+        public string RoleName { get; set; }
 
         public string DefaultWorkspaceId { get; set; }
 

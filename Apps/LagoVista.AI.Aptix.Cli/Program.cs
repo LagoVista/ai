@@ -234,7 +234,7 @@ namespace LagoVista.AI.Aptix.Cli
             var question = string.Join(" ", cleanedArgs);
 
             var agentContext = EntityHeader.Create(config.AgentContextId, config.AgentContextName);
-            var conversationContext = EntityHeader.Create(config.ConversationContextId, config.ConversationContextName);
+            var role = EntityHeader.Create(config.RoleId, config.RoleName);
 
             var envelope = new AgentRequestEnvelope
             {
@@ -243,7 +243,7 @@ namespace LagoVista.AI.Aptix.Cli
                 PreviousTurnId = null,
                 OperationKind = EntityHeader<OperationKinds>.Create(OperationKinds.Text),
                 AgentContext = agentContext,
-                ConversationContext = conversationContext,
+                Role = role,
                 WorkspaceId = config.DefaultWorkspaceId,
                 Repo = config.DefaultRepo,
                 Language = config.DefaultLanguage,

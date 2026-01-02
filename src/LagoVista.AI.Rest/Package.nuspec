@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>LagoVista.AI.Rest</id>
-    <version>3.0.3151.1034</version>
+    <version>3.0.3151.1807</version>
     <authors>Software Logistics, LLC</authors>
     <owners>Software Logistics, LLC</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
@@ -12,14 +12,14 @@
     <copyright>Copyright Software Logistics - 2026</copyright>
     <tags>LagoVista HomeAutomation IoT AI Machine Learning</tags>
     <icon>LagoVistaIcon.png</icon>
-    <releaseNotes>Build Date: 1/1/2026 3:34:02 PM UTC</releaseNotes>
+    <releaseNotes>Build Date: 1/1/2026 11:07:30 PM UTC</releaseNotes>
     <repository url="https://www.github.com/lagovista" type="git" branch="master"></repository>
     <dependencies>
       <group targetFramework="net9.0">
-        <dependency id="LagoVista.IoT.Web.Common" version="3.0.3150.1706" />
-        <dependency id="LagoVista.UserAdmin" version="3.0.3150.1706" />
+        <dependency id="LagoVista.IoT.Web.Common" version="3.0.3151.1130" />
+        <dependency id="LagoVista.UserAdmin" version="3.0.3151.1130" />
         <dependency id="Microsoft.ML.OnnxRuntime" version="1.22.1" />
-        <dependency id="LagoVista.AI" version="3.0.3151.1034" />
+        <dependency id="LagoVista.AI" version="3.0.3151.1807" />
       </group>
     </dependencies>
   </metadata>

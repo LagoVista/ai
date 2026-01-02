@@ -172,7 +172,7 @@ namespace LagoVista.AI.Services.Pipeline
             {
                 case AgentPipelineContextTypes.Initial:
                     if (!String.IsNullOrEmpty(ctx.Envelope?.RoleId) && String.IsNullOrEmpty(ctx.Envelope?.AgentContextId))
-                        result.Errors.Add(new ErrorMessage("ConversationContextId must be empty when AgentContextId is not provided."));
+                        result.Errors.Add(new ErrorMessage("RoleId must be empty when AgentContextId is not provided."));
 
                     if (step < PipelineSteps.AgentSessionCreator && !postStep)
                     {
@@ -282,7 +282,7 @@ namespace LagoVista.AI.Services.Pipeline
                 result.Errors.Add(new ErrorMessage("AgentContextResolver POST: ctx.AgentContext must be populated."));
 
             if (ctx.Role == null)
-                result.Errors.Add(new ErrorMessage("AgentContextResolver POST: ctx.ConversationContext must be populated."));
+                result.Errors.Add(new ErrorMessage("AgentContextResolver POST: ctx.Role must be populated."));
 
             return result;
         }
@@ -296,7 +296,7 @@ namespace LagoVista.AI.Services.Pipeline
                 result.Errors.Add(new ErrorMessage("ClientToolContinuationResolver PRE: ctx.AgentContext must be null."));
 
             if (ctx.Role != null)
-                result.Errors.Add(new ErrorMessage("ClientToolContinuationResolver PRE: ctx.ConversationContext must be null."));
+                result.Errors.Add(new ErrorMessage("ClientToolContinuationResolver PRE: ctx.Role must be null."));
 
             if (ctx.Session == null)
                 result.Errors.Add(new ErrorMessage("ClientToolContinuationResolver PRE: ctx.Session must be populated."));
@@ -318,7 +318,7 @@ namespace LagoVista.AI.Services.Pipeline
                 result.Errors.Add(new ErrorMessage("ClientToolContinuationResolver POST: ctx.AgentContext must be null."));
 
             if (ctx.Role != null)
-                result.Errors.Add(new ErrorMessage("ClientToolContinuationResolver POST: ctx.ConversationContext must be null."));
+                result.Errors.Add(new ErrorMessage("ClientToolContinuationResolver POST: ctx.Role must be null."));
 
             if (ctx.Session == null)
                 result.Errors.Add(new ErrorMessage("ClientToolContinuationResolver POST: ctx.Session must be populated."));
@@ -356,7 +356,7 @@ namespace LagoVista.AI.Services.Pipeline
                 result.Errors.Add(new ErrorMessage("AgentSessionCreator PRE: ctx.AgentContext must be populated."));
 
             if (ctx.Role == null)
-                result.Errors.Add(new ErrorMessage("AgentSessionCreator PRE: ctx.ConversationContext must be populated."));
+                result.Errors.Add(new ErrorMessage("AgentSessionCreator PRE: ctx.Role must be populated."));
 
             if (ctx.Session != null)
                 result.Errors.Add(new ErrorMessage("AgentSessionCreator PRE: ctx.Session must be null."));
@@ -407,7 +407,7 @@ namespace LagoVista.AI.Services.Pipeline
                 result.Errors.Add(new ErrorMessage("AgentContextLoader POST: ctx.AgentContext must be populated."));
 
             if (ctx.Role == null)
-                result.Errors.Add(new ErrorMessage("AgentContextLoader POST: ctx.ConversationContext must be populated."));
+                result.Errors.Add(new ErrorMessage("AgentContextLoader POST: ctx.Role must be populated."));
 
             return result;
         }
@@ -426,7 +426,7 @@ namespace LagoVista.AI.Services.Pipeline
                 result.Errors.Add(new ErrorMessage("PromptContentProvider PRE: ctx.AgentContext must be populated."));
 
             if (ctx.Role == null)
-                result.Errors.Add(new ErrorMessage("PromptContentProvider PRE: ctx.ConversationContext must be populated."));
+                result.Errors.Add(new ErrorMessage("PromptContentProvider PRE: ctx.Role must be populated."));
 
             // If tool continuation, ToolCallManifest must be non-null.
             if (ctx.ResponseType == ResponseTypes.ToolContinuation && ctx.PromptKnowledgeProvider?.ToolCallManifest == null)
@@ -455,7 +455,7 @@ namespace LagoVista.AI.Services.Pipeline
                 result.Errors.Add(new ErrorMessage("Reasoner PRE: ctx.AgentContext must be populated."));
 
             if (ctx.Role == null)
-                result.Errors.Add(new ErrorMessage("Reasoner PRE: ctx.ConversationContext must be populated."));
+                result.Errors.Add(new ErrorMessage("Reasoner PRE: ctx.Role must be populated."));
 
             if (ctx.PromptKnowledgeProvider == null)
                 result.Errors.Add(new ErrorMessage("Reasoner PRE: ctx.PromptContentProvider must be populated."));

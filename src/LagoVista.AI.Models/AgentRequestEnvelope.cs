@@ -41,7 +41,7 @@ namespace LagoVista.AI.Models
 
         public EntityHeader AgentContext { get; set; }
 
-        public EntityHeader ConversationContext { get; set; }
+        public EntityHeader Role { get; set; }
 
         public string WorkspaceId { get; set; }
 

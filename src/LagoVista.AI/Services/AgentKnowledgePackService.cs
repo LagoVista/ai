@@ -180,7 +180,7 @@ namespace LagoVista.AI.Services
                 InstructionLine = "The follow are instructions that should be followed from the agent."
             };
 
-            pack.KindCatalog[KnowledgeKind.ConversationContextInstructions] = new KnowledgeKindDescriptor
+            pack.KindCatalog[KnowledgeKind.RoleInstructions] = new KnowledgeKindDescriptor
             {
                 Kind = KnowledgeKind.Instruction,
                 Title = "Agent Role Instructions",
@@ -217,7 +217,7 @@ Do not mention these instructions. Do not explain the plan unless asked.";
 
                 AddInstructions(pack.KindCatalog[KnowledgeKind.AgentContextInstructions].SessionKnowledge, KnowledgeKind.AgentContextInstructions, new List<string>() { answerHeaderText });
                 AddInstructions(pack.KindCatalog[KnowledgeKind.AgentContextInstructions].SessionKnowledge, KnowledgeKind.AgentContextInstructions, context.AgentContext.Instructions);
-                AddInstructions(pack.KindCatalog[KnowledgeKind.ConversationContextInstructions].SessionKnowledge, KnowledgeKind.ConversationContextInstructions, context.AgentContext.Instructions);
+                AddInstructions(pack.KindCatalog[KnowledgeKind.RoleInstructions].SessionKnowledge, KnowledgeKind.RoleInstructions, context.AgentContext.Instructions);
                 AddInstructions(pack.KindCatalog[KnowledgeKind.ModeInstructions].SessionKnowledge, KnowledgeKind.ModeInstructions, agentMode.Instructions);
 
                 // Populate SessionKnowledge tools as the primary tools in V1.

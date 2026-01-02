@@ -55,18 +55,18 @@ namespace LagoVista.AI.Services.Pipeline
             if (string.IsNullOrWhiteSpace(roleId))
             {
                 return InvokeResult<IAgentPipelineContext>.FromError(
-                "ConversationContextId not found.",
+                "RoleId not found.",
                 "AGENT_CTX_RESOLVER_CONVERSATION_CONTEXT_ID_NOT_AVAILABLE");
             }
 
-            var conversationContext = agentContext.Roles.FirstOrDefault(ctx => ctx.Id == roleId); 
-            if (conversationContext == null)
+            var role = agentContext.Roles.FirstOrDefault(ctx => ctx.Id == roleId); 
+            if (role == null)
             {
                 return InvokeResult<IAgentPipelineContext>.FromError(
-                    "ConversationContext not found.",
+                    "Role not found.",
                     "AGENT_CTX_RESOLVER_CONVERSATION_CONTEXT_NOT_FOUND");
             }
-            ctx.AttachAgentContext(agentContext, conversationContext);
+            ctx.AttachAgentContext(agentContext, role);
 
             return InvokeResult<IAgentPipelineContext>.Create(ctx);
         }

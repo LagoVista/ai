@@ -66,7 +66,7 @@ namespace LagoVista.AI.Models
             ResourceType: typeof(AIResources))]
         public EntityHeader DefaultRole { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.AgentContext_Roles, HelpResource: AIResources.Names.AgentContext_Role_Description, FieldType: FieldTypes.ChildListInline, FactoryUrl: "/api/ai/agent/conversation/context/factory",
+        [FormField(LabelResource: AIResources.Names.AgentContext_Roles, HelpResource: AIResources.Names.AgentContext_Role_Description, FieldType: FieldTypes.ChildListInline, FactoryUrl: "/api/ai/agentcontext/role/factory",
             ResourceType: typeof(AIResources))]
         public List<AgentContextRoles> Roles { get; set; } = new List<AgentContextRoles>();
 
@@ -184,7 +184,7 @@ namespace LagoVista.AI.Models
     }
 
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.AgentContext_Role_Title, AIResources.Names.AgentContext_Role_Description, AIResources.Names.AgentContext_Role_Description, EntityDescriptionAttribute.EntityTypes.ChildObject, typeof(AIResources),
-    FactoryUrl: "/api/ai/agent/conversation/context/factory")]
+    FactoryUrl: "/api/ai/agentcontext/role/factory")]
     public class AgentContextRoles : IFormDescriptor, IValidateable
     {
         public string Id { get; set; } = Guid.NewGuid().ToId();

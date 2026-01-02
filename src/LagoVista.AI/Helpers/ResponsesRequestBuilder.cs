@@ -37,10 +37,6 @@ namespace LagoVista.AI.Helpers
         /// Build the /responses request object as a strongly-typed DTO.
         /// The caller can serialize this with Json.NET and POST it to the API.
         /// </summary>
-        /// <param name="conversationContext">The reasoning profile / boot prompt for this conversation.</param>
-        /// <param name="request">The agent execute request from the client.</param>
-        /// <param name="ragContextBlock">The pre-formatted RAG context block (may be null or empty).</param>
-        /// <param name="toolUsageMetadataBlock">LLM-facing usage metadata block containing detailed instructions for all Aptix tools (may be null or empty).</param>
         /// <returns>ResponsesApiRequest representing the body for the /responses call.</returns>
         public Task<InvokeResult<ResponsesApiRequest>> BuildAsync(IAgentPipelineContext ctx)
         {

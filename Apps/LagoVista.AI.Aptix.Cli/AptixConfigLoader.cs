@@ -29,9 +29,9 @@ namespace LagoVista.AI.Aptix.Cli
             }
 
             if (String.IsNullOrWhiteSpace(config.AgentContextId) ||
-                String.IsNullOrWhiteSpace(config.ConversationContextId))
+                String.IsNullOrWhiteSpace(config.RoleId))
             {
-                Console.WriteLine("Aptix config is missing 'agentContextId' or 'conversationContextId'.");
+                Console.WriteLine("Aptix config is missing 'agentContextId' or 'roleId'.");
                 return null;
             }
 

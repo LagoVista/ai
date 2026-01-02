@@ -80,8 +80,8 @@ namespace LagoVista.AI.Rest
             return _agentContextManager.UpdateAgentContextAsync(ctx, OrgEntityHeader, UserEntityHeader);
         }
 
-        [HttpGet("/api/ai/agent/conversation/context/factory")]
-        public DetailResponse<AgentContextRoles> CreateConversationContext()
+        [HttpGet("/api/ai/agentcontext/role/factory")]
+        public DetailResponse<AgentContextRoles> CreateRole()
         {
             var result = DetailResponse<AgentContextRoles>.Create();
             return result;
