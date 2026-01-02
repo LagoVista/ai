@@ -151,7 +151,7 @@ namespace LagoVista.AI.Rag.Services
                 }
             }
 
-            // Populate Notes from warnings so the orchestrator/catalog can store
+            // Populate AdditionalConfiguration from warnings so the orchestrator/catalog can store
             // a single human-readable string when appropriate.
             if (final.Warnings.Count > 0)
             {

@@ -241,7 +241,7 @@ namespace LagoVista.AI.Rag.Tests
             Assert.That(result.Warnings[0], Does.Contain("Field X may be ambiguous"));
             Assert.That(result.Warnings[1], Does.Contain("Consider reviewing the domain description"));
 
-            // Notes should be a joined summary
+            // AdditionalConfiguration should be a joined summary
             Assert.That(result.Notes, Is.Not.Null.And.Not.Empty);
             Assert.That(result.Notes, Does.Contain("Field X may be ambiguous"));
         }

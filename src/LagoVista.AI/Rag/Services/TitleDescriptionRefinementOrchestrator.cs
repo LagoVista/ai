@@ -608,7 +608,7 @@ namespace LagoVista.AI.Rag.Services
         /// - Building a system prompt,
         /// - Building a compact JSON payload from the inputs and context,
         /// - Calling IStructuredTextLlmService,
-        /// - Applying guard rails and enrichment (HasChanges, RequiresAttention, Notes, etc.).
+        /// - Applying guard rails and enrichment (HasChanges, RequiresAttention, AdditionalConfiguration, etc.).
         /// </summary>
         private async Task<TitleDescriptionReviewResult> ReviewAsync(
             SummaryObjectKind kind,
@@ -731,7 +731,7 @@ namespace LagoVista.AI.Rag.Services
                 }
             }
 
-            // Populate Notes from warnings so the catalog can store
+            // Populate AdditionalConfiguration from warnings so the catalog can store
             // a single human-readable string when appropriate.
             if (final.Warnings.Count > 0)
             {

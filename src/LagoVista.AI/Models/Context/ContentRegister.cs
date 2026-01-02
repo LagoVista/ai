@@ -8,7 +8,7 @@ namespace LagoVista.AI.Models.Context
     /// <summary>
     /// AGN-030: A named container within the PromptKnowledgeProvider that holds an ordered set of line items.
     ///
-    /// Notes:
+    /// AdditionalConfiguration:
     /// - A register declares exactly one ContextClassification (Session or Consumable).
     /// - The register is primarily a state container; business logic should live elsewhere.
     /// </summary>

@@ -96,7 +96,7 @@ try{
 		}
 
 		if(classIsChanging)
-		{
+			{
 			currentClass = newClass;
 			WriteLine(string.Format("\tpublic class {0}", currentClass));
 			WriteLine("\t{");

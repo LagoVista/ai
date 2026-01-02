@@ -80,7 +80,6 @@ namespace LagoVista.AI
 
             services.AddSingleton<IModelMetadataSource, RoslynModelMetadataSource>();
 
-            services.AddSingleton<IAgentToolBoxManager, AgentToolBoxManager>();
             services.AddSingleton<IIndexIdServices, IndexIdServices>();
             services.AddSingleton<IIngestionConfigProvider, JsonIngestionConfigProvider>();
             services.AddSingleton<IIndexFileContextBuilder, IndexFileContextBuilder>();

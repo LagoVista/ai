@@ -190,7 +190,7 @@ namespace LagoVista.AI.Rest
         }
 
         /// <summary>
-        /// Model - Create new Notes
+        /// Model - Create new AdditionalConfiguration
         /// </summary>
         /// <returns></returns>
         [HttpGet("/api/ml/model/note/factory")]

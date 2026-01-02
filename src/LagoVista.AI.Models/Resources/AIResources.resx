@@ -775,8 +775,8 @@
   <data name="PersonaDefinition_HumorLevel" xml:space="preserve">
     <value>Humor</value>
   </data>
-  <data name="PersonaDefinition_Notes" xml:space="preserve">
-    <value>Notes</value>
+  <data name="PersonaDefinition_AdditionalConfiguration" xml:space="preserve">
+    <value>Additional Configuration</value>
   </data>
   <data name="ToneStyle_Neutral" xml:space="preserve">
     <value>Neutral</value>
@@ -993,5 +993,83 @@
   </data>
   <data name="AgentMode_IsDefault_Help" xml:space="preserve">
     <value>Indicates whether this mode is the default when no explicit mode is selected.</value>
+  </data>
+  <data name="AgentPersonaDefinition_Title" xml:space="preserve">
+    <value>Agent Persona Definition</value>
+  </data>
+  <data name="AgentPersonaDefinition_Description" xml:space="preserve">
+    <value>Defines a user-selectable conversational persona configuration.</value>
+  </data>
+  <data name="AgentPersonaDefinition_Help" xml:space="preserve">
+    <value>Defines a user-selectable conversational persona configuration.</value>
+  </data>
+  <data name="PersonaDefinition_AssumptionTolerance" xml:space="preserve">
+    <value>Assumption Tolerance</value>
+  </data>
+  <data name="PersonaDefinition_ChallengeLevel" xml:space="preserve">
+    <value>Challenge Level</value>
+  </data>
+  <data name="ChallengeLevel_None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="ChallengeLevel_Light" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="ChallengeLevel_Normal" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="ChallengeLevel_High" xml:space="preserve">
+    <value>High</value>
+  </data>
+  <data name="ChallengeLevel_Adversarial" xml:space="preserve">
+    <value>Adversarial</value>
+  </data>
+  <data name="AssumptionTolerance_Low" xml:space="preserve">
+    <value>Low</value>
+  </data>
+  <data name="AssumptionTolerance_Normal" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="AssumptionTolerance_High" xml:space="preserve">
+    <value>High</value>
+  </data>
+  <data name="PersonaDefinition_CreativityLevel" xml:space="preserve">
+    <value>Creativity</value>
+  </data>
+  <data name="CreativityLevel_Minimal" xml:space="preserve">
+    <value>Minimal</value>
+  </data>
+  <data name="CreativityLevel_Constrained" xml:space="preserve">
+    <value>Constrained</value>
+  </data>
+  <data name="CreativityLevel_Balanced" xml:space="preserve">
+    <value>Balanced</value>
+  </data>
+  <data name="CreativityLevel_Expansive" xml:space="preserve">
+    <value>Expansive</value>
+  </data>
+  <data name="PersonaDefinition_DetailFocus" xml:space="preserve">
+    <value>Detail focus</value>
+  </data>
+  <data name="DetailFocus_Outcome" xml:space="preserve">
+    <value>Outcome</value>
+  </data>
+  <data name="DetailFocus_Balanced" xml:space="preserve">
+    <value>Balanced</value>
+  </data>
+  <data name="DetailFocus_Process" xml:space="preserve">
+    <value>Process</value>
+  </data>
+  <data name="PersonaDefinition_RiskSensitivity" xml:space="preserve">
+    <value>Risk sensitivity</value>
+  </data>
+  <data name="RiskSensitivity_Low" xml:space="preserve">
+    <value>Low</value>
+  </data>
+  <data name="RiskSensitivity_Normal" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="RiskSensitivity_High" xml:space="preserve">
+    <value>High</value>
   </data>
 </root>

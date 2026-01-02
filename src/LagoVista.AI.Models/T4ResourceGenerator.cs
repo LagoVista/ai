@@ -1,4 +1,4 @@
-﻿/*1/2/2026 7:56:28 AM*/
+﻿/*1/2/2026 5:06:18 PM*/
 using System.Globalization;
 using System.Reflection;
 
@@ -261,6 +261,15 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:AgentMode_WhenToUse_Help
 
 		public static string AgentMode_WhenToUse_Help { get { return GetResourceString("AgentMode_WhenToUse_Help"); } }
+//Resources:AIResources:AgentPersonaDefinition_Description
+
+		public static string AgentPersonaDefinition_Description { get { return GetResourceString("AgentPersonaDefinition_Description"); } }
+//Resources:AIResources:AgentPersonaDefinition_Help
+
+		public static string AgentPersonaDefinition_Help { get { return GetResourceString("AgentPersonaDefinition_Help"); } }
+//Resources:AIResources:AgentPersonaDefinition_Title
+
+		public static string AgentPersonaDefinition_Title { get { return GetResourceString("AgentPersonaDefinition_Title"); } }
 //Resources:AIResources:AgentSession_Description
 
 		public static string AgentSession_Description { get { return GetResourceString("AgentSession_Description"); } }
@@ -318,6 +327,30 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:AiConversations_Title
 
 		public static string AiConversations_Title { get { return GetResourceString("AiConversations_Title"); } }
+//Resources:AIResources:AssumptionTolerance_High
+
+		public static string AssumptionTolerance_High { get { return GetResourceString("AssumptionTolerance_High"); } }
+//Resources:AIResources:AssumptionTolerance_Low
+
+		public static string AssumptionTolerance_Low { get { return GetResourceString("AssumptionTolerance_Low"); } }
+//Resources:AIResources:AssumptionTolerance_Normal
+
+		public static string AssumptionTolerance_Normal { get { return GetResourceString("AssumptionTolerance_Normal"); } }
+//Resources:AIResources:ChallengeLevel_Adversarial
+
+		public static string ChallengeLevel_Adversarial { get { return GetResourceString("ChallengeLevel_Adversarial"); } }
+//Resources:AIResources:ChallengeLevel_High
+
+		public static string ChallengeLevel_High { get { return GetResourceString("ChallengeLevel_High"); } }
+//Resources:AIResources:ChallengeLevel_Light
+
+		public static string ChallengeLevel_Light { get { return GetResourceString("ChallengeLevel_Light"); } }
+//Resources:AIResources:ChallengeLevel_None
+
+		public static string ChallengeLevel_None { get { return GetResourceString("ChallengeLevel_None"); } }
+//Resources:AIResources:ChallengeLevel_Normal
+
+		public static string ChallengeLevel_Normal { get { return GetResourceString("ChallengeLevel_Normal"); } }
 //Resources:AIResources:Common_Category
 
 		public static string Common_Category { get { return GetResourceString("Common_Category"); } }
@@ -378,6 +411,18 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:ConfirmationStrictness_Normal
 
 		public static string ConfirmationStrictness_Normal { get { return GetResourceString("ConfirmationStrictness_Normal"); } }
+//Resources:AIResources:CreativityLevel_Balanced
+
+		public static string CreativityLevel_Balanced { get { return GetResourceString("CreativityLevel_Balanced"); } }
+//Resources:AIResources:CreativityLevel_Constrained
+
+		public static string CreativityLevel_Constrained { get { return GetResourceString("CreativityLevel_Constrained"); } }
+//Resources:AIResources:CreativityLevel_Expansive
+
+		public static string CreativityLevel_Expansive { get { return GetResourceString("CreativityLevel_Expansive"); } }
+//Resources:AIResources:CreativityLevel_Minimal
+
+		public static string CreativityLevel_Minimal { get { return GetResourceString("CreativityLevel_Minimal"); } }
 //Resources:AIResources:DDR_Chapter
 
 		public static string DDR_Chapter { get { return GetResourceString("DDR_Chapter"); } }
@@ -417,6 +462,15 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:DdrTla_Catalog_Help
 
 		public static string DdrTla_Catalog_Help { get { return GetResourceString("DdrTla_Catalog_Help"); } }
+//Resources:AIResources:DetailFocus_Balanced
+
+		public static string DetailFocus_Balanced { get { return GetResourceString("DetailFocus_Balanced"); } }
+//Resources:AIResources:DetailFocus_Outcome
+
+		public static string DetailFocus_Outcome { get { return GetResourceString("DetailFocus_Outcome"); } }
+//Resources:AIResources:DetailFocus_Process
+
+		public static string DetailFocus_Process { get { return GetResourceString("DetailFocus_Process"); } }
 //Resources:AIResources:Experiemnt_Help
 
 		public static string Experiemnt_Help { get { return GetResourceString("Experiemnt_Help"); } }
@@ -711,21 +765,36 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:OperationKind_Text
 
 		public static string OperationKind_Text { get { return GetResourceString("OperationKind_Text"); } }
+//Resources:AIResources:PersonaDefinition_AdditionalConfiguration
+
+		public static string PersonaDefinition_AdditionalConfiguration { get { return GetResourceString("PersonaDefinition_AdditionalConfiguration"); } }
+//Resources:AIResources:PersonaDefinition_AssumptionTolerance
+
+		public static string PersonaDefinition_AssumptionTolerance { get { return GetResourceString("PersonaDefinition_AssumptionTolerance"); } }
+//Resources:AIResources:PersonaDefinition_ChallengeLevel
+
+		public static string PersonaDefinition_ChallengeLevel { get { return GetResourceString("PersonaDefinition_ChallengeLevel"); } }
 //Resources:AIResources:PersonaDefinition_ConfirmationStrictness
 
 		public static string PersonaDefinition_ConfirmationStrictness { get { return GetResourceString("PersonaDefinition_ConfirmationStrictness"); } }
+//Resources:AIResources:PersonaDefinition_CreativityLevel
+
+		public static string PersonaDefinition_CreativityLevel { get { return GetResourceString("PersonaDefinition_CreativityLevel"); } }
+//Resources:AIResources:PersonaDefinition_DetailFocus
+
+		public static string PersonaDefinition_DetailFocus { get { return GetResourceString("PersonaDefinition_DetailFocus"); } }
 //Resources:AIResources:PersonaDefinition_DisplayName
 
 		public static string PersonaDefinition_DisplayName { get { return GetResourceString("PersonaDefinition_DisplayName"); } }
 //Resources:AIResources:PersonaDefinition_HumorLevel
 
 		public static string PersonaDefinition_HumorLevel { get { return GetResourceString("PersonaDefinition_HumorLevel"); } }
-//Resources:AIResources:PersonaDefinition_Notes
-
-		public static string PersonaDefinition_Notes { get { return GetResourceString("PersonaDefinition_Notes"); } }
 //Resources:AIResources:PersonaDefinition_ReflectionLevel
 
 		public static string PersonaDefinition_ReflectionLevel { get { return GetResourceString("PersonaDefinition_ReflectionLevel"); } }
+//Resources:AIResources:PersonaDefinition_RiskSensitivity
+
+		public static string PersonaDefinition_RiskSensitivity { get { return GetResourceString("PersonaDefinition_RiskSensitivity"); } }
 //Resources:AIResources:PersonaDefinition_SuggestionStyle
 
 		public static string PersonaDefinition_SuggestionStyle { get { return GetResourceString("PersonaDefinition_SuggestionStyle"); } }
@@ -771,6 +840,15 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:ReflectionLevel_Normal
 
 		public static string ReflectionLevel_Normal { get { return GetResourceString("ReflectionLevel_Normal"); } }
+//Resources:AIResources:RiskSensitivity_High
+
+		public static string RiskSensitivity_High { get { return GetResourceString("RiskSensitivity_High"); } }
+//Resources:AIResources:RiskSensitivity_Low
+
+		public static string RiskSensitivity_Low { get { return GetResourceString("RiskSensitivity_Low"); } }
+//Resources:AIResources:RiskSensitivity_Normal
+
+		public static string RiskSensitivity_Normal { get { return GetResourceString("RiskSensitivity_Normal"); } }
 //Resources:AIResources:SourceOrganization_AppId
 
 		public static string SourceOrganization_AppId { get { return GetResourceString("SourceOrganization_AppId"); } }
@@ -999,6 +1077,9 @@ namespace LagoVista.AI.Models.Resources
 			public const string AgentMode_WelcomeMessage_Help = "AgentMode_WelcomeMessage_Help";
 			public const string AgentMode_WhenToUse = "AgentMode_WhenToUse";
 			public const string AgentMode_WhenToUse_Help = "AgentMode_WhenToUse_Help";
+			public const string AgentPersonaDefinition_Description = "AgentPersonaDefinition_Description";
+			public const string AgentPersonaDefinition_Help = "AgentPersonaDefinition_Help";
+			public const string AgentPersonaDefinition_Title = "AgentPersonaDefinition_Title";
 			public const string AgentSession_Description = "AgentSession_Description";
 			public const string AgentSession_Help = "AgentSession_Help";
 			public const string AgentSession_Title = "AgentSession_Title";
@@ -1018,6 +1099,14 @@ namespace LagoVista.AI.Models.Resources
 			public const string AiConversation_Interaction_Title = "AiConversation_Interaction_Title";
 			public const string AiConversation_Title = "AiConversation_Title";
 			public const string AiConversations_Title = "AiConversations_Title";
+			public const string AssumptionTolerance_High = "AssumptionTolerance_High";
+			public const string AssumptionTolerance_Low = "AssumptionTolerance_Low";
+			public const string AssumptionTolerance_Normal = "AssumptionTolerance_Normal";
+			public const string ChallengeLevel_Adversarial = "ChallengeLevel_Adversarial";
+			public const string ChallengeLevel_High = "ChallengeLevel_High";
+			public const string ChallengeLevel_Light = "ChallengeLevel_Light";
+			public const string ChallengeLevel_None = "ChallengeLevel_None";
+			public const string ChallengeLevel_Normal = "ChallengeLevel_Normal";
 			public const string Common_Category = "Common_Category";
 			public const string Common_Datestamp = "Common_Datestamp";
 			public const string Common_Description = "Common_Description";
@@ -1038,6 +1127,10 @@ namespace LagoVista.AI.Models.Resources
 			public const string ConfirmationStrictness_High = "ConfirmationStrictness_High";
 			public const string ConfirmationStrictness_Low = "ConfirmationStrictness_Low";
 			public const string ConfirmationStrictness_Normal = "ConfirmationStrictness_Normal";
+			public const string CreativityLevel_Balanced = "CreativityLevel_Balanced";
+			public const string CreativityLevel_Constrained = "CreativityLevel_Constrained";
+			public const string CreativityLevel_Expansive = "CreativityLevel_Expansive";
+			public const string CreativityLevel_Minimal = "CreativityLevel_Minimal";
 			public const string DDR_Chapter = "DDR_Chapter";
 			public const string DDR_Chapter_Description = "DDR_Chapter_Description";
 			public const string DDR_Chapter_Help = "DDR_Chapter_Help";
@@ -1051,6 +1144,9 @@ namespace LagoVista.AI.Models.Resources
 			public const string DdrTla_Catalog = "DdrTla_Catalog";
 			public const string DdrTla_Catalog_Description = "DdrTla_Catalog_Description";
 			public const string DdrTla_Catalog_Help = "DdrTla_Catalog_Help";
+			public const string DetailFocus_Balanced = "DetailFocus_Balanced";
+			public const string DetailFocus_Outcome = "DetailFocus_Outcome";
+			public const string DetailFocus_Process = "DetailFocus_Process";
 			public const string Experiemnt_Help = "Experiemnt_Help";
 			public const string Experiment_Description = "Experiment_Description";
 			public const string Experiment_Instructions = "Experiment_Instructions";
@@ -1149,11 +1245,16 @@ namespace LagoVista.AI.Models.Resources
 			public const string OperationKind_Domain = "OperationKind_Domain";
 			public const string OperationKind_Image = "OperationKind_Image";
 			public const string OperationKind_Text = "OperationKind_Text";
+			public const string PersonaDefinition_AdditionalConfiguration = "PersonaDefinition_AdditionalConfiguration";
+			public const string PersonaDefinition_AssumptionTolerance = "PersonaDefinition_AssumptionTolerance";
+			public const string PersonaDefinition_ChallengeLevel = "PersonaDefinition_ChallengeLevel";
 			public const string PersonaDefinition_ConfirmationStrictness = "PersonaDefinition_ConfirmationStrictness";
+			public const string PersonaDefinition_CreativityLevel = "PersonaDefinition_CreativityLevel";
+			public const string PersonaDefinition_DetailFocus = "PersonaDefinition_DetailFocus";
 			public const string PersonaDefinition_DisplayName = "PersonaDefinition_DisplayName";
 			public const string PersonaDefinition_HumorLevel = "PersonaDefinition_HumorLevel";
-			public const string PersonaDefinition_Notes = "PersonaDefinition_Notes";
 			public const string PersonaDefinition_ReflectionLevel = "PersonaDefinition_ReflectionLevel";
+			public const string PersonaDefinition_RiskSensitivity = "PersonaDefinition_RiskSensitivity";
 			public const string PersonaDefinition_SuggestionStyle = "PersonaDefinition_SuggestionStyle";
 			public const string PersonaDefinition_ToneStyle = "PersonaDefinition_ToneStyle";
 			public const string PersonaDefinition_VerbosityLevel = "PersonaDefinition_VerbosityLevel";
@@ -1169,6 +1270,9 @@ namespace LagoVista.AI.Models.Resources
 			public const string ReflectionLevel_Light = "ReflectionLevel_Light";
 			public const string ReflectionLevel_None = "ReflectionLevel_None";
 			public const string ReflectionLevel_Normal = "ReflectionLevel_Normal";
+			public const string RiskSensitivity_High = "RiskSensitivity_High";
+			public const string RiskSensitivity_Low = "RiskSensitivity_Low";
+			public const string RiskSensitivity_Normal = "RiskSensitivity_Normal";
 			public const string SourceOrganization_AppId = "SourceOrganization_AppId";
 			public const string SourceOrganization_AppId_Help = "SourceOrganization_AppId_Help";
 			public const string SourceOrganization_Help = "SourceOrganization_Help";

@@ -25,6 +25,9 @@ namespace LagoVista.AI.Managers
             services.AddScoped<IImageGeneratorManager, OpenAIManager>();
             services.AddScoped<IAiConversationManager, AiConversationManager>();
             services.AddScoped<ITextQueryManager, OpenAIManager>();
+            services.AddSingleton<IAgentPersonaDefinitionManager, AgentPersonaDefinitionManager>();
+            services.AddSingleton<IAgentToolBoxManager, AgentToolBoxManager>();
+
         }
     }
 }

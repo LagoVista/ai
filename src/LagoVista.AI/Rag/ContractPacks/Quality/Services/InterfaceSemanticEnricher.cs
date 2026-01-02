@@ -23,7 +23,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
     /// calls an LLM over HTTP, expects a structured JSON response with enriched fields,
     /// and merges the result back into the InterfaceDescription.
     ///
-    /// Notes:
+    /// AdditionalConfiguration:
     /// - Uses HttpClient injected via DI.
     /// - Assumes AgentContext exposes endpoint / key / model configuration.
     ///   Adjust property names in BuildHttpRequestAsync to match your concrete AgentContext.
