@@ -1,0 +1,162 @@
+﻿using LagoVista.AI.Models;
+using LagoVista.Core.Models;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+using System.Threading;
+
+namespace LagoVista.AI.Services
+{
+    public partial class AgentKnowledgePackService
+    {
+        private enum KnowledgeLevel
+        {
+            Agent,
+            AgentRole,
+            AgentMode
+        }
+
+        public class ProviderDescriptor
+        {
+            public string Label { get; }
+            public IAgentKnowledgeProvider Provider { get; }
+            public ProviderDescriptor(string label, IAgentKnowledgeProvider provider)
+            {
+                Label = label;
+                Provider = provider;
+            }
+        }
+
+        private static void AddInstructions(KnowledgeLane lane, KnowledgeKind kind, IEnumerable<string> instructions)
+        {
+            if (lane == null) throw new ArgumentNullException(nameof(lane));
+            if (instructions == null) return;
+
+            foreach (var inst in instructions)
+            {
+                if (string.IsNullOrWhiteSpace(inst)) continue;
+
+                lane.Items.Add(new KnowledgeItem
+                {
+                    Kind = kind,
+                    Content = inst
+                });
+            }
+        }
+
+        private static void AddInstructionDDR(KnowledgeLane lane, KnowledgeKind kind, IEnumerable<string> orderedIds, IDictionary<string, DdrModelFields> resolved)
+        {
+            if (lane == null) throw new ArgumentNullException(nameof(lane));
+            if (orderedIds == null) return;
+
+            resolved ??= new Dictionary<string, DdrModelFields>();
+
+            foreach (var id in orderedIds)
+            {
+                if (string.IsNullOrWhiteSpace(id)) continue;
+
+                resolved.TryGetValue(id, out var ddr);
+                if (ddr == null) continue;
+                var content = $"### {ddr.DdrIdentifier} - {ddr.Title}\r\n{ddr.AgentInstructions}\r\n\r\n";
+
+                lane.Items.Add(new KnowledgeItem
+                {
+                    Kind = kind,
+                    Id = id,
+                    Content = content
+                });
+            }
+        }
+
+        private static void AddReferenceDDR(KnowledgeLane lane, KnowledgeKind kind, IEnumerable<string> orderedIds, IDictionary<string, DdrModelFields> resolved)
+        {
+            if (lane == null) throw new ArgumentNullException(nameof(lane));
+            if (orderedIds == null) return;
+
+            resolved ??= new Dictionary<string, DdrModelFields>();
+
+            foreach (var id in orderedIds)
+            {
+                if (string.IsNullOrWhiteSpace(id)) continue;
+
+                resolved.TryGetValue(id, out var ddr);
+                if (ddr == null) continue;
+
+                lane.Items.Add(new KnowledgeItem
+                {
+                    Kind = kind,
+                    Id = id,
+                    Content = $"{ddr.DdrIdentifier}: {ddr.ReferentialSummary}"
+                });
+            }
+        }
+
+        private void AddAvailableTools(KnowledgeLane lane, IEnumerable<string> orderedIds)
+        {
+            if (lane == null) throw new ArgumentNullException(nameof(lane));
+            if (orderedIds == null) return;
+
+            foreach (var id in orderedIds)
+            {
+                var summary = _toolUsageMetaData.GetToolSummary(id);
+
+                if (string.IsNullOrWhiteSpace(id)) continue;
+
+                lane.Items.Add(new KnowledgeItem
+                {
+                    Kind = KnowledgeKind.ToolSummary,
+                    Id = id,
+                    Content = $"{id}: {summary}"
+                });
+            }
+        }
+
+        private void AddActiveTools(KnowledgeLane lane, IEnumerable<string> orderedIds)
+        {
+            if (lane == null) throw new ArgumentNullException(nameof(lane));
+            if (orderedIds == null) return;
+
+            foreach (var id in orderedIds)
+            {
+                if (string.IsNullOrWhiteSpace(id)) continue;
+
+                var usage = _toolUsageMetaData.GetToolUsageMetadata(id);
+
+                var content = @$"## {id} Usage\r\n{usage}";
+
+                lane.Items.Add(new KnowledgeItem
+                {
+                    Kind = KnowledgeKind.ToolUsage,
+                    Id = id,
+                    Content = usage
+                });
+            }
+        }
+
+
+        private async Task CollectProviderAsync(string label, IAgentKnowledgeProvider provider, KnowledgeAccumulator acc, StringBuilder log, CancellationToken ct)
+        {
+            if (provider == null) return;
+
+            // Direct fields first
+            acc.AddDirect(provider);
+            AppendDirectLog(label, provider, log);
+
+            var container = provider as IToolBoxProvider;
+            if (container != null)
+            {
+                foreach (var tb in container.ToolBoxes ?? new List<EntityHeader>())
+                {
+                    if (tb == null || string.IsNullOrWhiteSpace(tb.Id)) continue;
+
+                    var toolBox = await _toolBoxRepo.GetAgentToolBoxAsync(tb.Id);
+                    if (toolBox == null) continue;
+
+                    acc.AddDirect(toolBox);
+                    AppendToolBoxLog(label, toolBox, log);
+                }
+            }
+        }
+    }
+}

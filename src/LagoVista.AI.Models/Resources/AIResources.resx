@@ -1120,4 +1120,13 @@
   <data name="AgentContext_WelcomeMessage_Help" xml:space="preserve">
     <value>A welcome message will be displayed when the session starts or a role or mode changes</value>
   </data>
+  <data name="AgentContext_DefaultPersona" xml:space="preserve">
+    <value>Default Agent Persona</value>
+  </data>
+  <data name="AgentContext_DefaultPersona_Help" xml:space="preserve">
+    <value>The persona definition that wil be used by default when creating sessions within this agent.  This can be overriden at the user level.</value>
+  </data>
+  <data name="AgentContext_DefaultPersona_Select" xml:space="preserve">
+    <value>-select default persona-</value>
+  </data>
 </root>

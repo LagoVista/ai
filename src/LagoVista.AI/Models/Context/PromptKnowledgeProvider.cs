@@ -66,14 +66,8 @@ namespace LagoVista.AI.Models.Context
             return created;
         }
 
-        public List<ActiveTool> ActiveTools { get; } = new List<ActiveTool>();
-        public IReadOnlyList<AvailableTool> AvailableTools { get; private set; } = new List<AvailableTool>();
-
-        public void AttachAvailbleTools(List<AvailableTool> availableTools)
-        {
-            AvailableTools = availableTools;
-        }
-
+        public List<string> ActiveTools { get; } = new List<string>();
+ 
         public PromptKnowledgeProviderStates State { get; set; } = PromptKnowledgeProviderStates.NotSet;
 
         /// <summary>

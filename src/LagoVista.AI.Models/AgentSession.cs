@@ -93,7 +93,12 @@ namespace LagoVista.AI.Models
 
         public string Repo { get; set; }
 
+        /// <summary>
+        ///  Eventually this will go away...
+        /// </summary>
         public string Mode { get; set; } = AgentSession.DefaultMode;
+
+        public EntityHeader AgentMode { get; set; }
 
         public string CurrentBranch { get; set; } = AgentSession.DefaultBranch;
 

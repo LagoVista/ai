@@ -110,10 +110,11 @@ namespace LagoVista.AI.Models
         public AgentSessionTurn ThisTurn { get; private set; }
         public AgentSessionTurn PreviousTurn { get; private set; }
 
-        public void AttachAgentContext(AgentContext context, AgentContextRole role)
+        public void AttachAgentContext(AgentContext context, AgentContextRole role, AgentMode mode)
         {
             AgentContext = context ?? throw new ArgumentNullException(nameof(context));
             Role = role ?? throw new ArgumentNullException(nameof(role));
+            Mode = mode ?? throw new ArgumentNullException(nameof(mode));
             RefreshEnvelope();
         }
 
@@ -121,6 +122,8 @@ namespace LagoVista.AI.Models
         public AgentContext AgentContext { get; private set; }
 
         public AgentContextRole Role { get; private set; }
+
+        public AgentMode Mode { get; private set; }
 
         public bool HasPendingToolCalls
         {

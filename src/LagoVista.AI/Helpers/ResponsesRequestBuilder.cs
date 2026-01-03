@@ -28,9 +28,12 @@ namespace LagoVista.AI.Helpers
     public class ResponsesRequestBuilder : IResponsesRequestBuilder
     {
         private readonly IAdminLogger _adminLogger;
-        public ResponsesRequestBuilder(IAdminLogger adminLogger)
+        private readonly IServerToolSchemaProvider _toolSchemaProvider;
+
+        public ResponsesRequestBuilder(IAdminLogger adminLogger, IServerToolSchemaProvider toolSchemaProvider)
         {
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
+            _toolSchemaProvider = toolSchemaProvider ?? throw new ArgumentNullException(nameof(adminLogger));
         }
 
         /// <summary>
@@ -96,47 +99,8 @@ namespace LagoVista.AI.Helpers
                 }
             }
 
-            ctx.PromptKnowledgeProvider.ActiveTools.Add(new ActiveTool() {Name = ActivateToolsTool.ToolName, Schama = ActivateToolsTool.GetSchema(), ToolUsageMetaData = ActivateToolsTool.ToolUsageMetadata });
-            ctx.PromptKnowledgeProvider.ActiveTools.Add(new ActiveTool() { Name = AgentListModesTool.ToolName, Schama = AgentListModesTool.GetSchema(), ToolUsageMetaData = AgentListModesTool.ToolUsageMetadata });
-
-            var loadedToolContent = new StringBuilder();
-            loadedToolContent.AppendLine("## ACTIVE TOOLS");
-            loadedToolContent.AppendLine(@"These tools are currently active and ready and can immediately be used.
-There are additional tools that are available and can be loaded with the actives_tools tool that have previously been identified.");
-
-            foreach (var tool in ctx.PromptKnowledgeProvider.ActiveTools)
-            {
-                loadedToolContent.AppendLine($"{tool.Name}: {tool.ToolUsageMetaData}");
-            }
-
-            systemMessage.Content.Add(new ResponsesMessageContent
-            {
-                Text = loadedToolContent.ToString()
-            });
-
-            // Available ActiveTools are all the tools that could be used
-            // with this mode, we need to let the LLM know about them.  
-            // If the tool is active, we leave out since it well has it.
-            var activeTools = ctx.PromptKnowledgeProvider.ActiveTools.Select(tl => tl.Name);
-            var tools = ctx.PromptKnowledgeProvider.AvailableTools.Where( tl => !activeTools.Contains(tl.Name));
-            if (tools.Any()) {
-                var bldr = new StringBuilder();
-                bldr.AppendLine("## AVAILABLE TOOLS");
-                bldr.AppendLine(@"The following tools are available but not loaded.  
-Some tools are not provided by default.
-If any of these tools are useful to process the request, you may request them with the activate_tools tool.  
-As soon as you know the tools you require to complete this request, you may stop reasoning the request will be replayed with the requested tools.");
-        
-                foreach(var tool in tools)
-                {
-                    bldr.AppendLine($"- {tool.Name}: {tool.Summary}");
-                }
-
-                systemMessage.Content.Add(new ResponsesMessageContent
-                {
-                    Text = bldr.ToString()
-                });
-            }
+            ctx.PromptKnowledgeProvider.ActiveTools.Add(ActivateToolsTool.ToolName);
+            ctx.PromptKnowledgeProvider.ActiveTools.Add(AgentListModesTool.ToolName);
 
             var instructionBlock = "[MODE: " + ctx.Session.Mode + "]\n\n[INSTRUCTION]\n" + (ctx.Envelope.Instructions ?? string.Empty);
 
@@ -183,7 +147,7 @@ As soon as you know the tools you require to complete this request, you may stop
                         sb.AppendLine($"File Name: {file.FileName}");
                         sb.AppendLine($"Language: {file.Language}");
                         sb.AppendLine();
-                        sb.AppendLine(file.Contents ?? string.Empty);
+                        sb.AppendLine(file.Contents);
                         sb.AppendLine($"--- END ACTIVE FILE ---");
                         sb.AppendLine();
                     }
@@ -197,7 +161,7 @@ As soon as you know the tools you require to complete this request, you may stop
 
             foreach(var tool in ctx.PromptKnowledgeProvider.ActiveTools)
             {
-                dto.Tools.Add(tool.Schama);    
+                dto.Tools.Add(_toolSchemaProvider.GetToolSchema(tool));    
             }
             
             if (ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCallResults.Any())

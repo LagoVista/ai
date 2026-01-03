@@ -17,7 +17,7 @@ namespace LagoVista.AI.Models
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.AiAgentContext_Title, AIResources.Names.AiAgentContext_Description, AIResources.Names.AiAgentContext_Description, EntityDescriptionAttribute.EntityTypes.CoreIoTModel, typeof(AIResources),
         GetUrl: "/api/ai/agentcontext/{id}", GetListUrl: "/api/ai/agentcontexts", FactoryUrl: "/api/ai/agentcontext/factory", SaveUrl: "/api/ai/agentcontext", DeleteUrl: "/api/ai/agentcontext/{id}",
         ListUIUrl: "/mlworkbench/agents", EditUIUrl: "/mlworkbench/agent/{id}", CreateUIUrl: "/mlworkbench/agent/add", Icon: "icon-ae-database-3")]
-    public class AgentContext : EntityBase, IFormDescriptor, ISummaryFactory, IFormConditionalFields, IValidateable, IFormDescriptorCol2, IFormDescriptorBottom, IAgentKnowledgeProvider
+    public class AgentContext : EntityBase, IFormDescriptor, ISummaryFactory, IFormConditionalFields, IValidateable, IFormDescriptorCol2, IFormDescriptorBottom, IAgentKnowledgeProvider, IToolBoxProvider
     {
         public const string LlmProvider_OpenAI = "openai";
 
@@ -61,7 +61,6 @@ namespace LagoVista.AI.Models
             ResourceType: typeof(AIResources))]
         public EntityHeader DefaultRole { get; set; }
 
-
         [FormField(LabelResource: AIResources.Names.AgentContext_DefaultMode, PickerProviderFieldName: nameof(AgentModes), IsRequired:true, WaterMark: AIResources.Names.AgentContext_DefaultMode_Select, FieldType: FieldTypes.Picker,
             ResourceType: typeof(AIResources))]
         public EntityHeader DefaultMode { get; set; }
@@ -70,6 +69,10 @@ namespace LagoVista.AI.Models
             ResourceType: typeof(AIResources))]
         public List<AgentContextRole> Roles { get; set; } = new List<AgentContextRole>();
 
+        [FormField(LabelResource: AIResources.Names.AgentContext_DefaultPersona, HelpResource: AIResources.Names.AgentContext_DefaultPersona_Help, IsRequired:true, AllowAddChild: true, CanAddRows: true, 
+            WaterMark:AIResources.Names.AgentContext_DefaultPersona_Select, FieldType: FieldTypes.EntithHeaderPickerDropDown, EditorPath: "/mlworkbench/agentpersona/{id}", EntityHeaderPickerUrl: "/api/ai/agentpersonas", FactoryUrl: "/api/ai/agentpersona/factory",
+            ResourceType: typeof(AIResources))]
+        public EntityHeader DefaultAgentPersona { get; set; }
 
         [FormField(LabelResource: AIResources.Names.AgentContext_MaxTokenCount, HelpResource: AIResources.Names.AgentContext_MaxTokenCount_Help, FieldType: FieldTypes.Integer, ResourceType: typeof(AIResources))]
         public int MaxTokenCount { get; set; } = 400000;
@@ -133,6 +136,7 @@ namespace LagoVista.AI.Models
                 nameof(Icon),
                 nameof(DefaultRole),
                 nameof(DefaultMode),
+                nameof(DefaultAgentPersona),
                 nameof(VectorDatabaseCollectionName),
                 nameof(VectorDatabaseUri),
                 nameof(VectorDatabaseApiKey),

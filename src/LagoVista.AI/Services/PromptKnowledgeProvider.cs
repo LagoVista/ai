@@ -128,8 +128,6 @@ Do not infer or assume facts outside this registry.
                 kfrRegister.Add(kfrBlock);
             }
 
-            ctx.PromptKnowledgeProvider.AttachAvailbleTools(apk.AvailableTools);
-
             _adminLogger.Trace($"[JSON.PKP]={JsonConvert.SerializeObject(ctx.PromptKnowledgeProvider)}");
 
             return InvokeResult<IAgentPipelineContext>.Create(ctx);

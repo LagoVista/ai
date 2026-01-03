@@ -28,6 +28,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
 
             public AgentContext AgentContext { get; set; }
             public AgentContextRole Role { get; set; }
+            public AgentMode Mode { get; set; }
 
             public PromptKnowledgeProvider PromptKnowledgeProvider { get; set; } = new PromptKnowledgeProvider();
             public CompositionTrace Trace { get; set; } = new CompositionTrace();
@@ -46,7 +47,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
 
             public AgentToolExecutionContext ToToolContext() => new AgentToolExecutionContext();
 
-            public void AttachAgentContext(AgentContext context, AgentContextRole role)
+            public void AttachAgentContext(AgentContext context, AgentContextRole role, AgentMode mode)
             {
                 AgentContext = context;
                 Role = role;

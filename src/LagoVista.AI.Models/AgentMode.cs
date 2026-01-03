@@ -33,7 +33,7 @@ namespace LagoVista.AI.Models
 
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.AgentContext_Mode_Title, AIResources.Names.AgentContext_Mode_Description, AIResources.Names.AgentContext_Mode_Description, EntityDescriptionAttribute.EntityTypes.ChildObject, typeof(AIResources),
     FactoryUrl: "/api/ai/agentcontext/mode/factory")]
-    public sealed class AgentMode : IFormDescriptor, IFormDescriptorCol2, IAgentKnowledgeProvider
+    public sealed class AgentMode : IFormDescriptor, IFormDescriptorCol2, IAgentKnowledgeProvider, IToolBoxProvider
     {
         public const string AgentMode_AgentModeStaus_New = "new";
         public const string AgentMode_AgentModeStaus_Experimental = "experimental";

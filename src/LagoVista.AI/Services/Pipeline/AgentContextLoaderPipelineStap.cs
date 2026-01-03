@@ -34,7 +34,11 @@ namespace LagoVista.AI.Services.Pipeline
                 return InvokeResult<IAgentPipelineContext>.FromError("Conversation Context specified in session not found in Agent Context.", "AGENT_CTX_LOADER_CONVERSATION_CONTEXT_NOT_FOUND_IN_AGENT_CONTEXT");
             }
 
-            ctx.AttachAgentContext(agentContext, role);
+            var mode = agentContext.AgentModes.SingleOrDefault(cc => cc.Id == ctx.Session.AgentMode?.Id);
+            if(mode == null)
+                mode = agentContext.AgentModes.SingleOrDefault(cc => cc.Key == ctx.Session.Mode);
+
+            ctx.AttachAgentContext(agentContext, role, mode);
          
             return InvokeResult<IAgentPipelineContext>.Create(ctx);  
         }

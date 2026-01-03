@@ -16,7 +16,7 @@ namespace LagoVista.AI.Models
 {
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.AgentContext_Role_Title, AIResources.Names.AgentContext_Role_Description, AIResources.Names.AgentContext_Role_Description, EntityDescriptionAttribute.EntityTypes.ChildObject, typeof(AIResources),
     FactoryUrl: "/api/ai/agentcontext/role/factory")]
-    public class AgentContextRole : IFormDescriptor, IValidateable, IAgentKnowledgeProvider, IFormDescriptorCol2
+    public class AgentContextRole : IFormDescriptor, IValidateable, IAgentKnowledgeProvider, IFormDescriptorCol2, IToolBoxProvider
     {
         public string Id { get; set; } = Guid.NewGuid().ToId();
 

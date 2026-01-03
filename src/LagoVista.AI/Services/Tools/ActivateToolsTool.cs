@@ -64,12 +64,11 @@ namespace LagoVista.AI.Services.Tools
 
                     foreach (var tool in toolIds)
                     {
-                        context.PromptKnowledgeProvider.ActiveTools.Add(new ActiveTool()
-                        {
-                            ToolUsageMetaData = _metaDataProvider.GetToolUsageMetadata(tool),
-                            Name = tool,
-                            Schama = _schemaProvider.GetToolSchema(tool)
-                        });
+                        var lane = context.PromptKnowledgeProvider.Registers.SingleOrDefault(r => r.Classification == Models.Context.ContextClassification.Session);
+                        var usageInstructions = _metaDataProvider.GetToolUsageMetadata(tool);
+                        lane.Items.Add($"### {tool}\r\n{usageInstructions}\r\n\r\n");
+
+                        context.PromptKnowledgeProvider.ActiveTools.Add(tool);
                     }
 
                     _streamingContext.AddMilestoneAsync($"using tools {String.Join(',', toolIds)}");

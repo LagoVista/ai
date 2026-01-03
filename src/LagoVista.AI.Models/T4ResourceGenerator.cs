@@ -1,4 +1,4 @@
-﻿/*1/3/2026 8:37:28 AM*/
+﻿/*1/3/2026 2:32:04 PM*/
 using System.Globalization;
 using System.Reflection;
 
@@ -81,6 +81,15 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:AgentContext_DefaultMode_Select
 
 		public static string AgentContext_DefaultMode_Select { get { return GetResourceString("AgentContext_DefaultMode_Select"); } }
+//Resources:AIResources:AgentContext_DefaultPersona
+
+		public static string AgentContext_DefaultPersona { get { return GetResourceString("AgentContext_DefaultPersona"); } }
+//Resources:AIResources:AgentContext_DefaultPersona_Help
+
+		public static string AgentContext_DefaultPersona_Help { get { return GetResourceString("AgentContext_DefaultPersona_Help"); } }
+//Resources:AIResources:AgentContext_DefaultPersona_Select
+
+		public static string AgentContext_DefaultPersona_Select { get { return GetResourceString("AgentContext_DefaultPersona_Select"); } }
 //Resources:AIResources:AgentContext_DefaultRole
 
 		public static string AgentContext_DefaultRole { get { return GetResourceString("AgentContext_DefaultRole"); } }
@@ -1065,6 +1074,9 @@ namespace LagoVista.AI.Models.Resources
 			public const string AgentContext_CompletionReservePercent_Help = "AgentContext_CompletionReservePercent_Help";
 			public const string AgentContext_DefaultMode = "AgentContext_DefaultMode";
 			public const string AgentContext_DefaultMode_Select = "AgentContext_DefaultMode_Select";
+			public const string AgentContext_DefaultPersona = "AgentContext_DefaultPersona";
+			public const string AgentContext_DefaultPersona_Help = "AgentContext_DefaultPersona_Help";
+			public const string AgentContext_DefaultPersona_Select = "AgentContext_DefaultPersona_Select";
 			public const string AgentContext_DefaultRole = "AgentContext_DefaultRole";
 			public const string AgentContext_DefaultRole_Select = "AgentContext_DefaultRole_Select";
 			public const string AgentContext_InstructionDDRs = "AgentContext_InstructionDDRs";

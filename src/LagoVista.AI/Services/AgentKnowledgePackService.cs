@@ -29,13 +29,14 @@ namespace LagoVista.AI.Services
     /// - Tool schema attachment (PKP + ToolSchemaProvider)
     /// - Caching policy (delegated to underlying providers)
     /// </summary>
-    public sealed class AgentKnowledgePackService : IAgentKnowledgePackService
+    public sealed partial class AgentKnowledgePackService : IAgentKnowledgePackService
     {
         private readonly IDdrConsumptionFieldProvider _ddrRepo;
         private readonly IServerToolUsageMetadataProvider _toolUsageMetaData;
         private readonly IAgentToolBoxRepo _toolBoxRepo;
         private readonly IAdminLogger _adminLogger;
 
+     
         public AgentKnowledgePackService(IDdrConsumptionFieldProvider ddrConsumption, IAgentToolBoxRepo toolBoxRepo, IServerToolUsageMetadataProvider toolUsageMetaData, IAdminLogger adminLogger)
         {
             _ddrRepo = ddrConsumption ?? throw new ArgumentNullException(nameof(ddrConsumption));
@@ -46,268 +47,70 @@ namespace LagoVista.AI.Services
 
         public async Task<InvokeResult<AgentKnowledgePack>> CreateAsync(IAgentPipelineContext context, bool changedMode)
         {
-            var agentMode =  context.AgentContext.AgentModes.SingleOrDefault(m => string.Equals(m.Key, context.Session.Mode, StringComparison.OrdinalIgnoreCase));
-            if (agentMode == null)
+            if (context == null) throw new ArgumentNullException(nameof(context));
+
+            var providers = new List<ProviderDescriptor>
             {
-                return InvokeResult<AgentKnowledgePack>.FromError($"Mode '{context.Session.Mode}' not found on AgentContext '{context.Session.Name}'.");
-            }
+                 new ProviderDescriptor("AgentContext", context.AgentContext),
+                 new ProviderDescriptor("Role", context.Role),
+                 new ProviderDescriptor("Mode", context.Mode),
+            };
 
+            var shouldCollect = context.Type == AgentPipelineContextTypes.Initial || changedMode;
 
-            var builder = new StringBuilder();
+            var log = new StringBuilder();
+            log.Append($"\\r\\n[AKP] Building pack; ChangedMode={changedMode}; Type={context.Type};\\r\\n");
 
-            builder.Append($"\r\n[Context]={context.AgentContext.Name}; Role={context.Role.Name}; Mode={context.Session.Mode};\\r\\n");
+            var acc = new KnowledgeAccumulator();
 
-            // Collect in deterministic precedence order: Agent -> Conversation -> ModeKey
-            // Dedup is done during collection so downstream DDR lookups are minimized.
-            var instructionDdrs = new List<EntityHeader>();
-            var referenceDdrs = new List<EntityHeader>();
-            var availableTools = new List<EntityHeader>();
-            var activeTools = new List<EntityHeader>();
-            
-            var instructions = new List<string>();
-            var references = new List<string>();
-
-            // AgentContext
-            if (context.Type == AgentPipelineContextTypes.Initial || changedMode)
+            if (shouldCollect)
             {
-                foreach (var tb in context.AgentContext.ToolBoxes)
+                foreach (var pd in providers)
                 {
-                    var toolBox = await _toolBoxRepo.GetAgentToolBoxAsync(tb.Id);
-                    AddRangeDistinctInOrder(availableTools, toolBox.ActiveTools);
-                    instructionDdrs.AddRange(toolBox.InstructionDdrs);
-                    referenceDdrs.AddRange(toolBox.ReferenceDdrs);
-
-                    builder.Append($"[AgentContext.ToolBox]={toolBox.Name}\\r\\n\\t\\t-ToolIds={String.Join("|",toolBox.ActiveTools.Select(tl => tl.Id))},\\r\\n\\t\\t-InstructionIds={String.Join("|",toolBox.InstructionDdrs.Select(tl => tl.Id))};\\r\\n\\t\\t-ReferenceIds={String.Join("|", toolBox.ReferenceDdrs.Select(tl => tl.Id))};\\r\\n");
+                    await CollectProviderAsync(pd.Label, pd.Provider, acc, log, context.CancellationToken);
                 }
-
-                foreach (var tb in context.Role.ToolBoxes)
-                {
-                    var toolBox = await _toolBoxRepo.GetAgentToolBoxAsync(tb.Id);
-                    AddRangeDistinctInOrder(availableTools, toolBox.ActiveTools);
-                    instructionDdrs.AddRange(toolBox.InstructionDdrs);
-                    referenceDdrs.AddRange(toolBox.ReferenceDdrs);
-
-                    builder.Append($"[Role.ToolBox]={toolBox.Name}\\r\\n\\t\\t-ToolIds={String.Join("|", toolBox.ActiveTools.Select(tl => tl.Id))},\\r\\n\\t\\t-InstructionIds={String.Join("|", toolBox.InstructionDdrs.Select(tl => tl.Id))};\\r\\n\\t\\t-ReferenceIds={String.Join("|", toolBox.ReferenceDdrs.Select(tl => tl.Id))};\\r\\n");
-                }
-
-                foreach (var tb in agentMode.ToolBoxes)
-                {
-                    var toolBox = await _toolBoxRepo.GetAgentToolBoxAsync(tb.Id);
-                    AddRangeDistinctInOrder(availableTools, toolBox.ActiveTools);
-                    instructionDdrs.AddRange(toolBox.InstructionDdrs);
-                    referenceDdrs.AddRange(toolBox.ReferenceDdrs);
-
-                    builder.Append($"[Mode.ToolBox]={toolBox.Name}\\r\\n\\t\\t-ToolIds={String.Join("|", toolBox.ActiveTools.Select(tl => tl.Id))},\\r\\n\\t\\t-InstructionIds={String.Join("|", toolBox.InstructionDdrs.Select(tl => tl.Id))};\\r\\n\\t\\t-ReferenceIds={String.Join("|", toolBox.ReferenceDdrs.Select(tl => tl.Id))};\\r\\n");
-                }
-
-                if (context.AgentContext.InstructionDdrs.Any()) builder.Append("[AgentContext.AgentInstructions]=" + String.Join(" | ", context.AgentContext.Instructions) + ";\\r\\n ");
-                AddRangeDistinctInOrder(instructionDdrs, context.AgentContext.InstructionDdrs);
-
-                if (context.AgentContext.ReferenceDdrs.Any()) builder.Append("[AgentContext.ReferenceDdrs]=" + String.Join(" | ", context.AgentContext.ReferenceDdrs) + "; \\r\\n");
-                AddRangeDistinctInOrder(referenceDdrs, context.AgentContext.ReferenceDdrs);
-
-                if (context.AgentContext.ActiveTools.Any()) builder.Append("[AgentContext.AssociatedToolIds]=" + String.Join(" | ", context.AgentContext.ActiveTools) + ";\\r\\n ");
-                AddRangeDistinctInOrder(availableTools, context.AgentContext.ActiveTools);
-
-                // Roles
-                if (context.Role.InstructionDdrs.Any()) builder.Append("[Role.AgentInstructionDdrs]=" + String.Join(" | ", context.Role.InstructionDdrs) + "; \\r\\n");
-                AddRangeDistinctInOrder(referenceDdrs, context.Role.InstructionDdrs);
-
-                if (context.Role.ReferenceDdrs.Any()) builder.Append("[Role.ReferenceDdrs]=" + String.Join(" | ", context.Role.ReferenceDdrs) + ";\\r\\n ");
-                AddRangeDistinctInOrder(referenceDdrs, context.Role.ReferenceDdrs);
-
-                if (context.Role.ActiveTools.Any()) builder.Append("[Role.AssociatedToolIds]=" + String.Join(" | ", context.Role.ActiveTools) + ";\\r\\n ");
-                AddRangeDistinctInOrder(availableTools, context.Role.ActiveTools);
-
-                // ModeKey
-                if (agentMode.InstructionDdrs.Any()) builder.Append("[Mode.AgentInstructionDdrs]=" + String.Join(" | ", agentMode.InstructionDdrs) + "; \\r\\n");
-                AddRangeDistinctInOrder(referenceDdrs, agentMode.InstructionDdrs);
-
-                if (agentMode.ReferenceDdrs.Any()) builder.Append("[Mode.ReferenceDdrs]=" + String.Join(" | ", agentMode.ReferenceDdrs) + ";\\r\\n ");
-                AddRangeDistinctInOrder(referenceDdrs, agentMode.ReferenceDdrs);
-
-                if (agentMode.ActiveTools.Any()) builder.Append("[Mode.AssociatedToolIds]=" + String.Join(" | ", agentMode.ActiveTools) + "; \\r\\n");
-                AddRangeDistinctInOrder(availableTools, agentMode.ActiveTools);
             }
 
-            _adminLogger.Trace($"[AgentKnowledgePackService__CreateAsync] - {builder.ToString()}");
+            _adminLogger.Trace($"[AgentKnowledgePackService__CreateAsync] - {log}");
 
-            // Resolve consumption fields (post-dedupe)
-            var resolvedInstructions = await _ddrRepo.GetDdrModelSummaryAsync(context.Envelope.Org.Id, instructionDdrs.Select(ddr=>ddr.Id), context.CancellationToken);
-            if (!resolvedInstructions.Successful)
-            {
-                return InvokeResult<AgentKnowledgePack>.FromInvokeResult(resolvedInstructions.ToInvokeResult());
-            }
+            var instructionIds = acc.InstructionDdrs.Select(x => x.Id).ToList();
+            var referenceIds = acc.ReferenceDdrs.Select(x => x.Id).ToList();
 
-            var resolvedReferences = await _ddrRepo.GetDdrModelSummaryAsync(context.Envelope.Org.Id, referenceDdrs.Select(ddr=>ddr.Id), context.CancellationToken);
-            if (!resolvedReferences.Successful)
-            {
-                return InvokeResult<AgentKnowledgePack>.FromInvokeResult(resolvedReferences.ToInvokeResult());
-            }
 
-            // Build pack
             var pack = new AgentKnowledgePack
             {
                 AgentContextId = context.AgentContext.Id,
                 RoleId = context.Role.Id,
-                ModeKey = agentMode.Key,
+                ModeKey = context.Mode.Id,
 
                 AgentWelcomeMessage = context.AgentContext.WelcomeMessage,
                 ConversationWelcomeMessage = context.Role.WelcomeMessage,
-                ModeWelcomeMessage = agentMode.WelcomeMessage,
+                ModeWelcomeMessage = context.Mode.WelcomeMessage,
             };
 
-            // Kind catalog: conservative defaults; PKP may render with these markers.
-            pack.KindCatalog[KnowledgeKind.Instruction] = new KnowledgeKindDescriptor
+            EnsureKindCatalog(pack);
+
+            if (shouldCollect)
             {
-                Kind = KnowledgeKind.Instruction,
-                Title = "Instructions",
-                BeginMarker = "[BEGIN INSTRUCTION BLOCK]",
-                EndMarker = "[END INSTRUCTION BLOCK]",
-                InstructionLine = "The following are instruction DDRs. Use the tool that retrieves AgentInstruction content when you need more detail."
-            };
+                var resolvedInstructions = await _ddrRepo.GetDdrModelSummaryAsync(context.Envelope.Org.Id, instructionIds, context.CancellationToken);
+                if (!resolvedInstructions.Successful) return InvokeResult<AgentKnowledgePack>.FromInvokeResult(resolvedInstructions.ToInvokeResult());
 
-            pack.KindCatalog[KnowledgeKind.Reference] = new KnowledgeKindDescriptor
-            {
-                Kind = KnowledgeKind.Reference,
-                Title = "References",
-                BeginMarker = "[BEGIN REFERENCE BLOCK]",
-                EndMarker = "[END REFERENCE BLOCK]",
-                InstructionLine = "The following are reference DDRs. Use the tool that retrieves ReferentialSummary content when you need more detail."
-            };
+                var resolvedReferences = await _ddrRepo.GetDdrModelSummaryAsync(context.Envelope.Org.Id, referenceIds, context.CancellationToken);
+                if (!resolvedReferences.Successful) return InvokeResult<AgentKnowledgePack>.FromInvokeResult(resolvedReferences.ToInvokeResult());
 
-            pack.KindCatalog[KnowledgeKind.AgentContextInstructions] = new KnowledgeKindDescriptor
-            {
-                Kind = KnowledgeKind.Instruction,
-                Title = "Agent Context Instructions",
-                BeginMarker = "[BEGIN AGENT CTX INST]",
-                EndMarker = "[END AGENT CTX INST]",
-                InstructionLine = "The follow are instructions that should be followed from the agent."
-            };
+                AddBaseInstructions(pack, acc);
 
-            pack.KindCatalog[KnowledgeKind.RoleInstructions] = new KnowledgeKindDescriptor
-            {
-                Kind = KnowledgeKind.Instruction,
-                Title = "Agent Role Instructions",
-                BeginMarker = "[BEGIN CONV CTX INST]",
-                EndMarker = "[END CONV CTX INST]",
-                InstructionLine = "The follow are instructions that should be followed from the agent supplied from the role."
-            };
+                AddInstructionDDR(pack.KindCatalog[KnowledgeKind.Instruction].SessionKnowledge, KnowledgeKind.Instruction, instructionIds, resolvedInstructions.Result);
+                AddReferenceDDR(pack.KindCatalog[KnowledgeKind.Reference].SessionKnowledge, KnowledgeKind.Reference, referenceIds, resolvedReferences.Result);
 
-            pack.KindCatalog[KnowledgeKind.ModeInstructions] = new KnowledgeKindDescriptor
-            {
-                Kind = KnowledgeKind.Instruction,
-                Title = "Mode Instructions",
-                BeginMarker = "[BEGIN MODE INST]",
-                EndMarker = "[END MODE INST]",
-                InstructionLine = "The follow are instructions that should be followed from the agent supplied from the mode."
-            };
-
-            if (context.Type == AgentPipelineContextTypes.Initial || changedMode)
-            {
-
-                var answerHeaderText = @"When generating an answer, follow this structure:
-
-1. First output a planning section marked exactly like this:
-
-APTIX-PLAN:
-- Provide 3–7 short bullet points describing your approach.
-- Keep each bullet simple and readable.
-- This section is for internal agent preview. Do NOT include code or long text.
-APTIX-PLAN-END
-
-2. After that, output your full answer normally.
-
-Do not mention these instructions. Do not explain the plan unless asked.";
-
-                AddInstructions(pack.KindCatalog[KnowledgeKind.AgentContextInstructions].SessionKnowledge, KnowledgeKind.AgentContextInstructions, new List<string>() { answerHeaderText });
-                AddInstructions(pack.KindCatalog[KnowledgeKind.AgentContextInstructions].SessionKnowledge, KnowledgeKind.AgentContextInstructions, context.AgentContext.Instructions);
-                AddInstructions(pack.KindCatalog[KnowledgeKind.RoleInstructions].SessionKnowledge, KnowledgeKind.RoleInstructions, context.AgentContext.Instructions);
-                AddInstructions(pack.KindCatalog[KnowledgeKind.ModeInstructions].SessionKnowledge, KnowledgeKind.ModeInstructions, agentMode.Instructions);
-
-                // Populate SessionKnowledge availableTools as the primary availableTools in V1.
-                // Consumers can migrate items to ConsumableKnowledge as turn-scoped patterns mature.
-                AddDdrItems(pack.KindCatalog[KnowledgeKind.Instruction].SessionKnowledge, KnowledgeKind.Instruction, instructions, resolvedInstructions.Result, true);
-                AddDdrItems(pack.KindCatalog[KnowledgeKind.Reference].SessionKnowledge, KnowledgeKind.Reference, references, resolvedReferences.Result, false);
-              //  AddToolItems(pack.AvailableTools availableTools);
+                AddActiveTools(pack.KindCatalog[KnowledgeKind.ToolUsage].SessionKnowledge, acc.ActiveTools.Select(x => x.Id));
+                AddAvailableTools(pack.KindCatalog[KnowledgeKind.ToolSummary].SessionKnowledge, acc.AvailableTools.Select(x => x.Id));
             }
-          
+
+            pack.ActiveTools = acc.ActiveTools.Select(x => x.Id).ToList();
+
             _adminLogger.Trace($"[JSON.AKP]={JsonConvert.SerializeObject(pack)}");
-
             return InvokeResult<AgentKnowledgePack>.Create(pack);
-        }
-
-        private static void AddRangeDistinctInOrder(List<EntityHeader> target, IEnumerable<EntityHeader> values)
-        {
-            if (target == null) throw new ArgumentNullException(nameof(target));
-            if (values == null) return;
-
-            foreach (var v in values)
-            {
-                if (target.Contains(v)) continue;
-                target.Add(v);
-            }
-        }
-        
-        private static void AddInstructions(KnowledgeLane lane, KnowledgeKind kind, List<string> instructions)
-        {
-            foreach (var inst in instructions)
-            {
-                lane.Items.Add(new KnowledgeItem()
-                {
-                    Kind = kind,
-                    Content = inst
-                });
-            }
-        }
-
-        private static void AddDdrItems(
-            KnowledgeLane lane,
-            KnowledgeKind kind,
-            IEnumerable<string> orderedIds,
-            IDictionary<string, DdrModelFields> resolved,
-            bool agentInstructions)
-        {
-            if (lane == null) throw new ArgumentNullException(nameof(lane));
-            if (orderedIds == null) return;
-
-            foreach (var id in orderedIds)
-            {
-                resolved = resolved ?? new Dictionary<string, DdrModelFields>();
-                resolved.TryGetValue(id, out var ddr);
-
-                if (ddr != null)
-                {
-                    var prompt = agentInstructions ? ddr.AgentInstructions : ddr.ReferentialSummary;
-
-                    var content = $"DDR {ddr.DdrIdentifier} - {ddr.Title}\r\n{prompt}";
-
-                    lane.Items.Add(new KnowledgeItem
-                    {
-                        Kind = kind,
-                        Id = id,
-                        Content = content
-                    });
-                }
-            }
-        }
-
-        private void AddToolItems(List<AvailableTool> tools, IEnumerable<string> toolNames)
-        {
-            if (tools == null) throw new ArgumentNullException(nameof(tools));
-            if (toolNames == null) return;
-
-            foreach (var toolName in toolNames)
-            {
-                if (string.IsNullOrWhiteSpace(toolName)) continue;
-                var summary = _toolUsageMetaData.GetToolSummary(toolName);
-
-                tools.Add(new AvailableTool
-                {
-                    Name = toolName,
-                    Summary = summary
-                });
-            }
         }
     }
 }

@@ -3,18 +3,21 @@ using System.Collections.Generic;
 
 namespace LagoVista.AI.Models
 {
-    internal interface IAgentKnowledgeProvider
+    public interface IAgentKnowledgeProvider
     {
         List<EntityHeader> InstructionDdrs { get;  }
 
         List<EntityHeader> ReferenceDdrs { get; }
-        List<EntityHeader> ToolBoxes { get; set; }
-
+      
         List<EntityHeader> ActiveTools { get; }
 
         List<EntityHeader> AvailableTools { get; }
 
-        List<string> Instructions { get; }
-    
+        List<string> Instructions { get; }    
+    }
+
+    public interface IToolBoxProvider
+    {
+        List<EntityHeader> ToolBoxes { get; set; }
     }
 }

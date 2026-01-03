@@ -6,9 +6,9 @@ namespace LagoVista.AI.Models
     public enum KnowledgeKind
     {
         AgentContextInstructions,
-        RoleInstructions,
-        ModeInstructions,
         Instruction,
         Reference,
+        ToolUsage,
+        ToolSummary,
     }
 }
