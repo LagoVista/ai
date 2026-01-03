@@ -42,8 +42,7 @@ namespace LagoVista.AI.Tests.Tools
                         {
                              Id = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                              Key = "general",
-                             DisplayName = "General Assistance"
-
+                             Name = "General Assistance"
                         }
                     }
                 },

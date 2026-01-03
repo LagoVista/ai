@@ -43,10 +43,6 @@ namespace LagoVista.AI.Services.Tools
             toolRegistry.RegisterTool<CodeHashNormalizedTool>();
             toolRegistry.RegisterTool<WorkspaceCreateFileTool>();
 
-            /* ModeKey Authoring */
-            toolRegistry.RegisterTool<AddAgentModeTool>();
-            toolRegistry.RegisterTool<UpdateAgentModeTool>();
-
             ///* workflow authoring + registry tools */
             toolRegistry.RegisterTool<ListWorkflowsTool>();
             toolRegistry.RegisterTool<GetWorkflowManifestTool>();

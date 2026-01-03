@@ -51,7 +51,7 @@ namespace LagoVista.AI.Helpers
             {
                 SessionId = ctx.Session.Id,
                 TurnId = ctx.ThisTurn.Id,
-                ModeDisplayName = mode.DisplayName
+                ModeDisplayName = mode.Name
             };
 
             switch(ctx.ResponseType)

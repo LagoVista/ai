@@ -44,17 +44,20 @@ namespace LagoVista.AI.Models
         /// Mode-specific behavior instructions for the LLM when this
         /// mode is active (go into the Active Mode Behavior Block).
         /// </summary>
-        public string[] AgentInstructionDdrs { get; set; } = Array.Empty<string>();
+        public List<EntityHeader> ActiveToolss { get; set; } = new List<EntityHeader>();
+
+        public List<EntityHeader> AgentInstructionDdrs { get; set; } = new List<EntityHeader>();
+
 
         /// <summary>
         /// DDR's that produce patterns, practices and standards that can be used when the LLM reasons.
         /// </summary>
-        public string[] ReferenceDdrs { get; set; } = Array.Empty<string>();
+        public List<EntityHeader> ReferenceDdrs { get; set; } = new List<EntityHeader>();
 
         /// <summary>
         /// Tool IDs that are enabled when this mode is active.
         /// </summary>
-        public string[] AssociatedToolIds { get; set; } = Array.Empty<string>();
+        public List<EntityHeader> ActiveTools { get; set; } = new List<EntityHeader>();
 
 
         public List<EntityHeader> ToolBoxes { get; set; } = new List<EntityHeader>();

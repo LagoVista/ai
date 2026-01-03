@@ -55,7 +55,6 @@ namespace LagoVista.AI.Managers
             agentContext.VectorDatabaseApiKey = null;
 
             await AuthorizeAsync(agentContext, AuthorizeResult.AuthorizeActions.Create, user, org);
-            AddGeneralMode(agentContext, org, user);
             await _repo.AddAgentContextAsync(agentContext);
 
             return InvokeResult.Success;
@@ -79,47 +78,12 @@ namespace LagoVista.AI.Managers
             // Ensure "general" exists as a baseline mode (mirrors orchestrator behavior).
             if (!agentContext.AgentModes.Any(mode => mode.Key == AgentSession.DefaultMode))
             {
-                AddGeneralMode(agentContext, org, user);
                 await UpdateAgentContextAsync(agentContext, org, user);
             }
 
             return agentContext;
         }
 
-        private void AddGeneralMode(AgentContext context, EntityHeader org, EntityHeader user)
-        {
-            var mode = new AgentMode
-            {
-                Id = Guid.NewGuid().ToId(),
-                Key = "general",
-                DisplayName = "General Mode",
-                Description = "General-purpose assistance for everyday Q&A, explanation, and lightweight help.",
-                WhenToUse = "Use this mode for everyday Q&A, explanation, and lightweight assistance.",
-                WelcomeMessage = "You are now in General mode. Use this mode for broad questions and lightweight assistance",
-                AgentInstructionDdrs = new[]
-                {
-                    "You are operating in General mode. Provide helpful and accurate responses to a wide range of user queries.",
-                    "Focus on clarity and conciseness in your answers.",
-                    "If you don't know the answer, admit it rather than making something up."
-                },
-                BehaviorHints = new[] { "preferConversationalTone" },
-                HumanRoleHints = new[] { "The human is seeking general information and assistance." },
-                AssociatedToolIds = new[] { "activate_tools", "list_agent_modes" },
-                RagScopeHints = Array.Empty<string>(),
-                StrongSignals = Array.Empty<string>(),
-                WeakSignals = Array.Empty<string>(),
-                ExampleUtterances = new[]
-                {
-                    "Review this PR diff and suggest improvements.",
-                    "Does this function handle edge cases?",
-                    "Propose a minimal patch to fix naming and add a comment.",
-                    "Flag any security issues in this handler."
-                },
-                IsDefault = true
-            };
-
-            context.AgentModes.Add(mode);
-        }
 
         public async Task<Models.AgentContext> GetAgentContextWithSecretsAsync(string id, EntityHeader org, EntityHeader user)
         {

@@ -1,4 +1,4 @@
-﻿/*1/2/2026 5:06:18 PM*/
+﻿/*1/3/2026 6:22:18 AM*/
 using System.Globalization;
 using System.Reflection;
 
@@ -63,12 +63,21 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:AgentContext_CompletionReservePercent_Help
 
 		public static string AgentContext_CompletionReservePercent_Help { get { return GetResourceString("AgentContext_CompletionReservePercent_Help"); } }
+//Resources:AIResources:AgentContext_DefaultMode
+
+		public static string AgentContext_DefaultMode { get { return GetResourceString("AgentContext_DefaultMode"); } }
+//Resources:AIResources:AgentContext_DefaultMode_Select
+
+		public static string AgentContext_DefaultMode_Select { get { return GetResourceString("AgentContext_DefaultMode_Select"); } }
 //Resources:AIResources:AgentContext_DefaultRole
 
 		public static string AgentContext_DefaultRole { get { return GetResourceString("AgentContext_DefaultRole"); } }
 //Resources:AIResources:AgentContext_DefaultRole_Select
 
 		public static string AgentContext_DefaultRole_Select { get { return GetResourceString("AgentContext_DefaultRole_Select"); } }
+//Resources:AIResources:AgentContext_Instructions
+
+		public static string AgentContext_Instructions { get { return GetResourceString("AgentContext_Instructions"); } }
 //Resources:AIResources:AgentContext_LlmProvider
 
 		public static string AgentContext_LlmProvider { get { return GetResourceString("AgentContext_LlmProvider"); } }
@@ -1011,8 +1020,11 @@ namespace LagoVista.AI.Models.Resources
 			public const string Agent_Context_Mode_Title = "Agent_Context_Mode_Title";
 			public const string AgentContext_CompletionReservePercent = "AgentContext_CompletionReservePercent";
 			public const string AgentContext_CompletionReservePercent_Help = "AgentContext_CompletionReservePercent_Help";
+			public const string AgentContext_DefaultMode = "AgentContext_DefaultMode";
+			public const string AgentContext_DefaultMode_Select = "AgentContext_DefaultMode_Select";
 			public const string AgentContext_DefaultRole = "AgentContext_DefaultRole";
 			public const string AgentContext_DefaultRole_Select = "AgentContext_DefaultRole_Select";
+			public const string AgentContext_Instructions = "AgentContext_Instructions";
 			public const string AgentContext_LlmProvider = "AgentContext_LlmProvider";
 			public const string AgentContext_LlmProvider_Select = "AgentContext_LlmProvider_Select";
 			public const string AgentContext_MaxTokenCount = "AgentContext_MaxTokenCount";

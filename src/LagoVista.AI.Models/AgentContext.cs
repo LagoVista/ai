@@ -1,4 +1,4 @@
-// --- BEGIN CODE INDEX META (do not edit) ---
+// --- BEGIN CODE INDEX META (do not edit) ---c
 // ContentHash: 9691650f74ac0a4a1a4874cef7dbe09f9dae22cae37448f3f6ff08b058887e32
 // IndexVersion: 2
 // --- END CODE INDEX META ---
@@ -57,9 +57,14 @@ namespace LagoVista.AI.Models
         [FormField(LabelResource: AIResources.Names.VectorDatabase_OpenAPI_Token, HelpResource: AIResources.Names.VectorDatabase_OpenAPI_Token_Help, SecureIdFieldName: nameof(LlmApiKeySecretId), FieldType: FieldTypes.Secret, ResourceType: typeof(AIResources))]
         public string LlmApiKey { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.AgentContext_DefaultRole, PickerProviderFieldName: nameof(Roles), WaterMark: AIResources.Names.AgentContext_DefaultRole_Select, FieldType: FieldTypes.EntityHeaderPicker,
+        [FormField(LabelResource: AIResources.Names.AgentContext_DefaultRole, PickerProviderFieldName: nameof(Roles), IsRequired:true, WaterMark: AIResources.Names.AgentContext_DefaultRole_Select, FieldType: FieldTypes.Picker,
             ResourceType: typeof(AIResources))]
         public EntityHeader DefaultRole { get; set; }
+
+
+        [FormField(LabelResource: AIResources.Names.AgentContext_DefaultMode, PickerProviderFieldName: nameof(AgentModes), IsRequired:true, WaterMark: AIResources.Names.AgentContext_DefaultMode_Select, FieldType: FieldTypes.Picker,
+            ResourceType: typeof(AIResources))]
+        public EntityHeader DefaultMode { get; set; }
 
         [FormField(LabelResource: AIResources.Names.AgentContext_Roles, HelpResource: AIResources.Names.AgentContext_Role_Description,AllowAddChild:true, CanAddRows: true, FieldType: FieldTypes.ChildList, FactoryUrl: "/api/ai/agentcontext/role/factory",
             ResourceType: typeof(AIResources))]
@@ -87,29 +92,27 @@ namespace LagoVista.AI.Models
         /// Mode-specific behavior instructions for the LLM when this
         /// mode is active (go into the Active Mode Behavior Block).
         /// </summary>
-        public string[] AgentInstructionDdrs { get; set; } = Array.Empty<string>();
+        public List<EntityHeader> AgentInstructionDdrs { get; set; } = new List<EntityHeader>();
 
         /// <summary>
         /// DDR's that produce patterns, practices and standards that can be used when the LLM reasons.
         /// </summary>
-        public string[] ReferenceDdrs { get; set; } = Array.Empty<string>();
+        public List<EntityHeader> ReferenceDdrs { get; set; } = new List<EntityHeader>();
 
         /// <summary>
         /// Tool IDs that are enabled when this mode is active.
         /// </summary>
-        public string[] AssociatedToolIds { get; set; } = Array.Empty<string>();
+        public List<EntityHeader> ActiveTools { get; set; } = new List<EntityHeader>();
+
+        public List<EntityHeader> AvailableTools { get; set; } = new List<EntityHeader>();
 
         public List<EntityHeader> ToolBoxes { get; set; } = new List<EntityHeader>();
 
+        [FormField(LabelResource: AIResources.Names.AgentContext_Instructions,  FieldType: FieldTypes.StringList, ResourceType: typeof(AIResources))]
         public List<string> Instructions { get; set; }= new List<string>();
 
-        /// <summary>
-        /// Optional grouping hints for UI or LLM reasoning, e.g. "authoring",
-        /// "read-only", "diagnostics".
-        /// </summary>
-        public string[] ToolGroupHints { get; set; } = Array.Empty<string>();
 
-        [FormField(LabelResource: AIResources.Names.AgentContext_Modes, HelpResource: AIResources.Names.AgentContext_Mode_Help, ChildListDisplayMember: nameof(AgentMode.DisplayName), AllowAddChild: true, CanAddRows: true, FieldType: FieldTypes.ChildList, FactoryUrl: "/api/ai/agentcontext/mode/factory",
+        [FormField(LabelResource: AIResources.Names.AgentContext_Modes, HelpResource: AIResources.Names.AgentContext_Mode_Help, ChildListDisplayMember: nameof(AgentMode.Name), AllowAddChild: true, CanAddRows: true, FieldType: FieldTypes.ChildList, FactoryUrl: "/api/ai/agentcontext/mode/factory",
            ResourceType: typeof(AIResources))]
         public List<AgentMode> AgentModes { get; set; } = new List<AgentMode>();
 
@@ -146,7 +149,7 @@ namespace LagoVista.AI.Models
                 nameof(AzureAccountId),
                 nameof(AzureApiToken),
                 nameof(BlobContainerName),
-                nameof(Description)
+                nameof(Instructions),
             };
         }
 
@@ -168,6 +171,7 @@ namespace LagoVista.AI.Models
                 nameof(CompletionReservePercent),
                 nameof(DefaultRole),
                 nameof(Roles),
+                nameof(DefaultMode),
                 nameof(AgentModes),
             };
         }

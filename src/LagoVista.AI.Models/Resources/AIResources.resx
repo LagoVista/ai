@@ -1072,4 +1072,13 @@
   <data name="RiskSensitivity_High" xml:space="preserve">
     <value>High</value>
   </data>
+  <data name="AgentContext_DefaultMode" xml:space="preserve">
+    <value>Default Mode</value>
+  </data>
+  <data name="AgentContext_DefaultMode_Select" xml:space="preserve">
+    <value>-select default mode-</value>
+  </data>
+  <data name="AgentContext_Instructions" xml:space="preserve">
+    <value>Instructions</value>
+  </data>
 </root>

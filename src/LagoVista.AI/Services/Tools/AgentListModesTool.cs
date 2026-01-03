@@ -89,7 +89,7 @@ namespace LagoVista.AI.Services.Tools
                     {
                         Id = mode.Id ?? string.Empty,
                         Key = mode.Key ?? string.Empty,
-                        DisplayName = mode.DisplayName ?? string.Empty,
+                        DisplayName = mode.Name ?? string.Empty,
                         Description = mode.Description ?? string.Empty,
                         SystemPromptSummary = mode.SystemPromptSummary ?? string.Empty,
                         IsDefault = mode.IsDefault,

@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
+using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json;
@@ -30,14 +31,14 @@ namespace LagoVista.AI.Services
     /// </summary>
     public sealed class AgentKnowledgePackService : IAgentKnowledgePackService
     {
-        private readonly IDdrConsumptionFieldProvider _ddrConsumption;
+        private readonly IDdrConsumptionFieldProvider _ddrRepo;
         private readonly IServerToolUsageMetadataProvider _toolUsageMetaData;
         private readonly IAgentToolBoxRepo _toolBoxRepo;
         private readonly IAdminLogger _adminLogger;
 
         public AgentKnowledgePackService(IDdrConsumptionFieldProvider ddrConsumption, IAgentToolBoxRepo toolBoxRepo, IServerToolUsageMetadataProvider toolUsageMetaData, IAdminLogger adminLogger)
         {
-            _ddrConsumption = ddrConsumption ?? throw new ArgumentNullException(nameof(ddrConsumption));
+            _ddrRepo = ddrConsumption ?? throw new ArgumentNullException(nameof(ddrConsumption));
             _toolUsageMetaData = toolUsageMetaData ?? throw new ArgumentNullException(nameof(toolUsageMetaData));
             _toolBoxRepo = toolBoxRepo ?? throw new ArgumentNullException(nameof(toolBoxRepo));
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
@@ -58,19 +59,23 @@ namespace LagoVista.AI.Services
 
             // Collect in deterministic precedence order: Agent -> Conversation -> ModeKey
             // Dedup is done during collection so downstream DDR lookups are minimized.
-            var instructionIds = new List<string>();
-            var referenceIds = new List<string>();
-            var toolNames = new List<string>();
+            var instructionDdrs = new List<EntityHeader>();
+            var referenceDdrs = new List<EntityHeader>();
+            var availableTools = new List<EntityHeader>();
+            var activeTools = new List<EntityHeader>();
+            
             var instructions = new List<string>();
+            var references = new List<string>();
+
             // AgentContext
             if (context.Type == AgentPipelineContextTypes.Initial || changedMode)
             {
                 foreach (var tb in context.AgentContext.ToolBoxes)
                 {
                     var toolBox = await _toolBoxRepo.GetAgentToolBoxAsync(tb.Id);
-                    AddRangeDistinctInOrder(toolNames, toolBox.Tools.Select(tl => tl.Id));
-                    instructionIds.AddRange(toolBox.InstructionDdrs.Select(tl => tl.Id));
-                    referenceIds.AddRange(toolBox.ReferenceDdrs.Select(tl => tl.Id));
+                    AddRangeDistinctInOrder(availableTools, toolBox.Tools);
+                    instructionDdrs.AddRange(toolBox.InstructionDdrs);
+                    referenceDdrs.AddRange(toolBox.ReferenceDdrs);
 
                     builder.Append($"[AgentContext.ToolBox]={toolBox.Name}\\r\\n\\t\\t-ToolIds={String.Join("|",toolBox.Tools.Select(tl => tl.Id))},\\r\\n\\t\\t-InstructionIds={String.Join("|",toolBox.InstructionDdrs.Select(tl => tl.Id))};\\r\\n\\t\\t-ReferenceIds={String.Join("|", toolBox.ReferenceDdrs.Select(tl => tl.Id))};\\r\\n");
                 }
@@ -78,9 +83,9 @@ namespace LagoVista.AI.Services
                 foreach (var tb in context.Role.ToolBoxes)
                 {
                     var toolBox = await _toolBoxRepo.GetAgentToolBoxAsync(tb.Id);
-                    AddRangeDistinctInOrder(toolNames, toolBox.Tools.Select(tl => tl.Id));
-                    instructionIds.AddRange(toolBox.InstructionDdrs.Select(tl => tl.Id));
-                    referenceIds.AddRange(toolBox.ReferenceDdrs.Select(tl => tl.Id));
+                    AddRangeDistinctInOrder(availableTools, toolBox.Tools);
+                    instructionDdrs.AddRange(toolBox.InstructionDdrs);
+                    referenceDdrs.AddRange(toolBox.ReferenceDdrs);
 
                     builder.Append($"[Role.ToolBox]={toolBox.Name}\\r\\n\\t\\t-ToolIds={String.Join("|", toolBox.Tools.Select(tl => tl.Id))},\\r\\n\\t\\t-InstructionIds={String.Join("|", toolBox.InstructionDdrs.Select(tl => tl.Id))};\\r\\n\\t\\t-ReferenceIds={String.Join("|", toolBox.ReferenceDdrs.Select(tl => tl.Id))};\\r\\n");
                 }
@@ -88,53 +93,53 @@ namespace LagoVista.AI.Services
                 foreach (var tb in agentMode.ToolBoxes)
                 {
                     var toolBox = await _toolBoxRepo.GetAgentToolBoxAsync(tb.Id);
-                    AddRangeDistinctInOrder(toolNames, toolBox.Tools.Select(tl => tl.Id));
-                    instructionIds.AddRange(toolBox.InstructionDdrs.Select(tl => tl.Id));
-                    referenceIds.AddRange(toolBox.ReferenceDdrs.Select(tl => tl.Id));
+                    AddRangeDistinctInOrder(availableTools, toolBox.Tools);
+                    instructionDdrs.AddRange(toolBox.InstructionDdrs);
+                    referenceDdrs.AddRange(toolBox.ReferenceDdrs);
 
                     builder.Append($"[Mode.ToolBox]={toolBox.Name}\\r\\n\\t\\t-ToolIds={String.Join("|", toolBox.Tools.Select(tl => tl.Id))},\\r\\n\\t\\t-InstructionIds={String.Join("|", toolBox.InstructionDdrs.Select(tl => tl.Id))};\\r\\n\\t\\t-ReferenceIds={String.Join("|", toolBox.ReferenceDdrs.Select(tl => tl.Id))};\\r\\n");
                 }
 
                 if (context.AgentContext.AgentInstructionDdrs.Any()) builder.Append("[AgentContext.AgentInstructions]=" + String.Join(" | ", context.AgentContext.Instructions) + ";\\r\\n ");
-                AddRangeDistinctInOrder(instructionIds, context.AgentContext.AgentInstructionDdrs);
+                AddRangeDistinctInOrder(instructionDdrs, context.AgentContext.AgentInstructionDdrs);
 
                 if (context.AgentContext.ReferenceDdrs.Any()) builder.Append("[AgentContext.ReferenceDdrs]=" + String.Join(" | ", context.AgentContext.ReferenceDdrs) + "; \\r\\n");
-                AddRangeDistinctInOrder(referenceIds, context.AgentContext.ReferenceDdrs);
+                AddRangeDistinctInOrder(referenceDdrs, context.AgentContext.ReferenceDdrs);
 
-                if (context.AgentContext.AssociatedToolIds.Any()) builder.Append("[AgentContext.AssociatedToolIds]=" + String.Join(" | ", context.AgentContext.AssociatedToolIds) + ";\\r\\n ");
-                AddRangeDistinctInOrder(toolNames, context.AgentContext.AssociatedToolIds);
+                if (context.AgentContext.ActiveTools.Any()) builder.Append("[AgentContext.AssociatedToolIds]=" + String.Join(" | ", context.AgentContext.ActiveTools) + ";\\r\\n ");
+                AddRangeDistinctInOrder(availableTools, context.AgentContext.ActiveTools);
 
                 // Roles
                 if (context.Role.AgentInstructionDdrs.Any()) builder.Append("[Role.AgentInstructionDdrs]=" + String.Join(" | ", context.Role.AgentInstructionDdrs) + "; \\r\\n");
-                AddRangeDistinctInOrder(referenceIds, context.Role.AgentInstructionDdrs);
+                AddRangeDistinctInOrder(referenceDdrs, context.Role.AgentInstructionDdrs);
 
                 if (context.Role.ReferenceDdrs.Any()) builder.Append("[Role.ReferenceDdrs]=" + String.Join(" | ", context.Role.ReferenceDdrs) + ";\\r\\n ");
-                AddRangeDistinctInOrder(referenceIds, context.Role.ReferenceDdrs);
+                AddRangeDistinctInOrder(referenceDdrs, context.Role.ReferenceDdrs);
 
-                if (context.Role.AssociatedToolIds.Any()) builder.Append("[Role.AssociatedToolIds]=" + String.Join(" | ", context.Role.AssociatedToolIds) + ";\\r\\n ");
-                AddRangeDistinctInOrder(toolNames, context.Role.AssociatedToolIds);
+                if (context.Role.ActiveTools.Any()) builder.Append("[Role.AssociatedToolIds]=" + String.Join(" | ", context.Role.ActiveTools) + ";\\r\\n ");
+                AddRangeDistinctInOrder(availableTools, context.Role.ActiveTools);
 
                 // ModeKey
                 if (agentMode.AgentInstructionDdrs.Any()) builder.Append("[Mode.AgentInstructionDdrs]=" + String.Join(" | ", agentMode.AgentInstructionDdrs) + "; \\r\\n");
-                AddRangeDistinctInOrder(referenceIds, agentMode.AgentInstructionDdrs);
+                AddRangeDistinctInOrder(referenceDdrs, agentMode.AgentInstructionDdrs);
 
                 if (agentMode.ReferenceDdrs.Any()) builder.Append("[Mode.ReferenceDdrs]=" + String.Join(" | ", agentMode.ReferenceDdrs) + ";\\r\\n ");
-                AddRangeDistinctInOrder(referenceIds, agentMode.ReferenceDdrs);
+                AddRangeDistinctInOrder(referenceDdrs, agentMode.ReferenceDdrs);
 
-                if (agentMode.AssociatedToolIds.Any()) builder.Append("[Mode.AssociatedToolIds]=" + String.Join(" | ", agentMode.AssociatedToolIds) + "; \\r\\n");
-                AddRangeDistinctInOrder(toolNames, agentMode.AssociatedToolIds);
+                if (agentMode.ActiveTools.Any()) builder.Append("[Mode.AssociatedToolIds]=" + String.Join(" | ", agentMode.ActiveTools) + "; \\r\\n");
+                AddRangeDistinctInOrder(availableTools, agentMode.ActiveTools);
             }
 
             _adminLogger.Trace($"[AgentKnowledgePackService__CreateAsync] - {builder.ToString()}");
 
             // Resolve consumption fields (post-dedupe)
-            var resolvedInstructions = await _ddrConsumption.GetDdrModelSummaryAsync(context.Envelope.Org.Id, instructionIds, context.CancellationToken);
+            var resolvedInstructions = await _ddrRepo.GetDdrModelSummaryAsync(context.Envelope.Org.Id, instructionDdrs.Select(ddr=>ddr.Id), context.CancellationToken);
             if (!resolvedInstructions.Successful)
             {
                 return InvokeResult<AgentKnowledgePack>.FromInvokeResult(resolvedInstructions.ToInvokeResult());
             }
 
-            var resolvedReferences = await _ddrConsumption.GetDdrModelSummaryAsync(context.Envelope.Org.Id, referenceIds, context.CancellationToken);
+            var resolvedReferences = await _ddrRepo.GetDdrModelSummaryAsync(context.Envelope.Org.Id, referenceDdrs.Select(ddr=>ddr.Id), context.CancellationToken);
             if (!resolvedReferences.Successful)
             {
                 return InvokeResult<AgentKnowledgePack>.FromInvokeResult(resolvedReferences.ToInvokeResult());
@@ -220,11 +225,11 @@ Do not mention these instructions. Do not explain the plan unless asked.";
                 AddInstructions(pack.KindCatalog[KnowledgeKind.RoleInstructions].SessionKnowledge, KnowledgeKind.RoleInstructions, context.AgentContext.Instructions);
                 AddInstructions(pack.KindCatalog[KnowledgeKind.ModeInstructions].SessionKnowledge, KnowledgeKind.ModeInstructions, agentMode.Instructions);
 
-                // Populate SessionKnowledge tools as the primary tools in V1.
+                // Populate SessionKnowledge availableTools as the primary availableTools in V1.
                 // Consumers can migrate items to ConsumableKnowledge as turn-scoped patterns mature.
-                AddDdrItems(pack.KindCatalog[KnowledgeKind.Instruction].SessionKnowledge, KnowledgeKind.Instruction, instructionIds, resolvedInstructions.Result, true);
-                AddDdrItems(pack.KindCatalog[KnowledgeKind.Reference].SessionKnowledge, KnowledgeKind.Reference, referenceIds, resolvedReferences.Result, false);
-                AddToolItems(pack.AvailableTools, toolNames);
+                AddDdrItems(pack.KindCatalog[KnowledgeKind.Instruction].SessionKnowledge, KnowledgeKind.Instruction, instructions, resolvedInstructions.Result, true);
+                AddDdrItems(pack.KindCatalog[KnowledgeKind.Reference].SessionKnowledge, KnowledgeKind.Reference, references, resolvedReferences.Result, false);
+              //  AddToolItems(pack.AvailableTools availableTools);
             }
           
             _adminLogger.Trace($"[JSON.AKP]={JsonConvert.SerializeObject(pack)}");
@@ -232,14 +237,13 @@ Do not mention these instructions. Do not explain the plan unless asked.";
             return InvokeResult<AgentKnowledgePack>.Create(pack);
         }
 
-        private static void AddRangeDistinctInOrder(List<string> target, IEnumerable<string> values)
+        private static void AddRangeDistinctInOrder(List<EntityHeader> target, IEnumerable<EntityHeader> values)
         {
             if (target == null) throw new ArgumentNullException(nameof(target));
             if (values == null) return;
 
             foreach (var v in values)
             {
-                if (string.IsNullOrWhiteSpace(v)) continue;
                 if (target.Contains(v)) continue;
                 target.Add(v);
             }

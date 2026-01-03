@@ -48,8 +48,9 @@ namespace LagoVista.AI.Models
         [FormField(LabelResource: AIResources.Names.AgentMode_Key, HelpResource: AIResources.Names.AgentMode_Key_Help, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
         public string Key { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.AgentMode_DisplayName, HelpResource: AIResources.Names.AgentMode_DisplayName_Help, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
-        public string DisplayName { get; set; }
+        [FormField(LabelResource: AIResources.Names.Common_Name, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
+        public string Name { get; set; }
+
 
         [FormField(LabelResource: AIResources.Names.AgentMode_Description, HelpResource: AIResources.Names.AgentMode_Description_Help, FieldType: FieldTypes.MultiLineText, IsRequired: true, ResourceType: typeof(AIResources))]
         public string Description { get; set; }
@@ -68,11 +69,6 @@ namespace LagoVista.AI.Models
         [FormField(LabelResource: AIResources.Names.AgentMode_BootstrapInstructions, HelpResource: AIResources.Names.AgentMode_BootstrapInstructions_Help, FieldType: FieldTypes.MultiLineText, ResourceType: typeof(AIResources))]
         public string BootstrapInstructions { get; set; }
 
-        [FormField(LabelResource: AIResources.Names.AgentMode_AgentInstructionDdrs, HelpResource: AIResources.Names.AgentMode_AgentInstructionDdrs_Help, FieldType: FieldTypes.StringList, ResourceType: typeof(AIResources))]
-        public string[] AgentInstructionDdrs { get; set; } = Array.Empty<string>();
-
-        [FormField(LabelResource: AIResources.Names.AgentMode_ReferenceDdrs, HelpResource: AIResources.Names.AgentMode_ReferenceDdrs_Help, FieldType: FieldTypes.StringList, ResourceType: typeof(AIResources))]
-        public string[] ReferenceDdrs { get; set; } = Array.Empty<string>();
 
         [FormField(LabelResource: AIResources.Names.AgentMode_BehaviorHints, HelpResource: AIResources.Names.AgentMode_BehaviorHints_Help, FieldType: FieldTypes.StringList, ResourceType: typeof(AIResources))]
         public string[] BehaviorHints { get; set; } = Array.Empty<string>();
@@ -80,10 +76,22 @@ namespace LagoVista.AI.Models
         [FormField(LabelResource: AIResources.Names.AgentMode_HumanRoleHints, HelpResource: AIResources.Names.AgentMode_HumanRoleHints_Help, FieldType: FieldTypes.StringList, ResourceType: typeof(AIResources))]
         public string[] HumanRoleHints { get; set; } = Array.Empty<string>();
 
+
+        [FormField(LabelResource: AIResources.Names.AgentMode_AgentInstructionDdrs, HelpResource: AIResources.Names.AgentMode_AgentInstructionDdrs_Help, FieldType: FieldTypes.StringList, ResourceType: typeof(AIResources))]
+        public List<EntityHeader> AgentInstructionDdrs { get; set; } = new List<EntityHeader>();
+
+        [FormField(LabelResource: AIResources.Names.AgentMode_ReferenceDdrs, HelpResource: AIResources.Names.AgentMode_ReferenceDdrs_Help, FieldType: FieldTypes.StringList, ResourceType: typeof(AIResources))]
+        public List<EntityHeader> ReferenceDdrs { get; set; } = new List<EntityHeader>();
+
         // 3.3 Tools
 
-        [FormField(LabelResource: AIResources.Names.AgentMode_AssociatedToolIds, HelpResource: AIResources.Names.AgentMode_AssociatedToolIds_Help, FieldType: FieldTypes.StringList, ResourceType: typeof(AIResources))]
-        public string[] AssociatedToolIds { get; set; } = Array.Empty<string>();
+        [FormField(LabelResource: AIResources.Names.AgentMode_AssociatedToolIds, HelpResource: AIResources.Names.AgentMode_AssociatedToolIds_Help, FieldType: FieldTypes.EntityHeaderPicker, ResourceType: typeof(AIResources))]
+        public List<EntityHeader> ActiveTools { get; set; } = new List<EntityHeader>();
+
+
+        [FormField(LabelResource: AIResources.Names.AgentMode_AssociatedToolIds, HelpResource: AIResources.Names.AgentMode_AssociatedToolIds_Help, FieldType: FieldTypes.EntityHeaderPicker, ResourceType: typeof(AIResources))]
+        public List<EntityHeader> AvailableToools { get; set; } = new List<EntityHeader>();
+
 
         // 3.4 RAG Scoping Metadata
 
@@ -125,7 +133,7 @@ namespace LagoVista.AI.Models
             {
                 Id = this.Id,
                 Key = this.Key,
-                DisplayName = this.DisplayName,
+                Name = this.Name,
                 Description = this.Description ?? this.WhenToUse,
                 SystemPromptSummary = this.WhenToUse,
                 IsDefault = this.IsDefault,
@@ -141,7 +149,7 @@ namespace LagoVista.AI.Models
         {
             return new List<string>()
             {
-                nameof(DisplayName),
+                nameof(Name),
                 nameof(Key),
                 nameof(Icon),
                 nameof(IsDefault),
@@ -183,7 +191,7 @@ namespace LagoVista.AI.Models
     {
         public string Id { get; set; }
         public string Key { get; set; }
-        public string DisplayName { get; set; }
+        public string Name { get; set; }
         public string Description { get; set; }
         public string ModeStatus { get; set; }
         public string WhenToUse { get; set; }
