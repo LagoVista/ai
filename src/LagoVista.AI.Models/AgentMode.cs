@@ -174,6 +174,16 @@ namespace LagoVista.AI.Models
                 nameof(ExampleUtterances),
             };
         }
+
+        public EntityHeader ToEntityHeader()
+        {
+            return new EntityHeader()
+            {
+                Id = this.Id,
+                Key = this.Key,
+                Text = this.Name
+            };
+        }
     }
 
     public class BootStrapTool

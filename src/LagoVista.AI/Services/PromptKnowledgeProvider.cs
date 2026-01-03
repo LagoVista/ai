@@ -26,8 +26,12 @@ namespace LagoVista.AI.Services
 
         public async Task<InvokeResult<IAgentPipelineContext>> PopulateAsync(IAgentPipelineContext ctx, bool changeMode)
         {
-            var apkResult = await _apkProvider.CreateAsync(ctx, false);
+            var apkResult = await _apkProvider.CreateAsync(ctx, changeMode);
             var apk = apkResult.Result;
+
+            ctx.PromptKnowledgeProvider.ClearSession();
+            ctx.PromptKnowledgeProvider.ClearConsumables();
+            ctx.PromptKnowledgeProvider.ActiveTools.Clear();
 
             foreach (var key in apk.KindCatalog.Keys)
             {
@@ -63,6 +67,8 @@ namespace LagoVista.AI.Services
                 }
             }
 
+            ctx.PromptKnowledgeProvider.ActiveTools.AddRange(apk.ActiveTools);
+
             var currentBranch = String.IsNullOrEmpty(ctx.Session.CurrentBranch) ? AgentSession.DefaultBranch : ctx.Session.CurrentBranch;
 
             if (!ctx.Session.Kfrs.ContainsKey(currentBranch))
@@ -73,23 +79,13 @@ namespace LagoVista.AI.Services
 These entries are authoritative for near-term correctness.
 They may be replaced or removed at any time.
 
-Do not infer or assume facts outside this registry.
+For agent/session state, rely only on KFR.
 
-### Goal (single)
- - no goals currently exist
-
-### Plan (single)
- - no plans currently exist
-
-### ActiveContracts
- - no active contracts exist
-
-### Constraints
- - no constraints exist
-
-### OpenQuestions (RequiresResolution)
- - no open questions exist
-
+### Goal (single) - none
+### Plan (single) - none
+### ActiveContracts - none
+### Constraints - none
+### OpenQuestions (RequiresResolution) - none
 ## END Known Facts Registry (KFR) — Active Working Memory
 ";
                 var kfrRegister = ctx.PromptKnowledgeProvider.GetOrCreateRegister("kfr", Models.Context.ContextClassification.Session);

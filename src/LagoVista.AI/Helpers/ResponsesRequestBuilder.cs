@@ -99,9 +99,6 @@ namespace LagoVista.AI.Helpers
                 }
             }
 
-            ctx.PromptKnowledgeProvider.ActiveTools.Add(ActivateToolsTool.ToolName);
-            ctx.PromptKnowledgeProvider.ActiveTools.Add(AgentListModesTool.ToolName);
-
             var instructionBlock = "[MODE: " + ctx.Session.Mode + "]\n\n[INSTRUCTION]\n" + (ctx.Envelope.Instructions ?? string.Empty);
 
             userMessage.Content.Add(new ResponsesMessageContent

@@ -20,11 +20,9 @@ namespace LagoVista.AI.Services.Tools
         public const string ToolName = "agent_change_mode";
 
         public const string ToolUsageMetadata =
-@"Use this tool to change the current agent session mode, if it was explicilty stated
-you can chnage modes immediately wihtout confirmation, however if the user wants
-to do something better supported by a different mode you should ask them first.
-after switching to the new mode, you should display the Welcome Message assocaited
-with the new mode.
+@"Use this tool to change the current agent session mode.
+If the user explicitly requests a mode change, switch immediately without confirmation.
+If a different mode would better support the request, ask the user before switching.
 ";
 
         private readonly IAgentSessionManager _sessionManager;
@@ -140,9 +138,11 @@ with the new mode.
                 });
 
                 ctx.Session.Mode = args.Mode;
+                ctx.Session.AgentMode = mode.ToEntityHeader();
                 ctx.Session.ModeReason = args.Reason;
                 ctx.Session.ModeSetTimestamp = ctx.TimeStamp;
                 ctx.Session.LastUpdatedDate = ctx.TimeStamp;
+                ctx.AttachAgentContext(ctx.AgentContext, ctx.Role, mode);
 
                 var result = new ModeChangeResult
                 {

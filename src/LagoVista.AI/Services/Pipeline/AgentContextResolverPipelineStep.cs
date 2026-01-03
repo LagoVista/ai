@@ -16,6 +16,7 @@ namespace LagoVista.AI.Services.Pipeline
     {
         private readonly IAgentContextManager _contextManager;
         private readonly IOrganizationManager _orgManager;
+
         public AgentContextResolverPipelineStep(
             IAgentSessionCreatorPipelineStep next,
             IAgentContextManager contextManager,
@@ -42,18 +43,15 @@ namespace LagoVista.AI.Services.Pipeline
             var agentContext = await _contextManager.GetAgentContextWithSecretsAsync(agentContextId, ctx.Envelope.Org, ctx.Envelope.User);
 
             var roleId = ctx.Envelope.RoleId ?? agentContext.DefaultRole?.Id;
-            if (string.IsNullOrWhiteSpace(roleId))
-            {
-                return InvokeResult<IAgentPipelineContext>.FromError("RoleId not Provided and No Default for Agent Context.", "AGENT_CTX_RESOLVER_CONVERSATION_CONTEXT_ID_NOT_AVAILABLE");
-            }
+            if (string.IsNullOrWhiteSpace(roleId)) return InvokeResult<IAgentPipelineContext>.FromError("RoleId not Provided and No Default for Agent Context.", "AGENT_CTX_RESOLVER_CONVERSATION_CONTEXT_ID_NOT_AVAILABLE");
 
             var role = agentContext.Roles.FirstOrDefault(ctx => ctx.Id == roleId);
-            if(role == null) return InvokeResult<IAgentPipelineContext>.FromError("Role not found.", "AGENT_CTX_RESOLVER_CONVERSATION_CONTEXT_NOT_FOUND");
+            if (role == null) return InvokeResult<IAgentPipelineContext>.FromError("Role not found.", "AGENT_CTX_RESOLVER_CONVERSATION_CONTEXT_NOT_FOUND");
 
-            if (String.IsNullOrEmpty(ctx.AgentContext.DefaultMode.Id)) return InvokeResult<IAgentPipelineContext>.FromError("No Default Mode Provided on Agent Context.", "AGENT_CTX_RESOLVER_NO_DEFAULT_MODE_ON_AGENT_CONTEXT");
+            if (String.IsNullOrEmpty(agentContext?.Id)) return InvokeResult<IAgentPipelineContext>.FromError("No Default Mode Provided on Agent Context.", "AGENT_CTX_RESOLVER_NO_DEFAULT_MODE_ON_AGENT_CONTEXT");
+            var mode = agentContext.AgentModes.SingleOrDefault(cc => cc.Id == agentContext.DefaultMode.Id);
 
-            var mode = agentContext.AgentModes.SingleOrDefault(cc => cc.Id == ctx.AgentContext.DefaultMode.Id); 
-            if(mode == null) return InvokeResult<IAgentPipelineContext>.FromError("Mode not found.", "AGENT_CTX_RESOLVER_MODE_NOT_FOUND_IN_AGENT_CONTEXT");
+            if (mode == null) return InvokeResult<IAgentPipelineContext>.FromError("Mode not found.", "AGENT_CTX_RESOLVER_MODE_NOT_FOUND_IN_AGENT_CONTEXT");
             ctx.AttachAgentContext(agentContext, role, mode);
 
             return InvokeResult<IAgentPipelineContext>.Create(ctx);

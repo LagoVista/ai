@@ -29,6 +29,11 @@ namespace LagoVista.AI.Services
             AddEntityHeaders(p?.AvailableTools, AvailableTools, _availableToolIds);
         }
 
+        public void AddctiveToolOnly(IAgentKnowledgeProvider p)
+        {
+            AddEntityHeaders(p?.ActiveTools, ActiveTools, _activeToolIds);
+        }
+
         private void AddInstructions(IEnumerable<string> values)
         {
             if (values == null) return;

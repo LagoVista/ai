@@ -115,7 +115,7 @@ namespace LagoVista.AI.Services
                 _logger.AddException("[AgentToolExecutor_ExecuteServerToolAsync__Exception]", ex);
 
 
-                return InvokeResult<AgentToolCallResult>.FromError($"[AgentToolExecutor_ExecuteServerToolAsync__Cancelled] errorMessage");
+                return InvokeResult<AgentToolCallResult>.FromError($"[AgentToolExecutor_ExecuteServerToolAsync_Exception] {errorMessage} ");
             }
         }
     }

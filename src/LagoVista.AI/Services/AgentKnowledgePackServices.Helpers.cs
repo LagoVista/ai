@@ -58,13 +58,17 @@ namespace LagoVista.AI.Services
 
                 resolved.TryGetValue(id, out var ddr);
                 if (ddr == null) continue;
-                var content = $"### {ddr.DdrIdentifier} - {ddr.Title}\r\n{ddr.AgentInstructions}\r\n\r\n";
+
+                var builder = new StringBuilder();
+                builder.AppendLine($"### {ddr.DdrIdentifier} - {ddr.Title}");
+                builder.AppendLine(ddr.AgentInstructions);
+                builder.AppendLine();
 
                 lane.Items.Add(new KnowledgeItem
                 {
                     Kind = kind,
                     Id = id,
-                    Content = content
+                    Content = builder.ToString()
                 });
             }
         }
@@ -123,19 +127,22 @@ namespace LagoVista.AI.Services
 
                 var usage = _toolUsageMetaData.GetToolUsageMetadata(id);
 
-                var content = @$"## {id} Usage\r\n{usage}";
+                var builder = new StringBuilder();
+                builder.AppendLine($"### {id} Usage");
+                builder.AppendLine(usage);
+                builder.AppendLine();
 
                 lane.Items.Add(new KnowledgeItem
                 {
                     Kind = KnowledgeKind.ToolUsage,
                     Id = id,
-                    Content = usage
+                    Content = builder.ToString()
                 });
             }
         }
 
 
-        private async Task CollectProviderAsync(string label, IAgentKnowledgeProvider provider, KnowledgeAccumulator acc, StringBuilder log, CancellationToken ct)
+        private async Task CollectFullProviderAsync(string label, IAgentKnowledgeProvider provider, KnowledgeAccumulator acc, StringBuilder log, CancellationToken ct)
         {
             if (provider == null) return;
 
@@ -154,6 +161,30 @@ namespace LagoVista.AI.Services
                     if (toolBox == null) continue;
 
                     acc.AddDirect(toolBox);
+                    AppendToolBoxLog(label, toolBox, log);
+                }
+            }
+        }
+
+        private async Task CollectToolsOnlyProviderAsync(string label, IAgentKnowledgeProvider provider, KnowledgeAccumulator acc, StringBuilder log, CancellationToken ct)
+        {
+            if (provider == null) return;
+
+            // Direct fields first
+            acc.AddctiveToolOnly(provider);
+            AppendDirectLog(label, provider, log);
+
+            var container = provider as IToolBoxProvider;
+            if (container != null)
+            {
+                foreach (var tb in container.ToolBoxes ?? new List<EntityHeader>())
+                {
+                    if (tb == null || string.IsNullOrWhiteSpace(tb.Id)) continue;
+
+                    var toolBox = await _toolBoxRepo.GetAgentToolBoxAsync(tb.Id);
+                    if (toolBox == null) continue;
+
+                    acc.AddctiveToolOnly(toolBox);
                     AppendToolBoxLog(label, toolBox, log);
                 }
             }

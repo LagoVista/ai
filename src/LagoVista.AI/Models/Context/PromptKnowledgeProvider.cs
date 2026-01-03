@@ -37,9 +37,9 @@ namespace LagoVista.AI.Models.Context
 
 
         public void Reset()
-        {
+        {         
             ClearConsumables();
-            ActiveTools.Clear();
+            ClearSession();
             ToolCallManifest.ToolCallResults.Clear();
             ToolCallManifest.ToolCalls.Clear();
         }
@@ -92,6 +92,14 @@ namespace LagoVista.AI.Models.Context
         public void ClearConsumables()
         {
             foreach (var reg in _registers.Values.Where(r => r.Classification == ContextClassification.Consumable))
+            {
+                reg.Clear();
+            }
+        }
+
+        public void ClearSession()
+        {
+            foreach (var reg in _registers.Values.Where(r => r.Classification == ContextClassification.Session))
             {
                 reg.Clear();
             }

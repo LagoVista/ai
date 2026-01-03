@@ -29,7 +29,10 @@ namespace LagoVista.AI.Services.Tools
         public bool IsToolFullyExecutedOnServer => true;
 
 
-        public const string ToolUsageMetadata = "Use this tool to request tools be active in the next request so they can process your request.  The prior request will be replayed.  The tools you request are ONLY available in the next call.";
+        public const string ToolUsageMetadata =
+@"Use this tool to request tools be active in the next request so they can process your request.  
+The prior request will be replayed.  
+Requested tools become available starting the next turn.";
 
         public const string ToolSummary = "activate tools for next request (always available)";
 

@@ -64,12 +64,7 @@ namespace LagoVista.AI.Services
                     return String.Empty;
                 }
 
-                // Delimited block for this specific tool.
-                sb.AppendLine("<<<APTIX_TOOL_USAGE_BEGIN name='" + toolName + "'>>>");
-                sb.AppendLine(usageMetadata.Trim());
-                sb.AppendLine("<<<APTIX_TOOL_USAGE_END name='" + toolName + "'>>>");
-                sb.AppendLine();
-                return sb.ToString();
+                return usageMetadata.Trim();
             }
             catch (Exception ex)
             {
@@ -118,7 +113,7 @@ namespace LagoVista.AI.Services
                     return String.Empty;
                 }
 
-                return $"{toolName} - {summary}";
+                return summary;
             }
             catch (Exception ex)
             {

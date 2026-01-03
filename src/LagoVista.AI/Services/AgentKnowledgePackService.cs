@@ -63,20 +63,18 @@ namespace LagoVista.AI.Services
 
             var acc = new KnowledgeAccumulator();
 
-            if (shouldCollect)
+            foreach (var pd in providers)
             {
-                foreach (var pd in providers)
-                {
-                    await CollectProviderAsync(pd.Label, pd.Provider, acc, log, context.CancellationToken);
-                }
+                if(shouldCollect)
+                    await CollectFullProviderAsync(pd.Label, pd.Provider, acc, log, context.CancellationToken);
+                else
+                    await CollectToolsOnlyProviderAsync(pd.Label, pd.Provider, acc, log, context.CancellationToken);
             }
 
             _adminLogger.Trace($"[AgentKnowledgePackService__CreateAsync] - {log}");
 
             var instructionIds = acc.InstructionDdrs.Select(x => x.Id).ToList();
             var referenceIds = acc.ReferenceDdrs.Select(x => x.Id).ToList();
-
-
             var pack = new AgentKnowledgePack
             {
                 AgentContextId = context.AgentContext.Id,
@@ -102,9 +100,12 @@ namespace LagoVista.AI.Services
 
                 AddInstructionDDR(pack.KindCatalog[KnowledgeKind.Instruction].SessionKnowledge, KnowledgeKind.Instruction, instructionIds, resolvedInstructions.Result);
                 AddReferenceDDR(pack.KindCatalog[KnowledgeKind.Reference].SessionKnowledge, KnowledgeKind.Reference, referenceIds, resolvedReferences.Result);
-
                 AddActiveTools(pack.KindCatalog[KnowledgeKind.ToolUsage].SessionKnowledge, acc.ActiveTools.Select(x => x.Id));
                 AddAvailableTools(pack.KindCatalog[KnowledgeKind.ToolSummary].SessionKnowledge, acc.AvailableTools.Select(x => x.Id));
+            }
+            else
+            {
+                AddActiveTools(pack.KindCatalog[KnowledgeKind.ToolUsage].SessionKnowledge, acc.ActiveTools.Select(x => x.Id));
             }
 
             pack.ActiveTools = acc.ActiveTools.Select(x => x.Id).ToList();

@@ -39,6 +39,7 @@ namespace LagoVista.AI.Services
                 ModeReason = "initial startup",
                 ModeSetTimestamp = now,
                 AgentContext = ctx.AgentContext.ToEntityHeader(),
+                AgentMode = ctx. Mode.ToEntityHeader(),
                 Role = ctx.Role.ToEntityHeader(),
                 Name = generatedName,
             };

@@ -49,7 +49,7 @@ namespace LagoVista.AI.Services
 
                 ctx = llmResult.Result;
 
-                var originalMode = ctx.Session.Mode;
+                var originalMode = ctx.Session.AgentMode.Id;
 
                 foreach (var toolCall in ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCalls)
                 {
@@ -74,9 +74,9 @@ namespace LagoVista.AI.Services
                     return InvokeResult<IAgentPipelineContext>.Create(ctx);
                 }
 
-                if(originalMode != ctx.Session.Mode)
+                if(originalMode != ctx.Session.AgentMode.Id)
                 {
-                    _logger.Trace($"[AgentReasonerPipelineStep__AgentReasonerPipelineStep] - Mode Change Detected Populate PKP {originalMode} -> {ctx.Session.Mode}");
+                    _logger.Trace($"[AgentReasonerPipelineStep__AgentReasonerPipelineStep] - Mode Change Detected Populate PKP {originalMode} -> {ctx.Session.AgentMode.Text}");
                    var pkpResult = await _pkpService.PopulateAsync(ctx, true);
                    if(!pkpResult.Successful) return InvokeResult<IAgentPipelineContext>.FromInvokeResult(pkpResult.ToInvokeResult());
                 }

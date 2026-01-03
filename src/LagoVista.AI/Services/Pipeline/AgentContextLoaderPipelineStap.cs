@@ -38,6 +38,9 @@ namespace LagoVista.AI.Services.Pipeline
             if(mode == null)
                 mode = agentContext.AgentModes.SingleOrDefault(cc => cc.Key == ctx.Session.Mode);
 
+            if(mode == null) InvokeResult<IAgentPipelineContext>.FromError("Mode was not found in Agent Context.", "AGENT_CTX_LOADER_COULD_NOT_RESOLVE_MODE");
+
+
             ctx.AttachAgentContext(agentContext, role, mode);
          
             return InvokeResult<IAgentPipelineContext>.Create(ctx);  

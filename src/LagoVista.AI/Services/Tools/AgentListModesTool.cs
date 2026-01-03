@@ -19,7 +19,10 @@ namespace LagoVista.AI.Services.Tools
     {
         private readonly IAdminLogger _logger;
         public const string ToolName = "agent_list_modes";
-        public const string ToolUsageMetadata = "Use this tool to list the available agent modes and their high-level descriptions. " + "Call it when the user asks what modes are supported, wants help choosing a mode, " + "or when you need to present mode options before proposing a mode change. " + "Do not call it on every request or as a substitute for the mode-change tool." + "When building the results you should return a list that includes the Display Name and the Key in parentheses as well as the description.";
+        public const string ToolUsageMetadata = @"Use this tool to list available agent modes and their high-level descriptions.
+Call it when the user asks about modes, needs help choosing one, or before invoking the agent_change_mode tool.
+Return Display Name (Key) with description.";
+
         public const string ToolSummary = "used to list agent modes that the user can choose from to customzie agent behavior";
         public AgentListModesTool(IAdminLogger logger)
         {
