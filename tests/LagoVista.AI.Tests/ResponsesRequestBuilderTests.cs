@@ -217,10 +217,10 @@
 
 //            var dto = _builder.Build(convCtx, request, string.Empty, string.Empty);
 
-//            Assert.That(dto.Tools, Is.Not.Null);
-//            Assert.That(dto.Tools.Count, Is.EqualTo(1));
+//            Assert.That(dto.ActiveTools, Is.Not.Null);
+//            Assert.That(dto.ActiveTools.Count, Is.EqualTo(1));
 
-//            var tool = dto.Tools[0];
+//            var tool = dto.ActiveTools[0];
 //            Assert.That(tool.Value<string>("name"), Is.EqualTo("ddr_document"));
 //            Assert.That(tool.Value<string>("description"), Does.Contain("DDR"));
 //        }
@@ -239,10 +239,10 @@
 //            var dto = _builder.Build(convCtx, request, string.Empty, string.Empty);
 
 //            Assert.That(dto.PreviousResponseId, Is.EqualTo("resp_123"));
-//            Assert.That(dto.Tools, Is.Not.Null);
-//            Assert.That(dto.Tools.Count, Is.EqualTo(1));
+//            Assert.That(dto.ActiveTools, Is.Not.Null);
+//            Assert.That(dto.ActiveTools.Count, Is.EqualTo(1));
 
-//            var tool = dto.Tools[0];
+//            var tool = dto.ActiveTools[0];
 //            Assert.That(tool.Value<string>("name"), Is.EqualTo("ddr_document"));
 //        }
 

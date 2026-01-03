@@ -33,7 +33,7 @@ namespace LagoVista.AI.Models
 
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.AgentContext_Mode_Title, AIResources.Names.AgentContext_Mode_Description, AIResources.Names.AgentContext_Mode_Description, EntityDescriptionAttribute.EntityTypes.ChildObject, typeof(AIResources),
     FactoryUrl: "/api/ai/agentcontext/mode/factory")]
-    public sealed class AgentMode : IFormDescriptor, IFormDescriptorCol2
+    public sealed class AgentMode : IFormDescriptor, IFormDescriptorCol2, IAgentKnowledgeProvider
     {
         public const string AgentMode_AgentModeStaus_New = "new";
         public const string AgentMode_AgentModeStaus_Experimental = "experimental";
@@ -77,24 +77,6 @@ namespace LagoVista.AI.Models
         public string[] HumanRoleHints { get; set; } = Array.Empty<string>();
 
 
-        [FormField(LabelResource: AIResources.Names.AgentMode_AgentInstructionDdrs, HelpResource: AIResources.Names.AgentMode_AgentInstructionDdrs_Help, FieldType: FieldTypes.StringList, ResourceType: typeof(AIResources))]
-        public List<EntityHeader> AgentInstructionDdrs { get; set; } = new List<EntityHeader>();
-
-        [FormField(LabelResource: AIResources.Names.AgentMode_ReferenceDdrs, HelpResource: AIResources.Names.AgentMode_ReferenceDdrs_Help, FieldType: FieldTypes.StringList, ResourceType: typeof(AIResources))]
-        public List<EntityHeader> ReferenceDdrs { get; set; } = new List<EntityHeader>();
-
-        // 3.3 Tools
-
-        [FormField(LabelResource: AIResources.Names.AgentMode_AssociatedToolIds, HelpResource: AIResources.Names.AgentMode_AssociatedToolIds_Help, FieldType: FieldTypes.EntityHeaderPicker, ResourceType: typeof(AIResources))]
-        public List<EntityHeader> ActiveTools { get; set; } = new List<EntityHeader>();
-
-
-        [FormField(LabelResource: AIResources.Names.AgentMode_AssociatedToolIds, HelpResource: AIResources.Names.AgentMode_AssociatedToolIds_Help, FieldType: FieldTypes.EntityHeaderPicker, ResourceType: typeof(AIResources))]
-        public List<EntityHeader> AvailableToools { get; set; } = new List<EntityHeader>();
-
-
-        // 3.4 RAG Scoping Metadata
-
         [FormField(LabelResource: AIResources.Names.AgentMode_RagScopeHints, HelpResource: AIResources.Names.AgentMode_RagScopeHints_Help, FieldType: FieldTypes.StringList, ResourceType: typeof(AIResources))]
         public string[] RagScopeHints { get; set; } = Array.Empty<string>();
 
@@ -109,17 +91,29 @@ namespace LagoVista.AI.Models
         [FormField(LabelResource: AIResources.Names.AgentMode_ExampleUtterances, HelpResource: AIResources.Names.AgentMode_ExampleUtterances_Help, FieldType: FieldTypes.StringList, ResourceType: typeof(AIResources))]
         public string[] ExampleUtterances { get; set; } = Array.Empty<string>();
 
-        [FormField(LabelResource: AIResources.Names.AgentMode_Instructions, HelpResource: AIResources.Names.AgentMode_Instructions_Help, FieldType: FieldTypes.StringList, ResourceType: typeof(AIResources))]
+        [FormField(LabelResource: AIResources.Names.AgentContext_InstructionDDRs, HelpResource: AIResources.Names.AgentContext_InstructionDDRs_Help, EntityHeaderPickerUrl: "/api/ddrs", FieldType: FieldTypes.ChildListInlinePicker, ResourceType: typeof(AIResources))]
+        public List<EntityHeader> InstructionDdrs { get; set; } = new List<EntityHeader>();
+
+        [FormField(LabelResource: AIResources.Names.AgentContext_ReferenceDDRs, HelpResource: AIResources.Names.AgentContext_ReferenceDDRs_Help, EntityHeaderPickerUrl: "/api/ddrs", FieldType: FieldTypes.ChildListInlinePicker, ResourceType: typeof(AIResources))]
+        public List<EntityHeader> ReferenceDdrs { get; set; } = new List<EntityHeader>();
+
+        [FormField(LabelResource: AIResources.Names.AgentContext_ActiveTools, HelpResource: AIResources.Names.AgentContext_ActiveTools_Help, EntityHeaderPickerUrl: "/api/ai/agenttools", FieldType: FieldTypes.ChildListInlinePicker, ResourceType: typeof(AIResources))]
+        public List<EntityHeader> ActiveTools { get; set; } = new List<EntityHeader>();
+
+        [FormField(LabelResource: AIResources.Names.AgentContext_AvailableTools, HelpResource: AIResources.Names.AgentContext_AvailableTools_Help, EntityHeaderPickerUrl: "/api/ai/agenttools", FieldType: FieldTypes.ChildListInlinePicker, ResourceType: typeof(AIResources))]
+        public List<EntityHeader> AvailableTools { get; set; } = new List<EntityHeader>();
+
+        [FormField(LabelResource: AIResources.Names.AgentContext_ToolBoxes, HelpResource: AIResources.Names.AgentContext_ToolBoxes_Help, EntityHeaderPickerUrl: "/api/ai/toolboxes", FieldType: FieldTypes.ChildListInlinePicker, ResourceType: typeof(AIResources))]
+        public List<EntityHeader> ToolBoxes { get; set; } = new List<EntityHeader>();
+
+        [FormField(LabelResource: AIResources.Names.AgentContext_Instructions, HelpResource: AIResources.Names.AgentContext_Instructions_Help, FieldType: FieldTypes.StringList, ResourceType: typeof(AIResources))]
         public List<string> Instructions { get; set; } = new List<string>();
 
         // 3.6 Lifecycle Metadata
-
         [FormField(LabelResource: AIResources.Names.AgentMode_Status, HelpResource: AIResources.Names.AgentMode_Status_Help, EnumType: typeof(AgentModeStatuses),
             FieldType: FieldTypes.Picker, IsRequired: true, ResourceType: typeof(AIResources))]
         public EntityHeader<AgentModeStatuses> ModeStatus { get; set; } = EntityHeader<AgentModeStatuses>.Create(AgentModeStatuses.New);
 
-        [FormField(LabelResource: AIResources.Names.AgentMode_ToolBoxes, HelpResource: AIResources.Names.AgentMode_ToolBoxes_Help, FieldType: FieldTypes.ChildListInlinePicker, ResourceType: typeof(AIResources))]
-        public List<EntityHeader> ToolBoxes { get; set; } = new List<EntityHeader>();
 
         [FormField(LabelResource: AIResources.Names.AgentMode_Version, HelpResource: AIResources.Names.AgentMode_Version_Help, IsRequired:true, FieldType: FieldTypes.Text, ResourceType: typeof(AIResources))]
         public string Version { get; set; } = "1.0.0";
@@ -159,6 +153,7 @@ namespace LagoVista.AI.Models
                 nameof(WhenToUse),
                 nameof(WelcomeMessage),
                 nameof(BootstrapInstructions),
+                nameof(Instructions),
             };
         }
 
@@ -166,13 +161,17 @@ namespace LagoVista.AI.Models
         {
             return new List<string>()
             {
+                nameof(InstructionDdrs),
+                nameof(ReferenceDdrs),
+                nameof(ActiveTools),
+                nameof(AvailableTools),
+                nameof(ToolBoxes),
                 nameof(BehaviorHints),
                 nameof(HumanRoleHints),
                 nameof(RagScopeHints),
                 nameof(StrongSignals),
                 nameof(WeakSignals),
                 nameof(ExampleUtterances),
-                nameof(Instructions),
             };
         }
     }

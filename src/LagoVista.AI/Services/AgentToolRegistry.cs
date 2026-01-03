@@ -174,8 +174,10 @@ namespace LagoVista.AI.Services
 
             _allTools.Add(new AgentToolSummary()
             {
-                ToolId = toolName,
-                ToolSummary = toolSummary
+                Id = toolName,
+                Name = toolName,
+                Key = toolName,
+                Summary = toolSummary
             });
 
             _logger.Trace(
@@ -215,18 +217,22 @@ namespace LagoVista.AI.Services
 
         public IEnumerable<AgentToolSummary> GetAllTools()
         {
-            return _allTools.OrderBy(ts => ts.ToolId);
+            return _allTools.OrderBy(ts => ts.Key);
         }
 
         public IEnumerable<string> GetAllToolIds()
         {
-            return _allTools.Select(tl => tl.ToolId);
+            return _allTools.Select(tl => tl.Key);
         }
     }
 
     public class AgentToolSummary
     {
-        public string ToolId { get; set; }
-        public string ToolSummary { get; set; }
+        public string Id { get; set; }
+
+        public string Key { get; set; }
+
+        public string Name { get; set; }
+        public string Summary { get; set; }
     }
 }

@@ -53,34 +53,34 @@ namespace LagoVista.AI.Services.Tools
             toolRegistry.RegisterTool<UpdateWorkflowTool>();
             toolRegistry.RegisterTool<DeleteWorkflowTool>();
 
-            // --- DDR / TLA Tools ---
+            // --- DDR / TLA ActiveTools ---
             toolRegistry.RegisterTool<GetTlaCatalogAgentTool>();
             toolRegistry.RegisterTool<AddTlaAgentTool>();
             toolRegistry.RegisterTool<CreateDdrAgentTool>();
             toolRegistry.RegisterTool<UpdateDdrMetadataAgentTool>();
             toolRegistry.RegisterTool<MoveDdrTlaAgentTool>();
 
-            // --- Goal Tools ---
+            // --- Goal ActiveTools ---
             toolRegistry.RegisterTool<SetGoalAgentTool>();
             toolRegistry.RegisterTool<ApproveGoalAgentTool>();
 
-            // -- Checkpoint Tools --
+            // -- Checkpoint ActiveTools --
             toolRegistry.RegisterTool<SessionCheckpointListTool>();
             toolRegistry.RegisterTool<SessionCheckpointRestoreTool>();
             toolRegistry.RegisterTool<SessionCheckpointSetTool>();
 
-            // -- Session Memory Tools
+            // -- Session Memory ActiveTools
             toolRegistry.RegisterTool<SessionMemoryListTool>();
             toolRegistry.RegisterTool<SessionMemoryRecallTool>();
             toolRegistry.RegisterTool<SessionMemoryStoreTool>();
 
-            // -- KFR (Known Fact Registry Tools)
+            // -- KFR (Known Fact Registry ActiveTools)
             toolRegistry.RegisterTool<SessionKfrClearTool>();
             toolRegistry.RegisterTool<SessionKfrEvictTool>();
             toolRegistry.RegisterTool<SessionKfrListTool>();
             toolRegistry.RegisterTool<SessionKfrUpsertTool>();
 
-            // --- Chapter Tools ---
+            // --- Chapter ActiveTools ---
             toolRegistry.RegisterTool<AddChapterAgentTool>();
             toolRegistry.RegisterTool<AddChaptersAgentTool>();
             toolRegistry.RegisterTool<UpdateChapterSummaryAgentTool>();

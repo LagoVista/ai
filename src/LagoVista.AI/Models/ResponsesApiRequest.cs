@@ -29,7 +29,7 @@ namespace LagoVista.AI.Models
         public List<ResponsesInputItem> Input { get; set; } = new List<ResponsesInputItem>();
 
         /// <summary>Z
-        /// Tools passed to /responses; kept as raw JSON objects so the client
+        /// ActiveTools passed to /responses; kept as raw JSON objects so the client
         /// (VS Code extension) can define them freely.
         /// </summary>
         [JsonProperty("tools", NullValueHandling = NullValueHandling.Ignore)]

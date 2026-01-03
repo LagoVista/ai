@@ -1,4 +1,4 @@
-﻿/*1/3/2026 6:22:18 AM*/
+﻿/*1/3/2026 8:37:28 AM*/
 using System.Globalization;
 using System.Reflection;
 
@@ -57,6 +57,18 @@ namespace LagoVista.AI.Models.Resources
         }*/
 		
 		public static string Agent_Context_Mode_Title { get { return GetResourceString("Agent_Context_Mode_Title"); } }
+//Resources:AIResources:AgentContext_ActiveTools
+
+		public static string AgentContext_ActiveTools { get { return GetResourceString("AgentContext_ActiveTools"); } }
+//Resources:AIResources:AgentContext_ActiveTools_Help
+
+		public static string AgentContext_ActiveTools_Help { get { return GetResourceString("AgentContext_ActiveTools_Help"); } }
+//Resources:AIResources:AgentContext_AvailableTools
+
+		public static string AgentContext_AvailableTools { get { return GetResourceString("AgentContext_AvailableTools"); } }
+//Resources:AIResources:AgentContext_AvailableTools_Help
+
+		public static string AgentContext_AvailableTools_Help { get { return GetResourceString("AgentContext_AvailableTools_Help"); } }
 //Resources:AIResources:AgentContext_CompletionReservePercent
 
 		public static string AgentContext_CompletionReservePercent { get { return GetResourceString("AgentContext_CompletionReservePercent"); } }
@@ -75,9 +87,18 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:AgentContext_DefaultRole_Select
 
 		public static string AgentContext_DefaultRole_Select { get { return GetResourceString("AgentContext_DefaultRole_Select"); } }
+//Resources:AIResources:AgentContext_InstructionDDRs
+
+		public static string AgentContext_InstructionDDRs { get { return GetResourceString("AgentContext_InstructionDDRs"); } }
+//Resources:AIResources:AgentContext_InstructionDDRs_Help
+
+		public static string AgentContext_InstructionDDRs_Help { get { return GetResourceString("AgentContext_InstructionDDRs_Help"); } }
 //Resources:AIResources:AgentContext_Instructions
 
 		public static string AgentContext_Instructions { get { return GetResourceString("AgentContext_Instructions"); } }
+//Resources:AIResources:AgentContext_Instructions_Help
+
+		public static string AgentContext_Instructions_Help { get { return GetResourceString("AgentContext_Instructions_Help"); } }
 //Resources:AIResources:AgentContext_LlmProvider
 
 		public static string AgentContext_LlmProvider { get { return GetResourceString("AgentContext_LlmProvider"); } }
@@ -102,6 +123,12 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:AgentContext_Modes
 
 		public static string AgentContext_Modes { get { return GetResourceString("AgentContext_Modes"); } }
+//Resources:AIResources:AgentContext_ReferenceDDRs
+
+		public static string AgentContext_ReferenceDDRs { get { return GetResourceString("AgentContext_ReferenceDDRs"); } }
+//Resources:AIResources:AgentContext_ReferenceDDRs_Help
+
+		public static string AgentContext_ReferenceDDRs_Help { get { return GetResourceString("AgentContext_ReferenceDDRs_Help"); } }
 //Resources:AIResources:AgentContext_Role_Description
 
 		public static string AgentContext_Role_Description { get { return GetResourceString("AgentContext_Role_Description"); } }
@@ -132,6 +159,18 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:AgentContext_Roles
 
 		public static string AgentContext_Roles { get { return GetResourceString("AgentContext_Roles"); } }
+//Resources:AIResources:AgentContext_ToolBoxes
+
+		public static string AgentContext_ToolBoxes { get { return GetResourceString("AgentContext_ToolBoxes"); } }
+//Resources:AIResources:AgentContext_ToolBoxes_Help
+
+		public static string AgentContext_ToolBoxes_Help { get { return GetResourceString("AgentContext_ToolBoxes_Help"); } }
+//Resources:AIResources:AgentContext_WelcomeMessage
+
+		public static string AgentContext_WelcomeMessage { get { return GetResourceString("AgentContext_WelcomeMessage"); } }
+//Resources:AIResources:AgentContext_WelcomeMessage_Help
+
+		public static string AgentContext_WelcomeMessage_Help { get { return GetResourceString("AgentContext_WelcomeMessage_Help"); } }
 //Resources:AIResources:AgentMode_AgentInstructionDdrs
 
 		public static string AgentMode_AgentInstructionDdrs { get { return GetResourceString("AgentMode_AgentInstructionDdrs"); } }
@@ -1018,13 +1057,20 @@ namespace LagoVista.AI.Models.Resources
 		public static class Names
 		{
 			public const string Agent_Context_Mode_Title = "Agent_Context_Mode_Title";
+			public const string AgentContext_ActiveTools = "AgentContext_ActiveTools";
+			public const string AgentContext_ActiveTools_Help = "AgentContext_ActiveTools_Help";
+			public const string AgentContext_AvailableTools = "AgentContext_AvailableTools";
+			public const string AgentContext_AvailableTools_Help = "AgentContext_AvailableTools_Help";
 			public const string AgentContext_CompletionReservePercent = "AgentContext_CompletionReservePercent";
 			public const string AgentContext_CompletionReservePercent_Help = "AgentContext_CompletionReservePercent_Help";
 			public const string AgentContext_DefaultMode = "AgentContext_DefaultMode";
 			public const string AgentContext_DefaultMode_Select = "AgentContext_DefaultMode_Select";
 			public const string AgentContext_DefaultRole = "AgentContext_DefaultRole";
 			public const string AgentContext_DefaultRole_Select = "AgentContext_DefaultRole_Select";
+			public const string AgentContext_InstructionDDRs = "AgentContext_InstructionDDRs";
+			public const string AgentContext_InstructionDDRs_Help = "AgentContext_InstructionDDRs_Help";
 			public const string AgentContext_Instructions = "AgentContext_Instructions";
+			public const string AgentContext_Instructions_Help = "AgentContext_Instructions_Help";
 			public const string AgentContext_LlmProvider = "AgentContext_LlmProvider";
 			public const string AgentContext_LlmProvider_Select = "AgentContext_LlmProvider_Select";
 			public const string AgentContext_MaxTokenCount = "AgentContext_MaxTokenCount";
@@ -1033,6 +1079,8 @@ namespace LagoVista.AI.Models.Resources
 			public const string AgentContext_Mode_Help = "AgentContext_Mode_Help";
 			public const string AgentContext_Mode_Title = "AgentContext_Mode_Title";
 			public const string AgentContext_Modes = "AgentContext_Modes";
+			public const string AgentContext_ReferenceDDRs = "AgentContext_ReferenceDDRs";
+			public const string AgentContext_ReferenceDDRs_Help = "AgentContext_ReferenceDDRs_Help";
 			public const string AgentContext_Role_Description = "AgentContext_Role_Description";
 			public const string AgentContext_Role_ModelName = "AgentContext_Role_ModelName";
 			public const string AgentContext_Role_Persona_Instructions = "AgentContext_Role_Persona_Instructions";
@@ -1043,6 +1091,10 @@ namespace LagoVista.AI.Models.Resources
 			public const string AgentContext_Role_Title = "AgentContext_Role_Title";
 			public const string AgentContext_Role_WelcomeMessage = "AgentContext_Role_WelcomeMessage";
 			public const string AgentContext_Roles = "AgentContext_Roles";
+			public const string AgentContext_ToolBoxes = "AgentContext_ToolBoxes";
+			public const string AgentContext_ToolBoxes_Help = "AgentContext_ToolBoxes_Help";
+			public const string AgentContext_WelcomeMessage = "AgentContext_WelcomeMessage";
+			public const string AgentContext_WelcomeMessage_Help = "AgentContext_WelcomeMessage_Help";
 			public const string AgentMode_AgentInstructionDdrs = "AgentMode_AgentInstructionDdrs";
 			public const string AgentMode_AgentInstructionDdrs_Help = "AgentMode_AgentInstructionDdrs_Help";
 			public const string AgentMode_AgentModeStaus_Deprecated = "AgentMode_AgentModeStaus_Deprecated";

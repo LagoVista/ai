@@ -1081,4 +1081,43 @@
   <data name="AgentContext_Instructions" xml:space="preserve">
     <value>Instructions</value>
   </data>
+  <data name="AgentContext_InstructionDDRs" xml:space="preserve">
+    <value>Instruction DDRs</value>
+  </data>
+  <data name="AgentContext_InstructionDDRs_Help" xml:space="preserve">
+    <value>DDRs that present instructions to the model via a system prompt</value>
+  </data>
+  <data name="AgentContext_ReferenceDDRs" xml:space="preserve">
+    <value>Reference DDRs</value>
+  </data>
+  <data name="AgentContext_ReferenceDDRs_Help" xml:space="preserve">
+    <value>DDRs that provide summaries to the model that the model can then request as a reference on how to perform a task</value>
+  </data>
+  <data name="AgentContext_ActiveTools" xml:space="preserve">
+    <value>Active Tools</value>
+  </data>
+  <data name="AgentContext_ActiveTools_Help" xml:space="preserve">
+    <value>Active tools are always ready for the model to invoke as they have sent over both detailed usaged instructions and a tool schema</value>
+  </data>
+  <data name="AgentContext_AvailableTools" xml:space="preserve">
+    <value>Available Tools</value>
+  </data>
+  <data name="AgentContext_AvailableTools_Help" xml:space="preserve">
+    <value>Available tools are tools that the model can load and use.  They are not pre-loaded to reduce prompt/token size</value>
+  </data>
+  <data name="AgentContext_ToolBoxes" xml:space="preserve">
+    <value>Tool Boxes</value>
+  </data>
+  <data name="AgentContext_ToolBoxes_Help" xml:space="preserve">
+    <value>Tool Boxes are collections of available tools, active tools, instruction ddrs, reference ddrs and instructions that are added to prompts.</value>
+  </data>
+  <data name="AgentContext_Instructions_Help" xml:space="preserve">
+    <value>Instructions will be added to the system prompt</value>
+  </data>
+  <data name="AgentContext_WelcomeMessage" xml:space="preserve">
+    <value>Welcome Message</value>
+  </data>
+  <data name="AgentContext_WelcomeMessage_Help" xml:space="preserve">
+    <value>A welcome message will be displayed when the session starts or a role or mode changes</value>
+  </data>
 </root>

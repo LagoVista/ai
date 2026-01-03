@@ -16,7 +16,7 @@ namespace LagoVista.AI.Models
 {
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.AgentContext_Role_Title, AIResources.Names.AgentContext_Role_Description, AIResources.Names.AgentContext_Role_Description, EntityDescriptionAttribute.EntityTypes.ChildObject, typeof(AIResources),
     FactoryUrl: "/api/ai/agentcontext/role/factory")]
-    public class AgentContextRole : IFormDescriptor, IValidateable
+    public class AgentContextRole : IFormDescriptor, IValidateable, IAgentKnowledgeProvider, IFormDescriptorCol2
     {
         public string Id { get; set; } = Guid.NewGuid().ToId();
 
@@ -31,36 +31,30 @@ namespace LagoVista.AI.Models
             FieldType: FieldTypes.Decimal, IsRequired: true, ResourceType: typeof(AIResources))]
         public float Temperature { get; set; } = 0.5f;
 
-        [FormField(LabelResource: AIResources.Names.AgentContext_Role_Persona_Instructions, FieldType: FieldTypes.MultiLineText, IsRequired: false, ResourceType: typeof(AIResources))]
-        public string PersonaInstructions { get; set; }
-
         /// <summary>
         /// Optional welcome message shown when entering this mode.
         /// </summary>
         [FormField(LabelResource: AIResources.Names.AgentContext_Role_WelcomeMessage, FieldType: FieldTypes.MultiLineText, IsRequired: false, ResourceType: typeof(AIResources))]
         public string WelcomeMessage { get; set; }
 
-        /// <summary>
-        /// Mode-specific behavior instructions for the LLM when this
-        /// mode is active (go into the Active Mode Behavior Block).
-        /// </summary>
-        public List<EntityHeader> ActiveToolss { get; set; } = new List<EntityHeader>();
+        [FormField(LabelResource: AIResources.Names.AgentContext_InstructionDDRs, HelpResource: AIResources.Names.AgentContext_InstructionDDRs_Help, EntityHeaderPickerUrl: "/api/ddrs", FieldType: FieldTypes.ChildListInlinePicker, ResourceType: typeof(AIResources))]
+        public List<EntityHeader> InstructionDdrs { get; set; } = new List<EntityHeader>();
 
-        public List<EntityHeader> AgentInstructionDdrs { get; set; } = new List<EntityHeader>();
-
-
-        /// <summary>
-        /// DDR's that produce patterns, practices and standards that can be used when the LLM reasons.
-        /// </summary>
+        [FormField(LabelResource: AIResources.Names.AgentContext_ReferenceDDRs, HelpResource: AIResources.Names.AgentContext_ReferenceDDRs_Help, EntityHeaderPickerUrl: "/api/ddrs", FieldType: FieldTypes.ChildListInlinePicker, ResourceType: typeof(AIResources))]
         public List<EntityHeader> ReferenceDdrs { get; set; } = new List<EntityHeader>();
 
-        /// <summary>
-        /// Tool IDs that are enabled when this mode is active.
-        /// </summary>
+        [FormField(LabelResource: AIResources.Names.AgentContext_ActiveTools, HelpResource: AIResources.Names.AgentContext_ActiveTools_Help, EntityHeaderPickerUrl: "/api/ai/agenttools", FieldType: FieldTypes.ChildListInlinePicker, ResourceType: typeof(AIResources))]
         public List<EntityHeader> ActiveTools { get; set; } = new List<EntityHeader>();
 
+        [FormField(LabelResource: AIResources.Names.AgentContext_AvailableTools, HelpResource: AIResources.Names.AgentContext_AvailableTools_Help, EntityHeaderPickerUrl: "/api/ai/agenttools", FieldType: FieldTypes.ChildListInlinePicker, ResourceType: typeof(AIResources))]
+        public List<EntityHeader> AvailableTools { get; set; } = new List<EntityHeader>();
 
+        [FormField(LabelResource: AIResources.Names.AgentContext_ToolBoxes, HelpResource: AIResources.Names.AgentContext_ToolBoxes_Help, EntityHeaderPickerUrl: "/api/ai/toolboxes", FieldType: FieldTypes.ChildListInlinePicker, ResourceType: typeof(AIResources))]
         public List<EntityHeader> ToolBoxes { get; set; } = new List<EntityHeader>();
+
+        [FormField(LabelResource: AIResources.Names.AgentContext_Instructions, HelpResource: AIResources.Names.AgentContext_Instructions_Help, FieldType: FieldTypes.StringList, ResourceType: typeof(AIResources))]
+        public List<string> Instructions { get; set; } = new List<string>();
+
 
         public EntityHeader ToEntityHeader()
         {
@@ -75,7 +69,19 @@ namespace LagoVista.AI.Models
                 nameof(ModelName),
                 nameof(Temperature),
                 nameof(WelcomeMessage),
-                nameof(PersonaInstructions),
+                nameof(Instructions)
+            };
+        }
+
+        public List<string> GetFormFieldsCol2()
+        {
+            return new List<string>()
+            {
+                nameof(InstructionDdrs),
+                nameof(ReferenceDdrs),
+                nameof(ActiveTools),
+                nameof(AvailableTools),
+                nameof(ToolBoxes)
             };
         }
     }

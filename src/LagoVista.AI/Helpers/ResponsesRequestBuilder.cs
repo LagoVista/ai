@@ -114,7 +114,7 @@ There are additional tools that are available and can be loaded with the actives
                 Text = loadedToolContent.ToString()
             });
 
-            // Available Tools are all the tools that could be used
+            // Available ActiveTools are all the tools that could be used
             // with this mode, we need to let the LLM know about them.  
             // If the tool is active, we leave out since it well has it.
             var activeTools = ctx.PromptKnowledgeProvider.ActiveTools.Select(tl => tl.Name);

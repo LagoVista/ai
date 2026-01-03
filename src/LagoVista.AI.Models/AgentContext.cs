@@ -17,7 +17,7 @@ namespace LagoVista.AI.Models
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.AiAgentContext_Title, AIResources.Names.AiAgentContext_Description, AIResources.Names.AiAgentContext_Description, EntityDescriptionAttribute.EntityTypes.CoreIoTModel, typeof(AIResources),
         GetUrl: "/api/ai/agentcontext/{id}", GetListUrl: "/api/ai/agentcontexts", FactoryUrl: "/api/ai/agentcontext/factory", SaveUrl: "/api/ai/agentcontext", DeleteUrl: "/api/ai/agentcontext/{id}",
         ListUIUrl: "/mlworkbench/agents", EditUIUrl: "/mlworkbench/agent/{id}", CreateUIUrl: "/mlworkbench/agent/add", Icon: "icon-ae-database-3")]
-    public class AgentContext : EntityBase, IFormDescriptor, ISummaryFactory, IFormConditionalFields, IValidateable, IFormDescriptorCol2, IFormDescriptorBottom
+    public class AgentContext : EntityBase, IFormDescriptor, ISummaryFactory, IFormConditionalFields, IValidateable, IFormDescriptorCol2, IFormDescriptorBottom, IAgentKnowledgeProvider
     {
         public const string LlmProvider_OpenAI = "openai";
 
@@ -77,38 +77,26 @@ namespace LagoVista.AI.Models
         [FormField(LabelResource: AIResources.Names.AgentContext_CompletionReservePercent, HelpResource: AIResources.Names.AgentContext_CompletionReservePercent_Help, FieldType: FieldTypes.Percent, ResourceType: typeof(AIResources))]
         public int CompletionReservePercent { get; set; } = 15;
 
-
-        /// <summary>
-        /// Optional welcome message shown when entering this mode.
-        /// </summary>
+        [FormField(LabelResource: AIResources.Names.AgentContext_WelcomeMessage, HelpResource: AIResources.Names.AgentContext_WelcomeMessage_Help, FieldType: FieldTypes.MultiLineText, ResourceType: typeof(AIResources))]
         public string WelcomeMessage { get; set; }
 
-        /// <summary>
-        /// Instructions to be sent over with the initial turn
-        /// </summary>
-        public string BoolstrapInstructions { get; set; }
 
-        /// <summary>
-        /// Mode-specific behavior instructions for the LLM when this
-        /// mode is active (go into the Active Mode Behavior Block).
-        /// </summary>
-        public List<EntityHeader> AgentInstructionDdrs { get; set; } = new List<EntityHeader>();
+        [FormField(LabelResource: AIResources.Names.AgentContext_InstructionDDRs, HelpResource: AIResources.Names.AgentContext_InstructionDDRs_Help, EntityHeaderPickerUrl: "/api/ddrs", FieldType: FieldTypes.ChildListInlinePicker, ResourceType: typeof(AIResources))]
+        public List<EntityHeader> InstructionDdrs { get; set; } = new List<EntityHeader>();
 
-        /// <summary>
-        /// DDR's that produce patterns, practices and standards that can be used when the LLM reasons.
-        /// </summary>
+        [FormField(LabelResource: AIResources.Names.AgentContext_ReferenceDDRs, HelpResource: AIResources.Names.AgentContext_ReferenceDDRs_Help, EntityHeaderPickerUrl: "/api/ddrs", FieldType: FieldTypes.ChildListInlinePicker, ResourceType: typeof(AIResources))]
         public List<EntityHeader> ReferenceDdrs { get; set; } = new List<EntityHeader>();
 
-        /// <summary>
-        /// Tool IDs that are enabled when this mode is active.
-        /// </summary>
+        [FormField(LabelResource: AIResources.Names.AgentContext_ActiveTools, HelpResource: AIResources.Names.AgentContext_ActiveTools_Help, EntityHeaderPickerUrl: "/api/ai/agenttools", FieldType: FieldTypes.ChildListInlinePicker, ResourceType: typeof(AIResources))]
         public List<EntityHeader> ActiveTools { get; set; } = new List<EntityHeader>();
 
+        [FormField(LabelResource: AIResources.Names.AgentContext_AvailableTools, HelpResource: AIResources.Names.AgentContext_AvailableTools_Help, EntityHeaderPickerUrl: "/api/ai/agenttools", FieldType: FieldTypes.ChildListInlinePicker, ResourceType: typeof(AIResources))]
         public List<EntityHeader> AvailableTools { get; set; } = new List<EntityHeader>();
 
+        [FormField(LabelResource: AIResources.Names.AgentContext_ToolBoxes, HelpResource: AIResources.Names.AgentContext_ToolBoxes_Help, EntityHeaderPickerUrl: "/api/ai/toolboxes", FieldType: FieldTypes.ChildListInlinePicker, ResourceType: typeof(AIResources))]
         public List<EntityHeader> ToolBoxes { get; set; } = new List<EntityHeader>();
 
-        [FormField(LabelResource: AIResources.Names.AgentContext_Instructions,  FieldType: FieldTypes.StringList, ResourceType: typeof(AIResources))]
+        [FormField(LabelResource: AIResources.Names.AgentContext_Instructions, HelpResource: AIResources.Names.AgentContext_Instructions_Help, FieldType: FieldTypes.StringList, ResourceType: typeof(AIResources))]
         public List<string> Instructions { get; set; }= new List<string>();
 
 
@@ -143,6 +131,8 @@ namespace LagoVista.AI.Models
                 nameof(Name),
                 nameof(Key),
                 nameof(Icon),
+                nameof(DefaultRole),
+                nameof(DefaultMode),
                 nameof(VectorDatabaseCollectionName),
                 nameof(VectorDatabaseUri),
                 nameof(VectorDatabaseApiKey),
@@ -150,6 +140,11 @@ namespace LagoVista.AI.Models
                 nameof(AzureApiToken),
                 nameof(BlobContainerName),
                 nameof(Instructions),
+                nameof(LlmProvider),
+                nameof(LlmApiKey),
+                nameof(EmbeddingModel),
+                nameof(MaxTokenCount),
+                nameof(CompletionReservePercent),
             };
         }
 
@@ -164,14 +159,12 @@ namespace LagoVista.AI.Models
         {
             return new List<string>()
             {
-                nameof(LlmProvider),
-                nameof(LlmApiKey),
-                nameof(EmbeddingModel),
-                nameof(MaxTokenCount),
-                nameof(CompletionReservePercent),
-                nameof(DefaultRole),
+                nameof(ToolBoxes),
+                nameof(InstructionDdrs),
+                nameof(ReferenceDdrs),
+                nameof(AvailableTools),
+                nameof(ActiveTools),
                 nameof(Roles),
-                nameof(DefaultMode),
                 nameof(AgentModes),
             };
         }
