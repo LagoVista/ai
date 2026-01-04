@@ -327,16 +327,23 @@ namespace LagoVista.AI.Helpers
                 else if (!String.IsNullOrEmpty(response.PrimaryOutputText))
                 {
                     var finalOutput = response.PrimaryOutputText;
+                    
                     if(finalOutput.Contains("APTIX-PLAN-END"))
                         finalOutput = finalOutput.Substring(finalOutput.IndexOf("APTIX-PLAN-END") + "APTIX-PLAN-END".Length).Trim();
 
                     var userInput = string.IsNullOrEmpty(ctx.Envelope.Instructions) ? "file upload" : ctx.Envelope.Instructions;
+                    await _turnHistoryRepo.AppendTurnAsync(ctx.Envelope.Org.Id, ctx.Session.Id, ctx.ThisTurn.Id, userInput, finalOutput, ctx.CancellationToken);
 
-                    await _turnHistoryRepo.AddTurnAsync(ctx.Envelope.Org.Id, ctx.Session.Id, ctx.ThisTurn.Id, userInput, finalOutput);
+                    ctx.ThisTurn.InstructionsTruncated = userInput.Length > 4 * 1024;
+                    ctx.ThisTurn.AgentAnswerTruncated = finalOutput.Length > 4 * 1024;
+    
+                    if(ctx.ThisTurn.InstructionsTruncated)
+                        userInput = userInput.Substring(0, 4 * 1024);
+                    
+                    if (ctx.ThisTurn.AgentAnswerTruncated)
+                        finalOutput = finalOutput.Substring(0, 4 * 1024);
 
-                    if (finalOutput.Length > 1024)
-                        finalOutput = finalOutput.Substring(1024);
-
+                    ctx.ThisTurn.InstructionSummary = userInput;
                     ctx.ThisTurn.AgentAnswerSummary = finalOutput;
                 }
                 else

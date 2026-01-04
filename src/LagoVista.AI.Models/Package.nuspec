@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>LagoVista.AI.Models</id>
-    <version>3.0.3154.0853</version>
+    <version>3.0.3154.1456</version>
     <authors>Software Logistics, LLC</authors>
     <owners>Software Logistics, LLC</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
@@ -12,11 +12,11 @@
     <copyright>Copyright Software Logistics - 2026</copyright>
     <tags>LagoVista HomeAutomation IoT AI Machine Learning</tags>
     <icon>LagoVistaIcon.png</icon>
-    <releaseNotes>Build Date: 1/4/2026 1:53:26 PM UTC</releaseNotes>
+    <releaseNotes>Build Date: 1/4/2026 7:56:49 PM UTC</releaseNotes>
     <repository url="https://www.github.com/lagovista" type="git" branch="master"></repository>
     <dependencies>
       <group targetFramework="netstandard2.0">
-        <dependency id="LagoVista.Core" version="3.0.3154.0544" />
+        <dependency id="LagoVista.Core" version="3.0.3154.1053" />
       </group>
     </dependencies>
   </metadata>

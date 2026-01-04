@@ -56,7 +56,7 @@ Field encoding rules:
 - Field names MUST match the schema labels exactly.
 - Labels may never contain a colon.
 
-TLA format:
+ID format:
 - MUST be exactly 10 characters in the form `AAA-NNNNNN`.
 - Example: `SYS-000010`.
 
@@ -71,7 +71,7 @@ Timestamps:
 - On initial save: `Last Updated Date = Creation Date` and `Last Updated By = Creator`.
 
 Filename convention:
-- MUST be `<TLA> - <Title>.md`.
+- MUST be `<ID> - <Title>.md`.
 
 ## 4 - DDR Type Schema (Required)
 Summary: Restricts DDRs to exactly one primary type selected from a fixed allowed set.
@@ -100,7 +100,7 @@ Summary: Defines the required structure for chapters inside `# Body` while keepi
 ## 7 - Output Correctness & Compliance
 Summary: Defines minimum requirements for drafts and full compliance requirements for generated/approved outputs.
 Draft minimum requirements (MUST):
-- Drafts MUST always have: TLA, Title, Summary, Creator, Creation Date, Last Updated Date, Last Updated By.
+- Drafts MUST always have: ID, Title, Summary, Creator, Creation Date, Last Updated Date, Last Updated By.
 
 Compliant DDR requirements (MUST):
 - Compliant outputs MUST satisfy all structural requirements in this schema, including required blocks/order, full required metadata set, body chapter rules, filename/TLA alignment, and approval rules.

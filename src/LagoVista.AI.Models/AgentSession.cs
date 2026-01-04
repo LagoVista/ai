@@ -268,7 +268,10 @@ namespace LagoVista.AI.Models
 
         public string InstructionSummary { get; set; }
 
+        public bool InstructionsTruncated { get; set; }
+
         public string AgentAnswerSummary { get; set; }
+        public bool AgentAnswerTruncated { get; set; }
 
         public string SessionId { get; set; }
 
