@@ -127,7 +127,7 @@ namespace LagoVista.AI.Tests
             var parsed = JObject.Parse(result.Result);
             var workflow = parsed["Workflow"];
 
-            // NOTE: 'id' is lower-case, 'Name' is PascalCase
+            // NOTE: 'id' is lower-case, 'Kind' is PascalCase
             Assert.That((string)workflow["id"], Is.EqualTo("create_ddr"));
             Assert.That((string)workflow["Name"], Is.EqualTo("Create DDR"));
         }

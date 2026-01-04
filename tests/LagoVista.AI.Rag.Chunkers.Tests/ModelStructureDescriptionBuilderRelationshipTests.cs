@@ -341,7 +341,7 @@ namespace LagoVista.AI.Models
 
             Assert.Multiple(() =>
             {
-                // We should still have the scalar Name property.
+                // We should still have the scalar Kind property.
                 var nameProp = description.Properties.Single(p => p.Name == "Name");
                 Assert.That(nameProp.ClrType, Is.EqualTo("string"));
                 Assert.That(nameProp.IsCollection, Is.False);

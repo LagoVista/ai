@@ -15,7 +15,7 @@ namespace LagoVista.AI.Helpers
         /// [
         ///   {
         ///     "CallId": "...",
-        ///     "Name": "...",
+        ///     "Kind": "...",
         ///     "ArgumentsJson": "{...}",
         ///     "IsServerTool": true,
         ///     "WasExecuted": true,

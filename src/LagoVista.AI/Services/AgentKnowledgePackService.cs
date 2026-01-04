@@ -98,16 +98,19 @@ namespace LagoVista.AI.Services
 
                 AddBaseInstructions(pack, acc);
 
-                AddInstructionDDR(pack.KindCatalog[KnowledgeKind.Instruction].SessionKnowledge, KnowledgeKind.Instruction, instructionIds, resolvedInstructions.Result);
-                AddReferenceDDR(pack.KindCatalog[KnowledgeKind.Reference].SessionKnowledge, KnowledgeKind.Reference, referenceIds, resolvedReferences.Result);
-                AddActiveTools(pack.KindCatalog[KnowledgeKind.ToolUsage].SessionKnowledge, acc.ActiveTools.Select(x => x.Id));
-                AddAvailableTools(pack.KindCatalog[KnowledgeKind.ToolSummary].SessionKnowledge, acc.AvailableTools.Select(x => x.Id));
-            }
-            else
-            {
-                AddActiveTools(pack.KindCatalog[KnowledgeKind.ToolUsage].SessionKnowledge, acc.ActiveTools.Select(x => x.Id));
-            }
+                var addResult = AddInstructionDDR(pack.KindCatalog[KnowledgeKind.Instruction].SessionKnowledge, KnowledgeKind.Instruction, instructionIds, resolvedInstructions.Result);
+                if (!addResult.Successful) return InvokeResult<AgentKnowledgePack>.FromInvokeResult(addResult);
 
+                addResult = AddReferenceDDR(pack.KindCatalog[KnowledgeKind.Reference].SessionKnowledge, KnowledgeKind.Reference, referenceIds, resolvedReferences.Result);
+                if (!addResult.Successful) return InvokeResult<AgentKnowledgePack>.FromInvokeResult(addResult);
+
+                addResult = AddActiveTools(pack.KindCatalog[KnowledgeKind.ToolUsage].SessionKnowledge, acc.ActiveTools.Select(x => x.Id));
+                if (!addResult.Successful) return InvokeResult<AgentKnowledgePack>.FromInvokeResult(addResult);
+
+                addResult = AddAvailableTools(pack.KindCatalog[KnowledgeKind.ToolSummary].SessionKnowledge, acc.AvailableTools.Select(x => x.Id));
+                if (!addResult.Successful) return InvokeResult<AgentKnowledgePack>.FromInvokeResult(addResult);
+            }
+            
             pack.ActiveTools = acc.ActiveTools.Select(x => x.Id).ToList();
 
             _adminLogger.Trace($"[JSON.AKP]={JsonConvert.SerializeObject(pack)}");

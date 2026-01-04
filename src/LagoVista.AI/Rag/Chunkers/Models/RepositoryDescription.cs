@@ -22,7 +22,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         public string Summary { get; set; }
 
         /// <summary>
-        /// Name of the immediate base type, e.g. DocumentDBRepoBase.
+        /// Kind of the immediate base type, e.g. DocumentDBRepoBase.
         /// </summary>
         public string BaseTypeName { get; set; }
 

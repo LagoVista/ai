@@ -86,13 +86,13 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         // ---------- Attribute Context ----------
 
         /// <summary>
-        /// Name of the attribute type that carried the resource reference
+        /// Kind of the attribute type that carried the resource reference
         /// (FormField, EntityDescription, EnumLabel, etc.).
         /// </summary>
         public string AttributeTypeName { get; set; }
 
         /// <summary>
-        /// Name of the attribute property (actual or synthetic for positional),
+        /// Kind of the attribute property (actual or synthetic for positional),
         /// e.g. LabelResource, HelpResource, TitleResource, TextResource, etc.
         /// </summary>
         public string AttributePropertyName { get; set; }

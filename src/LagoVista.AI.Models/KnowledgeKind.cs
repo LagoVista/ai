@@ -10,5 +10,7 @@ namespace LagoVista.AI.Models
         Reference,
         ToolUsage,
         ToolSummary,
+        Kfr,
+        Rag
     }
 }

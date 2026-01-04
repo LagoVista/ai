@@ -208,7 +208,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                         continue;
                     }
 
-                    // Line 1: Name : Type
+                    // Line 1: Kind : Type
                     propsSection.AppendLine($"- {prop.Name} : {SummarizeClrType(prop)}");
 
                     // Line 2: structural flags

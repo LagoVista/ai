@@ -210,7 +210,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
         {
             var className = classDecl.Identifier.Text;
 
-            // 1. Class Name Pattern (Strongest): <EntityName>Manager
+            // 1. Class Kind Pattern (Strongest): <EntityName>Manager
             if (className.EndsWith("Manager", StringComparison.Ordinal))
             {
                 var entityName = className.Substring(0, className.Length - "Manager".Length);

@@ -19,7 +19,7 @@ namespace LagoVista.AI.Rag.Models
         public SummaryObjectKind Kind { get; set; }
 
         /// <summary>
-        /// Name of the class (for models) or constant identifier (for domains).
+        /// Kind of the class (for models) or constant identifier (for domains).
         /// </summary>
         [JsonProperty("symbolName")]
         public string SymbolName { get; set; }

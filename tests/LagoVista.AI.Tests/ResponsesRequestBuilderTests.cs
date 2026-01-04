@@ -16,7 +16,7 @@
 //            return new AgentContextRole
 //            {
 //                Id = "conv-ctx-1",
-//                Name = "Test Conversation Context",
+//                Kind = "Test Conversation Context",
 //                ModelName = "gpt-5.1",
 //                SystemPrompts = new List<string>() { "You are the Aptix Reasoner." },
 //                Temperature = 0.7f
@@ -256,7 +256,7 @@
 
 //            Assert.That(dto.ToolChoice, Is.Not.Null);
 //            Assert.That(dto.ToolChoice.Type, Is.EqualTo("tool"));
-//            Assert.That(dto.ToolChoice.Name, Is.EqualTo("ddr_document"));
+//            Assert.That(dto.ToolChoice.Kind, Is.EqualTo("ddr_document"));
 //        }
 
 //        [Test]
@@ -275,7 +275,7 @@
 //                new
 //                {
 //                    CallId = "call_123",
-//                    Name = "testing_ping_pong",
+//                    Kind = "testing_ping_pong",
 //                    ArgumentsJson = "{\"message\":\"hello\",\"count\":0}",
 //                    IsServerTool = true,
 //                    WasExecuted = true,

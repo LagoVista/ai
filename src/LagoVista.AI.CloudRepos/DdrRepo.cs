@@ -52,6 +52,9 @@ namespace LagoVista.AI.CloudRepos
 
         public async Task<InvokeResult<IDictionary<string, DdrModelFields>>> GetDdrModelSummaryAsync(string orgId, IEnumerable<string> ddrIds, CancellationToken cancellationToken = default)
         {
+
+            _logger.Trace($"[DdrRepo_GetDdrModelSummaryAsync] - getting {String.Join(", ", ddrIds)}");
+
             if (string.IsNullOrWhiteSpace(orgId))
                 return InvokeResult<IDictionary<string, DdrModelFields>>.FromError("orgId is required.");
 
@@ -101,18 +104,19 @@ namespace LagoVista.AI.CloudRepos
                 var ddrs = await GetDdrs(missingIds.ToArray(), orgId);
 
                 // Fail-fast if any requested DDR wasn't found
-                var foundIds = new HashSet<string>(ddrs.Select(d => d.DdrIdentifier), StringComparer.OrdinalIgnoreCase);
+                var foundIds = new HashSet<string>(ddrs.Select(d => d.Id), StringComparer.OrdinalIgnoreCase);
                 var notFound = missingIds.Where(id => !foundIds.Contains(id)).ToArray();
                 if (notFound.Length > 0)
                 {
-                    _logger.AddError("[DdrRepo_GetAgentInstructionsAsync]", $"Could not find DDR(s) by TLA: {string.Join(", ", notFound)} org: {orgId}.");
+                    _logger.AddError("[DdrRepo_GetDdrModelSummaryAsync]", $"Could not find DDR(s) by ID: {string.Join(", ", notFound)} org: {orgId}.");
                     return InvokeResult<IDictionary<string, DdrModelFields>>.FromError($"DDR(s) not found: {string.Join(", ", notFound)}");
                 }
 
                 foreach (var ddr in ddrs)
                 {
-                    if (cancellationToken.IsCancellationRequested)
-                        return InvokeResult<IDictionary<string, DdrModelFields>>.FromError("Operation canceled.");
+                    _logger.Trace($"[DdrRepo_GetDdrModelSummaryAsync] - adding {ddr.DdrIdentifier} ({ddr.Id})");
+
+                    if (cancellationToken.IsCancellationRequested) return InvokeResult<IDictionary<string, DdrModelFields>>.FromError("Operation canceled.");
 
                     var content = new DdrModelFields()
                     {
@@ -123,12 +127,14 @@ namespace LagoVista.AI.CloudRepos
                         ReferentialSummary = ddr.ReferentialSummary
                     };
 
-                    result[ddr.DdrIdentifier] = content;
+                    result[ddr.Id] = content;
 
                     // Backfill cache only when non-empty (consistent with Add/Update behavior).
                     await _cacheProvider.AddAsync(GetDdrKey(ddr), JsonConvert.SerializeObject(content));
                 }
             }
+
+            _logger.Trace($"[DdrRepo_GetDdrModelSummaryAsync] Requested {ddrIds.Count()} - Loaded {result.Count}.");
 
             return InvokeResult<IDictionary<string, DdrModelFields>>.Create(result);
         }
@@ -153,7 +159,7 @@ namespace LagoVista.AI.CloudRepos
 
         public async Task<List<DetailedDesignReview>> GetDdrs(string[] ddrs, string orgId)
         {
-           var result = await QueryAsync(rec => ddrs.Contains(rec.DdrIdentifier), rec => rec.DdrIdentifier, ListRequest.CreateForAll());
+           var result = await QueryAsync(rec => ddrs.Contains(rec.Id)  && rec.OwnerOrganization.Id == orgId, rec => rec.DdrIdentifier , ListRequest.CreateForAll());
             return result.Model.ToList();
         }
 

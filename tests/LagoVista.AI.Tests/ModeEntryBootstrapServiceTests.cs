@@ -91,8 +91,8 @@
 
 //            Assert.That(result.Successful, Is.True);
 //            Assert.That(executor.Calls.Count, Is.EqualTo(2));
-//            Assert.That(executor.Calls[0].Name, Is.EqualTo("tool_a"));
-//            Assert.That(executor.Calls[1].Name, Is.EqualTo("tool_b"));
+//            Assert.That(executor.Calls[0].Kind, Is.EqualTo("tool_a"));
+//            Assert.That(executor.Calls[1].Kind, Is.EqualTo("tool_b"));
 //        }
 
 //        [Test]
@@ -101,7 +101,7 @@
 //            var executor = new FakeToolExecutor();
 //            executor.Handler = call =>
 //            {
-//                if (call.Name == "tool_a")
+//                if (call.Kind == "tool_a")
 //                {
 //                    call.IsServerTool = true;
 //                    call.WasExecuted = true;
@@ -138,8 +138,8 @@
 //            Assert.That(result.Successful, Is.False);
 //            // tool_a executed, tool_b attempted and failed, tool_c should not run
 //            Assert.That(executor.Calls.Count, Is.EqualTo(2));
-//            Assert.That(executor.Calls[0].Name, Is.EqualTo("tool_a"));
-//            Assert.That(executor.Calls[1].Name, Is.EqualTo("tool_b"));
+//            Assert.That(executor.Calls[0].Kind, Is.EqualTo("tool_a"));
+//            Assert.That(executor.Calls[1].Kind, Is.EqualTo("tool_b"));
 //        }
 
 //        [Test]

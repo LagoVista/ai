@@ -238,7 +238,7 @@ namespace LagoVista.AI
             //{
             //    schema.Properties[name].Items.Properties.Add(new JObject
             //    {
-            //        [arg.Name] = new JObject
+            //        [arg.Kind] = new JObject
             //        {
             //            ["type"] = arg.Type,
             //            ["description"] = arg.Description

@@ -170,13 +170,13 @@ namespace LagoVista.AI.Rag.Chunkers.Models
     public sealed class EndpointHandlerDescription
     {
         /// <summary>
-        /// Name of the DI-injected interface used as the handler, e.g.
+        /// Kind of the DI-injected interface used as the handler, e.g.
         /// IDeviceManager.
         /// </summary>
         public string Interface { get; set; }
 
         /// <summary>
-        /// Name of the handler method invoked from the controller action,
+        /// Kind of the handler method invoked from the controller action,
         /// e.g. CreateDeviceAsync.
         /// </summary>
         public string Method { get; set; }

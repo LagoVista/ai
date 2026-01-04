@@ -32,7 +32,7 @@ namespace LagoVista.AI.Interfaces
         /// ToolCallManifest — Validity Definition (LOCKED)
         /// - ToolCalls and ToolCallResults must have same count.
         /// - Order must match.
-        /// - ToolCallId and Name must match pairwise.
+        /// - ToolCallId and Kind must match pairwise.
         /// - All ToolCallResults MUST have ResultJson.
         /// </summary>
         InvokeResult ValidateToolCallManifest(ToolCallManifest manifest);

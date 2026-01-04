@@ -209,13 +209,13 @@ namespace LagoVista.AI.Models
             var allProps = description.Properties.ToList();
             Assert.That(allProps, Is.Not.Empty, "Expected some properties in the description.");
 
-            // We should only have ONE 'Name' property total (the concrete one),
-            // even though EntityBase also has a Name.
+            // We should only have ONE 'Kind' property total (the concrete one),
+            // even though EntityBase also has a Kind.
             var nameProps = allProps.Where(p => p.Name == "Name").ToList();
             Assert.That(nameProps.Count, Is.EqualTo(1),
                 "ModelStructureDescription should not contain duplicate 'Name' properties from EntityBase and the derived type.");
 
-            // And that single Name should *not* be tagged as an EntityBase property.
+            // And that single Kind should *not* be tagged as an EntityBase property.
             Assert.That(nameProps[0].Group, Is.Not.EqualTo("EntityBase"),
                 "Overridden 'Name' on the derived model should not be grouped under EntityBase.");
 

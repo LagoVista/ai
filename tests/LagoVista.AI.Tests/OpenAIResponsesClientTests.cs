@@ -153,7 +153,7 @@
 //            return new AgentContext
 //            {
 //                Id = "agent-1",
-//                Name = "Test Agent",
+//                Kind = "Test Agent",
 //                LlmApiKey = "test-api-key",
 //                AgentModes = new List<AgentMode>
 //                {
@@ -172,7 +172,7 @@
 //            return new AgentContextRole
 //            {
 //                Id = "conv-ctx-1",
-//                Name = "Test Conversation Context",
+//                Kind = "Test Conversation Context",
 //                ModelName = "gpt-5.1",
 //                SystemPrompts = new List<string> { "You are the Aptix Reasoner." },
 //                Temperature = 0.7f

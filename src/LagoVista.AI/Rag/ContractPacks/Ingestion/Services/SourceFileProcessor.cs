@@ -186,7 +186,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
                             break;
                     }
 
-                    //var chunks = _chunkerServics.ChunkCSharpWithRoslyn(symbolText, fileInfo.Name);
+                    //var chunks = _chunkerServics.ChunkCSharpWithRoslyn(symbolText, fileInfo.Kind);
                     //foreach (var chunk in chunks.Result)
                     //{
                     //    var points = chunk.BuildRagPoints(ctx);

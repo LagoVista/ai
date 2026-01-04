@@ -27,7 +27,7 @@ namespace LagoVista.AI.Models.Context
         public const string ToolCallManifestRegisterName = "ToolCallManifest";
 
         [JsonProperty("registers")]
-        private readonly Dictionary<string, ContentRegister> _registers = new Dictionary<string, ContentRegister>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<KnowledgeKind, ContentRegister> _registers = new Dictionary<KnowledgeKind, ContentRegister>();
 
         /// <summary>
         /// Returns a snapshot of registers.
@@ -45,24 +45,23 @@ namespace LagoVista.AI.Models.Context
         }
 
         /// <summary>
-        /// Get an existing register by name, or create it with the provided classification.
+        /// Get an existing register by kind, or create it with the provided classification.
         /// </summary>
-        public ContentRegister GetOrCreateRegister(string name, ContextClassification classification)
+        public ContentRegister GetOrCreateRegister(KnowledgeKind kind, ContextClassification classification)
         {
-            if (String.IsNullOrWhiteSpace(name)) throw new ArgumentException("Register name is required.", nameof(name));
-
-            if (_registers.TryGetValue(name, out var existing))
+            
+            if (_registers.TryGetValue(kind, out var existing))
             {
                 if (existing.Classification != classification)
                 {
-                    throw new InvalidOperationException($"Register '{name}' already exists with classification '{existing.Classification}', requested '{classification}'.");
+                    throw new InvalidOperationException($"Register '{kind}' already exists with classification '{existing.Classification}', requested '{classification}'.");
                 }
 
                 return existing;
             }
 
-            var created = new ContentRegister(name, classification);
-            _registers[name] = created;
+            var created = new ContentRegister(kind, classification);
+            _registers[kind] = created;
             return created;
         }
 
@@ -71,16 +70,10 @@ namespace LagoVista.AI.Models.Context
         public PromptKnowledgeProviderStates State { get; set; } = PromptKnowledgeProviderStates.NotSet;
 
         /// <summary>
-        /// Try get register by name.
+        /// Try get register by kind.
         /// </summary>
-        public bool TryGetRegister(string name, out ContentRegister register)
+        public bool TryGetRegister(KnowledgeKind name, out ContentRegister register)
         {
-            if (String.IsNullOrWhiteSpace(name))
-            {
-                register = null!;
-                return false;
-            }
-
             return _registers.TryGetValue(name, out register!);
         }
 

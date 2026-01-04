@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
+using LagoVista.Core.Validation;
 
 namespace LagoVista.AI.Services
 {
@@ -45,19 +46,18 @@ namespace LagoVista.AI.Services
             }
         }
 
-        private static void AddInstructionDDR(KnowledgeLane lane, KnowledgeKind kind, IEnumerable<string> orderedIds, IDictionary<string, DdrModelFields> resolved)
+        private static InvokeResult AddInstructionDDR(KnowledgeLane lane, KnowledgeKind kind, IEnumerable<string> orderedIds, IDictionary<string, DdrModelFields> resolved)
         {
             if (lane == null) throw new ArgumentNullException(nameof(lane));
-            if (orderedIds == null) return;
-
-            resolved ??= new Dictionary<string, DdrModelFields>();
+            if (orderedIds == null) throw new ArgumentNullException(nameof(orderedIds));
+            if (resolved == null) throw new ArgumentNullException(nameof(resolved));
 
             foreach (var id in orderedIds)
             {
-                if (string.IsNullOrWhiteSpace(id)) continue;
+                if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("missing id value in ordered ids for instruction ddrs");
 
                 resolved.TryGetValue(id, out var ddr);
-                if (ddr == null) continue;
+                if (ddr == null) return InvokeResult.FromError($"Could not find resolved ddr for instruction ddr {id}");
 
                 var builder = new StringBuilder();
                 builder.AppendLine($"### {ddr.DdrIdentifier} - {ddr.Title}");
@@ -71,21 +71,22 @@ namespace LagoVista.AI.Services
                     Content = builder.ToString()
                 });
             }
+
+            return InvokeResult.Success;
         }
 
-        private static void AddReferenceDDR(KnowledgeLane lane, KnowledgeKind kind, IEnumerable<string> orderedIds, IDictionary<string, DdrModelFields> resolved)
+        private static InvokeResult AddReferenceDDR(KnowledgeLane lane, KnowledgeKind kind, IEnumerable<string> orderedIds, IDictionary<string, DdrModelFields> resolved)
         {
             if (lane == null) throw new ArgumentNullException(nameof(lane));
-            if (orderedIds == null) return;
-
-            resolved ??= new Dictionary<string, DdrModelFields>();
+            if (orderedIds == null) throw new ArgumentNullException(nameof(orderedIds));
+            if (resolved == null) throw new ArgumentNullException(nameof(resolved));
 
             foreach (var id in orderedIds)
             {
-                if (string.IsNullOrWhiteSpace(id)) continue;
+                if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("missing id value in ordered ids for reference ddrs");
 
                 resolved.TryGetValue(id, out var ddr);
-                if (ddr == null) continue;
+                if (ddr == null) return InvokeResult.FromError($"Could not find resolved ddr for reference ddr {id}");
 
                 lane.Items.Add(new KnowledgeItem
                 {
@@ -94,18 +95,20 @@ namespace LagoVista.AI.Services
                     Content = $"{ddr.DdrIdentifier}: {ddr.ReferentialSummary}"
                 });
             }
+
+            return InvokeResult.Success;
         }
 
-        private void AddAvailableTools(KnowledgeLane lane, IEnumerable<string> orderedIds)
+        private InvokeResult AddAvailableTools(KnowledgeLane lane, IEnumerable<string> orderedIds)
         {
             if (lane == null) throw new ArgumentNullException(nameof(lane));
-            if (orderedIds == null) return;
+            if (orderedIds == null) throw new ArgumentNullException(nameof(orderedIds)); ;
 
             foreach (var id in orderedIds)
             {
                 var summary = _toolUsageMetaData.GetToolSummary(id);
 
-                if (string.IsNullOrWhiteSpace(id)) continue;
+                if (string.IsNullOrWhiteSpace(id)) return InvokeResult.FromError($"Could not find available tool {id}");
 
                 lane.Items.Add(new KnowledgeItem
                 {
@@ -114,16 +117,18 @@ namespace LagoVista.AI.Services
                     Content = $"{id}: {summary}"
                 });
             }
+
+            return InvokeResult.Success;
         }
 
-        private void AddActiveTools(KnowledgeLane lane, IEnumerable<string> orderedIds)
+        private InvokeResult AddActiveTools(KnowledgeLane lane, IEnumerable<string> orderedIds)
         {
             if (lane == null) throw new ArgumentNullException(nameof(lane));
-            if (orderedIds == null) return;
+            if (orderedIds == null) throw new ArgumentNullException(nameof(orderedIds)); ;
 
             foreach (var id in orderedIds)
             {
-                if (string.IsNullOrWhiteSpace(id)) continue;
+                if (string.IsNullOrWhiteSpace(id)) return InvokeResult.FromError($"Could not find active tool {id}");
 
                 var usage = _toolUsageMetaData.GetToolUsageMetadata(id);
 
@@ -139,6 +144,8 @@ namespace LagoVista.AI.Services
                     Content = builder.ToString()
                 });
             }
+
+            return InvokeResult.Success;
         }
 
 

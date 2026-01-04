@@ -14,18 +14,17 @@ namespace LagoVista.AI.Models.Context
     /// </summary>
     public sealed class ContentRegister
     {
-        public ContentRegister(string name, ContextClassification classification)
+        public ContentRegister(KnowledgeKind kind, ContextClassification classification)
         {
-            if (String.IsNullOrWhiteSpace(name)) throw new ArgumentException("Register name is required.", nameof(name));
-            Name = name;
+            Kind = kind;
             Classification = classification;
         }
 
         /// <summary>
-        /// Stable register name/key.
+        /// Stable register kind/key.
         /// </summary>
-        [JsonProperty("name")]
-        public string Name { get; }
+        [JsonProperty("kind")]
+        public KnowledgeKind Kind { get; }
 
         /// <summary>
         /// Session or Consumable (AGN-030).

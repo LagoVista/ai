@@ -132,7 +132,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
 
         /// <summary>
         /// True when this field is part of the base SummaryData shape
-        /// (Id, Name, Key, Description, etc.).
+        /// (Id, Kind, Key, Description, etc.).
         /// False when the field is defined on a concrete summary type.
         /// </summary>
         public bool IsBaseSummaryDataField { get; set; }

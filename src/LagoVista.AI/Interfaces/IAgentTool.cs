@@ -8,7 +8,7 @@ namespace LagoVista.AI.Interfaces
     /// <summary>
     /// Server-side tool that can be invoked by the Aptix reasoner.
     /// 
-    /// The tool is identified by a stable Name that must match the
+    /// The tool is identified by a stable Kind that must match the
     /// LLM tool name (and what you register in AgentToolRegistry).
     /// </summary>
     public interface IAgentTool

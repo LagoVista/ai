@@ -346,7 +346,7 @@
 //            return new AgentContextRole
 //            {
 //                Id = id,
-//                Name = id,
+//                Kind = id,
 //                WelcomeMessage = welcome,
 //                AgentInstructionDdrs = (instructionDdrs ?? Array.Empty<string>()).ToArray(),
 //                ReferenceDdrs = (referenceDdrs ?? Array.Empty<string>()).ToArray(),

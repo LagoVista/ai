@@ -20,7 +20,7 @@ namespace LagoVista.AI.Rag.Models
         public string DomainKey { get; set; }
 
         /// <summary>
-        /// DomainDescription.Name
+        /// DomainDescription.Kind
         /// </summary>
         public string Name { get; set; }
 
@@ -36,7 +36,7 @@ namespace LagoVista.AI.Rag.Models
 
         /// <summary>
         /// Structural issues detected during domain metadata extraction
-        /// (e.g. multiple [DomainDescription] members, missing Name, etc.).
+        /// (e.g. multiple [DomainDescription] members, missing Kind, etc.).
         /// </summary>
         public List<string> Errors { get; } = new List<string>();
 

@@ -27,6 +27,8 @@ namespace LagoVista.AI.Services
         public async Task<InvokeResult<IAgentPipelineContext>> PopulateAsync(IAgentPipelineContext ctx, bool changeMode)
         {
             var apkResult = await _apkProvider.CreateAsync(ctx, changeMode);
+            if (!apkResult.Successful) return InvokeResult<IAgentPipelineContext>.FromInvokeResult(apkResult.ToInvokeResult());    
+
             var apk = apkResult.Result;
 
             ctx.PromptKnowledgeProvider.ClearSession();
@@ -39,7 +41,7 @@ namespace LagoVista.AI.Services
 
                 if (items.ConsumableKnowledge.Items.Any())
                 {
-                    var register = ctx.PromptKnowledgeProvider.GetOrCreateRegister(key.ToString(), Models.Context.ContextClassification.Consumable);
+                    var register = ctx.PromptKnowledgeProvider.GetOrCreateRegister(key, Models.Context.ContextClassification.Consumable);
                     var contentBlock = new StringBuilder();
                     contentBlock.AppendLine(items.BeginMarker);
                     contentBlock.AppendLine(items.InstructionLine);
@@ -53,7 +55,7 @@ namespace LagoVista.AI.Services
 
                 if (items.SessionKnowledge.Items.Any())
                 {
-                    var register = ctx.PromptKnowledgeProvider.GetOrCreateRegister(key.ToString(), Models.Context.ContextClassification.Session);
+                    var register = ctx.PromptKnowledgeProvider.GetOrCreateRegister(key, Models.Context.ContextClassification.Session);
                     var contentBlock = new StringBuilder();
                     contentBlock.AppendLine(items.BeginMarker);
                     contentBlock.AppendLine(items.InstructionLine);
@@ -88,7 +90,7 @@ For agent/session state, rely only on KFR.
 ### OpenQuestions (RequiresResolution) - none
 ## END Known Facts Registry (KFR) — Active Working Memory
 ";
-                var kfrRegister = ctx.PromptKnowledgeProvider.GetOrCreateRegister("kfr", Models.Context.ContextClassification.Session);
+                var kfrRegister = ctx.PromptKnowledgeProvider.GetOrCreateRegister(KnowledgeKind.Kfr, Models.Context.ContextClassification.Session);
                 kfrRegister.Add(kfrBlock);
             }
             else
@@ -120,7 +122,7 @@ Do not infer or assume facts outside this registry.
 
 ## END Known Facts Registry (KFR) — Active Working Memory
 ";
-                var kfrRegister = ctx.PromptKnowledgeProvider.GetOrCreateRegister("kfr", Models.Context.ContextClassification.Session);
+                var kfrRegister = ctx.PromptKnowledgeProvider.GetOrCreateRegister(KnowledgeKind.Kfr, Models.Context.ContextClassification.Session);
                 kfrRegister.Add(kfrBlock);
             }
 

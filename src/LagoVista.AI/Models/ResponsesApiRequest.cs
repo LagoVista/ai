@@ -136,7 +136,7 @@ namespace LagoVista.AI.Models
         public string Type { get; set; } = "tool";
 
         /// <summary>
-        /// Name of the tool that must be used.
+        /// Kind of the tool that must be used.
         /// </summary>
         [JsonProperty("name")]
         public string Name { get; set; }

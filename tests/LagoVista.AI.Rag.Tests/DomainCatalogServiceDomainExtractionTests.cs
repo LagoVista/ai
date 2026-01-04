@@ -140,7 +140,7 @@ namespace Sample
             Assert.That(summaries.Count, Is.EqualTo(1));
             var summary = summaries[0];
 
-            // Name not set in initializer, so it should fall back to DomainKey.
+            // Kind not set in initializer, so it should fall back to DomainKey.
             Assert.That(summary.Title, Is.EqualTo("KeyOnly"));
             Assert.That(summary.DomainKey, Is.EqualTo("KeyOnly"));
         }

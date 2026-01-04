@@ -64,24 +64,30 @@ Requested tools become available starting the next turn.";
                     payload = JObject.Parse(argumentsJson);
                     var idsArray = payload["tool_ids"] as JArray;
                     var toolIds = idsArray.Values<string>().ToList();
+                    var lane = context.PromptKnowledgeProvider.Registers.SingleOrDefault(r => r.Kind == KnowledgeKind.ToolUsage);
 
                     foreach (var tool in toolIds)
                     {
-                        var lane = context.PromptKnowledgeProvider.Registers.SingleOrDefault(r => r.Classification == Models.Context.ContextClassification.Session);
                         var usageInstructions = _metaDataProvider.GetToolUsageMetadata(tool);
                         lane.Items.Add($"### {tool}\r\n{usageInstructions}\r\n\r\n");
 
                         context.PromptKnowledgeProvider.ActiveTools.Add(tool);
                     }
 
-                    _streamingContext.AddMilestoneAsync($"using tools {String.Join(',', toolIds)}");
+                    _streamingContext.AddMilestoneAsync($"activated tools {String.Join(',', toolIds)}");
                 }
             }
             catch (JsonException jex)
             {
                 _adminLogger.AddException(tag, jex);
-                return Task.FromResult( InvokeResult<string>.FromError("argumentsJson was not valid JSON."));
+                return Task.FromResult( InvokeResult<string>.FromError($"{tag}- argumentsJson was not valid JSON {jex}."));
             }
+            catch(Exception ex)
+            {
+                _adminLogger.AddException(tag, ex);
+                return Task.FromResult(InvokeResult<string>.FromError($"{tag} - unhandled exceptoin {ex}."));
+            }
+
 
             return Task.FromResult(InvokeResult<string>.Create("{'result':'ok'}"));
 

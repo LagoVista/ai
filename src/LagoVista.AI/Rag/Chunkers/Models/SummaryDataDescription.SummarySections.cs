@@ -202,7 +202,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                         continue;
                     }
 
-                    // Line 1: Name : Type
+                    // Line 1: Kind : Type
                     fieldsSection.AppendLine($"- {field.Name} : {field.ClrType ?? "(unknown-type)"}");
 
                     var flags = new List<string>();

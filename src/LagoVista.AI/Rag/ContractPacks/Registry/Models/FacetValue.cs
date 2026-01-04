@@ -7,7 +7,7 @@ namespace LagoVista.AI.Rag.Models
     public sealed class FacetValue
     {
         /// <summary>
-        /// Name of the facet type (e.g. "Kind", "SubKind", "Repo").
+        /// Kind of the facet type (e.g. "Kind", "SubKind", "Repo").
         /// </summary>
         public string Type { get; set; }
 

@@ -196,7 +196,7 @@
 
 //            var call = response.ToolCalls.Single();
 //            Assert.That(call.CallId, Is.EqualTo("call_1"));
-//            Assert.That(call.Name, Is.EqualTo("ddr_document"));
+//            Assert.That(call.Kind, Is.EqualTo("ddr_document"));
 //            Assert.That(call.ArgumentsJson, Does.Contain(@"""IDX-0001""").And.Contain("Sample DDR"));
 //            Assert.That(response.FinishReason, Is.EqualTo("tool_use"));
 //        }
@@ -263,7 +263,7 @@
 //        ///  }
 //        ///
 //        /// We expect this to be classified as tool-only and produce a single
-//        /// AgentToolCall with CallId/Name/ArgumentsJson populated.
+//        /// AgentToolCall with CallId/Kind/ArgumentsJson populated.
 //        /// </summary>
 //        [Test]
 //        public void Parse_FunctionCallOnlyResponse_MapsToToolOnlyAndExtractsToolCall()
@@ -318,7 +318,7 @@
 
 //            var call = response.ToolCalls.Single();
 //            Assert.That(call.CallId, Is.EqualTo("call_MHhGBZbNhV2ybEAFuIBTcsqp"));
-//            Assert.That(call.Name, Is.EqualTo("testing_ping_pong"));
+//            Assert.That(call.Kind, Is.EqualTo("testing_ping_pong"));
 //            Assert.That(call.ArgumentsJson, Does.Contain("hello from VS Code"));
 //            Assert.That(call.ArgumentsJson, Does.Contain(@"""count"":0"));
 //        }

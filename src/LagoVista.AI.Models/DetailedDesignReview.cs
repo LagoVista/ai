@@ -67,6 +67,7 @@ namespace LagoVista.AI.Models
             summary.DdrIdentifier = DdrIdentifier;
             summary.Type = Type;
             summary.NeedsHumanConfirmation = NeedsHumanConfirmation;
+            summary.Name = $"{DdrIdentifier} - {Name}";            
             return summary;
         }
 
@@ -84,8 +85,6 @@ namespace LagoVista.AI.Models
         public string SourceKind { get; set; }  // DDR / Domain / Spec / Code / etc.
         public string Reason { get; set; }      // Why we pulled it in
     }
-
-
 
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.DDRs_Title, AIResources.Names.DDR_Help, AIResources.Names.DDR_Description, 
         EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIDomain))]

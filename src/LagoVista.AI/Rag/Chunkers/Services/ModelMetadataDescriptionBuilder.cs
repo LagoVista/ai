@@ -222,7 +222,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
         /// <summary>
         /// Extracts field names from a method that returns a List&lt;string&gt; using nameof(...)
         /// entries, such as:
-        ///   return new List&lt;string&gt; { nameof(Name), nameof(Key), ... };
+        ///   return new List&lt;string&gt; { nameof(Kind), nameof(Key), ... };
         /// Returns lowerCamelCase property names in declaration order.
         /// </summary>
         private static List<string> ExtractLayoutFieldNames(ClassDeclarationSyntax modelType, string methodName)
