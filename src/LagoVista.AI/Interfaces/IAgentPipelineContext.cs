@@ -67,6 +67,8 @@ namespace LagoVista.AI.Interfaces
         void AttachSession(AgentSession session, AgentSessionTurn previousSessoin, AgentSessionTurn thisTurn);
         void AttachToolManifest(ToolCallManifest toolManifest);
 
+        void SetInstructions(string instructions);
+
         void SetResponsePayload(ResponsePayload payload);
 
         // If you actually use these in steps, keep them. Otherwise, drop.

@@ -38,12 +38,16 @@ namespace LagoVista.AI.Models
 
     public sealed class AgentPipelineContext : IAgentPipelineContext
     {
-   
+
+        private string _instructions;
+
         public AgentPipelineContext(AgentExecuteRequest request, EntityHeader org, EntityHeader user, CancellationToken token = default)
         {
             if(request == null) throw new ArgumentNullException(nameof(request));
             if(org == null) throw new ArgumentNullException(nameof(org));
             if(user == null) throw new ArgumentNullException(nameof(user));
+
+            _instructions = request.Instruction;
 
             var hasToolResults = request.ToolResults?.Any() ?? false;
 
@@ -64,6 +68,7 @@ namespace LagoVista.AI.Models
             }
             else
                 throw new InvalidOperationException("Invalid Request");
+
 
             CancellationToken = token;
             CorrelationId = Guid.NewGuid().ToId();
@@ -115,6 +120,12 @@ namespace LagoVista.AI.Models
             AgentContext = context ?? throw new ArgumentNullException(nameof(context));
             Role = role ?? throw new ArgumentNullException(nameof(role));
             Mode = mode ?? throw new ArgumentNullException(nameof(mode));
+            RefreshEnvelope();
+        }
+
+        public void SetInstructions(string instructions)
+        {
+            _instructions = instructions;
             RefreshEnvelope();
         }
 
@@ -193,7 +204,7 @@ namespace LagoVista.AI.Models
 
             // turn is a litte interesting on the envelope, if we have it coming in we don't ovwrwrite it because on new turns it will be null
             Envelope = new Envelope(AgentContext?.Id ?? existing.AgentContextId, Role?.Id ?? existing.RoleId, Session?.Id ?? existing.SessionId, 
-                                    PreviousTurn?.Id ?? existing.PreviousTurnId, ThisTurn?.Id ?? existing.ThisTurnId, existing.Instructions, existing.Stream, existing.ToolResults, existing.ClipBoardImages,
+                                    PreviousTurn?.Id ?? existing.PreviousTurnId, ThisTurn?.Id ?? existing.ThisTurnId, _instructions, existing.Stream, existing.ToolResults, existing.ClipBoardImages,
                                     existing.InputArtifacts, existing.RagScope, existing.Org, existing.User);
         }
 

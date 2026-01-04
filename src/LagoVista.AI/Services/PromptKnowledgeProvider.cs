@@ -82,12 +82,12 @@ These entries are authoritative for near-term correctness.
 They may be replaced or removed at any time.
 
 For agent/session state, rely only on KFR.
-
-### Goal (single) - none
-### Plan (single) - none
-### ActiveContracts - none
-### Constraints - none
-### OpenQuestions (RequiresResolution) - none
+### Current Mode: {ctx.Mode.Name}
+### Goal (single): -
+### Plan (single): -
+### ActiveContracts: -
+### Constraints: -
+### OpenQuestions (RequiresResolution): -
 ## END Known Facts Registry (KFR) — Active Working Memory
 ";
                 var kfrRegister = ctx.PromptKnowledgeProvider.GetOrCreateRegister(KnowledgeKind.Kfr, Models.Context.ContextClassification.Session);
@@ -104,6 +104,8 @@ These entries are authoritative for near-term correctness.
 They may be replaced or removed at any time.
 
 Do not infer or assume facts outside this registry.
+
+### Current Mode: {ctx.Mode.Name}
 
 ### Goal (single)
 {BuildKfrSection(branchKfrs.Where(kfr => kfr.Kind == KfrKind.Goal && kfr.IsActive))}

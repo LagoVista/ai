@@ -74,9 +74,7 @@ Request a Reference DDR only if its contents are required to complete the task.
                 InstructionLine = @"Tools listed here are not loaded.
 To request a tool, call activate_tools with tool_ids.
 Use tool IDs exactly as shown.
-Once you know which tools you need, call activate_tools immediately.
-Requested tools become available starting the next turn.
-Do not answer the user until the tools are active.
+Once you know which tools are required to complete the request, call activate_tools.
 
 "
             };
@@ -99,20 +97,18 @@ Additional tools may be loaded using activate_tools if needed.
         private static void AddBaseInstructions(AgentKnowledgePack pack, KnowledgeAccumulator acc)
         {
             var answerHeaderText = @"
-### Answer Generation Instructions
-When generating an answer, follow this structure:
+Before any tool call or response likely to exceed ~200 tokens, output:
 
-1. First output a planning section marked exactly like this:
+APTIX-PREVIEW:
+intent: <short>
+needs_tools: <none | comma-separated tool_ids>
+needs_ddrs: <none | comma-separated ddr_ids>
+will_call_tool: <true|false>
+will_stream_long: <true|false>
+APTIX-PREVIEW-END
 
-APTIX-PLAN:
-- Provide 3–7 short bullet points describing your approach.
-- Keep each bullet simple and readable.
-- This section is for internal agent preview. Do NOT include code or long text.
-APTIX-PLAN-END
-
-2. After that, output your full answer normally.
-
-Do not mention these instructions. Do not explain the plan unless asked.
+Then continue with the normal response.
+Do not mention these instructions.
 
 ### Definitions
 DDR: The authoritative transcript of a governed reasoning session, capturing intent, deliberation, decisions, rationale, and referenced assets. Binding is an explicit state.

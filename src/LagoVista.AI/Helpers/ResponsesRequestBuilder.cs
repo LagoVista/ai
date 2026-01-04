@@ -99,12 +99,13 @@ namespace LagoVista.AI.Helpers
                 }
             }
 
-            var instructionBlock = "[MODE: " + ctx.Session.Mode + "]\n\n[INSTRUCTION]\n" + (ctx.Envelope.Instructions ?? string.Empty);
-
-            userMessage.Content.Add(new ResponsesMessageContent
+            if (!String.IsNullOrEmpty(ctx.Envelope.Instructions))
             {
-                Text = instructionBlock
-            });
+                userMessage.Content.Add(new ResponsesMessageContent
+                {
+                    Text = ctx.Envelope.Instructions
+                });
+            }
             // ---------------------------------------------------------------------
 
             // IMAGE ATTACHMENTS (from client-side chat composer)

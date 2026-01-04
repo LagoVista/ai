@@ -1,11 +1,13 @@
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Pipeline;
 using LagoVista.AI.Interfaces.Services;
 using LagoVista.AI.Models;
 using LagoVista.AI.Services.Pipeline;
+using LagoVista.AI.Services.Tools;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 
@@ -62,10 +64,14 @@ namespace LagoVista.AI.Services
 
                     if (ctx.CancellationToken.IsCancellationRequested) { return InvokeResult<IAgentPipelineContext>.Abort(); }
                     if (!callResponse.Successful) { return InvokeResult<IAgentPipelineContext>.FromInvokeResult(callResponse.ToInvokeResult()); }
-
                     var result = callResponse.Result;
                     ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCallResults.Add(result);
                 }
+
+                if(!ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCalls.Where(tc => tc.Name == ActivateToolsTool.ToolName).Any())
+                {
+                    ctx.SetInstructions("Tools Completed - Continue.");
+                }   
 
                 // After processing all our tool calls, if we still have client tool calls, we need to exit to let the client handle them.
                 // upon return we will pickup where we left off.  
