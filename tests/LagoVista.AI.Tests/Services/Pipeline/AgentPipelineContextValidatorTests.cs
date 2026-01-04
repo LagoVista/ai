@@ -30,6 +30,8 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             public AgentContextRole Role { get; set; }
             public AgentMode Mode { get; set; }
 
+            public void SetInstructions(string instructoins) { }
+
             public PromptKnowledgeProvider PromptKnowledgeProvider { get; set; } = new PromptKnowledgeProvider();
             public CompositionTrace Trace { get; set; } = new CompositionTrace();
 

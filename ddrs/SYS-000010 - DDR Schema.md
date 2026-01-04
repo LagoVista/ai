@@ -1,5 +1,5 @@
 # Metadata
-TLA: SYS-000010
+ID: SYS-000010
 Title: DDR Schema
 Type: Referential 
 Summary: This DDR describes the exact format and parts required to create a DDR. SYS-001 is our workflow; this is the expected output.
@@ -39,7 +39,7 @@ Summary: Defines key terms used throughout this schema so field names, structure
 ## 3 - DDR Metadata Schema (Required)
 Summary: Defines the required metadata fields and the strict formatting rules used to store them in markdown.
 Required metadata fields for compliant DDRs (one per line using `Field Name: value`):
-- TLA:
+- ID:
 - Title:
 - Type:
 - Summary:

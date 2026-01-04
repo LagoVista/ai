@@ -111,7 +111,7 @@ ragIndexCard:
 - MUST NOT contain normative rules
 - MUST NOT contain normative keywords (MUST, MUST NOT, SHOULD, MAY)
 
-referentialSummary (Referential only):
+referentialSummary:
 - Ultra-condensed awareness marker suitable for injection alongside many other referential summaries
 - Must include the DDR ID verbatim
 - Must be extremely short and token-efficient
@@ -120,7 +120,7 @@ referentialSummary (Referential only):
 - Must NOT contain procedural steps
 - Must NOT contain normative keywords (MUST, MUST NOT, SHOULD, MAY)
 
-agentInstructions (Instruction only):
+agentInstructions:
 - Executable procedural rules only
 - Each instruction MUST begin with exactly one normative keyword: MUST, MUST NOT, SHOULD, or MAY
 - Each instruction MUST contain exactly one normative keyword
@@ -128,25 +128,6 @@ agentInstructions (Instruction only):
 - Narrative explanation, rationale, and examples are forbidden
 
 You MUST output the JSON object using exactly the following top-level shape.
-You MUST NOT add any other top-level properties.
-
-{
-  ""ddrId"": string|null,
-  ""title"": string|null,
-  ""ddrType"": string|null,
-  ""status"": string|null,
-  ""approvedBy"": string|null,
-  ""approvalTimestamp"": string|null,
-  ""needsHumanConfirmation"": boolean,
-  ""needsHumanConfirmationReason"": string,
-  ""goal"": string,
-  ""humanSummary"": string|null,
-  ""condensedDdrContent"": string|null,
-  ""ragIndexCard"": string|null,
-
-  ""referentialSummary"": string|null,
-  ""agentInstructions"": array|null
-}
 
 Additional rules:
 - For any field that is forbidden for the DDR type, you MUST set it to null.
@@ -247,6 +228,7 @@ Additional rules:
             public string Tla { get; set; }
             public int? Index { get; set; }
             public string Title { get; set; }
+            public string Type { get; set; }
             public string Summary { get; set; }
             /// <summary>
             /// Free-form status value.
@@ -557,11 +539,7 @@ Additional rules:
 
             // Title line example: **Title:** Agent Tool Contract
             var title = MatchFirst(markdown, @"(?mi)^\*\*Title:\*\*\s*(?<v>.+?)\s*$");
-            if (string.IsNullOrWhiteSpace(title))
-            {
-                // Fallback: first H1 "# TUL-011 — Agent Tool Contract" => title after dash
-                title = TryParseTitleFromH1(markdown);
-            }
+            var type = MatchFirst(markdown, @"(?mi)^\*\*Type:\*\*\s*(?<v>.+?)\s*$");
 
             // ModeStatus line example: **ModeStatus:** Approved
             var status = MatchFirst(markdown, @"(?mi)^\*\*Status:\*\*\s*(?<v>.+?)\s*$");
@@ -599,6 +577,7 @@ Additional rules:
                 Index = idx,
                 Title = title,
                 Summary = summary,
+                Type = type,
                 Status = status,
                 Approval = new ApprovalParse
                 {
@@ -621,21 +600,6 @@ Additional rules:
             return string.IsNullOrWhiteSpace(v) ? null : v.Trim();
         }
 
-        private static string TryParseTitleFromH1(string markdown)
-        {
-            // Example: "# TUL-011 — Agent Tool Contract"
-            var h1 = MatchFirst(markdown, @"(?mi)^\#\s*(?<v>.+?)\s*$");
-            if (string.IsNullOrWhiteSpace(h1))
-                return null;
-            // If H1 contains " — " or " - ", attempt to strip leading identifier
-            var parts = h1.Split(new[] { "—", "-" }, 2, StringSplitOptions.None).Select(p => p.Trim()).ToArray();
-            if (parts.Length == 2 && parts[0].Length <= 16)
-            {
-                return parts[1].Trim();
-            }
-
-            return h1.Trim();
-        }
 
         private bool TryParseIdentifier(string identifier, out string tla, out int index)
         {
@@ -711,7 +675,7 @@ Additional rules:
                 p.String("source", "Optional source label (e.g., filename/path/URL) for traceability.");
                 p.Boolean("dryRun", "If true, do not persist anything; return extracted identity and generated derived fields for human review/confirmation.");
                 p.Boolean("confirmed", "If true, indicates the human has confirmed extracted identity and generated fields and the tool may proceed to persist.");
-                p.String("ddrId", "DDR identifier extracted from the Markdown (e.g., 'AGN-022'). If not determinable with confidence, set to null and set needsHumanConfirmation=true.");
+                p.String("ddrId", "DDR identifier extracted from the Markdown (e.g., 'AGN-000022'). If not determinable with confidence, set to null and set needsHumanConfirmation=true.");
                 p.String("title", "DDR title extracted from the Markdown. If not determinable with confidence, set to null and set needsHumanConfirmation=true.");
                 p.String("ddrType", "DDR type extracted from the Markdown. Must be exactly one of: 'Instruction', 'Referential', 'Generation', 'Policy / Rules / Governance'. " + "If ambiguous or not an exact match, set needsHumanConfirmation=true.");
                 p.String("goal", "What was the goal as extracted from the Markdown, if one can not be extracted you can try to synthesize one from the markdown content, if the goal is not clear you must set needsHumanConfirmation=true");

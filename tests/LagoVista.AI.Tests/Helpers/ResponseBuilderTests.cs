@@ -37,6 +37,7 @@ namespace LagoVista.AI.Tests.Helpers
             public PromptKnowledgeProvider PromptKnowledgeProvider { get; set; }
             public CompositionTrace Trace { get; set; }
 
+            public void SetInstructions(string instructoins) { }
             public ResponseTypes ResponseType { get; set; } = ResponseTypes.Final;
 
             public bool HasPendingToolCalls { get; set; }

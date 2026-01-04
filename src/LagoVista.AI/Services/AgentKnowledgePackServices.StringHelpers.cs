@@ -82,30 +82,34 @@ Once you know which tools are required to complete the request, call activate_to
             pack.KindCatalog[KnowledgeKind.ToolUsage] = new KnowledgeKindDescriptor
             {
                 Kind = KnowledgeKind.ToolUsage,
-                Title = "Tool Usage",
-                BeginMarker = "## Active Tools",
-                EndMarker = "\r\n",
-                InstructionLine = @"Tools listed here are already loaded and ready to use.
+                Title = AgentKnowledgePackService.ToolUsageTitle,
+                BeginMarker = AgentKnowledgePackService.ToolUsageBeginMarker,
+                EndMarker = AgentKnowledgePackService.ToolUsageEndMarker,
+                InstructionLine =AgentKnowledgePackService.ToolUsageInstructions
+            }; 
+        }
+
+        public const string ToolUsageTitle = "Tool Usage";
+        public const string ToolUsageBeginMarker = "## Active Tools";
+        public const string ToolUsageInstructions = @"Tools listed here are already loaded and ready to use.
 
 Usage instructions are available immediately. Do not assume or reconstruct schema unless provided.
 Additional tools may be loaded using activate_tools if needed.
 
-"
-            }; 
-        }
+";
+
+        public const string ToolUsageEndMarker = "\r\n";
 
         private static void AddBaseInstructions(AgentKnowledgePack pack, KnowledgeAccumulator acc)
         {
             var answerHeaderText = @"
 Before any tool call or response likely to exceed ~200 tokens, output:
 
-APTIX-PREVIEW:
-intent: <short>
-needs_tools: <none | comma-separated tool_ids>
-needs_ddrs: <none | comma-separated ddr_ids>
-will_call_tool: <true|false>
-will_stream_long: <true|false>
-APTIX-PREVIEW-END
+APTIX-PLAN:
+- Provide 1-5 short bullet points describing your approach.
+- Keep each bullet simple and readable.
+- This section is for internal agent preview. Do NOT include code or long text.
+APTIX-PLAN-END
 
 Then continue with the normal response.
 Do not mention these instructions.

@@ -110,7 +110,7 @@ namespace LagoVista.AI.Services
                 addResult = AddAvailableTools(pack.KindCatalog[KnowledgeKind.ToolSummary].SessionKnowledge, acc.AvailableTools.Select(x => x.Id));
                 if (!addResult.Successful) return InvokeResult<AgentKnowledgePack>.FromInvokeResult(addResult);
             }
-            
+
             pack.ActiveTools = acc.ActiveTools.Select(x => x.Id).ToList();
 
             _adminLogger.Trace($"[JSON.AKP]={JsonConvert.SerializeObject(pack)}");

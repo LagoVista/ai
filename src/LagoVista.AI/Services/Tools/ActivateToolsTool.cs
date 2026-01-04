@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -49,7 +50,7 @@ Requested tools become available starting the next turn.";
         {
             JObject payload;
 
-            var tag = "[LoadToolsTool__ExecuteAsync]";
+            var tag = "[ActivateToolsTool__ExecuteAsync]";
 
             try
             {
@@ -61,18 +62,26 @@ Requested tools become available starting the next turn.";
                 }
                 else
                 {
+
                     payload = JObject.Parse(argumentsJson);
                     var idsArray = payload["tool_ids"] as JArray;
                     var toolIds = idsArray.Values<string>().ToList();
-                    var lane = context.PromptKnowledgeProvider.Registers.SingleOrDefault(r => r.Kind == KnowledgeKind.ToolUsage);
+                    var lane = context.PromptKnowledgeProvider.GetOrCreateRegister(KnowledgeKind.ToolUsage, Models.Context.ContextClassification.Session);
+                    var content = new StringBuilder();
+                    content.AppendLine(AgentKnowledgePackService.ToolUsageBeginMarker);
+                    content.AppendLine(AgentKnowledgePackService.ToolUsageInstructions);
 
                     foreach (var tool in toolIds)
                     {
                         var usageInstructions = _metaDataProvider.GetToolUsageMetadata(tool);
-                        lane.Items.Add($"### {tool}\r\n{usageInstructions}\r\n\r\n");
+                        content.AppendLine($"### {tool}\r\n{usageInstructions}\r\n\r\n");
 
                         context.PromptKnowledgeProvider.ActiveTools.Add(tool);
                     }
+
+                    content.AppendLine(AgentKnowledgePackService.ToolUsageEndMarker);
+
+                    lane.Items.Add(content.ToString());
 
                     _streamingContext.AddMilestoneAsync($"activated tools {String.Join(',', toolIds)}");
                 }
