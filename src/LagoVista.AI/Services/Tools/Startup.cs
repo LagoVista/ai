@@ -59,6 +59,8 @@ namespace LagoVista.AI.Services.Tools
             toolRegistry.RegisterTool<CreateDdrAgentTool>();
             toolRegistry.RegisterTool<UpdateDdrMetadataAgentTool>();
             toolRegistry.RegisterTool<MoveDdrTlaAgentTool>();
+            toolRegistry.RegisterTool<GetCondensedDdrAgentTool>();
+            toolRegistry.RegisterTool<GetdDdrInstructionsAgentTool>();
 
             // --- Goal ActiveTools ---
             toolRegistry.RegisterTool<SetGoalAgentTool>();

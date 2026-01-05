@@ -1,15 +1,15 @@
-# SYS-004 — Aptix File & Patch Contract
+# Metadata
+ID: SYS-000004
+Title: Aptix File & Patch Contract 
+Type: Referential 
+Summary: This DDR defines how Aptix agents must format file-editing responses for the NuvOS Aptix VS Code extension.
+Status: Approved
+Creator: Kevin D. Wolf
+Creation Date: 2026-01-01T20:03:30.805Z
+Last Updated Date: 2026-01-01T20:03:30.805Z
+Last Updated By: Kevin D. Wolf
 
-**ID:** SYS-004  
-**Title:** Aptix File & Patch Contract  
-**Status:** Approved
-
-## Approval Metadata
-
-- **Approved By:** Kevin Wolf  
-- **Approval Timestamp:** 2025-12-02 15:45:00 EST (UTC-05:00)
-
----
+# Body
 
 ## 1. Purpose
 
@@ -348,6 +348,6 @@ Agents MUST refuse to emit patches when:
 - Single guarded code block
 - Prefer `json` language identifier
 
----
-
-This DDR is now formally approved and ready for indexing and long-term agent adherence.
+# Approval
+Approver: Kevin D. Wolf
+Approval Timestamp: 2026-01-01T20:03:30.805Z

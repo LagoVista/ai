@@ -1,17 +1,19 @@
-# SYS-001 — Aptix Development Workflow
+# Metadata
+ID: SYS-000001
+Title: Aptix Development Workflow
+Type: Instruction 
+Summary: SYS-001 defines the **standard operating procedure** for creating, revising, and approving.
+Status: Approved
+Creator: Kevin D. Wolf
+Creation Date: 2026-01-01T20:03:30.805Z
+Last Updated Date: 2026-01-01T20:03:30.805Z
+Last Updated By: Kevin D. Wolf
 
-**ID:** SYS-001  
-**Title:** Aptix Development Workflow  
-**Status:** Approved
-
-## Approval Metadata
-- **Approved By:** Kevin Wolf  
-- **Approval Timestamp:** 2025-12-07 (Updated)
-
+# Body
 ---
 
 # 1. Purpose
-SYS-001 defines the **standard operating procedure** for creating, revising, approving, and generating Aptix DDRs. It governs the human↔agent workflow, ensuring consistency, clarity, and high-quality specifications that downstream systems (agents, tools, RAG indexing, automation) can reliably consume.
+SYS-001 defines the **standard operating procedure** for creating, revising, and approving. It governs the human↔agent workflow, ensuring consistency, clarity, and high-quality specifications that downstream systems (agents, tools, RAG indexing, automation) can reliably consume.
 
 This workflow applies to **all DDRs** regardless of domain (system, tooling, agent architecture, platform features, etc.).
 
@@ -201,6 +203,6 @@ The human:
 
 The human is the **final authority** on DDR content and correctness.
 
----
-
-# End of SYS-001
+# Approval
+Approver: Kevin D. Wolf
+Approval Timestamp: 2026-01-01T20:03:30.805Z

@@ -148,7 +148,6 @@ dryRun, confirmed, markdown, source
             public string Summary { get; set; }
 
             public string Creator { get; set; }
-            public string References { get; set; }
             public string CreationDateRaw { get; set; }
             public string LastUpdatedDateRaw { get; set; }
             public string LastUpdatedBy { get; set; }
@@ -542,7 +541,6 @@ dryRun, confirmed, markdown, source
 
             // Other schema metadata (optional for import, but warnings if missing)
             result.Creator = GetMeta(meta, "Creator");
-            result.References = GetMeta(meta, "References");
             result.CreationDateRaw = GetMeta(meta, "Creation Date");
             result.LastUpdatedDateRaw = GetMeta(meta, "Last Updated Date");
             result.LastUpdatedBy = GetMeta(meta, "Last Updated By");
@@ -550,7 +548,7 @@ dryRun, confirmed, markdown, source
             // Schema-required metadata warnings (compatibility mode)
             var requiredMeta = new[]
             {
-                "ID","Title","Type","Summary","Status","Creator","References","Creation Date","Last Updated Date","Last Updated By"
+                "ID","Title","Type","Summary","Status","Creator","Creation Date","Last Updated Date","Last Updated By"
             };
 
             foreach (var req in requiredMeta)
