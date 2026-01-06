@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
+using LagoVista.Core;
 using LagoVista.Core.AI.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
@@ -45,14 +46,13 @@ namespace LagoVista.AI.Services
                 return InvokeResult<AgentToolCallResult>.FromError($"[AgentToolExecutor_ExecuteServerToolAsync__EmptyName] {errorMessage}");
             }
 
-            _logger.Trace($"[AgentToolExecutor_ExecuteServerToolAsync] Tool '{call.Name}' Was Called, Starting Execution with Arguments\r\n{call.ArgumentsJson}\r\n");
+            _logger.Trace($"{this.Tag()} Tool '{call.Name}' Was Called, Starting Execution with Arguments\r\n{call.ArgumentsJson}\r\n");
            
             var toolResult = _toolFactory.GetTool(call.Name);
             if (!toolResult.Successful)
             {
                 var errorMessage = toolResult.ErrorMessage ?? "Failed to resolve server tool.";                
-                _logger.AddError(
-                    "[AgentToolExecutor_ExecuteServerToolAsync__ResolveFailed]",
+                _logger.AddError(this.Tag(),
                     $"Tool '{call.Name}' resolve failed: {errorMessage}");
 
                 return InvokeResult<AgentToolCallResult>.FromInvokeResult(toolResult.ToInvokeResult());
@@ -62,13 +62,15 @@ namespace LagoVista.AI.Services
             if (tool == null)
             {
                 var errorMessage = $"Tool '{call.Name}' resolved to null instance.";
-                _logger.AddError("[AgentToolExecutor_ExecuteServerToolAsync__NullInstance]", errorMessage);
+                _logger.AddError(this.Tag(), errorMessage);
 
                 return InvokeResult<AgentToolCallResult>.FromError($"[AgentToolExecutor_ExecuteServerToolAsync__NullInstance] {errorMessage}");
             }
 
             try
             {
+                call.RequiresClientExecution = !tool.IsToolFullyExecutedOnServer;
+
                 var sw = Stopwatch.StartNew();
                 var execResult = await tool.ExecuteAsync(call.ArgumentsJson, context);
 
@@ -82,7 +84,7 @@ namespace LagoVista.AI.Services
                 {
                     var errorMessage = execResult.ErrorMessage;
 
-                    _logger.AddError("[AgentToolExecutor_ExecuteServerToolAsync__ToolFailed]", $"Tool '{call.Name}' execution failed: {errorMessage}");
+                    _logger.AddError(this.Tag(), $"Tool '{call.Name}' execution failed: {errorMessage}");
 
                     return InvokeResult<AgentToolCallResult>.FromInvokeResult(execResult.ToInvokeResult());
                 }
@@ -92,9 +94,9 @@ namespace LagoVista.AI.Services
                     result.ResultJson = execResult.Result;
                 }
 
-                result.RequiresClientExecution = !tool.IsToolFullyExecutedOnServer;
+                result.RequiresClientExecution = call.RequiresClientExecution;
              
-                _logger.Trace($"[AgentToolExecutor_ExecuteServerToolAsync] Tool '{call.Name}' Was Successfully Executed in {sw.Elapsed.TotalMilliseconds}ms\r\n");
+                _logger.Trace($"{this.Tag()} Tool '{call.Name}' Was Successfully Executed in {sw.Elapsed.TotalMilliseconds}ms\r\n", call.Name.ToKVP("tooLName"), result.RequiresClientExecution.ToString().ToKVP("Requires Client Execution."));
 
                 return InvokeResult<AgentToolCallResult>.Create(result);
             }

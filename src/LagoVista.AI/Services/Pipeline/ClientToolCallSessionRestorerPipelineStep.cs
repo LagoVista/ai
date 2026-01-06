@@ -23,7 +23,7 @@ namespace LagoVista.AI.Services.Pipeline
             _sessionManager = sessionManager ?? throw new ArgumentNullException(nameof(sessionManager));
         }
 
-        protected override PipelineSteps StepType => PipelineSteps.ClientToolContinuationResolver;
+        protected override PipelineSteps StepType => PipelineSteps.ClientToolCallSessionRestorer;
 
         protected override async Task<InvokeResult<IAgentPipelineContext>> ExecuteStepAsync(IAgentPipelineContext ctx)
         {        

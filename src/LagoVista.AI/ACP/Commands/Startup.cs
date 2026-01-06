@@ -19,6 +19,7 @@ namespace LagoVista.AI.ACP.Commands
             var commandRegistry = new AcpCommandRegistry(adminLogger);
             _acpCommandRegistry = commandRegistry;
             _acpCommandRegistry.RegisterCommand<ChangeModeCommand>();
+            _acpCommandRegistry.RegisterCommand<AcpPingCommand>();
 
             services.AddSingleton<IAcpCommandRegistry>(commandRegistry);
         }

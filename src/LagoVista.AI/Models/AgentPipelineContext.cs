@@ -20,6 +20,7 @@ namespace LagoVista.AI.Models
         RequestHandler = 10,
         SessionRestorer = 20,
         AgentContextResolver = 30,
+        ClientToolCallSessionRestorer = 35,
         ClientToolContinuationResolver = 40,
         AgentSessionCreator = 50,
         AgentContextLoader = 60,
@@ -201,7 +202,7 @@ namespace LagoVista.AI.Models
             {
                 if (ResponsePayload != null)
                 {
-                    return ResponseTypes.Final;
+                    return ResponsePayload.AcpIntents.Any() ? ResponseTypes.ACP :  ResponseTypes.Final;
                 }
 
                 if(HasClientToolCalls)

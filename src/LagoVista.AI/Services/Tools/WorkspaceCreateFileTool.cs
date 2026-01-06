@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
+using LagoVista.Core;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json;
@@ -86,27 +87,18 @@ namespace LagoVista.AI.Services.Tools
                     try
                     {
                         args = JsonConvert.DeserializeObject<Args>(argumentsJson);
+                        if( String.IsNullOrEmpty(args.Path)) return InvokeResult<string>.FromError("workspace_create_file requires a non-empty 'path' argument.");
+                        if (String.IsNullOrEmpty(args.Content)) return InvokeResult<string>.FromError("workspace_create_file requires a non-empty 'content' argument.");
                     }
                     catch (Exception ex)
                     {
-                        _logger.AddException("[WorkspaceCreateFileTool_ExecuteAsync__DeserializeArgs]", ex);
+                        _logger.AddException(this.Tag(), ex);
                     }
                 }
 
-                var resultPayload = new Result
-                {
-                    ToolName = ToolName,
-                    SessionId = context?.SessionId ?? string.Empty,
-                    IsClientExecutedOnly = true,
-                    Message = "workspace_create_file is defined as a client-executed tool. Server-side ExecuteAsync should not be invoked; ensure the client handles this tool call and performs the filesystem operation."
-                };
-                // Log a custom event so misconfiguration is easy to detect.
-                _logger.AddCustomEvent(LagoVista.Core.PlatformSupport.LogLevel.Error, "WorkspaceCreateFileTool.ExecuteAsync", "workspace_create_file was executed on the server, but it is a client-executed-only tool.", new[] { new KeyValuePair<string, string>("SessionId", context?.Request?.SessionId ?? string.Empty), new KeyValuePair<string, string>("SessionId", context?.SessionId ?? string.Empty), new KeyValuePair<string, string>("ArgumentsJson", argumentsJson ?? string.Empty) });
-                var json = JsonConvert.SerializeObject(resultPayload);
-                // This is treated as a successful InvokeResult from the
-                // perspective of the executor, but the payload clearly marks
-                // the call as misrouted.
-                return await Task.FromResult(InvokeResult<string>.Create(json));
+                _logger.Trace($"[JSON.FileCreate]{argumentsJson}");
+                _logger.Trace($"{this.Tag()} workspace_create_file was executed on the server", args.Path.ToKVP("path"), args.Content.Length.ToString().ToKVP("Length"));
+                return await Task.FromResult(InvokeResult<string>.Create(argumentsJson));
             }
             catch (Exception ex)
             {

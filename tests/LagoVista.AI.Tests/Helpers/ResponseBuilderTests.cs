@@ -11,6 +11,7 @@ using LagoVista.AI.Models.Context;
 using LagoVista.Core.AI.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
+using LagoVista.IoT.Logging.Utils;
 using Moq;
 using NUnit.Framework;
 
@@ -188,7 +189,9 @@ namespace LagoVista.AI.Tests.Helpers
                 validator.Setup(val => val.ValidatePreStep(It.IsAny<IAgentPipelineContext>(), It.IsAny<PipelineSteps>())).Returns(InvokeResult.FromError("error"));
                 validator.Setup(val => val.ValidateToolCallManifest(It.IsAny<ToolCallManifest>())).Returns(InvokeResult.FromError("error"));
             }
-            var builder = new AgentExecuteResponseBuilder(validator.Object);
+
+            var toolCallRepo = new Mock<IToolCallManifestRepo>();
+            var builder = new AgentExecuteResponseBuilder(validator.Object, toolCallRepo.Object, new AdminLogger(new ConsoleLogWriter()));
 
             return builder;
         }
