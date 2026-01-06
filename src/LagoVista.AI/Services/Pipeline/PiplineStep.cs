@@ -58,7 +58,7 @@ namespace LagoVista.AI.Services.Pipeline
                     return InvokeResult<IAgentPipelineContext>.FromInvokeResult(postvalidation);
                 }
 
-                _adminLogger.Trace($"{this.Tag()}- Success {StepType} {sw.Elapsed.TotalMilliseconds}ms");
+                _adminLogger.Trace($"{this.Tag()} - Success {StepType} {sw.Elapsed.TotalMilliseconds}ms");
 
                 LogSuccess(ctx, sw.Elapsed);
 

@@ -6,8 +6,8 @@ namespace LagoVista.AI.Interfaces
     public interface IToolCallManifestRepo
     {
         Task SetCallToolManifestAsync(string orgId, string toolManifestId, ToolCallManifest toolManifest);
-        Task<ToolCallManifest> GetToolCallManifestAsync(string toolManifestId, string orgId);
-    
-        Task RemoveToolCallManifestAsync(string toolManifestId, string orgId);  
+        Task<ToolCallManifest> GetToolCallManifestAsync(string orgId, string toolManifestId);
+  
+        Task RemoveToolCallManifestAsync(string orgId, string toolManifestId);  
     }
 }

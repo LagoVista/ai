@@ -65,6 +65,7 @@ namespace LagoVista.AI.Interfaces
         string ToolManifestId { get; }
         void AttachAgentContext(AgentContext context, AgentContextRole conversationContext, AgentMode mode);
         void AttachSession(AgentSession session, AgentSessionTurn thisTurn);
+        void AttachClientToolSession(AgentSession session, AgentSessionTurn thisTurn);
         void AttachSession(AgentSession session, AgentSessionTurn previousSessoin, AgentSessionTurn thisTurn);
         void AttachToolManifest(ToolCallManifest toolManifest);
 

@@ -31,10 +31,10 @@ namespace LagoVista.AI.CloudRepos
             return $"{orgId}/clienttool/manifests/{toolManifestId}.json".ToLower();
         }
 
-        public async Task<ToolCallManifest> GetToolCallManifestAsync(string toolManifestId, string orgId)
+        public async Task<ToolCallManifest> GetToolCallManifestAsync(string orgId, string toolManifestId)
         {
             var path = BuildPath(orgId, toolManifestId);
-            var json = await _cacheProvider.GetAsync(toolManifestId);
+            var json = await _cacheProvider.GetAsync($"{orgId}.{toolManifestId}");
             if (!string.IsNullOrEmpty(json))
             {
                 return JsonConvert.DeserializeObject<ToolCallManifest>(json);
@@ -46,10 +46,10 @@ namespace LagoVista.AI.CloudRepos
             return manifest;
         }
 
-        public async Task RemoveToolCallManifestAsync(string toolManifestId, string orgId)
+        public async Task RemoveToolCallManifestAsync(string orgId, string toolManifestId)
         {
             await _cacheProvider.RemoveAsync($"{orgId}.{toolManifestId}");
-            await DeleteFileAsync(BuildPath(orgId, toolManifestId), GetContainerName(orgId)); 
+            await DeleteFileAsync(GetContainerName(orgId), BuildPath(orgId, toolManifestId)); 
         }
 
         public async Task SetCallToolManifestAsync(string orgId, string toolManifestId, ToolCallManifest toolManifest)
@@ -59,6 +59,7 @@ namespace LagoVista.AI.CloudRepos
             var path = BuildPath(orgId, toolManifestId);
             var buffer = System.Text.UTF8Encoding.UTF8.GetBytes(json);
             await AddFileAsync(containerName, path, buffer);
+            await _cacheProvider.AddAsync($"{orgId}.{toolManifestId}", json);
         }
     }
 }

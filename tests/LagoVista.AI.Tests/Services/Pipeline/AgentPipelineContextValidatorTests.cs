@@ -88,6 +88,11 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             {
                 throw new NotImplementedException();
             }
+
+            public void AttachClientToolSession(AgentSession session, AgentSessionTurn thisTurn)
+            {
+                throw new NotImplementedException();
+            }
         }
 
         private static Envelope NewEnvelope(string agentContextId = null, string conversationContextId = null, string sessionId = null, string turnId = null, bool stream = false, IEnumerable<ToolResultSubmission> toolResults = null)

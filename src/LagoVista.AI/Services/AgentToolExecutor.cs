@@ -88,7 +88,7 @@ namespace LagoVista.AI.Services
 
                     return InvokeResult<AgentToolCallResult>.FromInvokeResult(execResult.ToInvokeResult());
                 }
-                else
+                else if(!call.RequiresClientExecution)
                 {
                     result.ExecutionMs = Convert.ToInt32(sw.Elapsed.TotalMilliseconds);
                     result.ResultJson = execResult.Result;

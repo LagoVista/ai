@@ -24,7 +24,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
     public class ClientToolContinuationResolverPipelineStepTests
     {
         private static ClientToolContinuationResolverPipelineStep CreateSut(
-            Mock<IPromptKnowledgeProviderInitializerPipelineStep> next,
+            Mock<IAgentContextLoaderPipelineStap> next,
             Mock<IAgentPipelineContextValidator> validator,
             Mock<IToolCallManifestRepo> repo)
         {
@@ -141,7 +141,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
         public async Task ExecuteStepAsync_ManifestNotFound_ReturnsError()
         {
             // Arrange
-            var next = new Mock<IPromptKnowledgeProviderInitializerPipelineStep>(MockBehavior.Loose);
+            var next = new Mock<IAgentContextLoaderPipelineStap>(MockBehavior.Loose);
             var repo = new Mock<IToolCallManifestRepo>(MockBehavior.Loose);
 
             var org = EntityHeader.Create("org-1", "Org One");
@@ -173,7 +173,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
         public async Task ExecuteStepAsync_DuplicateClientToolCallIds_ReturnsFailure()
         {
             // Arrange
-            var next = new Mock<IPromptKnowledgeProviderInitializerPipelineStep>(MockBehavior.Loose);
+            var next = new Mock<IAgentContextLoaderPipelineStap>(MockBehavior.Loose);
             var repo = new Mock<IToolCallManifestRepo>(MockBehavior.Loose);
             var valiator = new Mock<IAgentPipelineContextValidator>(MockBehavior.Loose);
 
@@ -215,7 +215,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
         public async Task ExecuteStepAsync_ClientExecutionRequiredButNoManifestResult_ReturnsFailure()
         {
             // Arrange
-            var next = new Mock<IPromptKnowledgeProviderInitializerPipelineStep>(MockBehavior.Loose);
+            var next = new Mock<IAgentContextLoaderPipelineStap>(MockBehavior.Loose);
             var repo = new Mock<IToolCallManifestRepo>(MockBehavior.Loose);
             var valiator = new Mock<IAgentPipelineContextValidator>(MockBehavior.Loose);
 
@@ -250,7 +250,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
         public async Task ExecuteStepAsync_ClientProvidesResultForNonClientTool_ReturnsFailure()
         {
             // Arrange
-            var next = new Mock<IPromptKnowledgeProviderInitializerPipelineStep>(MockBehavior.Loose);
+            var next = new Mock<IAgentContextLoaderPipelineStap>(MockBehavior.Loose);
             var repo = new Mock<IToolCallManifestRepo>(MockBehavior.Loose);
             var valiator = new Mock<IAgentPipelineContextValidator>(MockBehavior.Loose);
 
@@ -290,7 +290,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
         public async Task ExecuteStepAsync_ExtraClientToolCallIdNotInManifest_ReturnsFailure()
         {
             // Arrange
-            var next = new Mock<IPromptKnowledgeProviderInitializerPipelineStep>(MockBehavior.Loose);
+            var next = new Mock<IAgentContextLoaderPipelineStap>(MockBehavior.Loose);
             var repo = new Mock<IToolCallManifestRepo>(MockBehavior.Loose);
             var valiator = new Mock<IAgentPipelineContextValidator>(MockBehavior.Loose);
 
@@ -330,7 +330,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
         public async Task ExecuteStepAsync_ClientResultToolCallIdNotInManifestToolCalls_ReturnsFailure()
         {
             // Arrange
-            var next = new Mock<IPromptKnowledgeProviderInitializerPipelineStep>(MockBehavior.Loose);
+            var next = new Mock<IAgentContextLoaderPipelineStap>(MockBehavior.Loose);
             var repo = new Mock<IToolCallManifestRepo>(MockBehavior.Loose);
             var valiator = new Mock<IAgentPipelineContextValidator>(MockBehavior.Loose);
 
@@ -373,7 +373,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             // it fails when the existing result row is NOT marked RequiresClientExecution=true.
 
             // Arrange
-            var next = new Mock<IPromptKnowledgeProviderInitializerPipelineStep>(MockBehavior.Loose);
+            var next = new Mock<IAgentContextLoaderPipelineStap>(MockBehavior.Loose);
             var repo = new Mock<IToolCallManifestRepo>(MockBehavior.Loose);            
             var validator = new Mock<IAgentPipelineContextValidator>(MockBehavior.Loose);
 
@@ -414,7 +414,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
         public async Task ExecuteStepAsync_ExistingResultAlreadyHasErrorMessage_ReturnsFailure()
         {
             // Arrange
-            var next = new Mock<IPromptKnowledgeProviderInitializerPipelineStep>(MockBehavior.Loose);
+            var next = new Mock<IAgentContextLoaderPipelineStap>(MockBehavior.Loose);
             var repo = new Mock<IToolCallManifestRepo>(MockBehavior.Loose);
             var validator = new Mock<IAgentPipelineContextValidator>(MockBehavior.Loose);
 
@@ -454,7 +454,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
         public async Task ExecuteStepAsync_ExistingResultAlreadyHasResultJson_ReturnsFailure()
         {
             // Arrange
-            var next = new Mock<IPromptKnowledgeProviderInitializerPipelineStep>(MockBehavior.Loose);
+            var next = new Mock<IAgentContextLoaderPipelineStap>(MockBehavior.Loose);
             var repo = new Mock<IToolCallManifestRepo>(MockBehavior.Loose);
             var validator = new Mock<IAgentPipelineContextValidator>(MockBehavior.Loose);
 
@@ -494,7 +494,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
         public async Task ExecuteStepAsync_MultipleValidationFailures_AggregatesErrors_ReturnsFailure()
         {
             // Arrange
-            var next = new Mock<IPromptKnowledgeProviderInitializerPipelineStep>(MockBehavior.Loose);
+            var next = new Mock<IAgentContextLoaderPipelineStap>(MockBehavior.Loose);
             var repo = new Mock<IToolCallManifestRepo>(MockBehavior.Loose);
             var validator = new Mock<IAgentPipelineContextValidator>(MockBehavior.Loose);
 
@@ -549,7 +549,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
         public async Task ExecuteStepAsync_MultipleExistingResultIntegrityFailures_AggregatesErrors_ReturnsFailure()
         {
             // Arrange
-            var next = new Mock<IPromptKnowledgeProviderInitializerPipelineStep>(MockBehavior.Loose);
+            var next = new Mock<IAgentContextLoaderPipelineStap>(MockBehavior.Loose);
             var repo = new Mock<IToolCallManifestRepo>(MockBehavior.Loose);
             var validator = new Mock<IAgentPipelineContextValidator>(MockBehavior.Loose);
 
@@ -608,7 +608,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
         public async Task ExecuteStepAsync_HappyPath_ReconcilesClientResults_AttachesManifest_RemovesManifest_ReturnsCtx()
         {
             // Arrange
-            var next = new Mock<IPromptKnowledgeProviderInitializerPipelineStep>(MockBehavior.Loose);
+            var next = new Mock<IAgentContextLoaderPipelineStap>(MockBehavior.Loose);
             var repo = new Mock<IToolCallManifestRepo>(MockBehavior.Loose);
             var validator = new Mock<IAgentPipelineContextValidator>(MockBehavior.Loose);
 

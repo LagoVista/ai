@@ -34,7 +34,7 @@ namespace LagoVista.AI.Services.Pipeline
             if (previousTurn == null)
                 return InvokeResult<IAgentPipelineContext>.FromError("Turn Id not found in Previous Turns", "AGENT_SESSION_RESTORE_NO_PREVIOUS_TURN");
 
-            ctx.AttachSession(session, previousTurn);
+            ctx.AttachClientToolSession(session, previousTurn);
 
             return InvokeResult<IAgentPipelineContext>.Create(ctx);
         }

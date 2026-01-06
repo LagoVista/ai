@@ -255,6 +255,14 @@ namespace LagoVista.AI.Models
 
             logger.Trace($"[AgentPipelineContext__LogDetails] - {step}.", kvps.ToArray());          
         }
+
+        public void AttachClientToolSession(AgentSession session, AgentSessionTurn turn)
+        {
+            // for client continuation we don't bump the turns;
+            this.Session = session;
+            this.ThisTurn = turn;
+            this.PreviousTurn = turn;
+        }
     }
 
     public class Envelope

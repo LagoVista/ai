@@ -304,6 +304,9 @@ namespace LagoVista.AI.Services.Pipeline
             if (ctx.ThisTurn == null)
                 result.Errors.Add(new ErrorMessage("ClientToolContinuationResolver PRE: ctx.ThisTurn must be populated."));
 
+            if (ctx.PreviousTurn == null)
+                result.Errors.Add(new ErrorMessage("ClientToolContinuationResolver PRE: ctx.PreviousTurn must be populated."));
+
             if ((ctx.Envelope?.ToolResults?.Count ?? 0) == 0)
                 result.Errors.Add(new ErrorMessage("ClientToolContinuationResolver PRE: Envelope.ToolResults must contain at least one row."));
 
@@ -332,8 +335,8 @@ namespace LagoVista.AI.Services.Pipeline
             if (ctx.ThisTurn != null && !String.Equals(ctx.ThisTurn.Id, ctx.Envelope?.PreviousTurnId, StringComparison.Ordinal))
                 result.Errors.Add(new ErrorMessage("ClientToolContinuationResolver POST: ThisTurn.Id must equal Envelope.PreviousTurnId."));
 
-            if (ctx.ThisTurn != null && !String.Equals(ctx.PreviousTurn.Id, ctx.Envelope?.PreviousTurnId, StringComparison.Ordinal))
-                result.Errors.Add(new ErrorMessage("ClientToolContinuationResolver POST: Previous.Id must equal Envelope.PreviousTurnId."));
+            if (ctx.PreviousTurn != null && !String.Equals(ctx.PreviousTurn.Id, ctx.ThisTurn.Id, StringComparison.Ordinal))
+                result.Errors.Add(new ErrorMessage("ClientToolContinuationResolver POST: ctx.PreviousTurn.Id must equal ctx.ThisTurn.Id."));
 
             if (ctx.PromptKnowledgeProvider?.ToolCallManifest == null)
             {

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Pipeline;
 using LagoVista.AI.Models;
+using LagoVista.Core;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 
@@ -13,22 +14,25 @@ namespace LagoVista.AI.Services.Pipeline
     public sealed class ClientToolContinuationResolverPipelineStep : PipelineStep, IClientToolContinuationResolverPipelineStep
     {
         private readonly IToolCallManifestRepo _repo;
+        private readonly IAdminLogger _adminLogger;
 
         public ClientToolContinuationResolverPipelineStep(
-            IPromptKnowledgeProviderInitializerPipelineStep next,
+            IAgentContextLoaderPipelineStap next,
             IAgentPipelineContextValidator validator,
             IToolCallManifestRepo repo,
-            IAdminLogger adminLogger) : base(next, validator, adminLogger)
-        {
+            IAdminLogger adminLogger) : base(next, validator, adminLogger){
             _repo = repo ?? throw new ArgumentNullException(nameof(repo));
+            _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
         }
 
         protected override PipelineSteps StepType => PipelineSteps.ClientToolContinuationResolver;
 
         protected override async Task<InvokeResult<IAgentPipelineContext>> ExecuteStepAsync(IAgentPipelineContext ctx)
         {
-            var manifest = await _repo.GetToolCallManifestAsync(ctx.ToolManifestId, ctx.Envelope.Org.Id);
+            var manifest = await _repo.GetToolCallManifestAsync(ctx.Envelope.Org.Id, ctx.ToolManifestId);
             if (manifest == null) return InvokeResult<IAgentPipelineContext>.FromError($"Tool Call Manifest with Id {ctx.ToolManifestId} not found.", "CLIENT_TOOL_CONTINUATION_RESOLVER_MANIFEST_NOT_FOUND");
+
+            _adminLogger.Trace($"{this.Tag()} - manifest loaded");
 
             var reconcileToolResult = new InvokeResult();
 
@@ -53,6 +57,8 @@ namespace LagoVista.AI.Services.Pipeline
 
             if (reconcileToolResult.Successful)
             {
+                _adminLogger.Trace($"{this.Tag()} - tool called vs tool call reqeusted validated.");
+
                 foreach (var toolResult in ctx.Envelope.ToolResults)
                 {
                     var pendingCall = manifest.ToolCalls.SingleOrDefault(tc => tc.ToolCallId == toolResult.ToolCallId);
@@ -97,6 +103,21 @@ namespace LagoVista.AI.Services.Pipeline
                                 {
                                     existingResult.ErrorMessage = toolResult.ErrorMessage;
                                     existingResult.ResultJson = toolResult.ResultJson;
+                                    if(!String.IsNullOrEmpty(toolResult.ResultJson))
+                                    {
+                                        _adminLogger.Trace($"{this.Tag()} - success client tool call", toolResult.ToolCallId.ToKVP("callId"), toolResult.ResultJson.ToKVP("resultJson"));
+                                    }
+                                    else if(!String.IsNullOrEmpty(toolResult.ErrorMessage))
+                                        _adminLogger.Trace($"{this.Tag()} - failed client tool call", toolResult.ToolCallId.ToKVP("callId"), toolResult.ErrorMessage.ToKVP("errorMessage"));
+                                    else
+                                    {
+                                        _adminLogger.AddError(this.Tag(), "neither results nor error message were set", toolResult.ToolCallId.ToKVP("callId"));
+                                        reconcileToolResult.AddSystemError($"Tool Call {pendingCall.Name}, with Id {toolResult.ToolCallId} was provided from client, however both result json and error message are empty.  In Manifest {ctx.ToolManifestId}.");
+                                    }                                 
+                                }
+                                else
+                                {
+                                        _adminLogger.AddError(this.Tag(), "could not apply, review results", toolResult.ToolCallId.ToKVP("callId"));                                    
                                 }
                             }
                             else
@@ -125,14 +146,22 @@ namespace LagoVista.AI.Services.Pipeline
 
 
             if (!reconcileToolResult.Successful)
+            {
+                _adminLogger.AddError(this.Tag(), $"Tool call results reconciliation failed", 
+                    string.Join(", ", reconcileToolResult.Errors.Select(err => err.Message).ToArray()).ToKVP("errors"));
                 return InvokeResult<IAgentPipelineContext>.FromInvokeResult(reconcileToolResult);
+            }
 
             ctx.AttachToolManifest(manifest);
-
+            
+            _adminLogger.Trace($"{this.Tag()} - success applying tools");
+     
             // Tool manifests are temporary per-turn state.
             // If the client posts results multiple times for the same manifest, we treat it as an error.
             // If we later need an explicit retry mechanism, we can add it; for now, reconcile once and clean up.
-            await _repo.RemoveToolCallManifestAsync(ctx.ToolManifestId, ctx.Envelope.Org.Id);
+            await _repo.RemoveToolCallManifestAsync(ctx.Envelope.Org.Id, ctx.ToolManifestId);
+            
+            _adminLogger.Trace($"{this.Tag()} - old manifest removed from repo");
                 
             return InvokeResult<IAgentPipelineContext>.Create(ctx);
         }

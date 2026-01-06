@@ -96,6 +96,11 @@ namespace LagoVista.AI.Tests.Helpers
             {
                 throw new NotImplementedException();
             }
+
+            public void AttachClientToolSession(AgentSession session, AgentSessionTurn thisTurn)
+            {
+                throw new NotImplementedException();
+            }
         }
 
         private static AgentContext CreateAgentContextWithMode(string modeKey, string displayName)
