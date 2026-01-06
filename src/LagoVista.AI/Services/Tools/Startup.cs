@@ -32,6 +32,12 @@ namespace LagoVista.AI.Services.Tools
             toolRegistry.RegisterTool<DelayTool>();
             toolRegistry.RegisterTool<FailureInjectionTool>();
 
+            ///* utility tools
+            toolRegistry.RegisterTool<GetAuditFieldsForUpdate>();
+            toolRegistry.RegisterTool<GetAuditFieldsForCreate>();
+            toolRegistry.RegisterTool<GetCurrentTimeStamp>();
+            toolRegistry.RegisterTool<GetCurrentUser>();
+
             toolRegistry.RegisterTool<FetchWebPageTool>();
 
             toolRegistry.RegisterTool<AgentListModesTool>();
@@ -59,6 +65,8 @@ namespace LagoVista.AI.Services.Tools
             toolRegistry.RegisterTool<CreateDdrAgentTool>();
             toolRegistry.RegisterTool<UpdateDdrMetadataAgentTool>();
             toolRegistry.RegisterTool<MoveDdrTlaAgentTool>();
+            toolRegistry.RegisterTool<GetCondensedDdrAgentTool>();
+            toolRegistry.RegisterTool<GetdDdrInstructionsAgentTool>();
 
             // --- Goal ActiveTools ---
             toolRegistry.RegisterTool<SetGoalAgentTool>();

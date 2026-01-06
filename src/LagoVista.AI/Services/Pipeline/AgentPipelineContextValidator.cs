@@ -511,7 +511,7 @@ namespace LagoVista.AI.Services.Pipeline
             if (ctx.ResponseType == ResponseTypes.NotReady)
                 result.Errors.Add(new ErrorMessage("ResponseBuilder PRE: ResponseType must not be NotReady."));
 
-            if (ctx.ResponseType != ResponseTypes.Final && ctx.ResponseType != ResponseTypes.ToolContinuation)
+            if (ctx.ResponseType != ResponseTypes.Final && ctx.ResponseType != ResponseTypes.ToolContinuation && ctx.ResponseType != ResponseTypes.ACP)
                 result.Errors.Add(new ErrorMessage($"ResponseBuilder PRE: Unknown ResponseType '{ctx.ResponseType}'."));
 
             if (ctx.ResponseType == ResponseTypes.Final)
@@ -526,6 +526,15 @@ namespace LagoVista.AI.Services.Pipeline
             {
                 if (ctx.PromptKnowledgeProvider?.ToolCallManifest == null)
                     result.Errors.Add(new ErrorMessage("ResponseBuilder PRE: ToolCallManifest is required for ToolContinuation responses."));
+            }
+
+            if(ctx.ResponseType == ResponseTypes.ACP)
+            {
+                if (ctx.ResponsePayload == null)
+                    result.Errors.Add(new ErrorMessage("ResponseBuilder PRE: ResponsePayload is required for ACP responses."));
+
+                if (!ctx.ResponsePayload.AcpIntents.Any())
+                    result.Errors.Add(new ErrorMessage("ResponseBuilder PRE: AcpInents must have at leaste one valude for ACP responses."));
             }
 
             return result;

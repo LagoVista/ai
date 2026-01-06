@@ -34,6 +34,7 @@ namespace LagoVista.AI.Interfaces
         NotReady,
         Final,
         ToolContinuation,
+        ACP    
     }
 
     public interface IAgentPipelineContext : IHasSession, IHasTimeStamp, IHasEnvelope, IToolContextSource
@@ -78,6 +79,10 @@ namespace LagoVista.AI.Interfaces
         void LogStepErrorDetails(IAdminLogger logger, PipelineSteps step, InvokeResult error, TimeSpan ts);
 
         void LogDetails(IAdminLogger logger, PipelineSteps step, TimeSpan? ts = null);
+
+        bool IsTerminal { get;}
+
+        void SetTerminal(string reason);      
     }
 }
 

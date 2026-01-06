@@ -20,9 +20,11 @@ namespace LagoVista.AI.Models
         RequestHandler = 10,
         SessionRestorer = 20,
         AgentContextResolver = 30,
+        ClientToolCallSessionRestorer = 35,
         ClientToolContinuationResolver = 40,
         AgentSessionCreator = 50,
         AgentContextLoader = 60,
+        AcpCommandHandler = 65,
         PromptKnowledgeProviderInitializer = 70,
         Reasoner = 80,
         LLMClient = 90,
@@ -136,6 +138,20 @@ namespace LagoVista.AI.Models
 
         public AgentMode Mode { get; private set; }
 
+        public bool IsTerminal { get; private set;}
+        public string IsTerminalReason { get; private set; }
+
+        public void SetTerminal(string reason)
+        {
+            if(String.IsNullOrEmpty(reason))
+            {
+                throw new ArgumentNullException(nameof(reason));
+            }
+
+            IsTerminal = true;
+            IsTerminalReason = reason;
+        }
+
         public bool HasPendingToolCalls
         {
             get => PromptKnowledgeProvider.ToolCallManifest.ToolCalls.Any();
@@ -186,7 +202,7 @@ namespace LagoVista.AI.Models
             {
                 if (ResponsePayload != null)
                 {
-                    return ResponseTypes.Final;
+                    return ResponsePayload.AcpIntents.Any() ? ResponseTypes.ACP :  ResponseTypes.Final;
                 }
 
                 if(HasClientToolCalls)

@@ -11,6 +11,7 @@ using LagoVista.AI.Models.Context;
 using LagoVista.Core.AI.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
+using LagoVista.IoT.Logging.Utils;
 using Moq;
 using NUnit.Framework;
 
@@ -75,6 +76,8 @@ namespace LagoVista.AI.Tests.Helpers
 
             public AgentSessionTurn PreviousTurn => throw new NotImplementedException();
 
+            public bool IsTerminal => throw new NotImplementedException();
+
             public void LogStepErrorDetails(IAdminLogger logger, PipelineSteps step, string error, TimeSpan ts) { }
             public void LogStepErrorDetails(IAdminLogger logger, PipelineSteps step, InvokeResult error, TimeSpan ts) { }
             public void LogDetails(IAdminLogger logger, PipelineSteps step, TimeSpan? ts = null) { }
@@ -85,6 +88,11 @@ namespace LagoVista.AI.Tests.Helpers
             }
 
             public void AttachSession(AgentSession session, AgentSessionTurn previousSessoin, AgentSessionTurn thisTurn)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void SetTerminal(string reason)
             {
                 throw new NotImplementedException();
             }
@@ -181,7 +189,9 @@ namespace LagoVista.AI.Tests.Helpers
                 validator.Setup(val => val.ValidatePreStep(It.IsAny<IAgentPipelineContext>(), It.IsAny<PipelineSteps>())).Returns(InvokeResult.FromError("error"));
                 validator.Setup(val => val.ValidateToolCallManifest(It.IsAny<ToolCallManifest>())).Returns(InvokeResult.FromError("error"));
             }
-            var builder = new AgentExecuteResponseBuilder(validator.Object);
+
+            var toolCallRepo = new Mock<IToolCallManifestRepo>();
+            var builder = new AgentExecuteResponseBuilder(validator.Object, toolCallRepo.Object, new AdminLogger(new ConsoleLogWriter()));
 
             return builder;
         }

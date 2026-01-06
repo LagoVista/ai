@@ -148,7 +148,7 @@ Bad usage:
                 }
                 catch (Exception ex)
                 {
-                    _logger.AddException("[workspace_write_patch_Deserialize]", ex);
+                    _logger.AddException(this.Tag(), ex);
 
                     var errorPayload = JsonConvert.SerializeObject(new WorkspaceWritePatchResponse
                     {
@@ -195,11 +195,13 @@ Bad usage:
                 var responseDto = _batchFactory.BuildResponse(storedBatch, context);
                 var json = JsonConvert.SerializeObject(responseDto);
 
+                _logger.Trace($"[JSON.FilePatch]{json}");
+
                 return InvokeResult<string>.Create(json);
             }
             catch (Exception ex)
             {
-                _logger.AddException("[workspace_write_patch_Execute]", ex);
+                _logger.AddException(this.Tag(), ex);
 
                 var errorPayload = JsonConvert.SerializeObject(new WorkspaceWritePatchResponse
                 {

@@ -47,6 +47,8 @@ namespace LagoVista.AI.Tests.Services.Pipeline
 
             public AgentSessionTurn PreviousTurn { get; set; }
 
+            public bool IsTerminal => throw new NotImplementedException();
+
             public AgentToolExecutionContext ToToolContext() => new AgentToolExecutionContext();
 
             public void AttachAgentContext(AgentContext context, AgentContextRole role, AgentMode mode)
@@ -78,6 +80,11 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             }
 
             public void AttachSession(AgentSession session, AgentSessionTurn previousSessoin, AgentSessionTurn thisTurn)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void SetTerminal(string reason)
             {
                 throw new NotImplementedException();
             }

@@ -10,6 +10,7 @@ using LagoVista.AI.Services.Pipeline;
 using LagoVista.AI.Services.Tools;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
+using Newtonsoft.Json;
 
 namespace LagoVista.AI.Services
 {
@@ -41,7 +42,7 @@ namespace LagoVista.AI.Services
             {
                 if (ctx.CancellationToken.IsCancellationRequested) { return InvokeResult<IAgentPipelineContext>.Abort(); }
 
-                _logger.Trace("[AgentReasoner_ExecuteAsync] Iteration " + (iteration + 1) + " starting. " + "sessionId=" + ctx.Session.Id + ", mode=" + ctx.Session.Mode);
+                _logger.Trace($"{this.Tag()} Iteration " + (iteration + 1) + " starting. " + "sessionId=" + ctx.Session.Id + ", mode=" + ctx.Session.Mode);
 
                 var llmResult = await _llmClient.ExecuteAsync(ctx);
                 if (!llmResult.Successful) { return llmResult; }
@@ -68,21 +69,24 @@ namespace LagoVista.AI.Services
                     ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCallResults.Add(result);
                 }
 
-                if(!ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCalls.Where(tc => tc.Name == ActivateToolsTool.ToolName).Any())
-                {
-                    ctx.SetInstructions("Tools Completed - Continue.");
-                }   
+                _logger.Trace($"[JSON.PromptKnowledgeProvider.ToolCallManifest] {JsonConvert.SerializeObject(ctx.PromptKnowledgeProvider.ToolCallManifest)}");
 
                 // After processing all our tool calls, if we still have client tool calls, we need to exit to let the client handle them.
                 // upon return we will pickup where we left off.  
                 if (llmResult.Result.HasClientToolCalls)
                 {
+                    _logger.Trace($"{this.Tag()} - Has Client Tools, Exiting Reasoner Step to let Client Execute Tools.");
                     return InvokeResult<IAgentPipelineContext>.Create(ctx);
                 }
 
-                if(originalMode != ctx.Session.AgentMode.Id)
+                if (!ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCalls.Where(tc => tc.Name == ActivateToolsTool.ToolName).Any())
                 {
-                    _logger.Trace($"[AgentReasonerPipelineStep__AgentReasonerPipelineStep] - Mode Change Detected Populate PKP {originalMode} -> {ctx.Session.AgentMode.Text}");
+                    ctx.SetInstructions("Tools Completed - Continue.");
+                }
+
+                if (originalMode != ctx.Session.AgentMode.Id)
+                {
+                    _logger.Trace($"{this.Tag()} - Mode Change Detected Populate PKP {originalMode} -> {ctx.Session.AgentMode.Text}");
                    var pkpResult = await _pkpService.PopulateAsync(ctx, true);
                    if(!pkpResult.Successful) return InvokeResult<IAgentPipelineContext>.FromInvokeResult(pkpResult.ToInvokeResult());
                 }

@@ -31,7 +31,7 @@ namespace LagoVista.AI.Services.Pipeline
 
         public async Task<InvokeResult<IAgentPipelineContext>> ExecuteAsync(IAgentPipelineContext ctx)
         {
-            _adminLogger.Trace($"[PipelineStep__ExecuteAsync] - Start {StepType}");
+            _adminLogger.Trace($"{this.Tag()} - Start {StepType}");
 
             try
             {
@@ -45,7 +45,7 @@ namespace LagoVista.AI.Services.Pipeline
                 if (ctx.CancellationToken.IsCancellationRequested) return InvokeResult<IAgentPipelineContext>.Abort();
 
                 var result = await ExecuteStepAsync(ctx);
-                _adminLogger.Trace($"[PipelineStep__ExecuteAsync] - Completed {StepType}");
+                _adminLogger.Trace($"{this.Tag()} - Completed {StepType}");
 
                 if (ctx.CancellationToken.IsCancellationRequested) return InvokeResult<IAgentPipelineContext>.Abort();
 
@@ -58,11 +58,11 @@ namespace LagoVista.AI.Services.Pipeline
                     return InvokeResult<IAgentPipelineContext>.FromInvokeResult(postvalidation);
                 }
 
-                _adminLogger.Trace($"[PipelineStep__ExecuteAsync] - Success {StepType} {sw.Elapsed.TotalMilliseconds}ms");
+                _adminLogger.Trace($"{this.Tag()}- Success {StepType} {sw.Elapsed.TotalMilliseconds}ms");
 
                 LogSuccess(ctx, sw.Elapsed);
 
-                if (_next == null)
+                if (_next == null || ctx.IsTerminal)
                 {
                     return result;
                 }
@@ -71,7 +71,7 @@ namespace LagoVista.AI.Services.Pipeline
             }
             catch(Exception ex)
             {
-                _adminLogger.AddException($"[PipelineStep__ExecuteAsync] - Exception in {StepType}", ex);
+                _adminLogger.AddException($"{this.Tag()} - Exception in {StepType}", ex);
                 return InvokeResult<IAgentPipelineContext>.FromError(ex.Message, ex.GetType().ToString());  
             }
          }

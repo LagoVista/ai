@@ -13,7 +13,7 @@ namespace LagoVista.AI.Services.Pipeline
         private readonly IAgentSessionFactory _sessionFactory;
 
         public AgentSessionCreatorPipelineStep(
-            IPromptKnowledgeProviderInitializerPipelineStep next,
+            IAcpCommandPipelineStep next,
             IAgentSessionFactory sessionFactory,
             IAgentPipelineContextValidator validator,
             IAdminLogger adminLogger) : base(next, validator, adminLogger)

@@ -24,6 +24,7 @@ namespace LagoVista.AI.Services
             services.AddScoped<IPromptKnowledgeProvider, PromptKnowledgeProvider>();
             Pipeline.Startup.ConfigureServices(services, adminLogger);
             Qdrant.Startup.ConfigureServices(services, adminLogger);
+            ACP.Startup.ConfigureServices(services, adminLogger);
         }
     }
 }
