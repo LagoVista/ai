@@ -23,6 +23,7 @@ namespace LagoVista.AI.Models
         ClientToolContinuationResolver = 40,
         AgentSessionCreator = 50,
         AgentContextLoader = 60,
+        AcpCommandHandler = 65,
         PromptKnowledgeProviderInitializer = 70,
         Reasoner = 80,
         LLMClient = 90,
@@ -135,6 +136,20 @@ namespace LagoVista.AI.Models
         public AgentContextRole Role { get; private set; }
 
         public AgentMode Mode { get; private set; }
+
+        public bool IsTerminal { get; private set;}
+        public string IsTerminalReason { get; private set; }
+
+        public void SetTerminal(string reason)
+        {
+            if(String.IsNullOrEmpty(reason))
+            {
+                throw new ArgumentNullException(nameof(reason));
+            }
+
+            IsTerminal = true;
+            IsTerminalReason = reason;
+        }
 
         public bool HasPendingToolCalls
         {

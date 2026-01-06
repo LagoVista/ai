@@ -78,6 +78,10 @@ namespace LagoVista.AI.Interfaces
         void LogStepErrorDetails(IAdminLogger logger, PipelineSteps step, InvokeResult error, TimeSpan ts);
 
         void LogDetails(IAdminLogger logger, PipelineSteps step, TimeSpan? ts = null);
+
+        bool IsTerminal { get;}
+
+        void SetTerminal(string reason);
     }
 }
 

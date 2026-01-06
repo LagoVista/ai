@@ -14,7 +14,7 @@ namespace LagoVista.AI.Services.Pipeline
         private readonly IAgentContextManager _contextManager;
      
         public AgentContextLoaderPipelineStap(
-            IPromptKnowledgeProviderInitializerPipelineStep next,
+            IAcpCommandPipelineStep next,
             IAgentPipelineContextValidator validator,
             IAgentContextManager contextManager,
             IAdminLogger adminLogger) : base(next, validator, adminLogger)

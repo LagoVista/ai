@@ -1,3 +1,4 @@
+using LagoVista.AI.ACP;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Pipeline;
 using LagoVista.AI.Services.OpenAI;
@@ -21,6 +22,7 @@ namespace LagoVista.AI.Services.Pipeline
             services.AddScoped<IClientToolContinuationResolverPipelineStep, ClientToolContinuationResolverPipelineStep>();
             services.AddScoped<IAgentPipelineContextValidator, AgentPipelineContextValidator>();
             services.AddScoped<IPromptKnowledgeProviderInitializerPipelineStep, PromptKnowledgeProviderInitializerPipelineStep>();
+            services.AddScoped<IAcpCommandPipelineStep, AcpCommandPipelineStep>();
         }
     }
 }

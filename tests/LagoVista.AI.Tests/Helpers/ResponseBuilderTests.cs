@@ -75,6 +75,8 @@ namespace LagoVista.AI.Tests.Helpers
 
             public AgentSessionTurn PreviousTurn => throw new NotImplementedException();
 
+            public bool IsTerminal => throw new NotImplementedException();
+
             public void LogStepErrorDetails(IAdminLogger logger, PipelineSteps step, string error, TimeSpan ts) { }
             public void LogStepErrorDetails(IAdminLogger logger, PipelineSteps step, InvokeResult error, TimeSpan ts) { }
             public void LogDetails(IAdminLogger logger, PipelineSteps step, TimeSpan? ts = null) { }
@@ -85,6 +87,11 @@ namespace LagoVista.AI.Tests.Helpers
             }
 
             public void AttachSession(AgentSession session, AgentSessionTurn previousSessoin, AgentSessionTurn thisTurn)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void SetTerminal(string reason)
             {
                 throw new NotImplementedException();
             }
