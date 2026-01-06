@@ -30,9 +30,7 @@ namespace LagoVista.AI.Models
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine("Persona Preferences (non-normative):");
             AppendPreference(sb, "Name", DisplayName);
-
             AppendPreference(sb, "Tone", ToneStyle?.Text, ToneStyle?.Value.ToString());
             AppendPreference(sb, "Verbosity", VerbosityLevel?.Text, VerbosityLevel?.Value.ToString());
             AppendPreference(sb, "Detail focus", DetailFocus?.Text, DetailFocus?.Value.ToString());

@@ -94,6 +94,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
                 sessionId,
                 null,
                 turnId,
+                null,
                 instructions: "hi",
                 stream: stream,
                 toolResults: toolResults,
@@ -137,7 +138,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             // Create an envelope with empty Instructions and no artifacts/clipboard.
             var org = EntityHeader.Create("org_1", "Org");
             var user = EntityHeader.Create("user_1", "User");
-            var env = new Envelope(null, null, null, null, null, instructions: null, stream: false, toolResults: null, clipboardImages: null, inputArtifacts: null, ragScope: new RagScope(), org: org, user: user);
+            var env = new Envelope(null, null, null, null, null, null, instructions: null, stream: false, toolResults: null, clipboardImages: null, inputArtifacts: null, ragScope: new RagScope(), org: org, user: user);
 
             var ctx = new TestPipelineContext
             {

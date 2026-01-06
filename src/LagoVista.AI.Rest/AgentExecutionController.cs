@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Pipeline;
+using LagoVista.AI.Managers;
 using LagoVista.AI.Models;
 using LagoVista.Core.AI.Models;
 using LagoVista.Core.Exceptions;
@@ -30,10 +31,13 @@ namespace LagoVista.AI.Rest
         private readonly IAgentRequestHandlerStep _agentRequestHandler;
         private readonly IAgentSessionManager _sessionManager;
         private readonly IAdminLogger _adminLogger;
+        private readonly IAgentPersonaDefinitionManager _agentPersonaDefinitionManager;
 
-        public AgentExecutionController(IAgentRequestHandlerStep agentRequestHandler, IAgentSessionManager sessionManager, UserManager<AppUser> userManager, IAdminLogger logger)
+
+        public AgentExecutionController(IAgentRequestHandlerStep agentRequestHandler, IAgentPersonaDefinitionManager agentPersonaDefinitionManager, IAgentSessionManager sessionManager, UserManager<AppUser> userManager, IAdminLogger logger)
             : base(userManager, logger)
         {
+            _agentPersonaDefinitionManager = agentPersonaDefinitionManager;
             _agentRequestHandler = agentRequestHandler;
             _sessionManager = sessionManager;
             _adminLogger = logger;
@@ -171,6 +175,30 @@ namespace LagoVista.AI.Rest
 
                 return new EmptyResult();
             }
+        }
+
+        [HttpGet("/api/ai/agent/session/{sessionid}/persona/change/{personaid}")]
+        public async Task<IActionResult> ChangeAgentSessionPersona(string sessionid, string personaid)
+        {
+            var cancellationToken = HttpContext?.RequestAborted ?? CancellationToken.None;
+            var session = await _sessionManager.GetAgentSessionAsync(sessionid, OrgEntityHeader, UserEntityHeader); 
+
+            var request = new AgentExecuteRequest()
+            {
+                SessionId = sessionid,
+                               
+                Streaming = false
+
+            };
+            var persona = await _agentPersonaDefinitionManager.GetAgentPersonaDefinitionAsync(personaid, OrgEntityHeader, UserEntityHeader);
+            var result = await _agentRequestHandler.HandleAsync(request, OrgEntityHeader, UserEntityHeader, cancellationToken);
+            if (result.Successful)
+            {
+                var responseJSON = JsonConvert.SerializeObject(result.Result);
+                _adminLogger.Trace($"[JSON.RAWREQUEST]={responseJSON}");
+            }
+
+            return new JsonResult(result);
         }
 
         [HttpGet("/api/ai/agent/session/{id}/rollback/{turnid}")]

@@ -13,7 +13,7 @@ namespace LagoVista.AI.Services
         private const int InstructionSummaryMaxLength = 256;
 
         private readonly IAgentSessionNamingService _namingService;
-
+    
         public AgentSessionFactory(IAgentSessionNamingService namingService)
         {
             _namingService = namingService ?? throw new ArgumentNullException(nameof(namingService));
@@ -39,6 +39,7 @@ namespace LagoVista.AI.Services
                 ModeReason = "initial startup",
                 ModeSetTimestamp = now,
                 AgentContext = ctx.AgentContext.ToEntityHeader(),
+                AgentPersona = ctx.AgentContext.DefaultAgentPersona,
                 AgentMode = ctx. Mode.ToEntityHeader(),
                 Role = ctx.Role.ToEntityHeader(),
                 Name = generatedName,

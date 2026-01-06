@@ -35,14 +35,16 @@ namespace LagoVista.AI.Services
         private readonly IServerToolUsageMetadataProvider _toolUsageMetaData;
         private readonly IAgentToolBoxRepo _toolBoxRepo;
         private readonly IAdminLogger _adminLogger;
+        private readonly IAgentPersonaDefinitionRepo _personaRepo;
 
-     
-        public AgentKnowledgePackService(IDdrConsumptionFieldProvider ddrConsumption, IAgentToolBoxRepo toolBoxRepo, IServerToolUsageMetadataProvider toolUsageMetaData, IAdminLogger adminLogger)
+
+        public AgentKnowledgePackService(IDdrConsumptionFieldProvider ddrConsumption, IAgentToolBoxRepo toolBoxRepo, IServerToolUsageMetadataProvider toolUsageMetaData, IAgentPersonaDefinitionRepo personaRepo, IAdminLogger adminLogger)
         {
             _ddrRepo = ddrConsumption ?? throw new ArgumentNullException(nameof(ddrConsumption));
             _toolUsageMetaData = toolUsageMetaData ?? throw new ArgumentNullException(nameof(toolUsageMetaData));
             _toolBoxRepo = toolBoxRepo ?? throw new ArgumentNullException(nameof(toolBoxRepo));
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
+            _personaRepo = personaRepo ?? throw new ArgumentNullException(nameof(personaRepo));
         }
 
         public async Task<InvokeResult<AgentKnowledgePack>> CreateAsync(IAgentPipelineContext context, bool changedMode)
@@ -62,6 +64,8 @@ namespace LagoVista.AI.Services
             log.Append($"\\r\\n[AKP] Building pack; ChangedMode={changedMode}; Type={context.Type};\\r\\n");
 
             var acc = new KnowledgeAccumulator();
+
+
 
             foreach (var pd in providers)
             {
@@ -109,6 +113,25 @@ namespace LagoVista.AI.Services
 
                 addResult = AddAvailableTools(pack.KindCatalog[KnowledgeKind.ToolSummary].SessionKnowledge, acc.AvailableTools.Select(x => x.Id));
                 if (!addResult.Successful) return InvokeResult<AgentKnowledgePack>.FromInvokeResult(addResult);
+            }
+            
+            if(shouldCollect || !String.IsNullOrEmpty( context.Envelope.AgentContextId) && context.Envelope.AgentContextId != context.Session.AgentContext?.Id)
+            {
+                var personaId = String.IsNullOrEmpty(context.Envelope.AgentPersonaId) ? context.Session.AgentPersona.Id : context.Envelope.AgentPersonaId;
+
+                if(String.IsNullOrEmpty(personaId))
+                {
+                    personaId = context.AgentContext.DefaultAgentPersona?.Id;
+                    if(string.IsNullOrEmpty(personaId))
+                    {
+                        return InvokeResult<AgentKnowledgePack>.FromError("Could not find default agent person on agent context. please add one.");
+                    }
+                }
+
+                var agentPersona = await _personaRepo.GetAgentPersonaDefinitionAsync(personaId);
+                context.Session.AgentPersona = agentPersona?.ToEntityHeader();
+                var personaAddResults = AddPersona(pack.KindCatalog[KnowledgeKind.AgentPersona].SessionKnowledge, KnowledgeKind.AgentPersona, agentPersona);
+                if (!personaAddResults.Successful) return InvokeResult<AgentKnowledgePack>.FromInvokeResult(personaAddResults);
             }
 
             pack.ActiveTools = acc.ActiveTools.Select(x => x.Id).ToList();

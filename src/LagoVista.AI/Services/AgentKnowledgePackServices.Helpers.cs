@@ -46,6 +46,18 @@ namespace LagoVista.AI.Services
             }
         }
 
+        private static InvokeResult AddPersona(KnowledgeLane lane, KnowledgeKind kind, AgentPersonaDefinition personaDefinition)
+        {
+            lane.Items.Add(new KnowledgeItem()
+            {
+                Kind = KnowledgeKind.AgentPersona,
+                Id = personaDefinition.Id,
+                Content = personaDefinition.BuildPersonaGuidance()
+            });
+
+            return InvokeResult.Success;
+        }
+
         private static InvokeResult AddInstructionDDR(KnowledgeLane lane, KnowledgeKind kind, IEnumerable<string> orderedIds, IDictionary<string, DdrModelFields> resolved)
         {
             if (lane == null) throw new ArgumentNullException(nameof(lane));

@@ -51,7 +51,7 @@ namespace LagoVista.AI.Models
 
             var hasToolResults = request.ToolResults?.Any() ?? false;
 
-            Envelope = new Envelope(request.AgentContextId, request.RoleId, request.SessionId, request.TurnId, null, request.Instruction, 
+            Envelope = new Envelope(request.AgentContextId, request.RoleId, request.SessionId, request.TurnId, null, request.AgentPersonaId, request.Instruction, 
                 request.Streaming, request.ToolResults, request.ClipboardImages, request.InputArtifacts, request.RagScope, org, user);
 
             if (String.IsNullOrEmpty(request.SessionId) && String.IsNullOrEmpty(request.TurnId) && !hasToolResults)
@@ -204,7 +204,7 @@ namespace LagoVista.AI.Models
 
             // turn is a litte interesting on the envelope, if we have it coming in we don't ovwrwrite it because on new turns it will be null
             Envelope = new Envelope(AgentContext?.Id ?? existing.AgentContextId, Role?.Id ?? existing.RoleId, Session?.Id ?? existing.SessionId, 
-                                    PreviousTurn?.Id ?? existing.PreviousTurnId, ThisTurn?.Id ?? existing.ThisTurnId, _instructions, existing.Stream, existing.ToolResults, existing.ClipBoardImages,
+                                    PreviousTurn?.Id ?? existing.PreviousTurnId, ThisTurn?.Id ?? existing.ThisTurnId, existing.AgentPersonaId, _instructions, existing.Stream, existing.ToolResults, existing.ClipBoardImages,
                                     existing.InputArtifacts, existing.RagScope, existing.Org, existing.User);
         }
 
@@ -243,7 +243,7 @@ namespace LagoVista.AI.Models
 
     public class Envelope
     {
-        public Envelope(string agentContextId, string roleId, string sessionId, string previousTurnid, string thisTurnId, string instructions, bool stream,
+        public Envelope(string agentContextId, string roleId, string sessionId, string previousTurnid, string thisTurnId, string agentPersonaId, string instructions, bool stream,
                         IEnumerable<ToolResultSubmission> toolResults, IEnumerable<ClipboardImage> clipboardImages, IEnumerable<InputArtifact> inputArtifacts,
                         RagScope ragScope, EntityHeader org, EntityHeader user)
         {
@@ -251,6 +251,7 @@ namespace LagoVista.AI.Models
             RoleId = roleId;
             SessionId = sessionId;
             PreviousTurnId = previousTurnid;
+            AgentPersonaId = agentPersonaId;
             ThisTurnId = thisTurnId;
             Org = org ?? throw new ArgumentNullException(nameof(org));
             User = user ?? throw new ArgumentNullException(nameof(user));
@@ -270,6 +271,7 @@ namespace LagoVista.AI.Models
 
         public string Instructions { get; }
         public string AgentContextId { get; }
+        public string AgentPersonaId { get; }
         public string RoleId { get; }
         public string SessionId { get; }
         public string PreviousTurnId { get; }

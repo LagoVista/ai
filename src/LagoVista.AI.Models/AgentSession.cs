@@ -106,6 +106,8 @@ namespace LagoVista.AI.Models
 
         public string ModeReason { get; set; }
 
+        public EntityHeader AgentPersona { get; set; }
+
         public string DefaultLanguage { get; set; }
 
         public EntityHeader<OperationKinds> OperationKind { get; set; }

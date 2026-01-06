@@ -28,6 +28,18 @@ namespace LagoVista.AI.Services
 
         private static void EnsureKindCatalog(AgentKnowledgePack pack)
         {
+            pack.KindCatalog[KnowledgeKind.AgentPersona] = new KnowledgeKindDescriptor
+            {
+                Kind = KnowledgeKind.AgentPersona,
+                Title = "Agent Persaon",
+                BeginMarker = "## Response Style",
+                EndMarker = "\r\n",
+                InstructionLine = @"Scope: tone and phrasing only
+Response Style remains in effect until explicitly changed.
+
+"
+            };
+
             pack.KindCatalog[KnowledgeKind.Instruction] = new KnowledgeKindDescriptor
             {
                 Kind = KnowledgeKind.Instruction,

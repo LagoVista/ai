@@ -86,6 +86,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
                 sessionId: "sess_1",
                 thisTurnId: "turn_1",
                 previousTurnid: "prev_i",
+                agentPersonaId: null,
                 instructions: "",
                 stream: false,
                 toolResults: toolResults ?? Array.Empty<ToolResultSubmission>(),
