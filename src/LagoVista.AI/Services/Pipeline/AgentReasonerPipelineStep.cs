@@ -69,7 +69,7 @@ namespace LagoVista.AI.Services
                     ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCallResults.Add(result);
                 }
 
-                _logger.Trace($"[JSON.PromptKnowledgeProvider.ToolCallManifest] {JsonConvert.SerializeObject(ctx.PromptKnowledgeProvider.ToolCallManifest)}");
+                _logger.Trace($"[JSON.PromptKnowledgeProvider.ToolCallManifest]={JsonConvert.SerializeObject(ctx.PromptKnowledgeProvider.ToolCallManifest)}");
 
                 // After processing all our tool calls, if we still have client tool calls, we need to exit to let the client handle them.
                 // upon return we will pickup where we left off.  

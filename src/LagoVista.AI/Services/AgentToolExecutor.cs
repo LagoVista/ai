@@ -41,12 +41,13 @@ namespace LagoVista.AI.Services
             if (string.IsNullOrWhiteSpace(call.Name))
             {
                 var errorMessage = "Tool call name is empty.";
-                _logger.AddError("[AgentToolExecutor_ExecuteServerToolAsync__EmptyName]", errorMessage);
+                _logger.AddError(this.Tag(), errorMessage);
 
                 return InvokeResult<AgentToolCallResult>.FromError($"[AgentToolExecutor_ExecuteServerToolAsync__EmptyName] {errorMessage}");
             }
 
-            _logger.Trace($"{this.Tag()} Tool '{call.Name}' Was Called, Starting Execution with Arguments\r\n{call.ArgumentsJson}\r\n");
+            _logger.Trace($"{this.Tag()} Tool '{call.Name}' Was Called, Starting Execution");
+            _logger.Trace($"[JSON.ToolCallArgs]={call.ArgumentsJson}");
            
             var toolResult = _toolFactory.GetTool(call.Name);
             if (!toolResult.Successful)
@@ -64,7 +65,7 @@ namespace LagoVista.AI.Services
                 var errorMessage = $"Tool '{call.Name}' resolved to null instance.";
                 _logger.AddError(this.Tag(), errorMessage);
 
-                return InvokeResult<AgentToolCallResult>.FromError($"[AgentToolExecutor_ExecuteServerToolAsync__NullInstance] {errorMessage}");
+                return InvokeResult<AgentToolCallResult>.FromError($"{this.Tag()} {errorMessage}");
             }
 
             try
@@ -104,8 +105,7 @@ namespace LagoVista.AI.Services
             {
                 var errorMessage = $"Tool '{call.Name}' execution was cancelled.";
 
-                _logger.AddError(
-                    "[AgentToolExecutor_ExecuteServerToolAsync__Cancelled]",
+                _logger.AddError(this.Tag(),
                     errorMessage);
 
                 return InvokeResult<AgentToolCallResult>.FromError($"[AgentToolExecutor_ExecuteServerToolAsync__Cancelled] {errorMessage}");

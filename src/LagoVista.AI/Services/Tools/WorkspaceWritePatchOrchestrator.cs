@@ -195,7 +195,7 @@ Bad usage:
                 var responseDto = _batchFactory.BuildResponse(storedBatch, context);
                 var json = JsonConvert.SerializeObject(responseDto);
 
-                _logger.Trace($"[JSON.FilePatch]{json}");
+                _logger.Trace($"[JSON.FilePatch]={json}");
 
                 return InvokeResult<string>.Create(json);
             }

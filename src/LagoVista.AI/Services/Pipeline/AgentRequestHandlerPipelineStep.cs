@@ -72,7 +72,9 @@ namespace LagoVista.AI.Services.Pipeline
             if(!preValidation.Successful) return InvokeResult<AgentExecuteResponse>.FromInvokeResult(preValidation.ToInvokeResult());
 
             var sw = Stopwatch.StartNew();
-            ctx.LogDetails(_adminLogger, PipelineSteps.RequestHandler);
+
+            _adminLogger.Trace($"[PipelineStep__ExecuteAsync] Line: 00 - Start {nameof(AgentRequestHandlerPipelineStep)}");
+            _adminLogger.Trace($"{this.Tag()} - Start");   
 
             InvokeResult<IAgentPipelineContext> result = null;
 
@@ -99,18 +101,20 @@ namespace LagoVista.AI.Services.Pipeline
 
             if (result.Successful)
             {
-                _adminLogger.Trace($"[AgentRequestHandlerPipelineStep__Handle] - Success");
-             
+                _adminLogger.Trace($"[PipelineStep__ExecuteAsync] Line: 00 - Success {nameof(AgentRequestHandlerPipelineStep)} {sw.Elapsed.TotalMilliseconds}ms");
+
                 ctx.ThisTurn.Status = EntityHeader<AgentSessionTurnStatuses>.Create(AgentSessionTurnStatuses.Completed);
                 ctx.ThisTurn.ExecutionMs = sw.Elapsed.TotalMilliseconds;
 
                 await _agentSessionManager.UpdateSessionAsync(result.Result.Session, org, user);
-                ctx.LogDetails(_adminLogger, PipelineSteps.RequestHandler, sw.Elapsed);
 
                 var postValidation = _validator.ValidatePostStep(result.Result, PipelineSteps.RequestHandler);
                 if(!postValidation.Successful) return InvokeResult<AgentExecuteResponse>.FromInvokeResult(postValidation.ToInvokeResult());
 
                 var response = await _responseBuilder.BuildAsync(result.Result);
+
+                _adminLogger.Trace($"[PipelineStep__ExecuteAsync] Line: 00 - Completed {nameof(AgentRequestHandlerPipelineStep)} {sw.Elapsed.TotalMilliseconds}ms");
+
                 return response;
             }
             else
@@ -125,7 +129,9 @@ namespace LagoVista.AI.Services.Pipeline
                     await _agentSessionManager.UpdateSessionAsync(ctx.Session, org, user);
                 }
 
-                ctx.LogStepErrorDetails(_adminLogger, PipelineSteps.RequestHandler, result.ToInvokeResult(), sw.Elapsed);
+                _adminLogger.Trace($"[PipelineStep__ExecuteAsync] Line: 00 - Error {nameof(AgentRequestHandlerPipelineStep)} {result.ErrorMessage} {sw.Elapsed.TotalMilliseconds}ms");
+                _adminLogger.AddError(this.Tag(), result.ErrorMessage);
+
                 return InvokeResult<AgentExecuteResponse>.FromInvokeResult(result.ToInvokeResult());
             }
         }

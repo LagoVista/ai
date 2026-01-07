@@ -224,37 +224,7 @@ namespace LagoVista.AI.Models
                                     existing.InputArtifacts, existing.RagScope, existing.Org, existing.User);
         }
 
-        public void LogStepErrorDetails(IAdminLogger logger, PipelineSteps step, string error, TimeSpan ts)
-        {
-            logger.AddError($"[AgentPipelineContext__LogStepErrorDetails] - {step} Error restoring Agent Context.", error,
-                CorrelationId.ToKVP("CorrelationId"),
-                step.ToString().ToKVP("step"),
-                Envelope.Org.Text.ToKVP("Org"),
-                Envelope.User.Text.ToKVP("User"));
-        }
-
-        public void LogStepErrorDetails(IAdminLogger logger, PipelineSteps step, InvokeResult error, TimeSpan ts)
-        {
-            logger.AddError($"[AgentPipelineContext__LogStepErrorDetails] - {step} Error restoring Agent Context.", error.ErrorMessage,
-                CorrelationId.ToKVP("CorrelationId"),
-                step.ToString().ToKVP("step"),
-                Envelope.Org.Text.ToKVP("Org"),
-                Envelope.User.Text.ToKVP("User"));
-        }
-
-        public void LogDetails(IAdminLogger logger, PipelineSteps step, TimeSpan? ts = null)
-        {
-            var kvps = new List<KeyValuePair<string, string>>()
-            {
-                CorrelationId.ToKVP("CorrelationId"),
-                (ts.HasValue ? "end" : "start").ToKVP("action"),
-                step.ToString().ToKVP("step"),
-                Envelope.Org.Text.ToKVP("Org"),
-                Envelope.User.Text.ToKVP("User"),
-            };
-
-            logger.Trace($"[AgentPipelineContext__LogDetails] - {step}.", kvps.ToArray());          
-        }
+    
 
         public void AttachClientToolSession(AgentSession session, AgentSessionTurn turn)
         {

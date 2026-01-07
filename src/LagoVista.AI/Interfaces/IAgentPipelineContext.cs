@@ -73,13 +73,6 @@ namespace LagoVista.AI.Interfaces
 
         void SetResponsePayload(ResponsePayload payload);
 
-        // If you actually use these in steps, keep them. Otherwise, drop.
-
-        void LogStepErrorDetails(IAdminLogger logger, PipelineSteps step, string error, TimeSpan ts);
-
-        void LogStepErrorDetails(IAdminLogger logger, PipelineSteps step, InvokeResult error, TimeSpan ts);
-
-        void LogDetails(IAdminLogger logger, PipelineSteps step, TimeSpan? ts = null);
 
         bool IsTerminal { get;}
 

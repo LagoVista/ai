@@ -42,8 +42,6 @@ namespace LagoVista.AI.Helpers
                 return InvokeResult<IAgentPipelineContext>.FromError("[AgentExecuteResponseParser__Parse] Empty or null JSON payload.");
             }
 
-
-
             JObject root;
             try
             {
@@ -297,13 +295,6 @@ namespace LagoVista.AI.Helpers
                 ctx.ThisTurn.OpenAIResponseBlobUrl = (await _transcriptStore.SaveTurnResponseAsync(ctx.Envelope.Org.Id, ctx.Session.Id, ctx.ThisTurn.Id, rawJson.Trim(), ctx.CancellationToken)).Result.ToString();
 
                 var lastIteration = ctx.ThisTurn.Iterations.LastOrDefault();
-
-                var previousResponseId = lastIteration == null ? ctx.ThisTurn.PreviousOpenAIResponseId : lastIteration.OpenAiResponseId;
-
-                if (String.IsNullOrWhiteSpace(previousResponseId))
-                    previousResponseId = "-none-";
-
-                _logger.Trace($"[Builder_Response_Chain] {previousResponseId} - {id} {response.Usage.PromptTokens}, {response.Usage.CompletionTokens}, {response.Usage.TotalTokens}");
 
                 var iteration = new AgentSessionTurnIteration()
                 {

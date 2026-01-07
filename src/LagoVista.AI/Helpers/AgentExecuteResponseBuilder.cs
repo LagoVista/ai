@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
+using LagoVista.Core;
 using LagoVista.Core.AI.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
@@ -103,7 +104,6 @@ namespace LagoVista.AI.Helpers
                     }
 
                     await _toolCallManifestRepo.SetCallToolManifestAsync(ctx.Envelope.Org.Id, ctx.ToolManifestId, ctx.PromptKnowledgeProvider.ToolCallManifest);
-                    _adminlogger.Trace($"{this.Tag()} saved tool call manifest");
 
                     response.Kind = AgentExecuteResponseKind.ClientToolContinuation;
                     response.PrimaryOutputText = null;

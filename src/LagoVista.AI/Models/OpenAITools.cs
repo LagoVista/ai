@@ -281,6 +281,9 @@ namespace LagoVista.AI
                         schema.Require(name);
                 }
 
+        public static void MinLength(this JsonSchemaProperty prop, int min) => prop.AddKeyword("minLength", min);
+        public static void MaxLength(this JsonSchemaProperty prop, int max) => prop.AddKeyword("maxLength", max);
+
         public static void Boolean(
             this JsonSchemaObject schema,
             string name,
@@ -362,6 +365,12 @@ namespace LagoVista.AI
             }
         }
 
+        public static void Require(this JsonSchemaObject schema, params string[] names)
+        {
+            foreach (var name in names)
+                schema.Require(name);
+        }
+
         public static void OneOf(this JsonSchemaObject schema, Action<OneOfBuilder> build)
         {
             if (schema == null) throw new ArgumentNullException(nameof(schema));
@@ -372,5 +381,66 @@ namespace LagoVista.AI
 
             schema.ExtensionData["oneOf"] = new JArray(b.Build());
         }
+
+        public static void Object(this JsonSchemaObject schema, string name, string description, Action<JsonSchemaObject> build, bool required = false)
+        {
+            var obj = new JsonSchemaObject();
+            build(obj);
+
+            schema.Properties[name] = new JsonSchemaProperty
+            {
+                Type = "object",
+                Description = description,
+                Items = null,
+                ExtensionData = new Dictionary<string, JToken>()
+            };
+
+            // Store nested object schema under property keywords
+            schema.Properties[name].AddKeyword("properties", JObject.FromObject(obj.Properties));
+            schema.Properties[name].AddKeyword("required", new JArray(obj.Required));
+            schema.Properties[name].AddKeyword("additionalProperties", obj.AdditionalProperties);
+
+            if (required)
+                schema.Require(name);
+        }
+
+        public static void ObjectArray(this JsonSchemaObject schema, string name, string description, Action<JsonSchemaObject> item, bool required = false, int? minItems = null)
+        {
+            var itemSchema = new JsonSchemaObject();
+            item(itemSchema);
+
+            var prop = new JsonSchemaProperty
+            {
+                Type = "array",
+                Description = description,
+                Items = new JsonSchemaNode
+                {
+                    Type = "object",
+                    AdditionalProperties = itemSchema.AdditionalProperties,
+                    Properties = itemSchema.Properties,
+                    Required = itemSchema.Required
+                }
+            };
+
+            if (minItems.HasValue)
+                prop.AddKeyword("minItems", minItems.Value);
+
+            schema.Properties[name] = prop;
+
+            if (required)
+                schema.Require(name);
+        }
+
+        public static void OneOf(this JsonSchemaNode node, Action<JsonSchemaExtensions.OneOfBuilder> build)
+        {
+            if (node == null) throw new ArgumentNullException(nameof(node));
+            if (build == null) throw new ArgumentNullException(nameof(build));
+
+            var b = new JsonSchemaExtensions.OneOfBuilder();
+            build(b);
+
+            node.ExtensionData["oneOf"] = new JArray(b.Build());
+        }
+
     }
 }
