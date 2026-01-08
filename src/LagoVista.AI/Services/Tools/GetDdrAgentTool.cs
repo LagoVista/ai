@@ -49,9 +49,11 @@ namespace LagoVista.AI.Services.Tools
                 return FromError("identifier is required.");
             }
 
+            var ddirId = identifier.NormalizeDdrid();
+
             try
             {
-                var ddr = await _ddrManager.GetDdrByTlaIdentiferAsync(identifier, context.Org, context.User);
+                var ddr = await _ddrManager.GetDdrByTlaIdentiferAsync(ddirId, context.Org, context.User);
                 if (ddr == null)
                 {
                     return FromError($"DDR '{identifier}' not found.");

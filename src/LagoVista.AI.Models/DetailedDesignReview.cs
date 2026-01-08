@@ -1,18 +1,15 @@
 ﻿using LagoVista.AI.Models.Resources;
-using LagoVista.Core.AI.Interfaces;
 using LagoVista.Core.Attributes;
 using LagoVista.Core.Interfaces;
 using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
-using System;
 using System.Collections.Generic;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LagoVista.AI.Models
 {
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.DDR_Title, AIResources.Names.DDR_Help, AIResources.Names.DDR_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIDomain))]
+    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.DDR_Title, AIResources.Names.DDR_Help, AIResources.Names.DDR_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIDomain), Icon:"icon-ae-brainstorm-1",
+         GetListUrl: "/api/ddrs", GetUrl: "/api/ddr/{id}", SaveUrl: "/api/ddr", DeleteUrl: "/api/ddr/{id}", FactoryUrl: "/api/ddr/factory",
+        CreateUIUrl: "/contentmanagement/ddr/add", EditUIUrl: "/contentmanagement/ddr/{id}", ListUIUrl: "/contentmanagement/ddrs")]
     public class DetailedDesignReview : EntityBase, IValidateable, ISummaryFactory
     {
 
@@ -67,7 +64,7 @@ namespace LagoVista.AI.Models
             summary.DdrIdentifier = DdrIdentifier;
             summary.Type = Type;
             summary.NeedsHumanConfirmation = NeedsHumanConfirmation;
-            summary.Name = $"{DdrIdentifier} - {Name}";            
+            summary.Name = Name;           
             return summary;
         }
 
@@ -86,8 +83,9 @@ namespace LagoVista.AI.Models
         public string Reason { get; set; }      // Why we pulled it in
     }
 
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.DDRs_Title, AIResources.Names.DDR_Help, AIResources.Names.DDR_Description, 
-        EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIDomain))]
+    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.DDR_Title, AIResources.Names.DDR_Help, AIResources.Names.DDR_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIDomain), Icon: "icon-ae-brainstorm-1",
+         GetListUrl: "/api/ddrs", GetUrl: "/api/ddr/{id}", SaveUrl: "/api/ddr", DeleteUrl: "/api/ddr/{id}", FactoryUrl: "/api/ddr/factory",
+        CreateUIUrl: "/contentmanagement/ddr/add", EditUIUrl: "/contentmanagement/ddr/{id}", ListUIUrl: "/contentmanagement/ddrs")]
     public class DetailedDesignReviewSummary : SummaryData
     {
         public string DdrIdentifier { get; set; }

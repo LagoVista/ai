@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>LagoVista.AI.CloudRepos</id>
-    <version>3.0.3155.0751</version>
+    <version>3.0.3158.1639</version>
     <authors>Software Logistics, LLC</authors>
     <owners>Software Logistics, LLC</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
@@ -12,14 +12,14 @@
     <copyright>Copyright Software Logistics - 2026</copyright>
     <tags>LagoVista HomeAutomation IoT AI Machine Learning</tags>
     <icon>LagoVistaIcon.png</icon>
-    <releaseNotes>Build Date: 1/5/2026 12:51:48 PM UTC</releaseNotes>
+    <releaseNotes>Build Date: 1/8/2026 9:39:49 PM UTC</releaseNotes>
     <repository url="https://www.github.com/lagovista" type="git" branch="master"></repository>
     <dependencies>
       <group targetFramework="netstandard2.1">
-        <dependency id="LagoVista.CloudStorage" version="3.0.3155.0526" />
+        <dependency id="LagoVista.CloudStorage" version="3.0.3158.1624" />
         <dependency id="Microsoft.ML.OnnxRuntime" version="1.22.1" />
-        <dependency id="LagoVista.AI.Models" version="3.0.3155.0751" />
-        <dependency id="LagoVista.AI" version="3.0.3155.0751" />
+        <dependency id="LagoVista.AI.Models" version="3.0.3158.1639" />
+        <dependency id="LagoVista.AI" version="3.0.3158.1639" />
       </group>
     </dependencies>
   </metadata>

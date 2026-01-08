@@ -665,13 +665,13 @@
     <value>New</value>
   </data>
   <data name="DDR_Title" xml:space="preserve">
-    <value>Detailed Design Review (DDR)</value>
+    <value>Deliberation and Design Review (DDR)</value>
   </data>
   <data name="DDR_Help" xml:space="preserve">
-    <value>A phase of our softwrae development process where we capture requirements for a new feature a modification or a bug fix.</value>
+    <value>The output of a structured conversation between a human and a model that documents the why, requirements and other findings for any topic</value>
   </data>
   <data name="DDR_Description" xml:space="preserve">
-    <value>A phase of our softwrae development process where we capture requirements for a new feature a modification or a bug fix.</value>
+    <value>The output of a structured conversation between a human and a model that documents the why, requirements and other findings for any topic</value>
   </data>
   <data name="DDR_Chapter" xml:space="preserve">
     <value>Design Review Chapter</value>

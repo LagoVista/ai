@@ -35,7 +35,13 @@ namespace LagoVista.AI.Services.Tools
         public bool IsToolFullyExecutedOnServer => true;
 
         public const string ToolName = "index_ddr";
-        public const string ToolUsageMetadata = "Indexes an existing DDR into the RAG/vector database for semantic search and retrieval. " + "Call this tool only when the user explicitly asks to index a DDR, or after a successful import_ddr when the assistant has asked 'Would you like to index this DDR now?' and the user confirms yes. " + "Do not call this tool automatically without user consent. " + "Provide the DDR identifier (e.g., 'TUL-011'); the tool should index the stored canonical DDR content and return a small JSON result indicating success and any indexing details (such as document/key and chunk count) if available.";
+        public const string ToolUsageMetadata =
+@"Indexes an existing DDR into the RAG/vector database for semantic search and retrieval.
+Call this tool only when the user explicitly asks to index a DDR, or after a successful import_ddr when the assistant has asked “Would you like to index this DDR now?” and the user confirms yes. Do not call this tool automatically without user consent.
+Provide a DDR identifier matching ^[A-Za-z]{3}-\d{1,6}$ (e.g., TUL-000011). 
+The tool will normalize the identifier by uppercasing the 3-letter prefix and left-padding the numeric portion to 6 digits (e.g., tul-01 or TuL-1 -> TUL-000001). 
+The tool indexes the stored canonical DDR content for the normalized identifier.
+Return a small JSON result indicating success and any indexing details available (e.g., document/key and chunk count).";
         public IndexDdrTool(IEmbedder embeder, IQdrantClient qdrantClient, IOrganizationManager orgManager, IDdrManager ddrManager, IAdminLogger logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -55,9 +61,9 @@ namespace LagoVista.AI.Services.Tools
             public bool Success { get; set; }
             public string Identifier { get; set; }
             // Stub fields you can later populate from the real indexer
-            public string VectorDocumentId { get; set; }
+            public string PointId { get; set; }
+            public string DocId { get; set; }
             public int? ChunkCount { get; set; }
-            public string SessionId { get; set; }
         }
 
         public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
@@ -76,7 +82,9 @@ namespace LagoVista.AI.Services.Tools
                     return InvokeResult<string>.FromError("index_ddr requires 'identifier'.");
                 }
 
-                var ddr = await _ddrManager.GetDdrByTlaIdentiferAsync(args.Identifier, context.Org, context.User, false);
+                var ddrId = args.Identifier.NormalizeDdrid();
+
+                var ddr = await _ddrManager.GetDdrByTlaIdentiferAsync(ddrId, context.Org, context.User, false);
                 if (ddr == null)
                     return InvokeResult<string>.FromError($"index_ddr - could not find DDR {args.Identifier} to process.");
                 if (String.IsNullOrEmpty(ddr.RagIndexCard))
@@ -99,11 +107,7 @@ namespace LagoVista.AI.Services.Tools
                     },
                     RepoId = "ddr-repo",
                 };
-                var ddrDescription = DdrDescriptionBuilder.FromSource(ctx, ddr.FullDDRMarkDown);
-                if (!ddrDescription.Successful)
-                {
-                    return InvokeResult<string>.FromError($"index_ddr - DDR description build failed: {ddrDescription.ErrorMessage}");
-                }
+                
 
                 var vector = await _embedder.EmbedAsync(ddr.RagIndexCard);
                 var point = new RagPoint()
@@ -118,7 +122,7 @@ namespace LagoVista.AI.Services.Tools
                         RepoBranch = ctx.GitRepoInfo.BranchRef,
                         CommitSha = "n/a",
                         Title = $"{ddr.DdrIdentifier} - {ddr.Name}",
-                        SectionKey = "DDR_Summary",
+                        SectionKey = "RagIndexCard",
                         EmbeddingModel = vector.Result.EmbeddingModel,
                         BusinessDomainKey = "General",
                         ContentTypeId = RagContentType.Spec,
@@ -131,10 +135,12 @@ namespace LagoVista.AI.Services.Tools
                 {
                     Success = true,
                     Identifier = args.Identifier.Trim(),
-                    VectorDocumentId = point.PointId,
+                    PointId = point.PointId,
+                    DocId = point.Payload.DocId,
                     ChunkCount = 1,
-                    SessionId = context?.SessionId
                 };
+
+                await _qdrantClient.DeleteByDocIdAsync(context.AgentContext.VectorDatabaseCollectionName, point.Payload.DocId);
                 await _qdrantClient.UpsertAsync(context.AgentContext.VectorDatabaseCollectionName, new[] { point }, cancellationToken);
                 return InvokeResult<string>.Create(JsonConvert.SerializeObject(payload));
             }

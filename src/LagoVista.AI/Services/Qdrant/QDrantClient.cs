@@ -117,6 +117,64 @@ namespace LagoVista.AI.Services.Qdrant
             resp.EnsureSuccessStatusCode();
         }
 
+
+        public Task DeleteByDocIdAsync(string collection, string docId, CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(docId))
+                throw new ArgumentException("DocId cannot be null or empty.", nameof(docId));
+
+            var filter = new QdrantFilter
+            {
+                Must =
+                {
+                    new QdrantCondition
+                    {
+                        Key = "DocId",
+                        Match = new QdrantMatch
+                        {
+                            Value = docId.Trim()
+                        }
+                    }
+                }
+            };
+
+            return DeleteByFilterAsync(collection, filter, ct);
+        }
+
+
+        public Task DeleteByDocIdsAsync(string collection, IEnumerable<string> docIds, CancellationToken ct = default)
+        {
+            if (docIds == null)
+                throw new ArgumentNullException(nameof(docIds));
+
+            var ids = docIds
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .Select(id => id.Trim())
+                .Distinct()
+                .ToArray();
+
+            if (ids.Length == 0)
+                return Task.CompletedTask;
+
+            var filter = new QdrantFilter
+            {
+                Must =
+                {
+                    new QdrantCondition
+                    {
+                        Key = "DocId",
+                        Match = new QdrantMatch
+                        {
+                            Value = ids
+                        }
+                    }
+                }
+            };
+
+            return DeleteByFilterAsync(collection, filter, ct);
+        }
+
+
         /// <summary>
 		/// Delete points by a Qdrant payload filter (e.g., delete all where path == file).
 		/// </summary>

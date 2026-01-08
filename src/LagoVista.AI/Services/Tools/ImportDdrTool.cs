@@ -204,6 +204,22 @@ dryRun, confirmed, markdown, source
         public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context)
             => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
 
+        private static readonly Regex LeadingIdRegex = new Regex(@"^\s*[A-Z]{3}-\d+\s*[:\-]\s*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+        public static string NormalizeTitle(string finalTitle, string ddrId)
+        {
+            if (string.IsNullOrWhiteSpace(ddrId))
+                throw new ArgumentException("DDR id is required.", nameof(ddrId));
+
+            if (string.IsNullOrWhiteSpace(finalTitle))
+                throw new ArgumentException("Title cannot be empty.", nameof(finalTitle));
+
+            // Remove any existing leading identifier
+            var cleanTitle = LeadingIdRegex.Replace(finalTitle.Trim(), string.Empty).Trim();
+
+            return $"{ddrId} - {cleanTitle}";
+        }
+
         public async Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentToolExecutionContext context, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(argumentsJson))
@@ -242,6 +258,8 @@ dryRun, confirmed, markdown, source
                 var finalTitle = parsed.Title ?? args.Title;
                 var finalType = parsed.Type ?? args.DdrType;
                 var finalStatus = parsed.Status ?? args.Status;
+
+
 
                 // Validate type semantics (exact match or confirmation required)
                 var typeIsAllowed = !string.IsNullOrWhiteSpace(finalType) && AllowedTypes.Contains(finalType, StringComparer.Ordinal);
@@ -309,6 +327,7 @@ dryRun, confirmed, markdown, source
                     string.Equals(finalType, "Policy / Rules / Governance", StringComparison.Ordinal);
 
                 var needsReason = BuildNeedsReason(args.NeedsHumanConfirmationReason, warnings);
+                finalTitle = NormalizeTitle(finalTitle, parsed.Id);
 
                 // If needs confirmation and not confirmed, return preview
                 var dryRun = args.DryRun.GetValueOrDefault(false);

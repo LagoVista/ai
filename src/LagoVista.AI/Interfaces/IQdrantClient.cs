@@ -20,5 +20,9 @@ namespace LagoVista.AI.Interfaces
         Task UpsertInBatchesAsync(string collectionName, IReadOnlyList<IRagPoint> points, int vectorDims, int? maxPerBatch = null, CancellationToken ct = default);
         Task<List<QdrantScoredPoint>> SearchAsync(string collectionName, QdrantSearchRequest req);
         Task DeleteByIdsAsync(string collectionName, IEnumerable<string> ids);
+        Task DeleteByDocIdAsync(string collection, string docId, CancellationToken ct = default);
+
+        Task DeleteByDocIdsAsync(string collection, IEnumerable<string> docIds, CancellationToken ct = default);
+        Task DeleteByFilterAsync(string collection, QdrantFilter filter, CancellationToken ct = default);
     }
 }
