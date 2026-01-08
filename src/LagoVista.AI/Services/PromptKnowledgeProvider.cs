@@ -82,7 +82,9 @@ These entries are authoritative for near-term correctness.
 They may be replaced or removed at any time.
 
 For agent/session state, rely only on KFR.
-### Current Mode: {ctx.Mode.Name}
+### Agent Mode Key (authoritative): {ctx.Mode.Key}
+### Agent Mode Display Name (non-authoritative): {ctx.Mode.Name}
+### Mode Change Rule (for model): “Only request a mode change if Agent Mode Key != requested mode key.”
 ### Goal (single): -
 ### Plan (single): -
 ### ActiveContracts: -
@@ -105,23 +107,19 @@ They may be replaced or removed at any time.
 
 Do not infer or assume facts outside this registry.
 
-### Current Mode: {ctx.Mode.Name}
-
+### Agent Mode Key (authoritative): {ctx.Mode.Key}
+### Agent Mode Display Name (non-authoritative): {ctx.Mode.Name}
+### Mode Change Rule (for model): “Only request a mode change if Agent Mode Key != requested mode key.”
 ### Goal (single)
 {BuildKfrSection(branchKfrs.Where(kfr => kfr.Kind == KfrKind.Goal && kfr.IsActive))}
-
 ### Plan (single)
 {BuildKfrSection(branchKfrs.Where(kfr => kfr.Kind == KfrKind.Plan && kfr.IsActive))}
-
 ### ActiveContracts
 {BuildKfrSection(branchKfrs.Where(kfr => kfr.Kind == KfrKind.ActiveContract && kfr.IsActive))}
-
 ### Constraints
 {BuildKfrSection(branchKfrs.Where(kfr => kfr.Kind == KfrKind.Constraint && kfr.IsActive))}
-
 ### OpenQuestions (RequiresResolution)
 {BuildKfrSection(branchKfrs.Where(kfr => kfr.Kind == KfrKind.OpenQuestion && kfr.IsActive))}
-
 ## END Known Facts Registry (KFR) — Active Working Memory
 ";
                 var kfrRegister = ctx.PromptKnowledgeProvider.GetOrCreateRegister(KnowledgeKind.Kfr, Models.Context.ContextClassification.Session);
