@@ -126,8 +126,8 @@ namespace LagoVista.AI.Services.Pipeline
                     return result;
                 }
 
-                // LOCKED rule: All tool call results MUST have ResultJson.
-                if (String.IsNullOrWhiteSpace(tr.ResultJson))
+                // LOCKED rule: All tool call results MUST have ResultJson OR error message.
+                if (String.IsNullOrWhiteSpace(tr.ResultJson) && String.IsNullOrEmpty(tr.ErrorMessage))
                 {
                     var reason = !String.IsNullOrWhiteSpace(tr.ErrorMessage) ? tr.ErrorMessage : "ResultJson is required.";
                     result.Errors.Add(new ErrorMessage($"Tool call '{tc.Name}' ({tc.ToolCallId}) failed validation: {reason}"));

@@ -141,9 +141,12 @@ namespace LagoVista.AI.Helpers
                     if (!String.IsNullOrEmpty(file.Contents))
                     {
                         sb.AppendLine($"--- BEGIN ACTIVE FILE ---");
-                        sb.AppendLine($"Relative Path: {file.RelativePath}");
-                        sb.AppendLine($"File Name: {file.FileName}");
-                        sb.AppendLine($"Language: {file.Language}");
+                        sb.AppendLine($"@Source: {file.FileSource}");
+                        sb.AppendLine($"@Workspace: {file.WorkSpace}");
+                        sb.AppendLine($"@Relative Path: {file.RelativePath}");
+                        sb.AppendLine($"@File Name: {file.FileName}");
+                        sb.AppendLine($"@SHA 256: {file.Sha256Hash}");
+                        sb.AppendLine($"@Language: {file.Language}");
                         sb.AppendLine();
                         sb.AppendLine(file.Contents);
                         sb.AppendLine($"--- END ACTIVE FILE ---");
@@ -168,10 +171,36 @@ namespace LagoVista.AI.Helpers
                 var toolResults = ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCallResults;
                 foreach (var result in toolResults)
                 {
+                    if (String.IsNullOrEmpty(result.ResultJson) && String.IsNullOrEmpty(result.ErrorMessage))
+                        return Task.FromResult(InvokeResult<ResponsesApiRequest>.FromError("Invalid tool Result: Both ResultJson and Error message are both null"));
+
+
+                    string resultJson;
+
+                    if (!string.IsNullOrWhiteSpace(result.ResultJson))
+                    {
+                        resultJson = result.ResultJson;
+                    }
+                    else
+                    {
+                        var error = result.ErrorMessage?.Trim();
+
+                        bool isJson =
+                            !string.IsNullOrEmpty(error) &&
+                            (error.StartsWith("{") || error.StartsWith("["));
+
+                        var errorPayload = isJson
+                            ? error
+                            : JsonConvert.SerializeObject(error ?? "Unknown error");
+
+                        resultJson = $@"{{ ""status"": ""failed"", ""result"": {errorPayload} }}";
+                    }
+
+
                     dto.Input.Add(new ResponsesFunctionCallOutput
                     {
                         CallId = result.ToolCallId,
-                        Output = result.ResultJson, 
+                        Output = resultJson, 
                     });
                 }
             }

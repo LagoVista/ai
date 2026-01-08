@@ -44,7 +44,8 @@ namespace LagoVista.AI.Services.Tools
             toolRegistry.RegisterTool<ModeChangeTool>();
             toolRegistry.RegisterTool<RequestUserApprovalAgentTool>();
 
-            toolRegistry.RegisterTool<ReadFileTool>();
+            toolRegistry.RegisterTool<WorkspaceReadServerFileTool>();
+            toolRegistry.RegisterTool<WorkspaceReadClientFileTool>();
             toolRegistry.RegisterTool<WorkspaceWritePatchTool>();
             toolRegistry.RegisterTool<CodeHashNormalizedTool>();
             toolRegistry.RegisterTool<WorkspaceCreateFileTool>();
