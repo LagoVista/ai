@@ -187,14 +187,10 @@ No explanations outside the JSON.
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         private readonly IStructuredTextLlmService _modelClient;
-        private readonly string _lensInstructions;
 
-        public EntityIndexDocumentBuilder(IStructuredTextLlmService modelClient, string lensInstructions)
+        public EntityIndexDocumentBuilder(IStructuredTextLlmService modelClient)
         {
             _modelClient = modelClient ?? throw new ArgumentNullException(nameof(modelClient));
-            _lensInstructions = string.IsNullOrWhiteSpace(lensInstructions)
-                ? throw new ArgumentException("Lens instructions are required.", nameof(lensInstructions))
-                : lensInstructions;
         }
 
         public async Task<EntityIndexDocument> BuildAsync(IEntityBase entity)
@@ -282,7 +278,7 @@ No explanations outside the JSON.
             var domainJson = domainPayload.ToString(Formatting.Indented);
 
             return
-$@"{_lensInstructions}
+$@"{IndexLensInstructions}
 
 EntityBaseHeader:
 {headerJson}

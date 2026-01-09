@@ -1,19 +1,35 @@
-// --- BEGIN CODE INDEX META (do not edit) ---
-// ContentHash: 6632a11efc12f336561908fce65ee9751ec0b1131b8205f4e91dc7e92733e887
-// IndexVersion: 2
-// --- END CODE INDEX META ---
 using LagoVista.AI.Models;
 using LagoVista.CloudStorage.DocumentDB;
 using LagoVista.CloudStorage.Interfaces;
 using LagoVista.Core.Interfaces;
 using LagoVista.Core.Models.UIMetaData;
 using LagoVista.IoT.Logging.Loggers;
-using Microsoft.Azure.Cosmos.Linq;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace LagoVista.AI.CloudRepos
 {
+    /// <summary>
+    /// necessary for circular dependency avoidance
+    /// </summary>
+    public class AgentContextLoaderRepo : DocumentDBRepoBase<AgentContext> , IAgentContextLoaderRepo
+    {
+        private readonly bool _shouldConsolidateCollections;
+
+        public AgentContextLoaderRepo(IMLRepoSettings settings, IAdminLogger logger, ICacheProvider cacheProvider) : 
+            base(settings.MLDocDbStorage.Uri, settings.MLDocDbStorage.AccessKey, settings.MLDocDbStorage.ResourceName, logger, cacheProvider)
+        {
+        }
+        protected override bool ShouldConsolidateCollections => _shouldConsolidateCollections;
+
+        public Task<AgentContext> GetAgentContextAsync(string id)
+        {
+            return this.GetDocumentAsync(id);
+        }
+
+    }
+
     public class AgentContextRepo : DocumentDBRepoBase<AgentContext>, IAgentContextRepo
     {
         private readonly bool _shouldConsolidateCollections;

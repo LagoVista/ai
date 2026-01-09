@@ -28,6 +28,7 @@ namespace LagoVista.AI.Services
             Pipeline.Startup.ConfigureServices(services, adminLogger);
             Qdrant.Startup.ConfigureServices(services, adminLogger);
             ACP.Startup.ConfigureServices(services, adminLogger);
+            Rag.Services.Startup.ConfigureServices(services, adminLogger);
         }
     }
 }
