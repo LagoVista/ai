@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace LagoVista.AI.Rag.Chunkers.Models
 {
-    public abstract class SummaryFacts : IRagableEntity
+    public abstract class SummaryFacts 
     {
         protected IEnumerable<SummarySection> _summarySections;
         /// <summary>
