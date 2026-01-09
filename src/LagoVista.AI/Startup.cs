@@ -66,7 +66,6 @@ namespace LagoVista.AI
 
             services.AddSingleton<IResponsesRequestBuilder, ResponsesRequestBuilder>();
             services.AddSingleton<IResponsesRequestBuilder, ResponsesRequestBuilder>();
-            services.AddScoped<IRagContextBuilder, QdrantRagContextBuilder>();
             services.AddScoped<IAgentSessionNamingService, OpenAISessionNamingService>();
             services.AddScoped<IStructuredTextLlmService, HttpStructuredTextLlmService>();
             services.AddScoped<ITextLlmService, HttpTextLlmService>();

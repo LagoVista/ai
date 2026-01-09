@@ -1,6 +1,7 @@
 ﻿using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
 using LagoVista.CloudStorage.DocumentDB;
+using LagoVista.CloudStorage.Interfaces;
 using LagoVista.Core.Exceptions;
 using LagoVista.Core.Interfaces;
 using LagoVista.Core.Models;
@@ -23,11 +24,11 @@ namespace LagoVista.AI.CloudRepos
         private readonly IAdminLogger _logger;
         private readonly ICacheProvider _cacheProvider;
 
-        public DdrRepo(IMLRepoSettings settings, IAdminLogger logger, ICacheProvider cacheProvider) :
-            base(settings.MLDocDbStorage.Uri, settings.MLDocDbStorage.AccessKey, settings.MLDocDbStorage.ResourceName, logger, cacheProvider)
+        public DdrRepo(IMLRepoSettings settings, IDocumentCloudCachedServices services) :
+            base(settings.MLDocDbStorage.Uri, settings.MLDocDbStorage.AccessKey, settings.MLDocDbStorage.ResourceName, services)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _cacheProvider = cacheProvider ?? throw new ArgumentNullException(nameof(cacheProvider));
+            _logger = services.AdminLogger ?? throw new ArgumentNullException(nameof(services.AdminLogger));
+            _cacheProvider = services.CacheProvider ?? throw new ArgumentNullException(nameof(services.CacheProvider));
             _shouldConsolidateCollections = settings.ShouldConsolidateCollections;
         }
 

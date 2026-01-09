@@ -1,5 +1,6 @@
 ﻿using LagoVista.AI.Models;
 using LagoVista.CloudStorage.DocumentDB;
+using LagoVista.CloudStorage.Interfaces;
 using LagoVista.Core.Exceptions;
 using LagoVista.Core.Interfaces;
 using LagoVista.Core.Models.UIMetaData;
@@ -17,10 +18,10 @@ namespace LagoVista.AI.CloudRepos
 
         private readonly ICacheProvider _cacheProvider;
 
-        public AgentToolBoxRepo(IMLRepoSettings settings, IAdminLogger logger, ICacheProvider cacheProvider) :
-            base(settings.MLDocDbStorage.Uri, settings.MLDocDbStorage.AccessKey, settings.MLDocDbStorage.ResourceName, logger, cacheProvider)
+        public AgentToolBoxRepo(IMLRepoSettings settings, IDocumentCloudCachedServices services) :
+            base(settings.MLDocDbStorage.Uri, settings.MLDocDbStorage.AccessKey, settings.MLDocDbStorage.ResourceName, services)
         {
-            _cacheProvider = cacheProvider;
+            _cacheProvider = services.CacheProvider;
             _shouldConsolidateCollections = settings.ShouldConsolidateCollections;
         }
 

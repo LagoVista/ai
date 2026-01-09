@@ -26,25 +26,16 @@ namespace LagoVista.AI.ACP.Commands
     {
         private const int TopK = 10;
 
-        private readonly LagoVista.AI.Rag.IRagIndexSearcher _indexSearcher;
-        private readonly LagoVista.AI.Rag.IRagPayloadHydrator _payloadHydrator;
-        private readonly LagoVista.AI.Rag.IRagRegisterWriter _registerWriter;
         private readonly IEmbedder _embedder;
+        private readonly IRagContextBuilder _ragContextBuilder;
 
         /// <summary>
         /// Placeholder until wired to configuration.
         /// </summary>
         public string CollectionName { get; set; } = "TODO_DDR_COLLECTION";
 
-        public AcpSearchDdrsCommand(
-            LagoVista.AI.Rag.IRagIndexSearcher indexSearcher,
-            LagoVista.AI.Rag.IRagPayloadHydrator payloadHydrator,
-            LagoVista.AI.Rag.IRagRegisterWriter registerWriter,
-            IEmbedder embedder)
+        public AcpSearchDdrsCommand(IEmbedder embedder)
         {
-            _indexSearcher = indexSearcher ?? throw new ArgumentNullException(nameof(indexSearcher));
-            _payloadHydrator = payloadHydrator ?? throw new ArgumentNullException(nameof(payloadHydrator));
-            _registerWriter = registerWriter ?? throw new ArgumentNullException(nameof(registerWriter));
             _embedder = embedder ?? throw new ArgumentNullException(nameof(embedder));
         }
 
@@ -61,8 +52,7 @@ namespace LagoVista.AI.ACP.Commands
             object ragScope = null;
             try
             {
-                dynamic ctx = context;
-                ragScope = ctx?.Request?.RagScope;
+                ragScope = context.Envelope.RagScope;
             }
             catch
             {
@@ -71,34 +61,9 @@ namespace LagoVista.AI.ACP.Commands
 
             var embedResult = await _embedder.EmbedAsync(topic);
             if (embedResult == null || embedResult.Result == null || embedResult.Result.Vector == null)
-                return InvokeResult<IAgentPipelineContext>.FromError("Failed to embed query text.");
+                return InvokeResult<IAgentPipelineContext>.FromError("Failed to embedfs query text.");
 
-            var scoredPoints = await _indexSearcher.SearchAsync(CollectionName, embedResult.Result.Vector, TopK, ragScope);
-
-            // Extract payload dictionaries from scored points.
-            var payloads = new List<Dictionary<string, object>>();
-            foreach (var sp in scoredPoints ?? Enumerable.Empty<object>())
-            {
-                if (sp == null) continue;
-                try
-                {
-                    dynamic d = sp;
-                    Dictionary<string, object> payload = d.Payload;
-                    if (payload != null)
-                        payloads.Add(payload);
-                }
-                catch
-                {
-                    // ignore malformed entries
-                }
-            }
-
-            var hydrated = await _payloadHydrator.HydrateAsync(payloads);
-
-            _registerWriter.WriteToRagRegister(context, hydrated);
-
-            // Non-terminal: allow pipeline to continue to model.
-            return InvokeResult<IAgentPipelineContext>.Create(context);
+            return await _ragContextBuilder.BuildContextSectionAsync(context, topic);
         }
     }
 }

@@ -16,8 +16,7 @@ namespace LagoVista.AI.Interfaces
         /// vector database, applies the provided RAG scope filters, and returns a single
         /// AGN-002 formatted [CONTEXT] block as the string payload.
         /// </summary>
-        /// <param name="instructions">Instructions / query text to embed and search on.</param>
-        /// <param name="ragScopeFilters">Key/value filters applied to the vector search payload.</param>
-        Task<InvokeResult<string>> BuildContextSectionAsync(AgentContext agentContext, string instructions, RagScope scopeFilter);
+        /// <param name="pipelineContext">Standard Pipeline Context</param>
+        Task<InvokeResult<IAgentPipelineContext>> BuildContextSectionAsync(IAgentPipelineContext pipelineContext, string query);
     }
 }

@@ -32,11 +32,7 @@ namespace LagoVista.AI.Services.Qdrant
         /// <param name="embedder">Embedder with an EmbedAsync(string, int) method that returns a vector result.</param>
         /// <param name="qdrantClient">Qdrant client abstraction.</param>
         /// <param name="contentRepo">Repository used to resolve raw text content for blobs/paths.</param>
-        public QdrantRagContextBuilder(
-            IEmbedder embedder,
-            IQdrantClient qdrantClient,
-            ILLMContentRepo contentRepo,
-            IAdminLogger adminLogger)
+        public QdrantRagContextBuilder(IEmbedder embedder, IQdrantClient qdrantClient, ILLMContentRepo contentRepo, IAdminLogger adminLogger)
         {
             _embedder = embedder ?? throw new ArgumentNullException(nameof(embedder));
             _qdrantClient = qdrantClient ?? throw new ArgumentNullException(nameof(qdrantClient));
@@ -46,26 +42,26 @@ namespace LagoVista.AI.Services.Qdrant
         }
 
         /// <inheritdoc />
-        public async Task<InvokeResult<string>> BuildContextSectionAsync(AgentContext agentContext,
-            string instructions,
-            RagScope filter)
+        public async Task<InvokeResult<IAgentPipelineContext>> BuildContextSectionAsync(IAgentPipelineContext piplineContext, string query)
         {
-            if (string.IsNullOrWhiteSpace(instructions))
+            if (null == piplineContext) throw new ArgumentNullException(nameof(piplineContext));
+
+            if(String.IsNullOrEmpty(query))
             {
-                return InvokeResult<string>.FromError("Instructions are required.");
+                return InvokeResult<IAgentPipelineContext>.FromError("Query is required.");
             }
 
             // 1) Embed the instructions
-            var embedResult = await _embedder.EmbedAsync(instructions, -1).ConfigureAwait(false);
+            var embedResult = await _embedder.EmbedAsync(query, -1);
             if (!embedResult.Successful)
             {
-                return InvokeResult<string>.FromError(embedResult.ErrorMessage);
+                return InvokeResult<IAgentPipelineContext>.FromError(embedResult.ErrorMessage);
             }
 
             var vector = embedResult.Result.Vector as float[];
             if (vector == null || vector.Length == 0)
             {
-                return InvokeResult<string>.FromError("Embedding vector was empty.");
+                return InvokeResult<IAgentPipelineContext>.FromError("Embedding vector was empty.");
             }
 
             // 3) Retrieve candidates from Qdrant
@@ -74,11 +70,11 @@ namespace LagoVista.AI.Services.Qdrant
                 Vector = vector,
                 Limit = Math.Clamp(_topK * 3, 12, 50),
                 WithPayload = true,
-                Filter = filter
+                Filter =piplineContext.Envelope.RagScope
             };
 
             var hits = await _qdrantClient.SearchAsync(
-                agentContext.VectorDatabaseCollectionName,
+                piplineContext.AgentContext.VectorDatabaseCollectionName,
                 searchRequest).ConfigureAwait(false);
 
             _adminLogger.Trace($"[QdrantRagContextBuilder__BuildContextSectionAsync] Query Completed, found {hits.Count} results.");
@@ -86,21 +82,21 @@ namespace LagoVista.AI.Services.Qdrant
             if (hits == null || hits.Count == 0)
             {
                 // Return an empty but well-formed context block
-                return InvokeResult<string>.Create("[CONTEXT]\r\n\r\n");
+                return InvokeResult<IAgentPipelineContext>.Create(piplineContext);
             }
 
             // 4) Select a diverse subset
             var selected = SelectDiverse(hits, _topK);
             if (selected.Count == 0)
             {
-                return InvokeResult<string>.Create("[CONTEXT]\r\n\r\n");
+                return InvokeResult<IAgentPipelineContext>.Create(piplineContext);
             }
 
             // 5) Build the AGN-002 compliant context block
-            var contextBlock = await BuildContextBlockAsync(agentContext, selected).ConfigureAwait(false);
+            var contextBlock = await BuildContextBlockAsync(piplineContext.AgentContext, selected).ConfigureAwait(false);
 
             //TODO: Need to be smarter about doing our RAG query.
-            return InvokeResult<string>.Create(string.Empty);
+            return InvokeResult<IAgentPipelineContext>.Create(piplineContext);
         }
 
         /// <summary>
