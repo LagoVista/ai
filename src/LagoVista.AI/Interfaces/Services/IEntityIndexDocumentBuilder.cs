@@ -6,6 +6,6 @@ namespace LagoVista.AI.Interfaces.Services
 {
     public interface IEntityIndexDocumentBuilder
     {
-        Task<EntityIndexDocument> BuildAsync(EntityBase entity);
+        Task<EntityIndexDocument> BuildAsync(IEntityBase entity);
     }
 }

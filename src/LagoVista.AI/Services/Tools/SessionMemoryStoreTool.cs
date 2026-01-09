@@ -143,19 +143,25 @@ namespace LagoVista.AI.Services.Tools
                     Vector = vector.Result.Vector,
                     Payload = new RagVectorPayload()
                     {
-                        DocId = note.Id,
-                        OrgNamespace = context.Envelope.Org.Id,
-                        Repo = "n/a",
-                        RepoBranch = "n/a",
-                        CommitSha = "n/a",
-                        Title = note.Title,
-                        SectionKey = "MemoryNote",
-                        EmbeddingModel = vector.Result.EmbeddingModel,
-                        BusinessDomainKey = "General",
-                        ContentTypeId = RagContentType.Spec,
-                        Subtype = "memory_note",
-                        SubtypeFlavor = "Default",
-                        Language = "en-US",
+                        Meta = new RagVectorPayloadMeta()
+                        {
+                            DocId = note.Id,
+                            OrgNamespace = context.Envelope.Org.Id,
+                            Title = note.Title,
+                            SectionKey = "MemoryNote",
+                            EmbeddingModel = vector.Result.EmbeddingModel,
+                            BusinessDomainKey = "General",
+                            ContentTypeId = RagContentType.Spec,
+                            Subtype = "memory_note",
+                            SubtypeFlavor = "Default",
+                            Language = "en-US",
+                        },
+                        Extra = new RagVectorPayloadExtra()
+                        {
+                            Repo = "n/a",
+                            RepoBranch = "n/a",
+                            CommitSha = "n/a",
+                        }
                     }
                 };
 

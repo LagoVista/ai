@@ -197,7 +197,7 @@ No explanations outside the JSON.
                 : lensInstructions;
         }
 
-        public async Task<EntityIndexDocument> BuildAsync(EntityBase entity)
+        public async Task<EntityIndexDocument> BuildAsync(IEntityBase entity)
         {
             if (entity == null) throw new ArgumentNullException(nameof(entity));
 
@@ -217,7 +217,7 @@ No explanations outside the JSON.
             };
         }
 
-        private static EntityIndexMeta ExtractMeta(EntityBase e) => new EntityIndexMeta
+        private static EntityIndexMeta ExtractMeta(IEntityBase e) => new EntityIndexMeta
         {
             Id = e.Id,
             DatabaseName = e.DatabaseName,
@@ -232,7 +232,6 @@ No explanations outside the JSON.
             Category = e.Category,
             Description = e.Description,
 
-            IsDeleted = e.IsDeleted,
             IsDeprecated = e.IsDeprecated,
             IsDraft = e.IsDraft,
 
@@ -247,7 +246,7 @@ No explanations outside the JSON.
             RatingsCount = e.RatingsCount
         };
 
-        private static JObject ExtractDomainPayload(EntityBase entity)
+        private static JObject ExtractDomainPayload(IEntityBase entity)
         {
             var json = JsonConvert.SerializeObject(entity, Formatting.None,
                 new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });

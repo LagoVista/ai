@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace LagoVista.AI.CloudRepos
 {
-    public class AgentContextRepo : DocumentDBRepoBase<AgentContext>, IAgentConextRepo
+    public class AgentContextRepo : DocumentDBRepoBase<AgentContext>, IAgentContextRepo
     {
         private readonly bool _shouldConsolidateCollections;
 

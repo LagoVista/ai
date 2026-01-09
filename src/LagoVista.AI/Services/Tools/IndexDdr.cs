@@ -116,19 +116,26 @@ Return a small JSON result indicating success and any indexing details available
                     Vector = vector.Result.Vector,
                     Payload = new RagVectorPayload()
                     {
-                        DocId = ddr.Id,
-                        OrgNamespace = ctx.DocumentIdentity.OrgNamespace,
-                        Repo = ctx.GitRepoInfo.RemoteUrl,
-                        RepoBranch = ctx.GitRepoInfo.BranchRef,
-                        CommitSha = "n/a",
-                        Title = $"{ddr.DdrIdentifier} - {ddr.Name}",
-                        SectionKey = "RagIndexCard",
-                        EmbeddingModel = vector.Result.EmbeddingModel,
-                        BusinessDomainKey = "General",
-                        ContentTypeId = RagContentType.Spec,
-                        Subtype = "ddr",
-                        SubtypeFlavor = "Default",
-                        Language = "en-US",
+                        Meta = new RagVectorPayloadMeta()
+                        {
+                            DocId = ddr.Id,
+                            OrgNamespace = ctx.DocumentIdentity.OrgNamespace,
+                            Title = $"{ddr.DdrIdentifier} - {ddr.Name}",
+                            SectionKey = "RagIndexCard",
+                            EmbeddingModel = vector.Result.EmbeddingModel,
+                            BusinessDomainKey = "General",
+                            ContentTypeId = RagContentType.Spec,
+                            Subtype = "ddr",
+                            SubtypeFlavor = "Default",
+                            Language = "en-US",
+
+                        },
+                        Extra = new RagVectorPayloadExtra()
+                        {
+                            Repo = ctx.GitRepoInfo.RemoteUrl,
+                            RepoBranch = ctx.GitRepoInfo.BranchRef,
+                            CommitSha = "n/a",
+                        }
                     }
                 };
                 var payload = new IndexDdrResult
@@ -136,11 +143,11 @@ Return a small JSON result indicating success and any indexing details available
                     Success = true,
                     Identifier = args.Identifier.Trim(),
                     PointId = point.PointId,
-                    DocId = point.Payload.DocId,
+                    DocId = point.Payload.Meta.DocId,
                     ChunkCount = 1,
                 };
 
-                await _qdrantClient.DeleteByDocIdAsync(context.AgentContext.VectorDatabaseCollectionName, point.Payload.DocId);
+                await _qdrantClient.DeleteByDocIdAsync(context.AgentContext.VectorDatabaseCollectionName, point.Payload.Meta.DocId);
                 await _qdrantClient.UpsertAsync(context.AgentContext.VectorDatabaseCollectionName, new[] { point }, cancellationToken);
                 return InvokeResult<string>.Create(JsonConvert.SerializeObject(payload));
             }

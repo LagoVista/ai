@@ -9,6 +9,7 @@ using LagoVista.Core.AI.Models;
 using LagoVista.Core.Utils.Types;
 using LagoVista.Core.Utils.Types.Nuviot.RagIndexing;
 using LagoVista.IoT.Logging.Loggers;
+using log4net.Util;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -32,6 +33,10 @@ namespace LagoVista.AI.Services.Qdrant
         public const int VECTOR_SIZE = 3072;
         public const string VECTOR_DISTANCE = "Cosine";
 
+        private readonly object _initLock = new object();
+        private Task _initTask;
+
+
         public QdrantClient(IQdrantSettings settings, IAdminLogger adminLogger)
         {
             _http = new HttpClient { BaseAddress = new Uri(settings.QdrantEndpoint) };
@@ -47,22 +52,147 @@ namespace LagoVista.AI.Services.Qdrant
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
         }
 
-        public async Task EnsureCollectionAsync(string name)
-        {
-            var exists = await _http.GetAsync($"/collections/{name}");
-            if (exists.IsSuccessStatusCode) return;
 
+        private readonly Dictionary<string, Task> _collectionInitTasks =
+            new Dictionary<string, Task>(StringComparer.OrdinalIgnoreCase);
+
+        public Task EnsureInitializedAsync(string collectionName, CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(collectionName))
+                throw new ArgumentException("collectionName is required.", nameof(collectionName));
+
+            lock (_initLock)
+            {
+                if (_collectionInitTasks.TryGetValue(collectionName, out var existing))
+                    return existing;
+
+                var task = EnsureCollectionAndIndexesAsync(collectionName, ct);
+                _collectionInitTasks[collectionName] = task;
+                return task;
+            }
+        }
+
+        private async Task EnsureCollectionAndIndexesAsync(string name, CancellationToken ct)
+        {
+            await EnsureCollectionExistsAsync(name, ct).ConfigureAwait(false);
+            await EnsurePayloadIndexesAsync(name, ct).ConfigureAwait(false);
+        }
+
+        private Task EnsureReadyAsync(string collection, CancellationToken ct)
+            => EnsureInitializedAsync(collection, ct);
+
+        private async Task EnsurePayloadIndexesAsync(string collectionName, CancellationToken ct)
+        {
+
+            var indexes = RagVectorPayload.Indexes;
+            // Create field indexes one-by-one; tolerate "already exists" race.
+            foreach (var spec in indexes)
+            {
+                await EnsurePayloadIndexAsync(collectionName, spec, ct).ConfigureAwait(false);
+            }
+        }
+
+        private static object BuildQdrantFieldSchema(QdrantPayloadIndexKind kind)
+        {
+            // Qdrant REST expects "field_schema": { "type": "keyword" | "integer" | ... }
+            // Keep this mapping tight and explicit.
+            switch (kind)
+            {
+                case QdrantPayloadIndexKind.Keyword:
+                    return new { type = "keyword" };
+
+                case QdrantPayloadIndexKind.Integer:
+                    return new { type = "integer" };
+
+                case QdrantPayloadIndexKind.Boolean:
+                    return new { type = "bool" };
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unsupported payload index kind.");
+            }
+        }
+
+        private async Task EnsurePayloadIndexAsync(string collectionName, QdrantPayloadIndexSpec spec, CancellationToken ct)
+        {
+            if (string.IsNullOrWhiteSpace(collectionName))
+                throw new ArgumentException("collectionName is required.", nameof(collectionName));
+            if (spec == null)
+                throw new ArgumentNullException(nameof(spec));
+            if (string.IsNullOrWhiteSpace(spec.Path))
+                throw new ArgumentException("spec.Path is required.", nameof(spec));
+
+            // REST: PUT /collections/{collection_name}/index
+            // Body: { field_name, field_schema }
+            var url = $"/collections/{collectionName}/index";
+
+            var requestBody = new
+            {
+                field_name = spec.Path,
+                field_schema = BuildQdrantFieldSchema(spec.Kind)
+            };
+
+            using (var resp = await _http.PutAsJsonAsync(url, requestBody, ct).ConfigureAwait(false))
+            {
+                if (resp.IsSuccessStatusCode) return;
+
+                var body = await SafeReadAsync(resp).ConfigureAwait(false);
+
+                // Idempotency: if another process already created it, accept.
+                if (resp.StatusCode == HttpStatusCode.Conflict ||
+                    body.IndexOf("already exists", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return;
+                }
+
+                throw new QdrantHttpException(
+                    $"Qdrant create payload index failed: '{spec.Path}' in '{collectionName}'",
+                    resp.StatusCode,
+                    body);
+            }
+        }
+
+        private async Task EnsureCollectionExistsAsync(string name, CancellationToken ct)
+        {
+            // 1) Fast path: GET collection
+            using (var exists = await _http.GetAsync($"/collections/{name}", ct).ConfigureAwait(false))
+            {
+                if (exists.IsSuccessStatusCode) return;
+
+                if (exists.StatusCode != HttpStatusCode.NotFound)
+                {
+                    var body = await SafeReadAsync(exists).ConfigureAwait(false);
+                    throw new QdrantHttpException($"Qdrant GET collection failed for '{name}'", exists.StatusCode, body);
+                }
+            }
+
+            // 2) Create on 404; tolerate race if another process created it first
             var req = new
             {
                 vectors = new { size = VECTOR_SIZE, distance = VECTOR_DISTANCE }
             };
-            var resp = await _http.PutAsJsonAsync($"/collections/{name}", req);
-            resp.EnsureSuccessStatusCode();
+
+            using (var resp = await _http.PutAsJsonAsync($"/collections/{name}", req, ct).ConfigureAwait(false))
+            {
+                if (resp.IsSuccessStatusCode) return;
+
+                // Qdrant may respond with conflict/bad request depending on version/config;
+                // treat "already exists" as success.
+                var body = await SafeReadAsync(resp).ConfigureAwait(false);
+
+                if (resp.StatusCode == HttpStatusCode.Conflict ||
+                    body.IndexOf("already exists", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return;
+                }
+
+                throw new QdrantHttpException($"Qdrant create collection failed for '{name}'", resp.StatusCode, body);
+            }
         }
 
         public async Task UpsertAsync(string collection, IEnumerable<IRagPoint> points, CancellationToken ct)
         {
             var sw = Stopwatch.StartNew();
+            await EnsureReadyAsync(collection, CancellationToken.None);
             var req = new { points = points.Select(p => new { id = p.PointId, vector = p.Vector, payload = p.Payload }) };
             var resp = await _http.PutAsJsonAsync($"/collections/{collection}/points?wait=true", req, ct);
             if (!resp.IsSuccessStatusCode)
@@ -78,9 +208,10 @@ namespace LagoVista.AI.Services.Qdrant
 
         public async Task<List<QdrantScoredPoint>> SearchAsync(string collection, QdrantSearchRequest req)
         {
-            _adminLogger.Trace($"[QdrantClient__SearchAsync] Search started with collection {collection}");
-
             var sw = Stopwatch.StartNew();
+            await EnsureReadyAsync(collection, CancellationToken.None);
+            _adminLogger.Trace($"{this.Tag()} Search started with collection {collection}");
+
             var resp = await _http.PostAsJsonAsync($"/collections/{collection}/points/search", req);
 
             if (resp.IsSuccessStatusCode)
@@ -89,7 +220,7 @@ namespace LagoVista.AI.Services.Qdrant
                 resp.EnsureSuccessStatusCode();
                 var json = await resp.Content.ReadAsAsync<QdrantSearchResponse>();
 
-                _adminLogger.Trace($"[QdrantClient__SearchAsync] Search completed in {sw.Elapsed.TotalMilliseconds}ms, found {json.Result.Count} results.");
+                _adminLogger.Trace($"{this.Tag()} Search completed in {sw.Elapsed.TotalMilliseconds}ms, found {json.Result.Count} results.");
 
                 return json!.Result ?? new List<QdrantScoredPoint>();
             }
@@ -102,24 +233,40 @@ namespace LagoVista.AI.Services.Qdrant
 
         public async Task DeleteByIdsAsync(string collection, IEnumerable<string> ids)
         {
-            var idArray = ids.ToArray();
+            await EnsureReadyAsync(collection, CancellationToken.None);
+
+            if (string.IsNullOrWhiteSpace(collection))
+                throw new ArgumentException("collection is required.", nameof(collection));
+            if (ids == null)
+                throw new ArgumentNullException(nameof(ids));
+
+            var idArray = ids
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .Select(id => id.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+
             if (idArray.Length == 0) return;
 
-            var payload = new
+            var url = $"/collections/{collection}/points/delete";
+
+            // Qdrant accepts: { "points": [ "id1", "id2", ... ] }
+            var body = new { points = idArray };
+
+            using (var resp = await _http.PostAsJsonAsync(url, body).ConfigureAwait(false))
             {
-                points = idArray.Select(id => new { id })
-            };
+                if (resp.IsSuccessStatusCode) return;
 
-            var resp = await _http.PostAsJsonAsync(
-                $"collections/{collection}/points/delete",
-                new { points = idArray });
-
-            resp.EnsureSuccessStatusCode();
+                var payload = await SafeReadAsync(resp).ConfigureAwait(false);
+                throw new QdrantHttpException("Qdrant delete-by-ids failed", resp.StatusCode, payload);
+            }
         }
 
 
-        public Task DeleteByDocIdAsync(string collection, string docId, CancellationToken ct = default)
+        public async Task DeleteByDocIdAsync(string collection, string docId, CancellationToken ct = default)
         {
+            await EnsureReadyAsync(collection, CancellationToken.None);
+
             if (string.IsNullOrWhiteSpace(docId))
                 throw new ArgumentException("DocId cannot be null or empty.", nameof(docId));
 
@@ -129,7 +276,7 @@ namespace LagoVista.AI.Services.Qdrant
                 {
                     new QdrantCondition
                     {
-                        Key = "DocId",
+                        Key = "meta.DocId",
                         Match = new QdrantMatch
                         {
                             Value = docId.Trim()
@@ -138,12 +285,14 @@ namespace LagoVista.AI.Services.Qdrant
                 }
             };
 
-            return DeleteByFilterAsync(collection, filter, ct);
+            await DeleteByFilterAsync(collection, filter, ct);
         }
 
 
-        public Task DeleteByDocIdsAsync(string collection, IEnumerable<string> docIds, CancellationToken ct = default)
+        public async Task DeleteByDocIdsAsync(string collection, IEnumerable<string> docIds, CancellationToken ct = default)
         {
+            await EnsureReadyAsync(collection, CancellationToken.None);
+
             if (docIds == null)
                 throw new ArgumentNullException(nameof(docIds));
 
@@ -154,7 +303,7 @@ namespace LagoVista.AI.Services.Qdrant
                 .ToArray();
 
             if (ids.Length == 0)
-                return Task.CompletedTask;
+                return;
 
             var filter = new QdrantFilter
             {
@@ -162,7 +311,7 @@ namespace LagoVista.AI.Services.Qdrant
                 {
                     new QdrantCondition
                     {
-                        Key = "DocId",
+                        Key = "meta.DocId",
                         Match = new QdrantMatch
                         {
                             Value = ids
@@ -171,7 +320,7 @@ namespace LagoVista.AI.Services.Qdrant
                 }
             };
 
-            return DeleteByFilterAsync(collection, filter, ct);
+            await DeleteByFilterAsync(collection, filter, ct);
         }
 
 
@@ -180,6 +329,8 @@ namespace LagoVista.AI.Services.Qdrant
 		/// </summary>
 		public async Task DeleteByFilterAsync(string collection, QdrantFilter filter, CancellationToken ct = default)
         {
+            await EnsureReadyAsync(collection, CancellationToken.None);
+
             var url = $"collections/{collection}/points/delete";
             var payload = new { filter };
             var json = JsonConvert.SerializeObject(payload);
@@ -203,13 +354,11 @@ namespace LagoVista.AI.Services.Qdrant
         /// on 413, halves batch size and retries. Uses lightweight size estimation
         /// if maxPerBatch is not provided.
         /// </summary>
-        public async Task UpsertInBatchesAsync(
-            string collection,
-            IReadOnlyList<IRagPoint> points,
-            int vectorDims,
-            int? maxPerBatch = null,
-            CancellationToken ct = default)
+        public async Task UpsertInBatchesAsync(string collection, IReadOnlyList<IRagPoint> points, int vectorDims, int? maxPerBatch = null, CancellationToken ct = default)
         {
+
+            await EnsureReadyAsync(collection, CancellationToken.None);
+
             if (points == null || points.Count == 0) return;
 
 
@@ -244,51 +393,10 @@ namespace LagoVista.AI.Services.Qdrant
             }
         }
 
-        /// <summary>
-        /// Posts an upsert using gzip-compressed JSON body for smaller request payloads.
-        /// Compatible with .NET Standard 2.1 (Newtonsoft.Json version).
-        /// </summary>
-        private async Task UpsertJsonGzipAsync(string collection, List<RagPoint> batch, CancellationToken ct)
-        {
-            var url = $"collections/{collection}/points?wait=true";
-            var payload = new { points = batch };
-            var json = JsonConvert.SerializeObject(payload);
-
-            using (var content = new StringContent(json, Encoding.UTF8, "application/json"))
-            using (var gz = new GZipContent(content))
-            using (var req = new HttpRequestMessage(HttpMethod.Put, url) { Content = gz })
-            {
-                req.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue("gzip"));
-                using (var resp = await _http.SendAsync(req, ct).ConfigureAwait(false))
-                {
-                    if (!resp.IsSuccessStatusCode)
-                    {
-                        var body = await SafeReadAsync(resp).ConfigureAwait(false);
-                        throw new QdrantHttpException("Qdrant upsert failed", resp.StatusCode, body);
-                    }
-                }
-            }
-        }
-
         private static async Task<string> SafeReadAsync(HttpResponseMessage resp)
         {
             try { return await resp.Content.ReadAsStringAsync().ConfigureAwait(false); }
             catch { return string.Empty; }
-        }
-
-
-
-        private static object KvMatch(string key, object value)
-            => new { key, match = new { value } };
-
-        private static HttpRequestMessage BuildJsonPost(string url, object body, string apiKey)
-        {
-            var json = JsonConvert.SerializeObject(body);
-            var req = new HttpRequestMessage(HttpMethod.Post, url);
-            req.Content = new StringContent(json, Encoding.UTF8, "application/json");
-            if (!string.IsNullOrWhiteSpace(apiKey))
-                req.Headers.TryAddWithoutValidation("api-key", apiKey);
-            return req;
         }
     }
 

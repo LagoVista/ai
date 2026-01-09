@@ -119,13 +119,13 @@ namespace LagoVista.AI.Services.Qdrant
 
                 var payload = RagVectorPayload.FromDictionary(h.Payload);
 
-                var path = !string.IsNullOrWhiteSpace(payload.Path)
-                    ? payload.Path
-                    : !string.IsNullOrWhiteSpace(payload.FullDocumentBlobUri)
-                        ? payload.FullDocumentBlobUri
+                var path = !string.IsNullOrWhiteSpace(payload.Extra.Path)
+                    ? payload.Extra.Path
+                    : !string.IsNullOrWhiteSpace(payload.Extra.FullDocumentBlobUri)
+                        ? payload.Extra.FullDocumentBlobUri
                         : string.Empty;
 
-                var sym = payload.Symbol ?? string.Empty;
+                var sym = payload.Extra.Symbol ?? string.Empty;
                 var key = path + "::" + sym;
 
                 if (!byKey.ContainsKey(key))
@@ -169,31 +169,31 @@ namespace LagoVista.AI.Services.Qdrant
 
                 var payload = RagVectorPayload.FromDictionary(hit.Payload);
 
-                _adminLogger.Trace($"[QdrantRagContextBuilder__BuildContextBlockAsync] Processing payload {payload.SemanticId}, path {payload.SourceSliceBlobUri}.");
+                _adminLogger.Trace($"[QdrantRagContextBuilder__BuildContextBlockAsync] Processing payload {payload.Meta.SemanticId}, path {payload.Extra.SourceSliceBlobUri}.");
 
-                var path = !string.IsNullOrWhiteSpace(payload.Path)
-                    ? payload.Path
-                    : !string.IsNullOrWhiteSpace(payload.FullDocumentBlobUri)
-                        ? payload.FullDocumentBlobUri
+                var path = !string.IsNullOrWhiteSpace(payload.Extra.Path)
+                    ? payload.Extra.Path
+                    : !string.IsNullOrWhiteSpace(payload.Extra.FullDocumentBlobUri)
+                        ? payload.Extra.FullDocumentBlobUri
                         : string.Empty;
 
-                var startLine = payload.LineStart ?? payload.StartLine ?? 1;
-                var endLine = payload.LineEnd ?? payload.EndLine ?? startLine;
+                var startLine = payload.Extra.LineStart ?? payload.Extra.StartLine ?? 1;
+                var endLine = payload.Extra.LineEnd ?? payload.Extra.EndLine ?? startLine;
                 if (endLine < startLine)
                 {
                     endLine = startLine;
                 }
 
-                var language = !string.IsNullOrWhiteSpace(payload.Language)
-                    ? payload.Language
+                var language = !string.IsNullOrWhiteSpace(payload.Meta.Language)
+                    ? payload.Meta.Language
                     : InferLanguageFromPath(path);
 
                 // Resolve blob/file name: prefer BlobUri, then FullDocumentBlobUri, then Path
-                var blobName = !string.IsNullOrWhiteSpace(payload.SourceSliceBlobUri)
-                    ? payload.SourceSliceBlobUri
-                    : !string.IsNullOrWhiteSpace(payload.FullDocumentBlobUri)
-                        ? payload.FullDocumentBlobUri
-                        : payload.Path;
+                var blobName = !string.IsNullOrWhiteSpace(payload.Extra.SourceSliceBlobUri)
+                    ? payload.Extra.SourceSliceBlobUri
+                    : !string.IsNullOrWhiteSpace(payload.Extra.FullDocumentBlobUri)
+                        ? payload.Extra.FullDocumentBlobUri
+                        : payload.Extra.Path;
 
                 if (string.IsNullOrWhiteSpace(blobName))
                 {
@@ -210,7 +210,7 @@ namespace LagoVista.AI.Services.Qdrant
 
                 // AGN-002 chunk block
                 sb.AppendLine("=== CHUNK " + chunkIndex + " ===");
-                sb.AppendLine("Id: " + (string.IsNullOrWhiteSpace(payload.SemanticId) ? hit.Id : payload.SemanticId));
+                sb.AppendLine("Id: " + (string.IsNullOrWhiteSpace(payload.Meta.SemanticId) ? hit.Id : payload.Meta.SemanticId));
                 sb.AppendLine("Path: " + (path ?? string.Empty));
                 sb.AppendLine("Lines: " + startLine + "-" + endLine);
                 sb.AppendLine("Language: " + language);

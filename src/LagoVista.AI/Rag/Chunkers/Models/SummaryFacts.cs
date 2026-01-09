@@ -102,33 +102,39 @@ namespace LagoVista.AI.Rag.Chunkers.Models
             {
                 var payload = new RagVectorPayload()
                 {
-                    DocId = this.DocId,
-                    OrgNamespace = this.OrgNamespace,
-                    ProjectId = this.ProjectId,
-                    Repo = this.Repo,
-                    RepoBranch = this.Branch,
-                    CommitSha = this.CommitSha,
-                    SectionKey = section.SectionKey,
-                    EmbeddingModel =  section.EmbeddingModel,
-                    BusinessDomainKey = section.DomainKey,
-                    ContentTypeId = ContentTypeId,
-                    Subtype = this.Subtype,
-                    SubtypeFlavor = this.SubtypeFlavor,
-                    Language = "en-US",
+                    Meta =  new RagVectorPayloadMeta()
+                    {
+                        DocId = this.DocId,
+                        OrgNamespace = this.OrgNamespace,
+                        ProjectId = this.ProjectId,
+                        SectionKey = section.SectionKey,
+                        EmbeddingModel = section.EmbeddingModel,
+                        BusinessDomainKey = section.DomainKey,
+                        ContentTypeId = ContentTypeId,
+                        Subtype = this.Subtype,
+                        SubtypeFlavor = this.SubtypeFlavor,
+                        Language = "en-US",
+                    },
+                    Extra = new RagVectorPayloadExtra()
+                    {
+                        Repo = this.Repo,
+                        RepoBranch = this.Branch,
+                        CommitSha = this.CommitSha,
+                    }
                 };
 
-                payload.Title = $"{section.SymbolType}: {section.Symbol} - {section.SectionKey} (Chunk {section.PartIndex} of {section.PartTotal})";
-                payload.SemanticId = $"{this.OrgNamespace}:{this.ProjectId}:{this.RepoId}:{section.SymbolType}:{section.Symbol}:{section.SectionKey}:{section.PartIndex}".ToLower();
+                payload.Meta.Title = $"{section.SymbolType}: {section.Symbol} - {section.SectionKey} (Chunk {section.PartIndex} of {section.PartTotal})";
+                payload.Meta.SemanticId = $"{this.OrgNamespace}:{this.ProjectId}:{this.RepoId}:{section.SymbolType}:{section.Symbol}:{section.SectionKey}:{section.PartIndex}".ToLower();
 
-                if(dualColonRegEx.Match(payload.SemanticId).Success)
+                if(dualColonRegEx.Match(payload.Meta.SemanticId).Success)
                 {
                     throw new ArgumentNullException("Semantic ID should not have two :: in a row, that means a field is missing, code should encorce this.");
                 }
 
                 section.PopulateRagPayload(payload);
 
-                payload.FullDocumentBlobUri = this.BlobUri.ToLower();
-                payload.DescriptionBlobUri = $"{this.BlobUri}.{section.ModelClassName}/{section.SectionKey}.{section.PartIndex}".ToLower().Replace(" ", "_").ToLower();
+                payload.Extra.FullDocumentBlobUri = this.BlobUri.ToLower();
+                payload.Extra.DescriptionBlobUri = $"{this.BlobUri}.{section.ModelClassName}/{section.SectionKey}.{section.PartIndex}".ToLower().Replace(" ", "_").ToLower();
 
                 var result = PopulateAdditionalRagProperties(payload);
 
@@ -144,7 +150,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                 payloadResults.Add(InvokeResult<IRagPoint>.Create( point));
             }
 
-            var uniqueBlobIds = payloadResults.Select(pay => pay.Result.Payload.DescriptionBlobUri).Distinct();
+            var uniqueBlobIds = payloadResults.Select(pay => pay.Result.Payload.Extra.DescriptionBlobUri).Distinct();
             if(uniqueBlobIds.Count() != payloadResults.Count())
             {
                 throw new ArgumentNullException("Blob uris within a vector payload must be unique");

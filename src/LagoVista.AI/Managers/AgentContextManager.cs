@@ -19,10 +19,10 @@ namespace LagoVista.AI.Managers
 {
     public class AgentContextManager : ManagerBase, IAgentContextManager
     {
-        private readonly IAgentConextRepo _repo;
+        private readonly IAgentContextRepo _repo;
         private readonly ISecureStorage _secureStorage;
 
-        public AgentContextManager(IAgentConextRepo repo, ISecureStorage secureStorage, IAdminLogger logger, IAppConfig appConfig, IDependencyManager dependencyManager, ISecurity security)
+        public AgentContextManager(IAgentContextRepo repo, ISecureStorage secureStorage, IAdminLogger logger, IAppConfig appConfig, IDependencyManager dependencyManager, ISecurity security)
                   : base(logger, appConfig, dependencyManager, security)
         {
             _repo = repo ?? throw new NullReferenceException(nameof(repo));

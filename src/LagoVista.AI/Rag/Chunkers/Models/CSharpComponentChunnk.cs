@@ -91,34 +91,41 @@ namespace LagoVista.AI.Rag.Chunkers.Models
 
             var payload = new RagVectorPayload()
             {
-                DocId = fileContext.DocumentIdentity.DocId,
-                OrgNamespace = fileContext.DocumentIdentity.OrgNamespace,
-                ProjectId = fileContext.DocumentIdentity.ProjectId,
-                Repo = fileContext.GitRepoInfo.RemoteUrl,
-                RepoBranch = fileContext.GitRepoInfo.BranchRef,
-                Path = fileContext.RelativePath,
-                CommitSha = fileContext.GitRepoInfo.CommitSha,
-                SourceSystem = "GitHub",
-                Symbol = SymbolName,
-                SymbolType = SymbolKind,
-                SectionKey = SectionKey,
-                EmbeddingModel = EmbeddingModel,
-                PartIndex = PartIndex,
-                PartTotal = PartTotal,
-                CharStart = StartCharacter,
-                CharEnd = EndCharacter,
-                ContentTypeId = RagContentType.SourceCode,
-                Language = "en-US",
-                Subtype = "RawCode",
-                SysDomain = "Backend",
+                Meta = new RagVectorPayloadMeta()
+                {
+                    DocId = fileContext.DocumentIdentity.DocId,
+                    OrgNamespace = fileContext.DocumentIdentity.OrgNamespace,
+                    ProjectId = fileContext.DocumentIdentity.ProjectId,
+                    SourceSystem = "GitHub",
+                    SectionKey = SectionKey,
+                    EmbeddingModel = EmbeddingModel,
+                    PartIndex = PartIndex,
+                    PartTotal = PartTotal,
+                    ContentTypeId = RagContentType.SourceCode,
+                    Language = "en-US",
+                    Subtype = "RawCode",
+                    SysDomain = "Backend",
+
+                },
+                Extra = new RagVectorPayloadExtra()
+                {
+                    Repo = fileContext.GitRepoInfo.RemoteUrl,
+                    RepoBranch = fileContext.GitRepoInfo.BranchRef,
+                    Path = fileContext.RelativePath,
+                    CommitSha = fileContext.GitRepoInfo.CommitSha,
+                    CharStart = StartCharacter,
+                    CharEnd = EndCharacter,
+                    Symbol = SymbolName,
+                    SymbolType = SymbolKind,
+                }
             };
 
-            payload.FullDocumentBlobUri = fileContext.BlobUri;
-            payload.SourceSliceBlobUri = $"{fileContext.BlobUri}.{SymbolKind}.{SymbolName}.{PartIndex}";
+            payload.Extra.FullDocumentBlobUri = fileContext.BlobUri;
+            payload.Extra.SourceSliceBlobUri = $"{fileContext.BlobUri}.{SymbolKind}.{SymbolName}.{PartIndex}";
 
-            payload.Title = $"{SymbolKind}: {SymbolName} - {SectionKey} (Chunk {PartIndex} of {PartTotal})";
-            payload.SemanticId = $"{fileContext.DocumentIdentity.OrgNamespace}:{fileContext.DocumentIdentity.ProjectId}:{fileContext.DocumentIdentity.RepoId}:{SymbolKind}:{SymbolName}:{SectionKey}:{PartIndex}".ToLower();
-            if (dualColonRegEx.Match(payload.SemanticId).Success)
+            payload.Meta.Title = $"{SymbolKind}: {SymbolName} - {SectionKey} (Chunk {PartIndex} of {PartTotal})";
+            payload.Meta.SemanticId = $"{fileContext.DocumentIdentity.OrgNamespace}:{fileContext.DocumentIdentity.ProjectId}:{fileContext.DocumentIdentity.RepoId}:{SymbolKind}:{SymbolName}:{SectionKey}:{PartIndex}".ToLower();
+            if (dualColonRegEx.Match(payload.Meta.SemanticId).Success)
             {
                 throw new ArgumentNullException("Semantic ID should not have two :: in a row, that means a field is missing, code should encorce this.");
             }

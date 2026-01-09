@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace LagoVista.AI
 {
-    public interface IAgentConextRepo
+    public interface IAgentContextRepo
     {
         Task AddAgentContextAsync(AgentContext agentContext);
         Task UpdateAgentContextAsync(AgentContext agentContext);

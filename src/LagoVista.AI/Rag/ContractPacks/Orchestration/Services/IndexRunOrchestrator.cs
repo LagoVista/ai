@@ -108,8 +108,6 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
 
             int idx = 1;
 
-            await _qdrantClient.EnsureCollectionAsync(config.Qdrant.Collection);
-
             var sw = Stopwatch.StartNew();
             _adminLogger.Trace("[IndexRunOrchestrator_RunAsync] - Finding all CSharp Files - this could take a moment.");
             var allDiscoveredFiles = await _discoveryService.DiscoverAsync(config, "*.cs", cancellationToken);
@@ -213,16 +211,16 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
                             foreach (var result in fileProcessResult.Result.RagPoints)
                             {
                                 totalPartsToIndex++;
-                                if (String.IsNullOrEmpty(result.Payload.DocId))
+                                if (String.IsNullOrEmpty(result.Payload.Meta.DocId))
                                     throw new ArgumentNullException("DocId");
 
-                                _adminLogger.Trace($"[IndexRunOrchestrator__RunAsync] {result.Payload.SemanticId}");
+                                _adminLogger.Trace($"[IndexRunOrchestrator__RunAsync] {result.Payload.Meta.SemanticId}");
 
                                 var embedResult = await _embedder.EmbedAsync(System.Text.UTF8Encoding.UTF8.GetString(result.Contents));
                                 result.Vector = embedResult.Result.Vector;
-                                result.Payload.EmbeddingModel = embedResult.Result.EmbeddingModel;
+                                result.Payload.Meta.EmbeddingModel = embedResult.Result.EmbeddingModel;
 
-                                await _contentStorage.AddContentAsync(result.Payload.SourceSliceBlobUri, result.Contents);
+                                await _contentStorage.AddContentAsync(result.Payload.Extra.SourceSliceBlobUri, result.Contents);
                             }
 
                             await _qdrantClient.UpsertInBatchesAsync(config.Qdrant.Collection, fileProcessResult.Result.RagPoints, config.Qdrant.VectorSize);

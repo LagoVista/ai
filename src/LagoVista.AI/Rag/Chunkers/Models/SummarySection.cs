@@ -64,12 +64,12 @@ namespace LagoVista.AI.Rag.Chunkers.Models
 
         public InvokeResult PopulateRagPayload(RagVectorPayload payload)
         {
-            payload.Symbol = Symbol;
-            payload.SymbolType = SymbolType;
-            payload.SectionKey = SectionKey;
-            payload.PartIndex = PartIndex;
-            payload.PartTotal = PartTotal;
-            payload.EmbeddingModel = EmbeddingModel;
+            payload.Extra.Symbol = Symbol;
+            payload.Extra.SymbolType = SymbolType;
+            payload.Meta.SectionKey = SectionKey;
+            payload.Meta.PartIndex = PartIndex;
+            payload.Meta.PartTotal = PartTotal;
+            payload.Meta.EmbeddingModel = EmbeddingModel;
             return InvokeResult.Success;
         }
     }
