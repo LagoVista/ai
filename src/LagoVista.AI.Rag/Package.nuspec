@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>LagoVista.AI.rag</id>
-    <version>3.0.3158.1639</version>
+    <version>3.0.3159.1348</version>
     <authors>Software Logistics, LLC</authors>
     <owners>Software Logistics, LLC</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
@@ -12,12 +12,12 @@
     <copyright>Copyright Software Logistics - 2026</copyright>
     <tags>LagoVista HomeAutomation IoT AI Machine Learning</tags>
     <icon>LagoVistaIcon.png</icon>
-    <releaseNotes>Build Date: 1/8/2026 9:39:49 PM UTC</releaseNotes>
+    <releaseNotes>Build Date: 1/9/2026 6:48:59 PM UTC</releaseNotes>
     <repository url="https://www.github.com/lagovista" type="git" branch="master"></repository>
     <dependencies>
       <group targetFramework="net8.0">
         <dependency id="Microsoft.CodeAnalysis.CSharp" version="4.14.0" />
-        <dependency id="LagoVista.AI.Rag.Chunkers" version="3.0.3158.1639" />
+        <dependency id="LagoVista.AI.Rag.Chunkers" version="3.0.3159.1348" />
       </group>
     </dependencies>
   </metadata>

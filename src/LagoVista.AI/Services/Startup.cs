@@ -1,4 +1,5 @@
 ﻿using LagoVista.AI.Helpers;
+using LagoVista.AI.Indexing;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Services;
 using LagoVista.AI.Services.Hashing;
@@ -22,6 +23,8 @@ namespace LagoVista.AI.Services
             services.AddScoped<IAgentExecuteResponseBuilder, AgentExecuteResponseBuilder>();
             services.AddScoped<ILLMWorkflowNarrator, LlmWorkflowNarrator>();
             services.AddScoped<IPromptKnowledgeProvider, PromptKnowledgeProvider>();
+            services.AddScoped<IEntityIndexDocumentBuilder, EntityIndexDocumentBuilder>();
+
             Pipeline.Startup.ConfigureServices(services, adminLogger);
             Qdrant.Startup.ConfigureServices(services, adminLogger);
             ACP.Startup.ConfigureServices(services, adminLogger);
