@@ -9,6 +9,7 @@ using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Services;
 using LagoVista.AI.Models;
 using LagoVista.Core.Models;
+using LagoVista.Core.Validation;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -220,7 +221,7 @@ No explanations outside the JSON.
         }
 
 
-        public async Task<EntityIndexDocument> BuildAsync(IEntityBase entity)
+        public async Task<InvokeResult<EntityIndexDocument>> BuildAsync(IEntityBase entity)
         {
             if (entity == null) throw new ArgumentNullException(nameof(entity));
 
@@ -229,15 +230,20 @@ No explanations outside the JSON.
 
             var prompt = BuildPrompt(meta, domainPayload);
 
-            var raw = await _modelClient.ExecuteAsync("", prompt);
-            var lenses = ParseLenses(raw.Result);
-
-            return new EntityIndexDocument
+            var raw = await _modelClient.ExecuteAsync<EntityIndexLenses>(IndexLensInstructions, prompt);
+            if (raw.Successful)
             {
-                Meta = meta,
-                Lenses = lenses,
-                DomainPayload = domainPayload
-            };
+                var lenses = raw.Result;
+
+                return InvokeResult<EntityIndexDocument>.Create(new EntityIndexDocument
+                {
+                    Meta = meta,
+                    Lenses = lenses,
+                    DomainPayload = domainPayload
+                });
+            }
+
+            return InvokeResult<EntityIndexDocument>.FromInvokeResult(raw.ToInvokeResult());
         }
 
         private static EntityIndexMeta ExtractMeta(IEntityBase e) => new EntityIndexMeta
@@ -307,9 +313,7 @@ No explanations outside the JSON.
             var domainJson = domainPayload.ToString(Formatting.Indented);
 
             return
-$@"{IndexLensInstructions}
-
-EntityBaseHeader:
+$@"EntityBaseHeader:
 {headerJson}
 
 DomainPayload:

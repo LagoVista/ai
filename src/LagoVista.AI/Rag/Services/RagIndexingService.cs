@@ -9,6 +9,7 @@ using LagoVista.Core.Interfaces;
 using LagoVista.Core.Models;
 using LagoVista.Core.Models.UIMetaData;
 using LagoVista.Core.Utils.Types;
+using LagoVista.Core.Utils.Types.Nuviot.RagIndexing;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.UserAdmin.Interfaces.Repos.Orgs;
@@ -98,6 +99,7 @@ namespace LagoVista.AI.Rag.Services
                         point.Payload.Extra.HumanContentFileName = userFileName;
                         point.Payload.Extra.Path = entity.EntityType;
                         point.Payload.Meta.EmbeddingModel = agentContext.EmbeddingModel;
+                        point.Payload.Meta.OrgNamespace = org.Namespace;
 
                         if (String.IsNullOrEmpty(point.Payload.Extra.EditorUrl))
                             point.Payload.Extra.EditorUrl = entityDescription.EditUIUrl;
@@ -139,8 +141,31 @@ namespace LagoVista.AI.Rag.Services
                 {
                     _adminLogger.Trace($"{this.Tag()} Background task startd for indexing non-raggable entity {entity.Name} ({entity.EntityType})");
 
-                    var lens = await _documentBuilder.BuildAsync(entity);
+                    var lensResult = await _documentBuilder.BuildAsync(entity);
+                    if(!lensResult.Successful)
+                    {
+                        _adminLogger.AddError(this.Tag(), $"Failed to build document for entity {entity.Name} ({entity.EntityType}): {lensResult.ErrorMessage}");
+                        return;
+                    }
+
+                    var lens = lensResult.Result;
+
+                    if(string.IsNullOrEmpty(lens.Lenses.EmbedSnippet))
+                    {
+                        _adminLogger.AddError(this.Tag(), $"No content to embed for entity {entity.Name} ({entity.EntityType})");
+                        return;
+                    }
+
                     var vectors = await _embedder.EmbedAsync(lens.Lenses.EmbedSnippet);
+                    if(!vectors.Successful)
+                    {
+                        _adminLogger.AddError(this.Tag(), $"Failed to embed snippet {entity.Name} ({entity.EntityType}): {lensResult.ErrorMessage}", 
+                            lens.Lenses.EmbedSnippet.Length.ToString().ToKVP("len"), 
+                            lens.Lenses.EmbedSnippet.Replace("\r","\\r").Replace("\n","\\n").ToKVP("embedding"));
+                        return;
+                    }
+
+                    _adminLogger.Trace($"{this.Tag()} Created Embedding {entity.Name} ({entity.EntityType})");
 
                     var modelFileName = $"{entity.Id}.model.json";
                     var userFileName = $"{entity.Id}.user.json";
@@ -152,20 +177,10 @@ namespace LagoVista.AI.Rag.Services
                         await _llmContentRepo.AddTextContentAsync(agentContext, path: entity.EntityType, fileName: cleanUpFileName, content: lens.Lenses.UserDetail, contentType: "application/json");
 
                     var point = new RagPoint();
+                    point.Payload = RagVectorPayload.FromEntity(entity);
                     point.PointId = entity.Id.ToGuidString();
-                    point.Payload.Meta.DocId = entity.Id;
-                    point.Payload.Meta.Title = entity.Name;
-                    point.Payload.Extra.EditorUrl = entityDescription.EditUIUrl;
-                    point.Payload.Extra.PreviewUrl = entityDescription.PreviewUIUrl;
-                    point.Payload.Meta.SectionKey = "main";
-                    point.Payload.Meta.PartIndex = 1;
-                    point.Payload.Meta.PartTotal = 1;
-                    point.Payload.Meta.SemanticId = $"{entityDescription.DomainName}.{entityType.Name}.{entity.Id}";
-                    point.Payload.Meta.ContentTypeId = Core.Utils.Types.Nuviot.RagIndexing.RagContentType.DomainDocument;
-                    point.Payload.Meta.Subtype = entity.EntityType;
-                    point.Payload.Meta.ProjectId = "default";
-                    point.Payload.Meta.OrgNamespace = entity.OwnerOrganization.Id;
                     point.Payload.Extra.Path = entity.EntityType;
+                    point.Payload.Meta.OrgNamespace = org.Namespace;
                     point.Payload.Extra.ModelContentFileName = modelFileName;
                     point.Payload.Extra.HumanContentFileName = userFileName;
                     if (!String.IsNullOrEmpty(lens.Lenses.CleanupGuidance))
@@ -173,11 +188,15 @@ namespace LagoVista.AI.Rag.Services
 
                     point.Payload.Meta.HasIssues = !String.IsNullOrEmpty(lens.Lenses.CleanupGuidance);
                     point.Vector = vectors.Result.Vector;
+
                     point.Payload.Meta.EmbeddingModel = vectors.Result.EmbeddingModel;
+
+                    _adminLogger.Trace($"{this.Tag()} Populated Rag Point {entity.Name} ({entity.EntityType})");
 
                     var validationReslut = point.Payload.ValidateForIndex();
                     if (validationReslut.Successful)
                     {
+                        _adminLogger.Trace($"{this.Tag()} Successfl validation, adding point {entity.Name} ({entity.EntityType})");
                         await _vectorDbClient.DeleteByDocIdAsync(agentContext.VectorDatabaseCollectionName, point.Payload.Meta.DocId, CancellationToken.None);
                         await _vectorDbClient.UpsertAsync(agentContext.VectorDatabaseCollectionName, new List<IRagPoint>() { point }, CancellationToken.None);
                         _adminLogger.Trace($"{this.Tag()} Completed indexing non-raggable entity {entity.Name} ({entity.EntityType}) in {sw.Elapsed.TotalMilliseconds}ms (in background task)");

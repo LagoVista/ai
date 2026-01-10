@@ -140,7 +140,7 @@ namespace LagoVista.AI.Services
             var json = JsonConvert.SerializeObject(requestBody);
 
 
-            _logger.Trace($"[{nameof(HttpStructuredTextLlmService)}__{nameof(HttpStructuredTextLlmService.ExecuteAsync)})__Send]\r\n===>>\r\n{json}\r\n===>>\r\n");
+            _logger.Trace($"[JSON.LLMTextReqest]={json}");
 
             using var httpRequest = new HttpRequestMessage(HttpMethod.Post, "/v1/responses")
             {
@@ -169,7 +169,7 @@ namespace LagoVista.AI.Services
             {
                 httpResponse = await client.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false);
                 responseContent = await httpResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
-                _logger.Trace($"[{nameof(HttpStructuredTextLlmService)}__{nameof(HttpStructuredTextLlmService.ExecuteAsync)})_Recv]\r\n<<===\r\n[JSON.LLMSTRUCT]={json}\r\n<<===\r\n");
+                _logger.Trace($"[JSON.LLMTextResponse]={responseContent}");
             }
             catch (Exception ex)
             {

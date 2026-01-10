@@ -13,6 +13,7 @@ namespace LagoVista.AI.Interfaces
     /// </summary>
     public interface IStructuredTextLlmService
     {
+
         /// <summary>
         /// Execute a typed LLM operation with the given system prompt and text payload.
         /// </summary>
