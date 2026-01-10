@@ -4,6 +4,8 @@
 // --- END CODE INDEX META ---
 using LagoVista.AI.Models;
 using LagoVista.Core.Validation;
+using System.Diagnostics;
+using System;
 using System.Threading.Tasks;
 
 namespace LagoVista.AI
@@ -15,5 +17,9 @@ namespace LagoVista.AI
         Task<InvokeResult> AddTextContentAsync(AgentContext vectorDb, string path, string fileName, string content, string contentType);
         Task<InvokeResult<string>> GetTextContentAsync(AgentContext vectorDb, string path, string fileName);
         Task<InvokeResult<string>> GetTextContentAsync(AgentContext vectorDb, string blobName);
+
+        Task<InvokeResult<Uri>> AddContentAsync(string orgNs, string blobName, string content);
+
+        Task<InvokeResult<Uri>> AddContentAsync(string orgNs, string blobName, byte[] content);
     }
 }

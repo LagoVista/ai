@@ -9,7 +9,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Content.Interfaces
 {
     public interface IContentStorage
     {
-        Task<InvokeResult> AddContntAsync(string blobName, string content);
-        Task<InvokeResult> AddContentAsync(string blobName, byte[] content);
+        Task<InvokeResult<Uri>> AddContentAsync(string blobName, string content);
+        Task<InvokeResult<Uri>> AddContentAsync(string blobName, byte[] content);
     }
 }

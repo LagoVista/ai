@@ -6,6 +6,7 @@ using LagoVista.AI.Managers;
 using LagoVista.AI.Models;
 using LagoVista.AI.Rag.Chunkers.Models;
 using LagoVista.AI.Rag.Chunkers.Services;
+using LagoVista.AI.Rag.ContractPacks.Content.Interfaces;
 using LagoVista.AI.Rag.ContractPacks.Ingestion.Interfaces;
 using LagoVista.Core;
 using LagoVista.Core.AI.Models;
@@ -25,6 +26,7 @@ namespace LagoVista.AI.Services.Tools
     /// </summary>
     public sealed class IndexDdrTool : IAgentTool
     {
+        private readonly ILLMContentRepo _llmContentRepo;
         private readonly IAdminLogger _logger;
         private readonly IDdrManager _ddrManager;
         private readonly IOrganizationManager _orgManager;
@@ -42,8 +44,9 @@ Provide a DDR identifier matching ^[A-Za-z]{3}-\d{1,6}$ (e.g., TUL-000011).
 The tool will normalize the identifier by uppercasing the 3-letter prefix and left-padding the numeric portion to 6 digits (e.g., tul-01 or TuL-1 -> TUL-000001). 
 The tool indexes the stored canonical DDR content for the normalized identifier.
 Return a small JSON result indicating success and any indexing details available (e.g., document/key and chunk count).";
-        public IndexDdrTool(IEmbedder embeder, IQdrantClient qdrantClient, IOrganizationManager orgManager, IDdrManager ddrManager, IAdminLogger logger)
+        public IndexDdrTool(IEmbedder embeder, ILLMContentRepo llmContentRepo, IQdrantClient qdrantClient, IOrganizationManager orgManager, IDdrManager ddrManager, IAdminLogger logger)
         {
+            _llmContentRepo = llmContentRepo ?? throw new ArgumentNullException(nameof(llmContentRepo));  
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _ddrManager = ddrManager ?? throw new ArgumentNullException(nameof(ddrManager));
             _embedder = embeder ?? throw new ArgumentNullException(nameof(embeder));
@@ -107,7 +110,18 @@ Return a small JSON result indicating success and any indexing details available
                     },
                     RepoId = "ddr-repo",
                 };
-                
+
+                var addContentResult = await _llmContentRepo.AddContentAsync(ctx.DocumentIdentity.OrgNamespace, $"ddrs/{ddr.DdrIdentifier.Replace("-",String.Empty).ToLower()}.model.txt", ddr.CondensedDdrContent);
+                if(addContentResult.Successful)
+                {
+                    return InvokeResult<string>.FromInvokeResult(addContentResult.ToInvokeResult());
+                }
+
+                var humanContentResult = await _llmContentRepo.AddContentAsync(ctx.DocumentIdentity.OrgNamespace, $"ddrs/{ddr.DdrIdentifier.Replace("-", String.Empty).ToLower()}.human.txt", ddr.CondensedDdrContent);
+                if (humanContentResult.Successful)
+                {
+                    return InvokeResult<string>.FromInvokeResult(humanContentResult.ToInvokeResult());   
+                }
 
                 var vector = await _embedder.EmbedAsync(ddr.RagIndexCard);
                 var point = new RagPoint()
@@ -120,6 +134,7 @@ Return a small JSON result indicating success and any indexing details available
                         {
                             DocId = ddr.Id,
                             OrgNamespace = ctx.DocumentIdentity.OrgNamespace,
+                            OrgId = ctx.DocumentIdentity.OrgId,
                             Title = $"{ddr.DdrIdentifier} - {ddr.Name}",
                             SectionKey = "RagIndexCard",
                             EmbeddingModel = vector.Result.EmbeddingModel,
@@ -135,6 +150,8 @@ Return a small JSON result indicating success and any indexing details available
                             Repo = ctx.GitRepoInfo.RemoteUrl,
                             RepoBranch = ctx.GitRepoInfo.BranchRef,
                             CommitSha = "n/a",
+                            FullDocumentBlobUri = addContentResult.Result.ToString(),
+                            HumanContentUrl = humanContentResult.Result.ToString()
                         }
                     }
                 };

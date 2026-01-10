@@ -6,17 +6,18 @@ using LagoVista.AI.Models;
 using LagoVista.CloudStorage.Storage;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
-using MongoDB.Bson.IO;
 using System;
-using System.Globalization;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace LagoVista.AI.CloudRepos
 {
     public class LLMContentRepo : CloudFileStorage, ILLMContentRepo
     {
+        private readonly IAdminLogger _adminLogger;
         public LLMContentRepo(IMLRepoSettings settings, IAdminLogger adminLogger) : base(settings.MLBlobStorage.AccountId, settings.MLBlobStorage.AccessKey, adminLogger)
         {
+            _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
         }
 
         private string GetContainerName(string orgId)
@@ -115,6 +116,22 @@ namespace LagoVista.AI.CloudRepos
 
             var content = System.Text.UTF8Encoding.UTF8.GetString(result.Result);
             return InvokeResult<string>.Create(content);
+        }
+
+
+        public async Task<InvokeResult<Uri>> AddContentAsync(string orgNs, string blobName, string content)
+        {
+            var sw = Stopwatch.StartNew();
+            var container = $"llmcontent{orgNs}";
+            _adminLogger.Trace($"{this.Tag()} - Add blob {container} - {blobName}");
+            var result = await AddFileAsync(container, blobName, content);
+            _adminLogger.Trace($"{this.Tag()} - Added {blobName}, Size: {content.Length} bytes in {sw.Elapsed.TotalMilliseconds}ms");
+            return result;
+        }
+
+        public async Task<InvokeResult<Uri>> AddContentAsync(string orgNs, string blobName, byte[] content)
+        {
+            return await AddContentAsync(orgNs, blobName, System.Text.UTF8Encoding.UTF8.GetString(content));
         }
     }
 }

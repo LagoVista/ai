@@ -93,10 +93,11 @@ namespace LagoVista.AI.Rag.Services
                         var modelFileName = ragContent.Payload.Meta.DocId == entity.Id ? $"{entity.Id}.model.json" : $"{entity.Id}.{ragContent.Payload.Meta.DocId}.model.json";
                         var userFileName = ragContent.Payload.Meta.DocId == entity.Id ? $"{entity.Id}.user.json" : $"{entity.Id}.{ragContent.Payload.Meta.DocId}.user.json";
 
-                        var modelSummaryUrl = await _llmContentRepo.AddTextContentAsync(agentContext, path: entity.EntityType, modelFileName, content: ragContent.ModelDescription, contentType: "application/json");
-                        var userDetails = await _llmContentRepo.AddTextContentAsync(agentContext, path: entity.EntityType, fileName: userFileName, content: ragContent.HumanDescription, contentType: "application/json");
-                        point.Payload.Extra.ModelContentFileName = modelFileName;
-                        point.Payload.Extra.HumanContentFileName = userFileName;
+                        var modelSummaryUrl = await _llmContentRepo.AddContentAsync(org.Namespace, modelFileName, ragContent.ModelDescription);
+                        var userDetails = await _llmContentRepo.AddContentAsync(org.Namespace, modelFileName, ragContent.HumanDescription);
+
+                        point.Payload.Extra.ModelContentUri = modelSummaryUrl.Result.ToString();
+                        point.Payload.Extra.HumanContentUrl = userDetails.Result.ToString();
                         point.Payload.Extra.Path = entity.EntityType;
                         point.Payload.Meta.EmbeddingModel = agentContext.EmbeddingModel;
                         point.Payload.Meta.OrgNamespace = org.Namespace;
@@ -181,8 +182,8 @@ namespace LagoVista.AI.Rag.Services
                     point.PointId = entity.Id.ToGuidString();
                     point.Payload.Extra.Path = entity.EntityType;
                     point.Payload.Meta.OrgNamespace = org.Namespace;
-                    point.Payload.Extra.ModelContentFileName = modelFileName;
-                    point.Payload.Extra.HumanContentFileName = userFileName;
+                    point.Payload.Extra.ModelContentUri = modelFileName;
+                    point.Payload.Extra.HumanContentUrl = userFileName;
                     if (!String.IsNullOrEmpty(lens.Lenses.CleanupGuidance))
                         point.Payload.Extra.IssuesFileName = cleanUpFileName;
 

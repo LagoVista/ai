@@ -225,12 +225,13 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
 
                             if (fileProcessResult.Result.RagPoints.Any())
                             {
+                                await _contentStorage.AddContentAsync(fileContext.FullPath, fileContext.Contents);
+
                                 await _qdrantClient.UpsertInBatchesAsync(config.Qdrant.Collection, fileProcessResult.Result.RagPoints, config.Qdrant.VectorSize);
 
                                 var record = localIndex.GetOrAdd(fileContext.RelativePath, fileContext.DocumentIdentity.DocId);
                                 record.ContentHash = await ContentHashUtil.ComputeFileContentHashAsync(fileContext.FullPath);
                                 await _localIndexStore.SaveAsync(config, repoId, localIndex, cancellationToken);
-                                await _contentStorage.AddContentAsync(fileContext.FullPath, fileContext.Contents);
                                 Console.WriteLine(new String('-', 80));
                             }
                         }
@@ -239,7 +240,6 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
                             _adminLogger.AddError($"[IndexRunOrchestrator_RunAsync]", $"{fileProcessResult.ErrorMessage} - {fullPath}");
                         }
                     }
-
 
                     idx++;
                 }
