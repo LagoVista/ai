@@ -13,6 +13,7 @@ using LagoVista.IoT.Logging.Loggers;
 using LagoVista.IoT.Logging.Utils;
 using LagoVista.Core.Interfaces;
 using LagoVista.AI.Services.OpenAI;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LagoVista.AI.RagConsole
 {
@@ -116,138 +117,25 @@ namespace LagoVista.AI.RagConsole
             }
 
             var adminLogger = new AdminLogger(new ConsoleLogWriter());
-            SLWIOC.RegisterSingleton<IAdminLogger>(adminLogger);
             var openAISettings = new OpenAISettings(result.Result.Embeddings.BaseUrl, result.Result.Embeddings.ApiKey);
             var qdrantSettings = new QdrantSettings(result.Result.Qdrant.Endpoint, result.Result.Qdrant.ApiKey);
 
-            var embedder = new OpenAIEmbedder(openAISettings, adminLogger);
+            var embedder = new OpenAIEmbedder(openAISettings, adminLogger);            
+            var collection = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
 
-            SLWIOC.RegisterSingleton<IngestionConfig>(result.Result);
-            SLWIOC.RegisterSingleton<IOpenAISettings>(openAISettings);
-            SLWIOC.RegisterSingleton<IQdrantSettings>(qdrantSettings);
+            var diManagement = new LagoVista.Core.DependencyInjection.DIManagement(collection);
+            diManagement.AddSingleton<IAdminLogger>(adminLogger);
+            diManagement.AddSingleton<IQdrantSettings>(qdrantSettings);
+            diManagement.AddSingleton<IngestionConfig>(result.Result);
+            diManagement.AddSingleton<IOpenAISettings>(openAISettings);
 
-            var collection = new ServicesCollectionAdapter();
+            LagoVista.AI.Startup.ConfigureServices(diManagement, adminLogger);
+            LagoVista.AI.CloudRepos.Startup.ConfigureServices(diManagement);
 
-            LagoVista.AI.Startup.ConfigureServices(collection, adminLogger);
-
-            var orchestrator = SLWIOC.Create<IIndexRunOrchestrator>();
-            await orchestrator.RunAsync(result.Result, mode, repoId, subKindFilter, verbose, dryRun);
-        }
-
-        private class ServicesCollectionAdapter : IServiceCollection
-        {
-            public void AddScoped(Type serviceType)
+            using (var provider = collection.BuildServiceProvider())
             {
-            }
-
-            public void AddScoped(Type serviceType, Func<IServiceProvider, object> implementationFactory)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void AddScoped(Type serviceType, Type implementationType)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void AddScoped<TService>() where TService : class
-            {
-                throw new NotImplementedException();
-            }
-
-            public void AddScoped<TService>(Func<IServiceProvider, TService> implementationFactory) where TService : class
-            {
-                throw new NotImplementedException();
-            }
-
-            public void AddSingleton(Type serviceType)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void AddSingleton(Type serviceType, Func<IServiceProvider, object> implementationFactory)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void AddSingleton(Type serviceType, object implementationInstance)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void AddSingleton(Type serviceType, Type implementationType)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void AddSingleton<TService>() where TService : class
-            {
-                throw new NotImplementedException();
-            }
-
-            public void AddSingleton<TService>(Func<IServiceProvider, TService> implementationFactory) where TService : class
-            {
-                throw new NotImplementedException();
-            }
-
-            public void AddSingleton<TService>(TService implementationInstance) where TService : class
-            {
-                throw new NotImplementedException();
-            }
-
-            public void AddTransient(Type serviceType)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void AddTransient(Type serviceType, Func<IServiceProvider, object> implementationFactory)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void AddTransient(Type serviceType, Type implementationType)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void AddTransient<TService>() where TService : class
-            {
-                throw new NotImplementedException();
-            }
-
-            public void AddTransient<TService>(Func<IServiceProvider, TService> implementationFactory) where TService : class
-            {
-                throw new NotImplementedException();
-            }
-
-            void IServiceCollection.AddScoped<TService, TImplementation>()
-            {
-                throw new NotImplementedException();
-            }
-
-            void IServiceCollection.AddScoped<TService, TImplementation>(Func<IServiceProvider, TImplementation> implementationFactory)
-            {
-                throw new NotImplementedException();
-            }
-
-            void IServiceCollection.AddSingleton<TService, TImplementation>()
-            {
-                throw new NotImplementedException();
-            }
-
-            void IServiceCollection.AddSingleton<TService, TImplementation>(Func<IServiceProvider, TImplementation> implementationFactory)
-            {
-                throw new NotImplementedException();
-            }
-
-            void IServiceCollection.AddTransient<TService, TImplementation>(Func<IServiceProvider, TImplementation> implementationFactory)
-            {
-                throw new NotImplementedException();
-            }
-
-            void IServiceCollection.AddTransient<TService, TImplementation>()
-            {
-                throw new NotImplementedException();
+                var orchestrator = provider.GetRequiredService<IIndexRunOrchestrator>();
+                await orchestrator.RunAsync(result.Result, mode, repoId, subKindFilter, verbose, dryRun);
             }
         }
 

@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>LagoVista.AI</id>
-    <version>3.0.3159.1348</version>
+    <version>3.0.3160.1708</version>
     <authors>Software Logistics, LLC</authors>
     <owners>Software Logistics, LLC</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
@@ -12,15 +12,16 @@
     <copyright>Copyright Software Logistics - 2026</copyright>
     <tags>LagoVista HomeAutomation IoT AI Machine Learning</tags>
     <icon>LagoVistaIcon.png</icon>
-    <releaseNotes>Build Date: 1/9/2026 6:48:59 PM UTC</releaseNotes>
+    <releaseNotes>Build Date: 1/10/2026 10:08:16 PM UTC</releaseNotes>
     <repository url="https://www.github.com/lagovista" type="git" branch="master"></repository>
     <dependencies>
       <group targetFramework="netstandard2.1">
-        <dependency id="LagoVista.MediaServices" version="3.0.3159.1322" />
+        <dependency id="HtmlAgilityPack" version="1.12.4" />
+        <dependency id="LagoVista.MediaServices" version="3.0.3160.1452" />
         <dependency id="Microsoft.Extensions.Http" version="3.1.0" />
         <dependency id="Microsoft.ML.OnnxRuntime" version="1.22.1" />
         <dependency id="Microsoft.CodeAnalysis.CSharp" version="4.8.0" />
-        <dependency id="LagoVista.AI.Models" version="3.0.3159.1348" />
+        <dependency id="LagoVista.AI.Models" version="3.0.3160.1708" />
       </group>
     </dependencies>
   </metadata>

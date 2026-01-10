@@ -1,4 +1,5 @@
 using LagoVista.AI.Rag.Chunkers.Interfaces;
+using LagoVista.AI.Rag.Chunkers.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -74,11 +75,24 @@ namespace LagoVista.AI.Rag.Chunkers.Models
             overview.AppendLine($"  CanImport: {CanImport}");
             overview.AppendLine($"  CanExport: {CanExport}");
 
+            if(String.IsNullOrEmpty(InsertUrl))
+                InsertUrl = SaveUrl;
+
+            if (String.IsNullOrEmpty(UpdateUrl))
+                UpdateUrl = SaveUrl;
+
             var urls = new[]
             {
-                ListUIUrl, EditUIUrl, CreateUIUrl, HelpUrl,
-                InsertUrl, SaveUrl, UpdateUrl,
-                FactoryUrl, GetUrl, GetListUrl, DeleteUrl
+                $"UI List: " + ListUIUrl,
+                $"UI Edit: " + EditUIUrl,
+                $"UI Create: " + CreateUIUrl,
+                $"Help Url: " + HelpUrl,
+                $"API POST: " +  InsertUrl,
+                $"API PUT: " + UpdateUrl,
+                $"API Factory: " + FactoryUrl,
+                $"API GET: " + GetUrl,
+                $"API GET List: " + GetListUrl,
+                $"API Delete: " + DeleteUrl
             }
             .Where(u => !string.IsNullOrWhiteSpace(u))
             .Distinct()
@@ -90,8 +104,13 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                 overview.AppendLine("UI / API Affordances:");
 
                 foreach (var url in urls)
-                    overview.AppendLine("- " + url);
+                {
+                    if(!url.Trim().EndsWith(':'))
+                        overview.AppendLine("- " + url);
+                }
             }
+
+
 
             sections.Add(new SummarySection
             {
@@ -99,6 +118,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                 SectionType = "Overview",
                 Flavor = "ModelMetadataDescription",
                 Symbol = symbol,
+                FinderSnippet = ModelMetadataFinderSnippetTextBuilder.BuildModelFinderSnippet(headerInfo, "ModelOverview", this), 
                 SymbolType = "Model",
                 DomainKey = headerInfo?.DomainKey,
                 ModelClassName = headerInfo?.ModelClassName,
@@ -162,6 +182,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                 Flavor = "ModelMetadataDescription",
                 Symbol = symbol,
                 SymbolType = "Model",
+                FinderSnippet = ModelMetadataFinderSnippetTextBuilder.BuildModelFinderSnippet(headerInfo, "ModelFields", this),
                 DomainKey = headerInfo?.DomainKey,
                 ModelClassName = headerInfo?.ModelClassName,
                 ModelName = headerInfo?.ModelName,
@@ -241,6 +262,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                 SectionType = "Layouts",
                 Flavor = "ModelMetadataDescription",
                 Symbol = symbol,
+                FinderSnippet = ModelMetadataFinderSnippetTextBuilder.BuildModelFinderSnippet(headerInfo, "Layout", this),
                 SymbolType = "Model",
                 DomainKey = headerInfo?.DomainKey,
                 ModelClassName = headerInfo?.ModelClassName,

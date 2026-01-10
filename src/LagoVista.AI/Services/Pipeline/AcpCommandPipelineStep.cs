@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Pipeline;
 using LagoVista.AI.Models;
+using LagoVista.Core;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 
@@ -42,7 +43,7 @@ namespace LagoVista.AI.Services.Pipeline
 
             if (route.Outcome == AcpRouteOutcome.NoMatch)
             {
-                _adminLogger.Trace($"{this.Tag()} No match returning context");
+                _adminLogger.Trace($"{this.Tag()} No match returning context", inputText.ToKVP("inputText"));
                 return InvokeResult<IAgentPipelineContext>.Create(ctx);
             }
 

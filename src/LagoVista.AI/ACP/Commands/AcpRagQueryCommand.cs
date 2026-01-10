@@ -20,36 +20,38 @@ namespace LagoVista.AI.ACP.Commands
     /// - hydrate payloads into Content/SummaryUrl/DetailsUrl
     /// - write combined block to PromptKnowledgeProvider Rag register
     /// </summary>
-    [AcpCommand("acp.rag.search_ddrs", "Search DDRs", "Runs a RAG search over DDR content and attaches results to the Rag knowledge register.")]
-    [AcpTriggers("search ddrs for")]
+    [AcpCommand("acp.rag.search", "perform generic rag search \\qt (Query Text)", "Runs a RAG search over all RAG content.")]
+    [AcpTriggers("\\qt")]
     [AcpArgs(1, 999)]
-    public sealed class AcpSearchDdrsCommand : IAcpCommand
+    public sealed class AcpRagQueryCommand : IAcpCommand
     {
         private const int TopK = 10;
 
         private readonly IRagContextBuilder _ragContextBuilder;
-        private readonly IAdminLogger _adminLogger;
 
-        public AcpSearchDdrsCommand(IAdminLogger adminLogger, IRagContextBuilder ragContextBuilder)
-        {
-            _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
-            _ragContextBuilder = ragContextBuilder ?? throw new ArgumentNullException(nameof(ragContextBuilder));
-        }
+        private readonly IAdminLogger _adminLogger;
 
         /// <summary>
         /// Placeholder until wired to configuration.
         /// </summary>
         public string CollectionName { get; set; } = "TODO_DDR_COLLECTION";
-    
+
+        public AcpRagQueryCommand(IRagContextBuilder ragContextBuilder, IAdminLogger adminLogger)
+        {
+            _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
+            _ragContextBuilder = ragContextBuilder ?? throw new ArgumentNullException(nameof(ragContextBuilder));
+        }
+
         public async Task<InvokeResult<IAgentPipelineContext>> ExecuteAsync(IAgentPipelineContext context, string[] args)
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
 
-            _adminLogger.Trace($"{this.Tag()} Executing with args: [{(args == null ? "" : String.Join(", ", args))}]");
 
             var topic = args == null ? null : String.Join(" ", args).Trim();
             if (String.IsNullOrWhiteSpace(topic))
-                return InvokeResult<IAgentPipelineContext>.FromError("Topic is required. Usage: search ddrs for <TOPIC>");
+                return InvokeResult<IAgentPipelineContext>.FromError("Topic is required. Usage: \\qt <TOPIC>");
+
+            _adminLogger.Trace($"{this.Tag()} execute rag query with arg: [{(args == null ? "" : String.Join(", ", args))}]");
 
             // Optional: scope filter may be present on the request payload.
             // TODO: Replace with your actual request shape/property.
@@ -63,12 +65,10 @@ namespace LagoVista.AI.ACP.Commands
                 // ignore; scope is optional
             }
 
+
             _adminLogger.Trace($"{this.Tag()} Created Embedding for: [{(args == null ? "" : String.Join(", ", args))}]");
 
-            var result = await _ragContextBuilder.BuildContextSectionAsync(context, topic);
-
-
-            return result;
+            return await _ragContextBuilder.BuildContextSectionAsync(context, topic);
         }
     }
 }

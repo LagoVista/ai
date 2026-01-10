@@ -16,9 +16,11 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
+    <PackageReference Include="LagoVista.Core.DependencyInjection" Version="3.0.3160.1452" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\LagoVista.AI.CloudRepos\LagoVista.AI.CloudRepos.csproj" />
     <ProjectReference Include="..\..\src\LagoVista.AI\LagoVista.AI.csproj" />
   </ItemGroup>
 

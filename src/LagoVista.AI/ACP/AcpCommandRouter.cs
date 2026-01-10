@@ -1,4 +1,5 @@
 ﻿using LagoVista.AI.Interfaces;
+using LagoVista.IoT.Logging.Loggers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,10 +11,12 @@ namespace LagoVista.AI.ACP
     public sealed class AcpCommandRouter : IAcpCommandRouter
     {
         private readonly IAcpCommandRegistry _registry;
+        private readonly IAdminLogger _logger;
 
-        public AcpCommandRouter(IAcpCommandRegistry registry)
+        public AcpCommandRouter(IAcpCommandRegistry registry, IAdminLogger adminLogger)
         {
             _registry = registry ?? throw new ArgumentNullException(nameof(registry));
+            _logger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
         }
 
         public AcpExecutionRoute Route(string inputText)
@@ -27,6 +30,8 @@ namespace LagoVista.AI.ACP
                                       .Select(s => _registry.GetDescriptor(s.Id))
                                       .Where(d => d != null)
                                       .ToList();
+
+            _logger.Trace($"{this.Tag()} Routing input: '{inputText}' against {descriptors.Count} commands.");
 
             var matches = new List<(AcpCommandDescriptor desc, string trigger, string[] args)>();
 
@@ -96,10 +101,13 @@ namespace LagoVista.AI.ACP
             };
         }
 
-        private static bool StartsWithTrigger(string input, string trigger, bool caseInsensitive, out string remainder)
+        private bool StartsWithTrigger(string input, string trigger, bool caseInsensitive, out string remainder)
         {
             remainder = null;
             trigger = trigger.Trim();
+
+            _logger.Trace($"{this.Tag()} Checking trigger '{trigger}' (CI={caseInsensitive}) against input '{input}'");
+
 
             var comparison = caseInsensitive ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
 
@@ -116,6 +124,8 @@ namespace LagoVista.AI.ACP
             remainder = input.Length == trigger.Length
                 ? String.Empty
                 : input.Substring(trigger.Length).Trim();
+
+            _logger.Trace($"{this.Tag()} Match - '{trigger}' with input '{input}'");
 
             return true;
         }

@@ -4,6 +4,7 @@ using LagoVista.AI.Models;
 using LagoVista.CloudStorage.Storage;
 using LagoVista.Core;
 using LagoVista.Core.Exceptions;
+using LagoVista.Core.Interfaces;
 using LagoVista.Core.Models;
 using LagoVista.Core.Models.UIMetaData;
 using LagoVista.IoT.Logging.Loggers;
@@ -17,7 +18,9 @@ namespace LagoVista.AI.CloudRepos
 {
     public class MemoryNoteRepo : TableStorageBase<MemoryNoteDTO>, IMemoryNoteRepo
     {
-        public MemoryNoteRepo(IMLRepoSettings settings, IAdminLogger logger) :
+        private readonly IRagIndexingServices _ragIndexing;
+
+        public MemoryNoteRepo(IMLRepoSettings settings, IAdminLogger logger, IRagIndexingServices ragIndexing) :
                base(settings.MLTableStorage.AccountId, settings.MLTableStorage.AccessKey, logger)
         {
         }

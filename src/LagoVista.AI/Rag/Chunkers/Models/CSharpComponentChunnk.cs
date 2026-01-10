@@ -95,6 +95,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                 {
                     DocId = fileContext.DocumentIdentity.DocId,
                     OrgNamespace = fileContext.DocumentIdentity.OrgNamespace,
+                    OrgId = fileContext.DocumentIdentity.OrgId,
                     ProjectId = fileContext.DocumentIdentity.ProjectId,
                     SourceSystem = "GitHub",
                     SectionKey = SectionKey,

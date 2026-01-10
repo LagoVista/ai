@@ -106,6 +106,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                     {
                         DocId = this.DocId,
                         OrgNamespace = this.OrgNamespace,
+                        OrgId = this.OrgId,
                         ProjectId = this.ProjectId,
                         SectionKey = section.SectionKey,
                         EmbeddingModel = section.EmbeddingModel,

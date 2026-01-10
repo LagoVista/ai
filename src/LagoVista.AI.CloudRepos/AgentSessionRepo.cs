@@ -1,11 +1,9 @@
 ﻿using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
 using LagoVista.CloudStorage.DocumentDB;
-using LagoVista.CloudStorage.Interfaces;
+using LagoVista.Core.Interfaces;
 using LagoVista.Core.Models.UIMetaData;
 using LagoVista.IoT.Logging.Loggers;
-using System;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace LagoVista.AI.CloudRepos
@@ -14,8 +12,8 @@ namespace LagoVista.AI.CloudRepos
     {
         private readonly bool _shouldConsolidateCollections;
 
-        public AgentSessionRepo(IMLRepoSettings settings, IDocumentCloudCachedServices services) :
-            base(settings.MLDocDbStorage.Uri, settings.MLDocDbStorage.AccessKey, settings.MLDocDbStorage.ResourceName, services)
+        public AgentSessionRepo(IMLRepoSettings settings, IAdminLogger adminLogger, ICacheProvider cacheProvider) :
+            base(settings.MLDocDbStorage.Uri, settings.MLDocDbStorage.AccessKey, settings.MLDocDbStorage.ResourceName, adminLogger, cacheProvider)
         {
             _shouldConsolidateCollections = settings.ShouldConsolidateCollections;
         }

@@ -63,6 +63,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             var help = Lookup(resources, helpKey, "EntityDescription UserHelpResource");
 
             // Named arguments for URLs and core affordances
+            var previewUIUrl = GetNamedString(entityAttr, "PreviewUIUrl");
             var listUIUrl = GetNamedString(entityAttr, "ListUIUrl");
             var editUIUrl = GetNamedString(entityAttr, "EditUIUrl");
             var createUIUrl = GetNamedString(entityAttr, "CreateUIUrl");
@@ -74,6 +75,9 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             var getUrl = GetNamedString(entityAttr, "GetUrl");
             var getListUrl = GetNamedString(entityAttr, "GetListUrl");
             var deleteUrl = GetNamedString(entityAttr, "DeleteUrl");
+
+            if (String.IsNullOrEmpty(helpUrl))
+                helpUrl = $"/help/{modelName}".ToLower();
 
             var metadata = new ModelMetadataDescription
             {
@@ -94,6 +98,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 CanExport = GetNamedBool(entityAttr, "CanExport"),
 
                 // UI / API affordances
+                PreviewUIUrl = previewUIUrl,
                 ListUIUrl = listUIUrl,
                 EditUIUrl = editUIUrl,
                 CreateUIUrl = createUIUrl,

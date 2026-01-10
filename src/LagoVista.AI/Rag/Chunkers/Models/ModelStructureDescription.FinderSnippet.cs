@@ -29,7 +29,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                 maxTokens = 512;
             }
 
-            var finderText = FinderSnippetTextBuilder.BuildModelFinderSnippet(
+            var finderText = ModelStructuredFinderSnippetTextBuilder.BuildModelFinderSnippet(
                 headerInfo,
                 this,
                 hasUiMetadata);

@@ -4,12 +4,14 @@
 // --- END CODE INDEX META ---
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
+using LagoVista.Core;
 using LagoVista.Core.Interfaces;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json;
 using RingCentral;
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Net.Http;
@@ -66,6 +68,9 @@ namespace LagoVista.AI.Services.OpenAI
 
         public async Task<InvokeResult<EmbeddingResult>> EmbedAsync(string text, int? estimatedTokens = null, string embeddingModel = "")
         {
+            var sw = Stopwatch.StartNew();
+            _adminLogger.Trace($"{this.Tag()} - Embedding text {text} with model: {(_model)}");
+
             var payload = new { model = string.IsNullOrEmpty(embeddingModel) ? _model : embeddingModel, input = text };
 
             if (estimatedTokens == null)
@@ -80,6 +85,9 @@ namespace LagoVista.AI.Services.OpenAI
                     throw new InvalidOperationException($"Embedding dims {vec.Length} != expected {_expectedDims}. Check model + Qdrant.VectorSize.");
 
                 var result = new EmbeddingResult(vec, payload.model);
+
+                _adminLogger.Trace($"{this.Tag()} - Created embedding for {text} in {sw.Elapsed.TotalMilliseconds}ms", sw.Elapsed.TotalMilliseconds.ToString().ToKVP("ms"));
+
 
                 return InvokeResult<EmbeddingResult>.Create(result);
             }

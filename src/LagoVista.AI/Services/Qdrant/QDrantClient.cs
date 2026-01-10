@@ -212,13 +212,16 @@ namespace LagoVista.AI.Services.Qdrant
             await EnsureReadyAsync(collection, CancellationToken.None);
             _adminLogger.Trace($"{this.Tag()} Search started with collection {collection}");
 
+            var queryJson = JsonConvert.SerializeObject(req);
+            _adminLogger.Trace($"[JSON.QDrantQuery={queryJson}");
+
             var resp = await _http.PostAsJsonAsync($"/collections/{collection}/points/search", req);
 
             if (resp.IsSuccessStatusCode)
             {
-
                 resp.EnsureSuccessStatusCode();
                 var json = await resp.Content.ReadAsAsync<QdrantSearchResponse>();
+                _adminLogger.Trace($"[JSON.QDrantResult={json}");
 
                 _adminLogger.Trace($"{this.Tag()} Search completed in {sw.Elapsed.TotalMilliseconds}ms, found {json.Result.Count} results.");
 
@@ -404,7 +407,18 @@ namespace LagoVista.AI.Services.Qdrant
         [JsonProperty("vector")] public float[] Vector { get; set; } = Array.Empty<float>();
         [JsonProperty("limit")] public int Limit { get; set; } = 8;
         [JsonProperty("with_payload")] public bool WithPayload { get; set; } = true;
-        [JsonProperty("filter")] public RagScope Filter { get; set; }
+
+        private RagScope _filter;
+        [JsonIgnore] public RagScope Filter
+        {
+            get => _filter;
+            set {
+                _filter = value;
+                RagFilter = value == null ? null : value.ToQdrantFilter();
+            }
+        }
+        [JsonProperty("filter", NullValueHandling = NullValueHandling.Ignore)]
+        public QdrantFilter RagFilter { get; set; }
     }
 
     public class QdrantFilter
@@ -421,10 +435,19 @@ namespace LagoVista.AI.Services.Qdrant
         [JsonProperty("range")] public QdrantRange Range { get; set; }
     }
 
-    public class QdrantMatch { 
-        [JsonProperty("value")] public object Value { get; set; }
+    public class QdrantMatch {
+        [JsonProperty("value", NullValueHandling = NullValueHandling.Ignore)]
+        public object? Value { get; set; }
 
-        [JsonProperty("any")] public IEnumerable<string> Any { get; set; }
+        [JsonProperty("any", NullValueHandling = NullValueHandling.Ignore)]
+        public IEnumerable<string> Any { get; set; }
+
+        [JsonProperty("except", NullValueHandling = NullValueHandling.Ignore)]
+        public IEnumerable<string> Except { get; set; }
+
+        // Optional, only if you decide to support substring/full-text later:
+        [JsonProperty("text", NullValueHandling = NullValueHandling.Ignore)]
+        public string? Text { get; set; }
     }
 
     public class QdrantRange
@@ -444,5 +467,79 @@ namespace LagoVista.AI.Services.Qdrant
         [JsonProperty("score")] public double Score { get; set; }
         [JsonProperty("payload")] public Dictionary<string, object> Payload { get; set; }
     }
+
+    static class QdrantRagScopeTranslator
+    {
+        public static QdrantFilter? ToQdrantFilter(this RagScope? scope)
+        {
+            if (scope == null || scope.Conditions == null || scope.Conditions.Count == 0)
+                return null;
+
+            scope.Validate();
+
+            var filter = new QdrantFilter();
+
+            foreach (var c in scope.Conditions)
+            {
+                var values = (c.Values ?? new List<string>())
+                    .Where(v => !String.IsNullOrWhiteSpace(v))
+                    .Select(v => v.Trim())
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                if (values.Count == 0)
+                    continue;
+
+                // Build a single Qdrant condition per RagScopeCondition.
+                var cond = new QdrantCondition
+                {
+                    Key = c.Key,
+                    Match = new QdrantMatch()
+                };
+
+                switch (c.Operator)
+                {
+                    case RagScopeOperator.Equals:
+                        // IN
+                        cond.Match.Any = values;
+                        filter.Must.Add(cond);
+                        break;
+
+                    case RagScopeOperator.NotEquals:
+                        // NOT IN (preferred native Qdrant operator)
+                        cond.Match.Except = values;
+                        filter.Must.Add(cond);
+                        break;
+
+                    case RagScopeOperator.Contains:
+                        // For keyword fields and arrays, "contains" == "any-of membership"
+                        // (If you mean full-text contains, see note below.)
+                        cond.Match.Any = values;
+                        filter.Must.Add(cond);
+                        break;
+
+                    case RagScopeOperator.DoesNotContain:
+                        // Exclude if field contains any of the values
+                        cond.Match.Except = values;
+                        filter.Must.Add(cond);
+                        break;
+
+                    default:
+                        throw new InvalidOperationException($"Unsupported operator: '{c.Operator}'.");
+                }
+            }
+
+            // If nothing made it in, return null so request omits "filter"
+            if ((filter.Must == null || filter.Must.Count == 0) &&
+                (filter.MustNot == null || filter.MustNot.Count == 0) &&
+                (filter.Should == null || filter.Should.Count == 0))
+            {
+                return null;
+            }
+
+            return filter;
+        }
+    }
+
 }
 

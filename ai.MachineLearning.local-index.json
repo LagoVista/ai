@@ -13,8 +13,8 @@
     "readme.md": {
       "filePath": "readme.md",
       "docId": "D1117A2F13A05FEDB58B3ABECF2956E2",
-      "contentHash": "4e7433245b0ff09bff5fd1aed938010a3b350f8f624cc46de63467a25b2c7d9a",
-      "activeContentHash": "4e7433245b0ff09bff5fd1aed938010a3b350f8f624cc46de63467a25b2c7d9a",
+      "contentHash": "45d1c878dd64f185ee3db8b7cc6c1ec8d8a9c7662001ecdd11f3a8d2668670b3",
+      "activeContentHash": "45d1c878dd64f185ee3db8b7cc6c1ec8d8a9c7662001ecdd11f3a8d2668670b3",
       "reindex": "full",
       "facets": [],
       "isActive": false
@@ -112,8 +112,8 @@
     "ddrs/ddr_chunker_service_pattern.md": {
       "filePath": "ddrs/ddr_chunker_service_pattern.md",
       "docId": "268735A4547156C5B7BB2B212A82A1D7",
-      "contentHash": "6ae4741fdaa3a644b1ae8c1718e3184ecd4ba1a52c23c099ab807102c4376da7",
-      "activeContentHash": "6ae4741fdaa3a644b1ae8c1718e3184ecd4ba1a52c23c099ab807102c4376da7",
+      "contentHash": "1f974da693ceb490bb960c0ed3b4a647271e85cca7b1e2f0489732cb945c2340",
+      "activeContentHash": "1f974da693ceb490bb960c0ed3b4a647271e85cca7b1e2f0489732cb945c2340",
       "reindex": "full",
       "facets": [],
       "isActive": false
@@ -337,8 +337,8 @@
     "ddrs/idx-025 - ragvectorpayload metadata contract.md": {
       "filePath": "ddrs/idx-025 - ragvectorpayload metadata contract.md",
       "docId": "02161B9276725125B82C33697767CCF2",
-      "contentHash": "ab0d2ceb181abfb203ef5f761ae76f601199ab82577e5fae50ead60a97455de4",
-      "activeContentHash": "ab0d2ceb181abfb203ef5f761ae76f601199ab82577e5fae50ead60a97455de4",
+      "contentHash": "2f6f0a33e25854001383e94b4484d7c33b8d5ff1d21128bd78be8b5e7208d9e2",
+      "activeContentHash": "2f6f0a33e25854001383e94b4484d7c33b8d5ff1d21128bd78be8b5e7208d9e2",
       "reindex": "full",
       "facets": [],
       "isActive": false
@@ -562,8 +562,8 @@
     "ddrs/idx-068 - codebase description & finder snippet strategy.md": {
       "filePath": "ddrs/idx-068 - codebase description & finder snippet strategy.md",
       "docId": "BCED635D81625708AED35E1C4998EA3B",
-      "contentHash": "78c2cee8013b8df6a01e0aac8e4697c79b353ea8493adfc4525703cbbd1036ed",
-      "activeContentHash": "78c2cee8013b8df6a01e0aac8e4697c79b353ea8493adfc4525703cbbd1036ed",
+      "contentHash": "d387c3b75498cf8822cecea674a3e7f34566a5541c43bcb2ba82eb1772806cde",
+      "activeContentHash": "d387c3b75498cf8822cecea674a3e7f34566a5541c43bcb2ba82eb1772806cde",
       "reindex": "full",
       "facets": [],
       "isActive": false
@@ -634,8 +634,8 @@
     "apps/lagovista.ai.aptix.cli/agentsummary.md": {
       "filePath": "apps/lagovista.ai.aptix.cli/agentsummary.md",
       "docId": "61094E45ABA15FCAAD577D92CD7A2C78",
-      "contentHash": "3e86105a9db8041e72f19321481ee9033127cea4ae5e9a8c6ca7a0ef27ac0b60",
-      "activeContentHash": "3e86105a9db8041e72f19321481ee9033127cea4ae5e9a8c6ca7a0ef27ac0b60",
+      "contentHash": "0a784c3e683389632b2ba0b1d8f2eb05df19293e1a44f3290759ed84f5830097",
+      "activeContentHash": "0a784c3e683389632b2ba0b1d8f2eb05df19293e1a44f3290759ed84f5830097",
       "reindex": "full",
       "facets": [],
       "isActive": false
@@ -643,8 +643,8 @@
     "apps/lagovista.ai.aptix.cli/aptixconfig.cs": {
       "filePath": "apps/lagovista.ai.aptix.cli/aptixconfig.cs",
       "docId": "983FA3CE20CC57979866201DD1885FF5",
-      "contentHash": "c462723ad8195420cb22a9300d5d6d92ffc1f5abdc7795e58ed2afa365e3177d",
-      "activeContentHash": "c462723ad8195420cb22a9300d5d6d92ffc1f5abdc7795e58ed2afa365e3177d",
+      "contentHash": "e133845342e15cf173a733262da61cbf635534d73d66aed79d40db9aa8eb4a3f",
+      "activeContentHash": "e133845342e15cf173a733262da61cbf635534d73d66aed79d40db9aa8eb4a3f",
       "reindex": "full",
       "facets": [],
       "isActive": false
@@ -652,8 +652,8 @@
     "apps/lagovista.ai.aptix.cli/aptixconfigloader.cs": {
       "filePath": "apps/lagovista.ai.aptix.cli/aptixconfigloader.cs",
       "docId": "79796EFFAAB3548DAAE3C599B89AE464",
-      "contentHash": "71ece8ebac985ab92ff054fc11a8b157f6910136bf55e060fadfd0fcab4fe613",
-      "activeContentHash": "71ece8ebac985ab92ff054fc11a8b157f6910136bf55e060fadfd0fcab4fe613",
+      "contentHash": "15299e947931af4272c41f48c3a8713631510c46a6b907a741e23153a786e045",
+      "activeContentHash": "15299e947931af4272c41f48c3a8713631510c46a6b907a741e23153a786e045",
       "reindex": "full",
       "facets": [],
       "isActive": false
@@ -679,8 +679,8 @@
     "apps/lagovista.ai.aptix.cli/program.cs": {
       "filePath": "apps/lagovista.ai.aptix.cli/program.cs",
       "docId": "6C9AD1E776545ED6BE1833CA7EFC57CB",
-      "contentHash": "20db7db887cbce5d3a8f60372c9d7216c1d8d23955638607f2fc2f2aff78cc54",
-      "activeContentHash": "20db7db887cbce5d3a8f60372c9d7216c1d8d23955638607f2fc2f2aff78cc54",
+      "contentHash": "d6970eefa72080dd66b117c466cd93f4f33f6a5fd5a77890276c765925c070b7",
+      "activeContentHash": "d6970eefa72080dd66b117c466cd93f4f33f6a5fd5a77890276c765925c070b7",
       "reindex": "full",
       "facets": [],
       "isActive": false
@@ -688,8 +688,8 @@
     "apps/lagovista.ai.ragconsole/program.cs": {
       "filePath": "apps/lagovista.ai.ragconsole/program.cs",
       "docId": "1AB58C2AB6F0530D884E8EF003BFAF53",
-      "contentHash": "8339778721a63600aecd12c62070ce5ba420147aefffc0709bc0e6cf8b450c38",
-      "activeContentHash": "8339778721a63600aecd12c62070ce5ba420147aefffc0709bc0e6cf8b450c38",
+      "contentHash": "55f756e5804154a0e42d08c962689893255f272103b710afa74482c565dac6cc",
+      "activeContentHash": "55f756e5804154a0e42d08c962689893255f272103b710afa74482c565dac6cc",
       "reindex": "full",
       "facets": [],
       "isActive": false
@@ -697,8 +697,8 @@
     "src/lagovista.ai/startup.cs": {
       "filePath": "src/lagovista.ai/startup.cs",
       "docId": "774A758FC7075D81B41FEC6A47E2A0AD",
-      "contentHash": "b9d456a1c8f2eeb914619d7374bbebf6ecdcd84bbd79f324e9b0e4cacd813b7e",
-      "activeContentHash": "b9d456a1c8f2eeb914619d7374bbebf6ecdcd84bbd79f324e9b0e4cacd813b7e",
+      "contentHash": "9337b3cad9b88295ea1e420a5d67b9a0063553db87314a5b055a39d07ff08628",
+      "activeContentHash": "9337b3cad9b88295ea1e420a5d67b9a0063553db87314a5b055a39d07ff08628",
       "reindex": "full",
       "facets": [],
       "isActive": false
@@ -706,8 +706,8 @@
     "src/lagovista.ai.agentclient/agentexecutionclient.cs": {
       "filePath": "src/lagovista.ai.agentclient/agentexecutionclient.cs",
       "docId": "2C8A9E81BA975F99B162C209D1B30F91",
-      "contentHash": "39826149ad4aa72648eb7146b93c60d6e6d9a167f427306b7f4e808a84e0d853",
-      "activeContentHash": "39826149ad4aa72648eb7146b93c60d6e6d9a167f427306b7f4e808a84e0d853",
+      "contentHash": "1ab23acce7a1c5744d05ec6fd12522991c8bb176e991f5408fdbee0ce1efb74f",
+      "activeContentHash": "1ab23acce7a1c5744d05ec6fd12522991c8bb176e991f5408fdbee0ce1efb74f",
       "reindex": "full",
       "facets": [],
       "isActive": false
@@ -715,8 +715,8 @@
     "src/lagovista.ai.cloudrepos/agentcontextrepo.cs": {
       "filePath": "src/lagovista.ai.cloudrepos/agentcontextrepo.cs",
       "docId": "4691AFE38722525D8F740E9854332CCC",
-      "contentHash": "d02b537f57dc501c84847353e94270b687dd193c9f6ceab64233f0e9ca61fd37",
-      "activeContentHash": "d02b537f57dc501c84847353e94270b687dd193c9f6ceab64233f0e9ca61fd37",
+      "contentHash": "2e6a72513feaa70a2b23abb67e33b66bf344889c417ed5719407c282e51a9e2b",
+      "activeContentHash": "2e6a72513feaa70a2b23abb67e33b66bf344889c417ed5719407c282e51a9e2b",
       "reindex": "full",
       "facets": [],
       "isActive": false
@@ -724,8 +724,8 @@
     "src/lagovista.ai.cloudrepos/agentsessionrepo.cs": {
       "filePath": "src/lagovista.ai.cloudrepos/agentsessionrepo.cs",
       "docId": "BDE254BB1EE357C5882CF90C4308771B",
-      "contentHash": "5aa4f147ed85ff9ddaa2ff716c899678ef2b60269173744d243e311be51fbf24",
-      "activeContentHash": "5aa4f147ed85ff9ddaa2ff716c899678ef2b60269173744d243e311be51fbf24",
+      "contentHash": "ff0dc2423f0962bed1dc69c3e24a6cf86d5ec4ee83bb764c93320df92dd8fd21",
+      "activeContentHash": "ff0dc2423f0962bed1dc69c3e24a6cf86d5ec4ee83bb764c93320df92dd8fd21",
       "reindex": "full",
       "facets": [],
       "isActive": false
@@ -733,8 +733,8 @@
     "src/lagovista.ai.cloudrepos/agentturntraanscriptstore.cs": {
       "filePath": "src/lagovista.ai.cloudrepos/agentturntraanscriptstore.cs",
       "docId": "2572BF01A7D85F80ADC6543CCAF1FDAC",
-      "contentHash": "6e03743da87b985daa8b29b0c203a42a2c7638ce18f03dc97f3abbbbdcd74c98",
-      "activeContentHash": "6e03743da87b985daa8b29b0c203a42a2c7638ce18f03dc97f3abbbbdcd74c98",
+      "contentHash": "1d6edfff191923e7a428138a8a969f7b91135590aeeeacd76d21fa3f63624d1a",
+      "activeContentHash": "1d6edfff191923e7a428138a8a969f7b91135590aeeeacd76d21fa3f63624d1a",
       "reindex": "full",
       "facets": [],
       "isActive": false
@@ -796,8 +796,8 @@
     "src/lagovista.ai.cloudrepos/llmcontentrepo.cs": {
       "filePath": "src/lagovista.ai.cloudrepos/llmcontentrepo.cs",
       "docId": "37E3A21EC842555BB183DA9230CA086B",
-      "contentHash": "8de77df5bd4e941ca1e982a067034984c12e11aa27741a3c50bf4fb4c3768752",
-      "activeContentHash": "8de77df5bd4e941ca1e982a067034984c12e11aa27741a3c50bf4fb4c3768752",
+      "contentHash": "cef05a2301a2404bb0c0a0392b091f9c6ce422fffe23578d6092ff0321842721",
+      "activeContentHash": "cef05a2301a2404bb0c0a0392b091f9c6ce422fffe23578d6092ff0321842721",
       "reindex": "full",
       "facets": [],
       "isActive": false
@@ -868,8 +868,8 @@
     "src/lagovista.ai.cloudrepos/startup.cs": {
       "filePath": "src/lagovista.ai.cloudrepos/startup.cs",
       "docId": "DFC3EEA7F9C95840B24BA27FAC48A941",
-      "contentHash": "cd9386a6ca3ecd1d0ca0b9be7f791c3b572aa409d55cec359a2c6016737ba191",
-      "activeContentHash": "cd9386a6ca3ecd1d0ca0b9be7f791c3b572aa409d55cec359a2c6016737ba191",
+      "contentHash": "4a80f8913da6cf68460af13f896a1e4ea29e3dfd0bca4ba7e584ea8138bc8bbf",
+      "activeContentHash": "4a80f8913da6cf68460af13f896a1e4ea29e3dfd0bca4ba7e584ea8138bc8bbf",
       "reindex": "full",
       "facets": [],
       "isActive": false
@@ -886,8 +886,8 @@
     "src/lagovista.ai.models/agentcontext.cs": {
       "filePath": "src/lagovista.ai.models/agentcontext.cs",
       "docId": "AE87AE6C9D8A5B909BEEFE4FD5198EC7",
-      "contentHash": "b27963b8349004d78a7f3f88a02286a851564c34ce04687fd410e608c4af3835",
-      "activeContentHash": "b27963b8349004d78a7f3f88a02286a851564c34ce04687fd410e608c4af3835",
+      "contentHash": "60bf66cbe9e4e53dc174e243e17383d1e0876ed74c1bbb3561ae79f1e46a60e7",
+      "activeContentHash": "60bf66cbe9e4e53dc174e243e17383d1e0876ed74c1bbb3561ae79f1e46a60e7",
       "reindex": "full",
       "facets": [],
       "isActive": false
@@ -4113,7 +4113,673 @@
       "reindex": "full",
       "facets": [],
       "isActive": false
+    },
+    "ddrs/aaa-001 - aptix agent architecture snapshot.md": {
+      "filePath": "ddrs/aaa-001 - aptix agent architecture snapshot.md",
+      "docId": "3D609D1F45B15026969593193518E1BA",
+      "contentHash": "8d999bca74294f8be564bf8f72a71fe78005c5d6b23b17bd541d904988c636d1",
+      "activeContentHash": "8d999bca74294f8be564bf8f72a71fe78005c5d6b23b17bd541d904988c636d1",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/agn-000037 - agent control plane.md": {
+      "filePath": "ddrs/agn-000037 - agent control plane.md",
+      "docId": "F8F9D4A224165168BE51FE8A9E50E315",
+      "contentHash": "0a08eedf12a1b487ca4f0d51edcc6b79493c86b22ec980079ed3c6debc64083f",
+      "activeContentHash": "0a08eedf12a1b487ca4f0d51edcc6b79493c86b22ec980079ed3c6debc64083f",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/agn-008 - task thread pattern for responses api.md": {
+      "filePath": "ddrs/agn-008 - task thread pattern for responses api.md",
+      "docId": "08A6FE2F76C45B05A9A156F7703F24C5",
+      "contentHash": "06c7cc2f797a99423331dd75fc23c27ebc550afe8c67e806b27ed0976f3a43d9",
+      "activeContentHash": "06c7cc2f797a99423331dd75fc23c27ebc550afe8c67e806b27ed0976f3a43d9",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/agn-009 - agent state and tools (conceptual) .md": {
+      "filePath": "ddrs/agn-009 - agent state and tools (conceptual) .md",
+      "docId": "5F4310E17E1C584B8859F1FE6F749972",
+      "contentHash": "a6d3d071e1caea8cbe8d710a8d04c7315de3bd4a2e758f843dbb505ca65ced68",
+      "activeContentHash": "a6d3d071e1caea8cbe8d710a8d04c7315de3bd4a2e758f843dbb505ca65ced68",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/agn-010 - agent–llm workflow for detailed design reviews.md": {
+      "filePath": "ddrs/agn-010 - agent–llm workflow for detailed design reviews.md",
+      "docId": "18FB3FECF6FE5FBBAA9E1A0CE9E934ED",
+      "contentHash": "0accd0fc039b0e3e439fa73397a19fa49e80e53143199efac1d48fdb1f5cc830",
+      "activeContentHash": "0accd0fc039b0e3e439fa73397a19fa49e80e53143199efac1d48fdb1f5cc830",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/agn-011 - agent execution pipeline & mode-oriented request construction.md": {
+      "filePath": "ddrs/agn-011 - agent execution pipeline & mode-oriented request construction.md",
+      "docId": "0439EE1CC3A650338DB4486BC8BF298D",
+      "contentHash": "131bba665c7032d37becb57df750c6f826014c83c8f898f8d19b162653dc4cce",
+      "activeContentHash": "131bba665c7032d37becb57df750c6f826014c83c8f898f8d19b162653dc4cce",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/agn-012 - agent system prompt architecture.md": {
+      "filePath": "ddrs/agn-012 - agent system prompt architecture.md",
+      "docId": "4FF1936E16AD5D96AA5B2D58DC49EA2D",
+      "contentHash": "cdec6ceb1bece16a5461a5848d4ded66a747b23c938d28ec96ffaff85b30d286",
+      "activeContentHash": "cdec6ceb1bece16a5461a5848d4ded66a747b23c938d28ec96ffaff85b30d286",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/agn-013 - agent mode definition and semantics.md": {
+      "filePath": "ddrs/agn-013 - agent mode definition and semantics.md",
+      "docId": "9D5C22406C2355A5B148B07E68CE1B59",
+      "contentHash": "b475d2af5100cdf24abed8287142c0e2d8f4e789f4eca4afc8386935a913e164",
+      "activeContentHash": "b475d2af5100cdf24abed8287142c0e2d8f4e789f4eca4afc8386935a913e164",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/agn-014 - agent mode catalog.md": {
+      "filePath": "ddrs/agn-014 - agent mode catalog.md",
+      "docId": "109485152F9655E1A33F67DD9B236597",
+      "contentHash": "121a945aa2d1e88202ab041e6dcfc6cbded53d60323cb3184a6b68a0fde530cb",
+      "activeContentHash": "121a945aa2d1e88202ab041e6dcfc6cbded53d60323cb3184a6b68a0fde530cb",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/agn-015 - rag query strategy.md": {
+      "filePath": "ddrs/agn-015 - rag query strategy.md",
+      "docId": "3525DC73B58857509D67918B806486D6",
+      "contentHash": "db0ccfd5e49bef8e2c732ea9693d69d9ab2cba5717bb8305b8454d9162e3f476",
+      "activeContentHash": "db0ccfd5e49bef8e2c732ea9693d69d9ab2cba5717bb8305b8454d9162e3f476",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/agn-016 - checkpoint restore and branch policy.md": {
+      "filePath": "ddrs/agn-016 - checkpoint restore and branch policy.md",
+      "docId": "3DB67553592D57D6A134E69894A378D6",
+      "contentHash": "49f70517ce08168e2ce79862154fdda91c3509c969b2b2d68bd99f99ca0eeaa6",
+      "activeContentHash": "49f70517ce08168e2ce79862154fdda91c3509c969b2b2d68bd99f99ca0eeaa6",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/agn-017 - instructive type of ddr.md": {
+      "filePath": "ddrs/agn-017 - instructive type of ddr.md",
+      "docId": "24CF58CBF00250A38EF2790F616DCAA2",
+      "contentHash": "a0ce90b61e9bfc1c0a6d2a6cb85a61e6bcbdb0ee99f6c66f6c2fe30341d2b6c8",
+      "activeContentHash": "a0ce90b61e9bfc1c0a6d2a6cb85a61e6bcbdb0ee99f6c66f6c2fe30341d2b6c8",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/agn-019 - ddr load on agent change mode.md": {
+      "filePath": "ddrs/agn-019 - ddr load on agent change mode.md",
+      "docId": "ECBBC400C1E15CEDA8E21DA93484E56F",
+      "contentHash": "d27d7ea6c8513c55ff0463683ad153016d8d15b77ec6a44d3543c457d8bfe8a3",
+      "activeContentHash": "d27d7ea6c8513c55ff0463683ad153016d8d15b77ec6a44d3543c457d8bfe8a3",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/agn-020 - referential ddr usage.md": {
+      "filePath": "ddrs/agn-020 - referential ddr usage.md",
+      "docId": "5F56E9D7ED0D5494A11EE3D56D3344A6",
+      "contentHash": "3ed3962f6e22f2dfcc5d96cf374503682c27b86209c9280443fd4e5f12e321b8",
+      "activeContentHash": "3ed3962f6e22f2dfcc5d96cf374503682c27b86209c9280443fd4e5f12e321b8",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/agn-021 - generation-ddr-definition.md": {
+      "filePath": "ddrs/agn-021 - generation-ddr-definition.md",
+      "docId": "25C204A2A9A65A01B24FFAE4B45C7B3C",
+      "contentHash": "9d46948fe64bfb3b97344c9c9674d91d4af5386f1502195c72d2c32c9bfeb10a",
+      "activeContentHash": "9d46948fe64bfb3b97344c9c9674d91d4af5386f1502195c72d2c32c9bfeb10a",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/agn-022 - ddr rag representation & quality contract.md": {
+      "filePath": "ddrs/agn-022 - ddr rag representation & quality contract.md",
+      "docId": "9CC92A2B943A573FB6686EABEC6C6C06",
+      "contentHash": "4da0d3e94eeb9c8402f0215da29451cbb666955be242b7d42ad27d0cf0794232",
+      "activeContentHash": "4da0d3e94eeb9c8402f0215da29451cbb666955be242b7d42ad27d0cf0794232",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/agn-023 - ddr ingestion & derived field generation contract.md": {
+      "filePath": "ddrs/agn-023 - ddr ingestion & derived field generation contract.md",
+      "docId": "B057C1A9A2B5517BA787BCB1CC75FDB3",
+      "contentHash": "72584169e4cdbd3cfa940fbb2a63f281cb19c44ae3ecfb6e8d61c5c464fd1b35",
+      "activeContentHash": "72584169e4cdbd3cfa940fbb2a63f281cb19c44ae3ecfb6e8d61c5c464fd1b35",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/agn-024 - agent working memory & known facts registry.md": {
+      "filePath": "ddrs/agn-024 - agent working memory & known facts registry.md",
+      "docId": "031860DC2D7250FABE48803BE2A38DD3",
+      "contentHash": "d44050408ff75d7af664befb9dccd28acfc4378c869fc2fb6bda4980ef8f103d",
+      "activeContentHash": "d44050408ff75d7af664befb9dccd28acfc4378c869fc2fb6bda4980ef8f103d",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/agn-025 - kfr lifecycle & working memory management.md": {
+      "filePath": "ddrs/agn-025 - kfr lifecycle & working memory management.md",
+      "docId": "6C9B4E83C59E558694B0EE1B0D64071C",
+      "contentHash": "3ba5b3d427e720071462928ce097297c1dbfe5238eddd7baffcbba088ee6e905",
+      "activeContentHash": "3ba5b3d427e720071462928ce097297c1dbfe5238eddd7baffcbba088ee6e905",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/agn-026 - agent pipeline refactor checklist and composition trace.md": {
+      "filePath": "ddrs/agn-026 - agent pipeline refactor checklist and composition trace.md",
+      "docId": "F0AB80CC0A4C5CDBA01BBAC710B908C0",
+      "contentHash": "3355386f11d151912ff28f15d13504978a4eb3ab38a5e36226a24055e821a669",
+      "activeContentHash": "3355386f11d151912ff28f15d13504978a4eb3ab38a5e36226a24055e821a669",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/agn-027 - agent pipeline refactor pt - content injection.md": {
+      "filePath": "ddrs/agn-027 - agent pipeline refactor pt - content injection.md",
+      "docId": "1488BA1FBF8B5B94A34E0C902F65CF22",
+      "contentHash": "732956880296458dda22a5c55aee993f94e05012b6d40f75441e8dc45b6bf614",
+      "activeContentHash": "732956880296458dda22a5c55aee993f94e05012b6d40f75441e8dc45b6bf614",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/agn-028 - agent session-level prompt injection governance.md": {
+      "filePath": "ddrs/agn-028 - agent session-level prompt injection governance.md",
+      "docId": "E45218CD4F145ECCB6A96A1EF93FA56A",
+      "contentHash": "637e12b48db81493c8def527da32721955fa5d3b352547956886f7506bb2ef64",
+      "activeContentHash": "637e12b48db81493c8def527da32721955fa5d3b352547956886f7506bb2ef64",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/agn-029 - agent turn-level contribution providers & injection governance.md": {
+      "filePath": "ddrs/agn-029 - agent turn-level contribution providers & injection governance.md",
+      "docId": "56C3E5EEBD675C45B18D82E7397B1C81",
+      "contentHash": "d5c0614d49f447965e8fcaf3e2922582a3f90fdf3596fdd2c11086c1f6457eeb",
+      "activeContentHash": "d5c0614d49f447965e8fcaf3e2922582a3f90fdf3596fdd2c11086c1f6457eeb",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/agn-030 - implementation of prompt context providers.md": {
+      "filePath": "ddrs/agn-030 - implementation of prompt context providers.md",
+      "docId": "B57F0998DF69593CB8462E50FAF06CFC",
+      "contentHash": "4bf0b2e8f300495d77825fecf42a7595fd77dd99a5fbd9008c6862a04848b63f",
+      "activeContentHash": "4bf0b2e8f300495d77825fecf42a7595fd77dd99a5fbd9008c6862a04848b63f",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/agn-031 - agent reasoner.md": {
+      "filePath": "ddrs/agn-031 - agent reasoner.md",
+      "docId": "D8D2AF2DFC915A88AFBFA6BDE874DFE6",
+      "contentHash": "1e38cbf2f921ac4feccb974e768a88ddc09ee31d896f78ebc6e74c0a1f3e0330",
+      "activeContentHash": "1e38cbf2f921ac4feccb974e768a88ddc09ee31d896f78ebc6e74c0a1f3e0330",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/agn-032 - agent pipeline steps.md": {
+      "filePath": "ddrs/agn-032 - agent pipeline steps.md",
+      "docId": "F36903E69FF8546FA28B59110BC82625",
+      "contentHash": "ddd2d5b957d9c3c0e15d1a6bfdf99c79f62840adce25e94308719bdc4b159f9c",
+      "activeContentHash": "ddd2d5b957d9c3c0e15d1a6bfdf99c79f62840adce25e94308719bdc4b159f9c",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/agn-033 - agentexecuteresponse shape.md": {
+      "filePath": "ddrs/agn-033 - agentexecuteresponse shape.md",
+      "docId": "7EE63D5BFC5A5D279665D7B8CE4A0F1B",
+      "contentHash": "4cd0ce21d9e9fe6f06acf628354f5b9d4318bb5b8c95f0c156864334f4ab0ab9",
+      "activeContentHash": "4cd0ce21d9e9fe6f06acf628354f5b9d4318bb5b8c95f0c156864334f4ab0ab9",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/agn-034 - agentexecuterequest streamlining (draft).md": {
+      "filePath": "ddrs/agn-034 - agentexecuterequest streamlining (draft).md",
+      "docId": "2DC7E67F5D7353779F0BEF1C6D6931D1",
+      "contentHash": "c282f4d0ecce4dfe52bf2edfc1f8bb49081c75165aea76817eb99e492b4783a2",
+      "activeContentHash": "c282f4d0ecce4dfe52bf2edfc1f8bb49081c75165aea76817eb99e492b4783a2",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/agn-034 - agentexecuterequest streamlining.md": {
+      "filePath": "ddrs/agn-034 - agentexecuterequest streamlining.md",
+      "docId": "D40CA281FCCB59B6AAD4C455FB9C401E",
+      "contentHash": "706a96121219257dbb4f5e6384a315dae8dabb27dd323bf96de9a2dcbf88c8a9",
+      "activeContentHash": "706a96121219257dbb4f5e6384a315dae8dabb27dd323bf96de9a2dcbf88c8a9",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/agn-035 - agent knowledge packs.md": {
+      "filePath": "ddrs/agn-035 - agent knowledge packs.md",
+      "docId": "F6E07A96367F533E94B047A166E21F9B",
+      "contentHash": "bacaf8582be2a35e348db62bb65d6b0b09aebe676859d2e42811c5bdd73e1df3",
+      "activeContentHash": "bacaf8582be2a35e348db62bb65d6b0b09aebe676859d2e42811c5bdd73e1df3",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/agn-036 - agent pipeline context validation rules.md": {
+      "filePath": "ddrs/agn-036 - agent pipeline context validation rules.md",
+      "docId": "0EF9723524B65C08B7CCFE6BE996226A",
+      "contentHash": "c604f8c38c602f4b369290a8c9b64c9b849565e7a5168c000f70feecf23aacfc",
+      "activeContentHash": "c604f8c38c602f4b369290a8c9b64c9b849565e7a5168c000f70feecf23aacfc",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/draft-agn-034.md": {
+      "filePath": "ddrs/draft-agn-034.md",
+      "docId": "C33E3BCCB9595BB4988FAD0807940A0C",
+      "contentHash": "de051eab9642fcb68eaa79d801ca75f3916f77da6b4612513c7761d1a20ebd2b",
+      "activeContentHash": "de051eab9642fcb68eaa79d801ca75f3916f77da6b4612513c7761d1a20ebd2b",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/idx-069 - rag point construction pipeline.md": {
+      "filePath": "ddrs/idx-069 - rag point construction pipeline.md",
+      "docId": "73D77679B1EF555082003BAC52C312E9",
+      "contentHash": "870d4dbc1062520e71839878698a1eb1a5875c5ceeab8c134988c13c73cb617b",
+      "activeContentHash": "870d4dbc1062520e71839878698a1eb1a5875c5ceeab8c134988c13c73cb617b",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/idx-070 - ragpayload backing artifact links.md": {
+      "filePath": "ddrs/idx-070 - ragpayload backing artifact links.md",
+      "docId": "1F3337CD2D3D5BF3972BB9B326DAAF52",
+      "contentHash": "1201b700dcf48047fa682dc5c1005af23fa59f805f915ae4575eb84ec3e9d581",
+      "activeContentHash": "1201b700dcf48047fa682dc5c1005af23fa59f805f915ae4575eb84ec3e9d581",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/idx-071 - domain catalog service ddr.md": {
+      "filePath": "ddrs/idx-071 - domain catalog service ddr.md",
+      "docId": "8D0935FD9C1F5E1086B66EC077D87CD0",
+      "contentHash": "1625c42da49e60d119d2e3014132b72f83981f00ab44e4634d464e7cc5589a12",
+      "activeContentHash": "1625c42da49e60d119d2e3014132b72f83981f00ab44e4634d464e7cc5589a12",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/idx-072 - domain description ddr.md": {
+      "filePath": "ddrs/idx-072 - domain description ddr.md",
+      "docId": "6929194A6A9F58B18003EAFF5A970A15",
+      "contentHash": "2687c96ced37a98bd615b7c862f409e9b9059b8cedf46af89a4c2f6ded3ba784",
+      "activeContentHash": "2687c96ced37a98bd615b7c862f409e9b9059b8cedf46af89a4c2f6ded3ba784",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/svc-001 - generic structured text llm service.md": {
+      "filePath": "ddrs/svc-001 - generic structured text llm service.md",
+      "docId": "39AB08C0CB7859BDA7FAE95FCECDE4A3",
+      "contentHash": "d8c50955a1dbe941c78ce276f2eca48c00cfebbf56292ba327f8ab5791c549b8",
+      "activeContentHash": "d8c50955a1dbe941c78ce276f2eca48c00cfebbf56292ba327f8ab5791c549b8",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/sys-000010 - ddr schema.md": {
+      "filePath": "ddrs/sys-000010 - ddr schema.md",
+      "docId": "34F2826BA4C058F293FC915112D06253",
+      "contentHash": "290e19c1a73df3d56898bef1947a89d51a5dd2305567324d991a19af2c56304f",
+      "activeContentHash": "290e19c1a73df3d56898bef1947a89d51a5dd2305567324d991a19af2c56304f",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/sys-001 - aptix development workflow.md": {
+      "filePath": "ddrs/sys-001 - aptix development workflow.md",
+      "docId": "99EDA4F1BB8F52689A838B4369D2884C",
+      "contentHash": "b43bf2cee04720f48e5cee9c79d1368a49b257bac375597d8bb6de658d11a305",
+      "activeContentHash": "b43bf2cee04720f48e5cee9c79d1368a49b257bac375597d8bb6de658d11a305",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/sys-001 - org - aptix development workflow ddr.md": {
+      "filePath": "ddrs/sys-001 - org - aptix development workflow ddr.md",
+      "docId": "23C20D1E8F51514CB1DBF5BBA5CDED53",
+      "contentHash": "d2341e7644935bf69066cd76929261e1f8b3456d30de045abe4115696ae49774",
+      "activeContentHash": "d2341e7644935bf69066cd76929261e1f8b3456d30de045abe4115696ae49774",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/sys-001 - rev 1- aptix development workflow (rev1).md": {
+      "filePath": "ddrs/sys-001 - rev 1- aptix development workflow (rev1).md",
+      "docId": "317E9CD4B0E25EB2A1F788AD1B8ADF34",
+      "contentHash": "f2c8db88998116380cea15564677857bc615a2c2b23f8df215a71280973814d7",
+      "activeContentHash": "f2c8db88998116380cea15564677857bc615a2c2b23f8df215a71280973814d7",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/sys-003 - logger usage and profiling standards ddr.md": {
+      "filePath": "ddrs/sys-003 - logger usage and profiling standards ddr.md",
+      "docId": "ACF6645C6C2854E7ABF4755110394485",
+      "contentHash": "2ecdecee19b2dae1450b6f3ec1cf1fbd369ab61a1b0e48dc5df28192ad7370af",
+      "activeContentHash": "2ecdecee19b2dae1450b6f3ec1cf1fbd369ab61a1b0e48dc5df28192ad7370af",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/sys-004 - aptix file & patch contract.md": {
+      "filePath": "ddrs/sys-004 - aptix file & patch contract.md",
+      "docId": "46C4A61CDD245222BE46603BC115A0B6",
+      "contentHash": "952e96a290bdb67954a943b5b70cfb0c77f54fea4921461b69ecac2df0b2122d",
+      "activeContentHash": "952e96a290bdb67954a943b5b70cfb0c77f54fea4921461b69ecac2df0b2122d",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/sys-005 - invokeresult usage & semantics.md": {
+      "filePath": "ddrs/sys-005 - invokeresult usage & semantics.md",
+      "docId": "03FE5F04EEAD5E97B52E912465501AA5",
+      "contentHash": "b8b236f7ebedf2d79af6ef20f8b5cd7602243194203833d96c380648b8c5143f",
+      "activeContentHash": "b8b236f7ebedf2d79af6ef20f8b5cd7602243194203833d96c380648b8c5143f",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/sys-006 - types of ddr (detailed design review) documents.md": {
+      "filePath": "ddrs/sys-006 - types of ddr (detailed design review) documents.md",
+      "docId": "39C027845C8B5D4880F342E230A84A62",
+      "contentHash": "2e064a0368e8404f2c5ee101e7da519369b0b4dd74572499ebe5e935e128d00a",
+      "activeContentHash": "2e064a0368e8404f2c5ee101e7da519369b0b4dd74572499ebe5e935e128d00a",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/sys-008 - aptix decision preservation protocol.md": {
+      "filePath": "ddrs/sys-008 - aptix decision preservation protocol.md",
+      "docId": "173D7A03A2615D629BDA672F53E49600",
+      "contentHash": "1db7dfeffc837b2fb0f146f2205df599b4e5e0dd45dd87a751599a75a9ce4d2d",
+      "activeContentHash": "1db7dfeffc837b2fb0f146f2205df599b4e5e0dd45dd87a751599a75a9ce4d2d",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/sys-009 - code generation interaction protocol.md": {
+      "filePath": "ddrs/sys-009 - code generation interaction protocol.md",
+      "docId": "F86E7AEC4B31515F8644B961A2B51341",
+      "contentHash": "446f5e1d34f839f4957fd6a4a825adaa22b40331ecbbebb46943f5e290921376",
+      "activeContentHash": "446f5e1d34f839f4957fd6a4a825adaa22b40331ecbbebb46943f5e290921376",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/tst-001 - test generation standards (nunit + moq).md": {
+      "filePath": "ddrs/tst-001 - test generation standards (nunit + moq).md",
+      "docId": "817C22CC13AC57E488E10ADFE07469CF",
+      "contentHash": "c4e97c6ee63397d2855d7bb7d1b32dcf5a0ea1319cf5a9dafd96ad61c8e8412e",
+      "activeContentHash": "c4e97c6ee63397d2855d7bb7d1b32dcf5a0ea1319cf5a9dafd96ad61c8e8412e",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/tst-002 - canonical test patterns & examples.md": {
+      "filePath": "ddrs/tst-002 - canonical test patterns & examples.md",
+      "docId": "56F6735AFF5955869DA0B5E6E4F97DEC",
+      "contentHash": "0fa9cbd8867e8496d1fbdb5ff17fc57e0b2ff1b2ecde52dbeb1a1a800796715e",
+      "activeContentHash": "0fa9cbd8867e8496d1fbdb5ff17fc57e0b2ff1b2ecde52dbeb1a1a800796715e",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/tst-003 - general purpose testing utilities framework (draft).md": {
+      "filePath": "ddrs/tst-003 - general purpose testing utilities framework (draft).md",
+      "docId": "B67CCC2F3ECC5E58A626C3C6E05EF90F",
+      "contentHash": "b46c11d2250c7d0f9aecd0a25584b2a0870fd4c74f73f06fbc57338f1ab11ab3",
+      "activeContentHash": "b46c11d2250c7d0f9aecd0a25584b2a0870fd4c74f73f06fbc57338f1ab11ab3",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/tul-005 - agent ddr manager tool spec.md": {
+      "filePath": "ddrs/tul-005 - agent ddr manager tool spec.md",
+      "docId": "0CCB6E4ED2555357898CC9609CF80765",
+      "contentHash": "3bdbab26b6d49a43af1ff3e33e5df499015c187c209f4c54e9b9232924d23553",
+      "activeContentHash": "3bdbab26b6d49a43af1ff3e33e5df499015c187c209f4c54e9b9232924d23553",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/tul-005 - agent ddr manager tool.md": {
+      "filePath": "ddrs/tul-005 - agent ddr manager tool.md",
+      "docId": "93807F1341A85617B809A753A4FFEE70",
+      "contentHash": "9bf3a560fec144d30ca9b786e99932e6f008d7fb9d71ce84ecaf1620da03a4b5",
+      "activeContentHash": "9bf3a560fec144d30ca9b786e99932e6f008d7fb9d71ce84ecaf1620da03a4b5",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/tul-006 - agent workflow registry tool.md": {
+      "filePath": "ddrs/tul-006 - agent workflow registry tool.md",
+      "docId": "8FA67AF6A0135E2C82E44B752C8013F4",
+      "contentHash": "5d11747f647775c2f534534f4791dafd7d197b6bab2992dc8b82a43a8e9a2648",
+      "activeContentHash": "5d11747f647775c2f534534f4791dafd7d197b6bab2992dc8b82a43a8e9a2648",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/tul-007 - agent mode handling.md": {
+      "filePath": "ddrs/tul-007 - agent mode handling.md",
+      "docId": "C5E8500CD05A5FFC91593609830E5BA7",
+      "contentHash": "83fa3eaa9ea899f712fdf5e6f0080702a0665f226aa5ea7cf707ac7b79c41f77",
+      "activeContentHash": "83fa3eaa9ea899f712fdf5e6f0080702a0665f226aa5ea7cf707ac7b79c41f77",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/tul-007 - agent session mode change tool.md": {
+      "filePath": "ddrs/tul-007 - agent session mode change tool.md",
+      "docId": "3BB89BABD8E654F1BC765FF9053C326C",
+      "contentHash": "73ce8549574aeed189673ff6a6c2472d04428d68f478362db1dde1483275f391",
+      "activeContentHash": "73ce8549574aeed189673ff6a6c2472d04428d68f478362db1dde1483275f391",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/tul-008 - mode-aware tool declaration and tool schema provider.md": {
+      "filePath": "ddrs/tul-008 - mode-aware tool declaration and tool schema provider.md",
+      "docId": "81F1762362CA5A1D866D3399A2488F90",
+      "contentHash": "790b3a1998ccc50b3650b79a724d17b2745e3320ddbfa703b034beb9b84419d0",
+      "activeContentHash": "790b3a1998ccc50b3650b79a724d17b2745e3320ddbfa703b034beb9b84419d0",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/tul-009 - session mode persistence and changemode tool.md": {
+      "filePath": "ddrs/tul-009 - session mode persistence and changemode tool.md",
+      "docId": "8C3CB3FE9B9B5D92AA4E91D1698596F7",
+      "contentHash": "cc0c53b0975de67ea8f4ffe20ed763f6844238412540821129b943b3f31d35cd",
+      "activeContentHash": "cc0c53b0975de67ea8f4ffe20ed763f6844238412540821129b943b3f31d35cd",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/tul-010 - agent mode catalog and mode identification rules.md": {
+      "filePath": "ddrs/tul-010 - agent mode catalog and mode identification rules.md",
+      "docId": "794241BFF94B5952975CC88D00DAEDB0",
+      "contentHash": "4d258e3b9f05ce63af7a5618ba67edbe857c3fef9cbd94b86bbc0b5dce2b3fb6",
+      "activeContentHash": "4d258e3b9f05ce63af7a5618ba67edbe857c3fef9cbd94b86bbc0b5dce2b3fb6",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/tul-010 - agent mode catalog tool.md": {
+      "filePath": "ddrs/tul-010 - agent mode catalog tool.md",
+      "docId": "F0B2660A40FB5D8DACBD66791E3531C9",
+      "contentHash": "50d712db81a337632c81143c3226974519dbb848c2bc19d482b37390c9bda0a2",
+      "activeContentHash": "50d712db81a337632c81143c3226974519dbb848c2bc19d482b37390c9bda0a2",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/tul-011 - agent tool contract.md": {
+      "filePath": "ddrs/tul-011 - agent tool contract.md",
+      "docId": "AD9888E4A2505F0FABB666F34DCA8C98",
+      "contentHash": "751ebeed876aa273bce85c52a866de627377cea639915df9757b9d57e72a0086",
+      "activeContentHash": "751ebeed876aa273bce85c52a866de627377cea639915df9757b9d57e72a0086",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/tul-012 - mode change tool trigger.md": {
+      "filePath": "ddrs/tul-012 - mode change tool trigger.md",
+      "docId": "8F9ACB6A803A50ACBFE9AD5DD61684C9",
+      "contentHash": "9935012026abf5757bb3c3d48e1cbf7a6f0dc3af70ddc3e79e65aec884e90804",
+      "activeContentHash": "9935012026abf5757bb3c3d48e1cbf7a6f0dc3af70ddc3e79e65aec884e90804",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/workflow seeds/aptix_collab_contract_v2.md": {
+      "filePath": "ddrs/workflow seeds/aptix_collab_contract_v2.md",
+      "docId": "0067413960C2572396A548B664BCA906",
+      "contentHash": "4b633a8ddbf085a16f11272641efc3e3426788bab0c10f4372e5d71febc7098f",
+      "activeContentHash": "4b633a8ddbf085a16f11272641efc3e3426788bab0c10f4372e5d71febc7098f",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/workflow seeds/chd-001 - child object authoring pattern.md": {
+      "filePath": "ddrs/workflow seeds/chd-001 - child object authoring pattern.md",
+      "docId": "248BCB18A6FF53B8B399A6E87CC50F95",
+      "contentHash": "d9cacc928ca1165b61ab19613b95256fa061be6d69e1f9de6515b75ec7f2d540",
+      "activeContentHash": "d9cacc928ca1165b61ab19613b95256fa061be6d69e1f9de6515b75ec7f2d540",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "ddrs/workflow seeds/enum-ui-picker-pattern.md": {
+      "filePath": "ddrs/workflow seeds/enum-ui-picker-pattern.md",
+      "docId": "B9F1484115E1528A8F5945DF325F1B31",
+      "contentHash": "ba5764f08539ceeddda568dbff0de3d108293e9060e7cf67f679af969eae6cc9",
+      "activeContentHash": "ba5764f08539ceeddda568dbff0de3d108293e9060e7cf67f679af969eae6cc9",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "src/lagovista.ai.cloudrepos/agentpersonadefinitionrepo.cs": {
+      "filePath": "src/lagovista.ai.cloudrepos/agentpersonadefinitionrepo.cs",
+      "docId": "E202ECD3D75155FABB7C9B61CA84CC0C",
+      "contentHash": "6b5549a9b37f992b20c1fe1df31d13819d5fb6c01ed2685aea04a5a93a6b59a4",
+      "activeContentHash": "6b5549a9b37f992b20c1fe1df31d13819d5fb6c01ed2685aea04a5a93a6b59a4",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "src/lagovista.ai.cloudrepos/agenttoolboxrepo.cs": {
+      "filePath": "src/lagovista.ai.cloudrepos/agenttoolboxrepo.cs",
+      "docId": "0D82ECECA9C3574E84A3FD25AB0ACD70",
+      "contentHash": "bdfa26066edcdacc684951d6608947931ae15a7f78899b3521a8a0a3dfa61a2d",
+      "activeContentHash": "bdfa26066edcdacc684951d6608947931ae15a7f78899b3521a8a0a3dfa61a2d",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "src/lagovista.ai.cloudrepos/agentturnchathistoryrepo.cs": {
+      "filePath": "src/lagovista.ai.cloudrepos/agentturnchathistoryrepo.cs",
+      "docId": "529E3DFE293B58989C4AC23E0E350F8C",
+      "contentHash": "bac3309cd276da2f3f96db2f58f3d72dd2e65b1f53c337a7c3ac41148abb124e",
+      "activeContentHash": "bac3309cd276da2f3f96db2f58f3d72dd2e65b1f53c337a7c3ac41148abb124e",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "src/lagovista.ai.cloudrepos/contentstorage.cs": {
+      "filePath": "src/lagovista.ai.cloudrepos/contentstorage.cs",
+      "docId": "609CF19F9DFD5D7B81A965383691FBD8",
+      "contentHash": "65986e4ad020c05019803603a47698f633fcc35ea66de00fc325f72d527a8996",
+      "activeContentHash": "65986e4ad020c05019803603a47698f633fcc35ea66de00fc325f72d527a8996",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "src/lagovista.ai.cloudrepos/ddrrepo.cs": {
+      "filePath": "src/lagovista.ai.cloudrepos/ddrrepo.cs",
+      "docId": "2F52C096E2B155E68AF6AB07F021B20D",
+      "contentHash": "9e5c6a6e4eb9907ea9da2858632ac898a9d80eef21d1a11f8d93a4218e0bb68b",
+      "activeContentHash": "9e5c6a6e4eb9907ea9da2858632ac898a9d80eef21d1a11f8d93a4218e0bb68b",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "src/lagovista.ai.cloudrepos/memorynoterepo.cs": {
+      "filePath": "src/lagovista.ai.cloudrepos/memorynoterepo.cs",
+      "docId": "E56E7FA326D85F678F6C78DD25F7910A",
+      "contentHash": "8e02da4d2629b432e71f3a014e16c2417fe3f882ffc4df5eca20e5a5407cd58a",
+      "activeContentHash": "8e02da4d2629b432e71f3a014e16c2417fe3f882ffc4df5eca20e5a5407cd58a",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "src/lagovista.ai.cloudrepos/resourceusagetablewriter.cs": {
+      "filePath": "src/lagovista.ai.cloudrepos/resourceusagetablewriter.cs",
+      "docId": "36350C9D6DB757B98F0ECB5C5FCC6281",
+      "contentHash": "0c1d47a8fa7cd704636d7c8a78af3e1c8688e460fe0815f065be261b9eef8121",
+      "activeContentHash": "0c1d47a8fa7cd704636d7c8a78af3e1c8688e460fe0815f065be261b9eef8121",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "src/lagovista.ai.cloudrepos/tlacatalogrepo.cs": {
+      "filePath": "src/lagovista.ai.cloudrepos/tlacatalogrepo.cs",
+      "docId": "07B02CA47F855C91BD493B78F3A3AE4F",
+      "contentHash": "cf7acb274fc04b9405ec52ab0dc3f2de08a4e266d7f4088b4388bfb65dea78bf",
+      "activeContentHash": "cf7acb274fc04b9405ec52ab0dc3f2de08a4e266d7f4088b4388bfb65dea78bf",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "src/lagovista.ai.cloudrepos/toolcallmanifestrepo.cs": {
+      "filePath": "src/lagovista.ai.cloudrepos/toolcallmanifestrepo.cs",
+      "docId": "4E957C34595B572F8C7146060EC6D0E3",
+      "contentHash": "c044d60a1d420b6a6073e5707a52bf711b5aefa8b3f4a35c15c1f3db9f7cfb70",
+      "activeContentHash": "c044d60a1d420b6a6073e5707a52bf711b5aefa8b3f4a35c15c1f3db9f7cfb70",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
+    },
+    "src/lagovista.ai.cloudrepos/workflowdefinitionrepo.cs": {
+      "filePath": "src/lagovista.ai.cloudrepos/workflowdefinitionrepo.cs",
+      "docId": "4AC74EBB38E952CE8D9DF308FA15D137",
+      "contentHash": "0fb517a3393bc2c8bf17c52caa5ea6cb4f3ee4f68f626c7d826dbec10167b17c",
+      "activeContentHash": "0fb517a3393bc2c8bf17c52caa5ea6cb4f3ee4f68f626c7d826dbec10167b17c",
+      "reindex": "full",
+      "facets": [],
+      "isActive": false
     }
   },
-  "count": 457
+  "count": 531
 }

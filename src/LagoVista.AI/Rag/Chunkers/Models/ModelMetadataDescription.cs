@@ -33,6 +33,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         public bool CanExport { get; set; }
 
         // ---------- UI / API Affordances ----------
+        public string PreviewUIUrl { get; set; }
         public string ListUIUrl { get; set; }
         public string EditUIUrl { get; set; }
         public string CreateUIUrl { get; set; }

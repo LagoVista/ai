@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Text;
 using LagoVista.AI.Rag.Chunkers.Models;
 using LagoVista.Core.Utils.Types.Nuviot.RagIndexing;
@@ -13,7 +14,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
     /// snippet using ModelStructureDescription (and optionally
     /// ModelMetadataDescription when available).
     /// </summary>
-    public static class FinderSnippetTextBuilder
+    public static class ModelMetadataFinderSnippetTextBuilder
     {
         /// <summary>
         /// Builds a canonical Model finder snippet for an entity model.
@@ -32,10 +33,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
         ///            structural shape and any available UI metadata and
         ///            interaction rules.
         /// </summary>
-        public static string BuildModelFinderSnippet(
-            DomainModelHeaderInformation header,
-            ModelStructureDescription model,
-            bool hasUiMetadata = false)
+        public static string BuildModelFinderSnippet(DomainModelHeaderInformation header, String sectiontype, ModelMetadataDescription model)
         {
             if (model == null)
             {
@@ -93,6 +91,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             // Kind
             // -----------------------------------------------------------------
             sb.AppendLine("Kind: Model");
+            sb.AppendLine($"ViewType: {sectiontype}");
             sb.AppendLine();
 
             // -----------------------------------------------------------------
@@ -112,31 +111,16 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                     ? model.ModelName
                     : artifact;
 
-            sb.Append("Artifact: ");
-            sb.AppendLine(artifact);
-
-            sb.Append("PrimaryEntity: ");
-            sb.AppendLine(primaryEntity);
-
-            var aspects = hasUiMetadata ? "Structure, UIMetadata" : "Structure";
-            sb.Append("Aspects: ");
-            sb.AppendLine(aspects);
-
+            sb.AppendLine($"Artifact: {artifact}");
+            sb.AppendLine($"Description: {model.Description}");
+            sb.AppendLine($"PrimaryEntity: {primaryEntity}");
+            sb.AppendLine($"Properties: {String.Join(", ", model.Fields.Select(fld => fld.Label))}");   
             sb.AppendLine();
 
             // -----------------------------------------------------------------
             // Purpose
             // -----------------------------------------------------------------
-            sb.Append("Purpose: Defines the ");
-            sb.Append(primaryEntity);
-            sb.Append(" entity, including its structural shape");
-
-            if (hasUiMetadata)
-            {
-                sb.Append(" and any available UI metadata and interaction rules");
-            }
-
-            sb.AppendLine(".");
+            sb.Append($"Purpose: Defines the {primaryEntity} including it's properties and structural shape.");
 
             return sb.ToString().Trim();
         }

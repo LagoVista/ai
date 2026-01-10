@@ -52,7 +52,7 @@ namespace LagoVista.AI.Services.Qdrant
             }
 
             // 1) Embed the instructions
-            var embedResult = await _embedder.EmbedAsync(query, -1);
+            var embedResult = await _embedder.EmbedAsync(query);
             if (!embedResult.Successful)
             {
                 return InvokeResult<IAgentPipelineContext>.FromError(embedResult.ErrorMessage);
@@ -70,12 +70,10 @@ namespace LagoVista.AI.Services.Qdrant
                 Vector = vector,
                 Limit = Math.Clamp(_topK * 3, 12, 50),
                 WithPayload = true,
-                Filter =piplineContext.Envelope.RagScope
+                Filter = piplineContext.Envelope.RagScope.Conditions.Count > 0 ? piplineContext.Envelope.RagScope : null
             };
 
-            var hits = await _qdrantClient.SearchAsync(
-                piplineContext.AgentContext.VectorDatabaseCollectionName,
-                searchRequest).ConfigureAwait(false);
+            var hits = await _qdrantClient.SearchAsync(piplineContext.AgentContext.VectorDatabaseCollectionName, searchRequest);
 
             _adminLogger.Trace($"[QdrantRagContextBuilder__BuildContextSectionAsync] Query Completed, found {hits.Count} results.");
 

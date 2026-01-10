@@ -205,7 +205,7 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
                         {
                             if (fileProcessResult.Result.RagPoints.Count == 0)
                             {
-                                Console.WriteLine($"No points: {fileContext.RelativePath}");
+                                continue;
                             }
 
                             foreach (var result in fileProcessResult.Result.RagPoints)
@@ -220,18 +220,19 @@ namespace LagoVista.AI.Rag.ContractPacks.Orchestration.Services
                                 result.Vector = embedResult.Result.Vector;
                                 result.Payload.Meta.EmbeddingModel = embedResult.Result.EmbeddingModel;
 
-                                await _contentStorage.AddContentAsync(result.Payload.Extra.SourceSliceBlobUri, result.Contents);
+                                await _contentStorage.AddContentAsync(result.Payload.Extra.DescriptionBlobUri, result.Contents);
                             }
 
-                            await _qdrantClient.UpsertInBatchesAsync(config.Qdrant.Collection, fileProcessResult.Result.RagPoints, config.Qdrant.VectorSize);
+                            if (fileProcessResult.Result.RagPoints.Any())
+                            {
+                                await _qdrantClient.UpsertInBatchesAsync(config.Qdrant.Collection, fileProcessResult.Result.RagPoints, config.Qdrant.VectorSize);
 
-                            var record = localIndex.GetOrAdd(fileContext.RelativePath, fileContext.DocumentIdentity.DocId);
-                            record.ContentHash = await ContentHashUtil.ComputeFileContentHashAsync(fileContext.FullPath);
-                            await _localIndexStore.SaveAsync(config, repoId, localIndex, cancellationToken);
-
-                            await _contentStorage.AddContentAsync(fileContext.FullPath, fileContext.Contents);
-
-                            Console.WriteLine(new String('-', 80));
+                                var record = localIndex.GetOrAdd(fileContext.RelativePath, fileContext.DocumentIdentity.DocId);
+                                record.ContentHash = await ContentHashUtil.ComputeFileContentHashAsync(fileContext.FullPath);
+                                await _localIndexStore.SaveAsync(config, repoId, localIndex, cancellationToken);
+                                await _contentStorage.AddContentAsync(fileContext.FullPath, fileContext.Contents);
+                                Console.WriteLine(new String('-', 80));
+                            }
                         }
                         else
                         {

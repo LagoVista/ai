@@ -28,7 +28,7 @@ namespace LagoVista.AI.ACP
             if (String.IsNullOrWhiteSpace(commandId))
             {
                 var msg = "ACP commandId is empty.";
-                _logger.AddError("[AcpCommandExecutor_ExecuteAsync__EmptyCommandId]", msg);
+                _logger.AddError(this.Tag(), msg);
                 return InvokeResult<IAgentPipelineContext>.FromError(msg);
             }
 
@@ -38,17 +38,17 @@ namespace LagoVista.AI.ACP
             if (!_commandRegistry.HasCommand(commandId))
             {
                 var msg = $"ACP command '{commandId}' is not registered.";
-                _logger.AddError("[AcpCommandExecutor_ExecuteAsync__NotRegistered]", msg);
+                _logger.AddError(this.Tag(), msg);
                 return InvokeResult<IAgentPipelineContext>.FromError(msg);
             }
 
-            _logger.Trace($"[AcpCommandExecutor_ExecuteAsync] ACP Command '{commandId}' matched. Executing with args: [{String.Join(", ", args)}]");
+            _logger.Trace($"{this.Tag()} ACP Command '{commandId}' matched. Executing with args: [{String.Join(", ", args)}]");
 
             var cmdResult = _commandFactory.GetCommand(commandId);
             if (!cmdResult.Successful)
             {
                 var msg = cmdResult.ErrorMessage ?? $"Failed to resolve ACP command '{commandId}'.";
-                _logger.AddError("[AcpCommandExecutor_ExecuteAsync__ResolveFailed]", msg);
+                _logger.AddError(this.Tag(), msg);
                 return InvokeResult<IAgentPipelineContext>.FromInvokeResult(cmdResult.ToInvokeResult());
             }
 
@@ -56,12 +56,14 @@ namespace LagoVista.AI.ACP
             if (cmd == null)
             {
                 var msg = $"ACP command '{commandId}' resolved to null instance.";
-                _logger.AddError("[AcpCommandExecutor_ExecuteAsync__NullInstance]", msg);
+                _logger.AddError(this.Tag(), msg);
                 return InvokeResult<IAgentPipelineContext>.FromError(msg);
             }
 
             try
             {
+                _logger.Trace($"{this.Tag()} - Starting execution of ACP command '{cmd.GetType().Name}'.");  
+
                 var sw = Stopwatch.StartNew();
                 var execResult = await cmd.ExecuteAsync(context, args);
 
@@ -72,19 +74,19 @@ namespace LagoVista.AI.ACP
                     return InvokeResult<IAgentPipelineContext>.FromInvokeResult(execResult.ToInvokeResult());
                 }
 
-                _logger.Trace($"[AcpCommandExecutor_ExecuteAsync] ACP Command '{commandId}' executed successfully in {sw.Elapsed.TotalMilliseconds}ms.");
+                _logger.Trace($"{this.Tag()} ACP Command '{commandId}' executed successfully in {sw.Elapsed.TotalMilliseconds}ms.");
                 return execResult;
             }
             catch (OperationCanceledException) when (context.CancellationToken.IsCancellationRequested)
             {
                 var msg = $"ACP command '{commandId}' execution was cancelled.";
-                _logger.AddError("[AcpCommandExecutor_ExecuteAsync__Cancelled]", msg);
+                _logger.AddError(this.Tag(), msg);
                 return InvokeResult<IAgentPipelineContext>.FromError(msg);
             }
             catch (Exception ex)
             {
                 var msg = $"ACP command '{commandId}' threw an exception: {ex.Message}";
-                _logger.AddException("[AcpCommandExecutor_ExecuteAsync__Exception]", ex);
+                _logger.AddException(this.Tag(), ex);
                 return InvokeResult<IAgentPipelineContext>.FromError(msg);
             }
         }

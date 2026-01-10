@@ -106,14 +106,14 @@ namespace LagoVista.AI.Rag.ContractPacks.Ingestion.Services
 
                                 }
 
-                                //var modelMetaDataDescription = _descriptionServices.BuildModelMetadataDescription(ctx, symbolText, resources);
-                                //if (modelMetaDataDescription.Successful)
-                                //{
-                                //    var headerInfo = FindDomainHeaderInfo(catalog, modelMetaDataDescription.Result);
-                                //    modelMetaDataDescription.Result.BuildSections(headerInfo.Result);
-                                //    var metaDataResults = modelMetaDataDescription.Result.BuildRagPoints();
-                                //    result.Result.RagPoints.AddRange(metaDataResults.Select(rp => rp.Result));
-                                //}
+                                var modelMetaDataDescription = _descriptionServices.BuildModelMetadataDescription(ctx, symbolText, resources);
+                                if (modelMetaDataDescription.Successful)
+                                {
+                                    var headerInfo = FindDomainHeaderInfo(catalog, modelMetaDataDescription.Result);
+                                    modelMetaDataDescription.Result.BuildSections(headerInfo.Result);
+                                    var metaDataResults = modelMetaDataDescription.Result.BuildRagPoints();
+                                    result.Result.RagPoints.AddRange(metaDataResults.Select(rp => rp.Result));
+                                }
                             }
 
                             break;
