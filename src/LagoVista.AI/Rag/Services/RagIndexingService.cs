@@ -10,13 +10,17 @@ using LagoVista.Core.Models;
 using LagoVista.Core.Models.UIMetaData;
 using LagoVista.Core.Utils.Types;
 using LagoVista.Core.Validation;
+using LagoVista.IoT.Logging.Loggers;
 using LagoVista.UserAdmin.Interfaces.Repos.Orgs;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using static LagoVista.Core.Models.AdaptiveCard.MSTeams;
 
 namespace LagoVista.AI.Rag.Services
 {
@@ -30,9 +34,10 @@ namespace LagoVista.AI.Rag.Services
         private readonly IAgentContextLoaderRepo _agentContextLoaderRepo;
         private readonly IBackgroundServiceTaskQueue _taskService;
         private readonly IQdrantClient _vectorDbClient;
+        private readonly IAdminLogger _adminLogger;
 
         public RagIndexingService(IEntityIndexDocumentBuilder documentBuilder, IEmbedder embedder, IAgentContextLoaderRepo agentContextLoaderRepo, IBackgroundServiceTaskQueue taskService, 
-                           IQdrantClient vectorDbClient, IOrganizationLoaderRepo orgRepo, ILLMContentRepo llmContentRepo) 
+                                  IAdminLogger adminLogger, IQdrantClient vectorDbClient, IOrganizationLoaderRepo orgRepo, ILLMContentRepo llmContentRepo) 
         {
             _documentBuilder = documentBuilder ?? throw new ArgumentNullException(nameof(documentBuilder));
             _embedder = embedder ?? throw new ArgumentNullException(nameof(embedder));
@@ -42,47 +47,108 @@ namespace LagoVista.AI.Rag.Services
             _taskService = taskService ?? throw new ArgumentNullException(nameof(taskService));
             _vectorDbClient = vectorDbClient ?? throw new ArgumentNullException(nameof(vectorDbClient));
             _agentContextLoaderRepo = agentContextLoaderRepo ?? throw new ArgumentNullException(nameof(agentContextLoaderRepo));
+            _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
         }
-
 
         public float[] GetEmbedingsAsync(IAIAgentContext agentContext, string text)
         {
             throw new NotImplementedException();
         }
 
-
-
         public async Task<InvokeResult> IndexAsync(IEntityBase entity)
         {
             var org = await _orgRepo.GetOrganizationAsync(entity.OwnerOrganization.Id);
-            if(EntityHeader.IsNullOrEmpty(org.DefaultAgentContext))
+            if (EntityHeader.IsNullOrEmpty(org.DefaultAgentContext))
                 return InvokeResult.FromError("Organization does not have a default agent context defined, content can not be indexed.");
 
-            var agentContext = await _agentContextLoaderRepo.GetAgentContextAsync(org.DefaultAgentContext.Id);
-            
+            _adminLogger.Trace($"{this.Tag()} Queue index for {entity.Name} ({entity.EntityType})");
+
             await _taskService.QueueBackgroundWorkItemAsync(async (token) =>
             {
+                var sw = Stopwatch.StartNew();
+                
+                var agentContext = await _agentContextLoaderRepo.GetAgentContextAsync(org.DefaultAgentContext.Id);
+          
                 var entityType = entity.GetType();
                 var attr = entityType.GetTypeInfo().GetCustomAttributes<EntityDescriptionAttribute>().FirstOrDefault();
                 var entityDescription = EntityDescription.Create(entityType, attr);
 
 
-                if (entity is IRagableEntity)
+                var ragEntity = entity as IRagableEntity;
+                if (ragEntity != null)
                 {
-                    
+                    _adminLogger.Trace($"{this.Tag()} Background task startd for indexing raggable entity {entity.Name} ({entity.EntityType})");
+
+                    var points = new List<RagPoint>();
+
+                    var ragContentItems = await ragEntity.GetRagContentAsync();
+                    _adminLogger.Trace($"{this.Tag()} Found {ragContentItems.Count} points for raggable entity {entity.Name} ({entity.EntityType})");
+
+                    foreach (var ragContent in ragContentItems)
+                    {
+                        var point = new RagPoint();
+                        point.PointId = Guid.NewGuid().ToString();
+                        point.Payload = ragContent.Payload;
+                        var modelFileName = ragContent.Payload.Meta.DocId == entity.Id ? $"{entity.Id}.model.json" : $"{entity.Id}.{ragContent.Payload.Meta.DocId}.model.json";
+                        var userFileName = ragContent.Payload.Meta.DocId == entity.Id ? $"{entity.Id}.user.json" : $"{entity.Id}.{ragContent.Payload.Meta.DocId}.user.json";
+
+                        var modelSummaryUrl = await _llmContentRepo.AddTextContentAsync(agentContext, path: entity.EntityType, modelFileName, content: ragContent.ModelDescription, contentType: "application/json");
+                        var userDetails = await _llmContentRepo.AddTextContentAsync(agentContext, path: entity.EntityType, fileName: userFileName, content: ragContent.HumanDescription, contentType: "application/json");
+                        point.Payload.Extra.ModelContentFileName = modelFileName;
+                        point.Payload.Extra.HumanContentFileName = userFileName;
+                        point.Payload.Extra.Path = entity.EntityType;
+                        point.Payload.Meta.EmbeddingModel = agentContext.EmbeddingModel;
+
+                        if (String.IsNullOrEmpty(point.Payload.Extra.EditorUrl))
+                            point.Payload.Extra.EditorUrl = entityDescription.EditUIUrl;
+
+                        if (String.IsNullOrEmpty(point.Payload.Extra.PreviewUrl))
+                            point.Payload.Extra.PreviewUrl = entityDescription.PreviewUIUrl;
+
+                        if (!String.IsNullOrEmpty(ragContent.Issues))
+                        {
+                            var issuesFilename = ragContent.Payload.Meta.DocId == entity.Id ? $"{entity.Id}.issues.json" : $"{entity.Id}.{ragContent.Payload.Meta.DocId}.issues.json";
+                            await _llmContentRepo.AddTextContentAsync(agentContext, path: entity.EntityType, fileName: issuesFilename, content: ragContent.Issues, contentType: "application/json");
+                            point.Payload.Extra.IssuesFileName = issuesFilename;
+                            point.Payload.Meta.HasIssues = true;
+                        }
+                        var validationResult = point.Payload.ValidateForIndex();
+                        if (validationResult.Successful)
+                        {
+                            var vector = await _embedder.EmbedAsync(ragContent.EmbeddingContent);
+                            point.Vector = vector.Result.Vector;
+                            point.Payload.Meta.EmbeddingModel = vector.Result.EmbeddingModel;
+                            points.Add(point);
+                        }
+                        else
+                        {
+                            _adminLogger.AddError(this.Tag(), $"Validation failed for entity {entity.Name} ({entity.EntityType}): {validationResult.Errors}");
+                        }
+
+                    }
+
+                    _adminLogger.Trace($"{this.Tag()} Added {ragContentItems.Count} points for raggable entity {entity.Name} ({entity.EntityType})");
+
+                    await _vectorDbClient.DeleteByDocIdsAsync(agentContext.VectorDatabaseCollectionName, points.Select(pt => pt.Payload.Meta.DocId), CancellationToken.None);
+                    await _vectorDbClient.UpsertAsync(agentContext.VectorDatabaseCollectionName, points.Cast<IRagPoint>().ToList(), CancellationToken.None);
+
+
+                    _adminLogger.Trace($"{this.Tag()} Completed {ragContentItems.Count} and indexed points for raggable entity {entity.Name} ({entity.EntityType}) in {sw.Elapsed.TotalMilliseconds}ms (in background task)");
                 }
                 else
                 {
+                    _adminLogger.Trace($"{this.Tag()} Background task startd for indexing non-raggable entity {entity.Name} ({entity.EntityType})");
+
                     var lens = await _documentBuilder.BuildAsync(entity);
                     var vectors = await _embedder.EmbedAsync(lens.Lenses.EmbedSnippet);
 
-                    var modelFileName = $"{entity.Id}.cleanup.json";
+                    var modelFileName = $"{entity.Id}.model.json";
                     var userFileName = $"{entity.Id}.user.json";
-                    var cleanUpFileName = $"{entity.Id}.cleanup.json";
+                    var cleanUpFileName = $"{entity.Id}.issues.json";
 
-                    var modelSummaryUrl = await _llmContentRepo.AddTextContentAsync(agentContext, path: entity.EntityType, modelFileName, content: lens.Lenses.ModelSummary, contentType: "application/json");
-                    var userDetails = await _llmContentRepo.AddTextContentAsync(agentContext, path: entity.EntityType, fileName: userFileName, content: lens.Lenses.UserDetail, contentType: "application/json");
-                    if(!String.IsNullOrEmpty(lens.Lenses.CleanupGuidance))  
+                    await _llmContentRepo.AddTextContentAsync(agentContext, path: entity.EntityType, modelFileName, content: lens.Lenses.ModelSummary, contentType: "application/json");
+                    await _llmContentRepo.AddTextContentAsync(agentContext, path: entity.EntityType, fileName: userFileName, content: lens.Lenses.UserDetail, contentType: "application/json");
+                    if (!String.IsNullOrEmpty(lens.Lenses.CleanupGuidance))
                         await _llmContentRepo.AddTextContentAsync(agentContext, path: entity.EntityType, fileName: cleanUpFileName, content: lens.Lenses.UserDetail, contentType: "application/json");
 
                     var point = new RagPoint();
@@ -90,11 +156,11 @@ namespace LagoVista.AI.Rag.Services
                     point.Payload.Meta.DocId = entity.Id;
                     point.Payload.Meta.Title = entity.Name;
                     point.Payload.Extra.EditorUrl = entityDescription.EditUIUrl;
+                    point.Payload.Extra.PreviewUrl = entityDescription.PreviewUIUrl;
                     point.Payload.Meta.SectionKey = "main";
                     point.Payload.Meta.PartIndex = 1;
                     point.Payload.Meta.PartTotal = 1;
                     point.Payload.Meta.SemanticId = $"{entityDescription.DomainName}.{entityType.Name}.{entity.Id}";
-                    point.Payload.Meta.EmbeddingModel = agentContext.EmbeddingModel;
                     point.Payload.Meta.ContentTypeId = Core.Utils.Types.Nuviot.RagIndexing.RagContentType.DomainDocument;
                     point.Payload.Meta.Subtype = entity.EntityType;
                     point.Payload.Meta.ProjectId = "default";
@@ -102,19 +168,43 @@ namespace LagoVista.AI.Rag.Services
                     point.Payload.Extra.Path = entity.EntityType;
                     point.Payload.Extra.ModelContentFileName = modelFileName;
                     point.Payload.Extra.HumanContentFileName = userFileName;
-                    if(!String.IsNullOrEmpty(lens.Lenses.CleanupGuidance))
+                    if (!String.IsNullOrEmpty(lens.Lenses.CleanupGuidance))
                         point.Payload.Extra.IssuesFileName = cleanUpFileName;
 
                     point.Payload.Meta.HasIssues = !String.IsNullOrEmpty(lens.Lenses.CleanupGuidance);
                     point.Vector = vectors.Result.Vector;
+                    point.Payload.Meta.EmbeddingModel = vectors.Result.EmbeddingModel;
 
-                    await _vectorDbClient.UpsertAsync(agentContext.VectorDatabaseCollectionName, new List<IRagPoint>() { point }, CancellationToken.None);
-
+                    var validationReslut = point.Payload.ValidateForIndex();
+                    if (validationReslut.Successful)
+                    {
+                        await _vectorDbClient.DeleteByDocIdAsync(agentContext.VectorDatabaseCollectionName, point.Payload.Meta.DocId, CancellationToken.None);
+                        await _vectorDbClient.UpsertAsync(agentContext.VectorDatabaseCollectionName, new List<IRagPoint>() { point }, CancellationToken.None);
+                        _adminLogger.Trace($"{this.Tag()} Completed indexing non-raggable entity {entity.Name} ({entity.EntityType}) in {sw.Elapsed.TotalMilliseconds}ms (in background task)");
+                    }
+                    else
+                    {
+                        _adminLogger.AddError(this.Tag(), $"Validation failed for entity {entity.Name} ({entity.EntityType}): {validationReslut.Errors}");
+                    }
                 }
             });
 
+            return InvokeResult.Success;
+        }
 
-            throw new NotImplementedException();
+        public async Task<InvokeResult> RemoveIndexAsync(string orgId, string docId)
+        {
+            var org = await _orgRepo.GetOrganizationAsync(orgId);
+            if (EntityHeader.IsNullOrEmpty(org.DefaultAgentContext))
+                return InvokeResult.FromError("Organization does not have a default agent context defined, content can not be indexed.");
+
+            await _taskService.QueueBackgroundWorkItemAsync(async (token) =>
+            {
+                var agentContext = await _agentContextLoaderRepo.GetAgentContextAsync(org.DefaultAgentContext.Id);
+                await _vectorDbClient.DeleteByDocIdAsync(agentContext.VectorDatabaseCollectionName, docId, token);
+            });
+      
+            return InvokeResult.Success;
         }
 
         public Task RemoveStaleVectorsAsync(IAIAgentContext agentContext, string docId, CancellationToken ct = default)

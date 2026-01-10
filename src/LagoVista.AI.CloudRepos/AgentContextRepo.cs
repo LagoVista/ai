@@ -20,6 +20,7 @@ namespace LagoVista.AI.CloudRepos
         public AgentContextLoaderRepo(IMLRepoSettings settings, IAdminLogger logger, ICacheProvider cacheProvider) : 
             base(settings.MLDocDbStorage.Uri, settings.MLDocDbStorage.AccessKey, settings.MLDocDbStorage.ResourceName, logger, cacheProvider)
         {
+            _shouldConsolidateCollections = settings.ShouldConsolidateCollections;
         }
         protected override bool ShouldConsolidateCollections => _shouldConsolidateCollections;
 

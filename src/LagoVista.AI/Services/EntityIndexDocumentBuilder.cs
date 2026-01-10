@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using LagoVista.AI.Helpers;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Services;
 using LagoVista.AI.Models;
@@ -193,6 +194,32 @@ No explanations outside the JSON.
             _modelClient = modelClient ?? throw new ArgumentNullException(nameof(modelClient));
         }
 
+        private static void NormalizeHtmlFields(JToken token)
+        {
+            if (token is JProperty prop && prop.Value.Type == JTokenType.String)
+            {
+                var value = prop.Value.Value<string>();
+                if (LooksLikeHtml(value))
+                {
+                    prop.Value = HtmlTextNormalizer.ToPlainText(value);
+                }
+            }
+
+            if (token is JContainer container)
+            {
+                foreach (var child in container.Children())
+                    NormalizeHtmlFields(child);
+            }
+        }
+
+        private static bool LooksLikeHtml(string value)
+        {
+            return value != null &&
+                   value.IndexOf('<') >= 0 &&
+                   value.IndexOf('>') >= 0;
+        }
+
+
         public async Task<EntityIndexDocument> BuildAsync(IEntityBase entity)
         {
             if (entity == null) throw new ArgumentNullException(nameof(entity));
@@ -262,6 +289,8 @@ No explanations outside the JSON.
                     obj.Remove("id"); // explicit because of [JsonProperty("id")]
                 }
             }
+
+            NormalizeHtmlFields(obj);
 
             // You may also want to strip high-noise sections from derived types consistently.
             // Example: auditHistory tends to be huge and not helpful for lens generation.

@@ -276,7 +276,7 @@ namespace LagoVista.AI.Services.Qdrant
                 {
                     new QdrantCondition
                     {
-                        Key = "meta.DocId",
+                        Key = "Meta.DocId",
                         Match = new QdrantMatch
                         {
                             Value = docId.Trim()
@@ -296,25 +296,16 @@ namespace LagoVista.AI.Services.Qdrant
             if (docIds == null)
                 throw new ArgumentNullException(nameof(docIds));
 
-            var ids = docIds
-                .Where(id => !string.IsNullOrWhiteSpace(id))
-                .Select(id => id.Trim())
-                .Distinct()
-                .ToArray();
-
-            if (ids.Length == 0)
-                return;
-
             var filter = new QdrantFilter
             {
                 Must =
                 {
                     new QdrantCondition
                     {
-                        Key = "meta.DocId",
+                        Key = "Meta.DocId",
                         Match = new QdrantMatch
                         {
-                            Value = ids
+                            Any = docIds.Select(x => x.Trim()).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToArray()
                         }
                     }
                 }
@@ -430,7 +421,11 @@ namespace LagoVista.AI.Services.Qdrant
         [JsonProperty("range")] public QdrantRange Range { get; set; }
     }
 
-    public class QdrantMatch { [JsonProperty("value")] public object Value { get; set; } }
+    public class QdrantMatch { 
+        [JsonProperty("value")] public object Value { get; set; }
+
+        [JsonProperty("any")] public IEnumerable<string> Any { get; set; }
+    }
 
     public class QdrantRange
     {
