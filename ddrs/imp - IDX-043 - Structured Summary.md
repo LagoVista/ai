@@ -1,6 +1,15 @@
-# IDX-StructuredSummary-001 — SummarySection Architecture & Rationale
+# Metadata
+ID: SYS-000043
+Title: Indexing Structured Summary
+Type: Referential 
+Status: Approved
+Creator: Kevin D. Wolf
+Creation Date: 2026-11-01T20:03:30.805Z
+Last Updated Date: 2026-11-01T20:03:30.805Z
+Last Updated By: Kevin D. Wolf
 
-**Status:** Accepted  
+
+**Summary** Describes how to convert rich, structured C# objects into LLM-friendly, human-readable sections that can be chunked and embedded consistently
 **Applies To:** All structured ChunkFlavors (ModelStructureDescription, Manager, Repository, Interface, Controller, Endpoint, etc.)  
 **Primary Goal:** Convert rich, structured C# objects into LLM-friendly, human-readable sections that can be chunked and embedded consistently.
 
@@ -157,4 +166,6 @@ This design:
 - ✅ All other fields become metadata for filtering and reasoning
 - ✅ Enables RagScope + RSN-XXX model
 
-**Status: Accepted — locked for initial index run**
+# Approval
+Approver: Kevin D. Wolf
+Approval Timestamp: 2026-01-21T10:56:30.805Z

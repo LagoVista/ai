@@ -1,6 +1,7 @@
 # AGN-015 — RAG Query Strategy
 
 **ID:** AGN-015  
+**Type:** Referential
 **Title:** RAG Query Strategy  
 **Status:** Draft (Tabled at outline stage)
 

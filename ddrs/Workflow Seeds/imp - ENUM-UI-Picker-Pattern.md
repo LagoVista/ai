@@ -1,3 +1,13 @@
+# Metadata
+ID: COD-000003
+Title: Creating Enums 
+Type: Referential
+Status: Approved
+Creator: Kevin D. Wolf
+Creation Date: 2026-01-11T20:03:30.805Z
+Last Updated Date: 2026-01-11T20:03:30.805Z
+Last Updated By: Kevin D. Wolf
+
 # Enum → UI Picker Pattern (Canonical)
 
 Use this pattern whenever you add a user-selectable enum that appears in forms and must support localization, stable string values, and optional CSS hooks.

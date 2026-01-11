@@ -1,4 +1,24 @@
-# CHD-001 — Child Object Authoring Pattern
+# Metadata
+ID: COD-000001
+Title: Child Object Authoring Pattern
+Type: Referential
+Status: Approved
+Creator: Kevin D. Wolf
+Creation Date: 2026-01-01T20:03:30.805Z
+Last Updated Date: 2026-01-01T20:03:30.805Z
+Last Updated By: Kevin D. Wolf
+
+# Approval
+Approver: Kevin D. Wolf
+Approval Timestamp: 2026-01-01T20:03:30.805Z
+
+
+## Summary
+
+Use this pattern whenever defining reusable embedded configuration models. Doing so guarantees consistency across UI rendering, agent tooling, and future extensibility.
+
+
+## Body
 
 ## Purpose
 
@@ -133,7 +153,3 @@ This pattern is designed to be:
 Agents SHOULD treat child objects as atomic units and avoid modifying parent entities unless explicitly requested.
 
 ---
-
-## Summary
-
-Use this pattern whenever defining reusable embedded configuration models. Doing so guarantees consistency across UI rendering, agent tooling, and future extensibility.
