@@ -1,4 +1,5 @@
-﻿using LagoVista.AI.Models;
+﻿using LagoVista.AI.Interfaces.Managers;
+using LagoVista.AI.Models;
 using LagoVista.Core.Models.UIMetaData;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;

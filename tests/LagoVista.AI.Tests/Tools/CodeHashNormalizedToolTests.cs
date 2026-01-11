@@ -1,7 +1,7 @@
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using LagoVista.AI.Interfaces;
+using LagoVista.AI.Interfaces.Services;
 using LagoVista.AI.Models;
 using LagoVista.AI.Services.Tools;
 using LagoVista.Core.AI.Models;

@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using LagoVista.AI.Indexing.Models;
 using LagoVista.AI.Rag.ContractPacks.IndexStore.Services;
 using LagoVista.AI.Rag.Models;
 using NUnit.Framework;

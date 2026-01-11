@@ -1,5 +1,4 @@
-﻿using LagoVista.AI.Interfaces;
-using LagoVista.AI.Models;
+﻿using LagoVista.AI.Models;
 using LagoVista.CloudStorage.DocumentDB;
 using LagoVista.Core.Models;
 using LagoVista.IoT.Logging.Loggers;
@@ -10,6 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using LagoVista.Core;
 using Microsoft.Azure.Cosmos.Linq;
+using LagoVista.AI.Interfaces.Repos;
 
 namespace LagoVista.AI.CloudRepos
 {

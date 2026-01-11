@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using LagoVista.AI.Rag.ContractPacks.Infrastructure.Services;
+using LagoVista.AI.Indexing.Services;
 using NUnit.Framework;
 
 namespace LagoVista.AI.Rag.Tests.Services

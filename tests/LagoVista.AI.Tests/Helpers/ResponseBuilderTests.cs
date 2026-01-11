@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Helpers;
 using LagoVista.AI.Interfaces;
+using LagoVista.AI.Interfaces.Repos;
 using LagoVista.AI.Models;
 using LagoVista.AI.Models.Context;
 using LagoVista.Core.AI.Models;

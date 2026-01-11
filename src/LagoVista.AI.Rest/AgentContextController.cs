@@ -2,6 +2,7 @@
 // ContentHash: 3deeacfc4503d772cfa5990528a4649d71c9698541a6f875517981776a79291f
 // IndexVersion: 2
 // --- END CODE INDEX META ---
+using LagoVista.AI.Interfaces.Managers;
 using LagoVista.AI.Models;
 using LagoVista.Core.Models.UIMetaData;
 using LagoVista.Core.Validation;

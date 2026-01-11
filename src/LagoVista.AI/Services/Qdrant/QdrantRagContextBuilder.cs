@@ -11,6 +11,7 @@ using LagoVista.Core.Utils.Types.Nuviot.RagIndexing;
 using LagoVista.Core.Interfaces;
 using LagoVista.Core.AI.Models;
 using LagoVista.IoT.Logging.Loggers;
+using LagoVista.AI.Interfaces.Repos;
 
 namespace LagoVista.AI.Services.Qdrant
 {

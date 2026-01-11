@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Pipeline;
+using LagoVista.AI.Interfaces.Repos;
 using LagoVista.AI.Models;
 using LagoVista.Core;
 using LagoVista.Core.Validation;

@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using LagoVista.AI.Interfaces.Managers;
+using LagoVista.AI.Interfaces.Repos;
 using LagoVista.AI.Models.TrainingData;
 using LagoVista.Core;
 using LagoVista.Core.Exceptions;

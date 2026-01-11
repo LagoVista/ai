@@ -5,6 +5,7 @@ using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
+using LagoVista.AI.Interfaces.Repos;
 using LagoVista.AI.Models;
 using LagoVista.AI.Services.Qdrant;
 using LagoVista.Core;

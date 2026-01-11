@@ -2,36 +2,25 @@
 // ContentHash: 8af30e234e22ac58836993d70b71054e82111113afd916ba48c95d9522589431
 // IndexVersion: 2
 // --- END CODE INDEX META ---
+using LagoVista.AI.Chunkers.Interfaces;
+using LagoVista.AI.FileServices.Indexes;
+using LagoVista.AI.FileServices.Services;
 using LagoVista.AI.Helpers;
+using LagoVista.AI.Indexing.Interfaces;
+using LagoVista.AI.Indexing.Services;
 using LagoVista.AI.Interfaces;
-using LagoVista.AI.Interfaces.Pipeline;
-using LagoVista.AI.Managers;
+using LagoVista.AI.Interfaces.Services;
+using LagoVista.AI.Quality.Interfaces;
+using LagoVista.AI.Quality.Model;
+using LagoVista.AI.Quality.Services;
 using LagoVista.AI.Rag.Chunkers.Interfaces;
 using LagoVista.AI.Rag.Chunkers.Services;
-using LagoVista.AI.Rag.ContractPacks.Content.Interfaces;
-using LagoVista.AI.Rag.ContractPacks.IndexStore.Services;
-using LagoVista.AI.Rag.ContractPacks.Infrastructure.Interfaces;
-using LagoVista.AI.Rag.ContractPacks.Infrastructure.Services;
-using LagoVista.AI.Rag.ContractPacks.Ingestion.Interfaces;
-using LagoVista.AI.Rag.ContractPacks.Ingestion.Services;
-using LagoVista.AI.Rag.ContractPacks.Orchestration.Interfaces;
-using LagoVista.AI.Rag.ContractPacks.Orchestration.Services;
-using LagoVista.AI.Rag.ContractPacks.Quality.Interfaces;
-using LagoVista.AI.Rag.ContractPacks.Registry.Interfaces;
-using LagoVista.AI.Rag.ContractPacks.Registry.Services;
-using LagoVista.AI.Rag.Interfaces;
-using LagoVista.AI.Rag.Models;
 using LagoVista.AI.Rag.Services;
 using LagoVista.AI.Services;
 using LagoVista.AI.Services.Hashing;
 using LagoVista.AI.Services.OpenAI;
-using LagoVista.AI.Services.Qdrant;
-using LagoVista.AI.Services.Tools;
 using LagoVista.Core.Interfaces;
-using LagoVista.Core.IOC;
 using LagoVista.IoT.Logging.Loggers;
-using Logzio.DotNet.Core.WebClient;
-using System;
 using System.Net.Http;
 
 namespace LagoVista.AI

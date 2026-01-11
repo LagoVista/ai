@@ -1,4 +1,4 @@
-﻿using LagoVista.AI.Interfaces;
+﻿using LagoVista.AI.Interfaces.Repos;
 using LagoVista.AI.Models;
 using LagoVista.CloudStorage.Storage;
 using LagoVista.Core.Validation;

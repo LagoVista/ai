@@ -1,5 +1,5 @@
 ﻿using Azure.Data.Tables;
-using LagoVista.AI.Interfaces;
+using LagoVista.AI.Interfaces.Repos;
 using LagoVista.AI.Models;
 using LagoVista.CloudStorage.Storage;
 using LagoVista.Core;
@@ -23,6 +23,7 @@ namespace LagoVista.AI.CloudRepos
         public MemoryNoteRepo(IMLRepoSettings settings, IAdminLogger logger, IRagIndexingServices ragIndexing) :
                base(settings.MLTableStorage.AccountId, settings.MLTableStorage.AccessKey, logger)
         {
+            _ragIndexing = ragIndexing ?? throw new ArgumentNullException(nameof(ragIndexing));
         }
 
         public Task AddMemoryNoteAsync(AgentSessionMemoryNote note)

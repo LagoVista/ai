@@ -1,4 +1,5 @@
 ﻿using LagoVista.AI.Interfaces;
+using LagoVista.AI.Interfaces.Services;
 using LagoVista.Core.Interfaces;
 using LagoVista.IoT.Logging.Loggers;
 

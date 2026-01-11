@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using LagoVista.AI.Indexing.Models;
 using LagoVista.AI.Rag.Models;
 using LagoVista.AI.Rag.Services;
 using LagoVista.Core.Models;

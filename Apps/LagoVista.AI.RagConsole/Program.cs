@@ -2,18 +2,15 @@
 // ContentHash: 84feeaeb64610697ce02a858eb217cf406b5821707963650d179e5c3e6374064
 // IndexVersion: 2
 // --- END CODE INDEX META ---
-using LagoVista.AI.Rag.Models;
 using LagoVista.AI.Rag.Chunkers.Models;
-using LagoVista.AI.Rag.ContractPacks.Infrastructure.Services;
-using LagoVista.Core.IOC;
-using LagoVista.AI.Rag.ContractPacks.Orchestration.Interfaces;
-using LagoVista.AI.Services;
 using LagoVista.AI.Interfaces;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.IoT.Logging.Utils;
-using LagoVista.Core.Interfaces;
 using LagoVista.AI.Services.OpenAI;
 using Microsoft.Extensions.DependencyInjection;
+using LagoVista.AI.Indexing.Models;
+using LagoVista.AI.Indexing.Services;
+using LagoVista.AI.Indexing.Interfaces;
 
 namespace LagoVista.AI.RagConsole
 {

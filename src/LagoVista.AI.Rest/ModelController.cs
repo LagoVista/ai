@@ -17,6 +17,7 @@ using LagoVista.Core;
 using LagoVista.IoT.Web.Common.Attributes;
 using Microsoft.AspNetCore.Http;
 using System.IO;
+using LagoVista.AI.Interfaces.Managers;
 
 namespace LagoVista.AI.Rest
 {

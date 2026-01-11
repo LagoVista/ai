@@ -1,5 +1,5 @@
-﻿using LagoVista.AI.Rag.ContractPacks.Content.Interfaces;
-using LagoVista.AI.Rag.Models;
+﻿using LagoVista.AI.Indexing.Interfaces;
+using LagoVista.AI.Indexing.Models;
 using LagoVista.CloudStorage.Storage;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;

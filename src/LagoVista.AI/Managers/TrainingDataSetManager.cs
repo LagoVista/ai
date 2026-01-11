@@ -3,6 +3,8 @@
 // IndexVersion: 2
 // --- END CODE INDEX META ---
 using System.Threading.Tasks;
+using LagoVista.AI.Interfaces.Managers;
+using LagoVista.AI.Interfaces.Repos;
 using LagoVista.AI.Models.TrainingData;
 using LagoVista.Core.Interfaces;
 using LagoVista.Core.Managers;

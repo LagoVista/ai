@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using LagoVista.AI.Interfaces;
+using LagoVista.AI.Interfaces.Services;
 
 namespace LagoVista.AI.Services.Hashing
 {

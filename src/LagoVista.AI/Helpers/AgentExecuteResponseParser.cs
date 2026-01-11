@@ -8,6 +8,7 @@ using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
 using System.Threading.Tasks;
 using LagoVista.IoT.Logging.Loggers;
+using LagoVista.AI.Interfaces.Repos;
 
 namespace LagoVista.AI.Helpers
 {

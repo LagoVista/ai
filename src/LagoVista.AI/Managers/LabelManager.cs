@@ -4,6 +4,8 @@
 // --- END CODE INDEX META ---
 using System;
 using System.Threading.Tasks;
+using LagoVista.AI.Interfaces.Managers;
+using LagoVista.AI.Interfaces.Repos;
 using LagoVista.AI.Models;
 using LagoVista.Core.Interfaces;
 using LagoVista.Core.Managers;
@@ -14,7 +16,7 @@ using LagoVista.IoT.Logging.Loggers;
 
 namespace LagoVista.AI.Managers
 {
-    public class LabelManager : ManagerBase, ILabelManager
+    public class LabelManager : ManagerBase, Interfaces.Managers.ILabelManager
     {
         private readonly ILabelRepo _repo;
         private readonly ILabelSetRepo _labelSetRepo;

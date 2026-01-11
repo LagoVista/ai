@@ -1,5 +1,6 @@
 ﻿using ICSharpCode.SharpZipLib.Core;
-using LagoVista.AI.Interfaces;
+using LagoVista.AI.Interfaces.Managers;
+using LagoVista.AI.Interfaces.Repos;
 using LagoVista.AI.Models;
 using LagoVista.Core;
 using LagoVista.Core.Exceptions;

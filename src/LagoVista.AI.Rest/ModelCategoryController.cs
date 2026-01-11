@@ -14,6 +14,7 @@ using LagoVista.Core.Models.UIMetaData;
 using LagoVista.AI.Models;
 using LagoVista.Core;
 using LagoVista.IoT.Web.Common.Attributes;
+using LagoVista.AI.Interfaces.Managers;
 
 namespace LagoVista.AI.Rest
 {

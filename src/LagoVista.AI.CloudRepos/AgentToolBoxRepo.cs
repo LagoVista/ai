@@ -1,4 +1,5 @@
-﻿using LagoVista.AI.Models;
+﻿using LagoVista.AI.Interfaces.Repos;
+using LagoVista.AI.Models;
 using LagoVista.CloudStorage.DocumentDB;
 using LagoVista.CloudStorage.Interfaces;
 using LagoVista.Core.Exceptions;

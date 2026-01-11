@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
+using LagoVista.AI.Interfaces.Managers;
 using LagoVista.AI.Interfaces.Pipeline;
 using LagoVista.AI.Managers;
 using LagoVista.AI.Models;

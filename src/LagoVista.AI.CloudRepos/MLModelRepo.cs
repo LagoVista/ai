@@ -3,6 +3,7 @@
 // IndexVersion: 2
 // --- END CODE INDEX META ---
 using System.Threading.Tasks;
+using LagoVista.AI.Interfaces.Repos;
 using LagoVista.CloudStorage.Storage;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;

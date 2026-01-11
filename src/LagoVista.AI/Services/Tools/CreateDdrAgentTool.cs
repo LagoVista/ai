@@ -5,6 +5,7 @@ using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
+using LagoVista.AI.Interfaces.Managers;
 using LagoVista.AI.Models;
 using LagoVista.Core;
 using LagoVista.Core.Models;

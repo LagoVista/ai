@@ -1,4 +1,5 @@
 ﻿using LagoVista.AI.Interfaces;
+using LagoVista.AI.Interfaces.Managers;
 using LagoVista.AI.Interfaces.Pipeline;
 using LagoVista.AI.Models;
 using LagoVista.Core.Validation;

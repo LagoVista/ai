@@ -4,6 +4,7 @@
 // --- END CODE INDEX META ---
 using System.Linq;
 using System.Threading.Tasks;
+using LagoVista.AI.Interfaces.Repos;
 using LagoVista.AI.Models.TrainingData;
 using LagoVista.CloudStorage.DocumentDB;
 using LagoVista.Core.Models.UIMetaData;

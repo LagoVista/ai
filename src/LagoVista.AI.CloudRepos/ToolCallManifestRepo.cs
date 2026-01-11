@@ -1,5 +1,5 @@
 ﻿using Azure;
-using LagoVista.AI.Interfaces;
+using LagoVista.AI.Interfaces.Repos;
 using LagoVista.AI.Models.Context;
 using LagoVista.CloudStorage.Storage;
 using LagoVista.Core;

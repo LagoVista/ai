@@ -2,9 +2,10 @@
 // ContentHash: a27eb1c13ec36c494606c61641bc0faf9a49475edbd635b2b55772bd73be8e95
 // IndexVersion: 2
 // --- END CODE INDEX META ---
+using LagoVista.AI.Indexing.Interfaces;
 using LagoVista.AI.Interfaces;
+using LagoVista.AI.Interfaces.Repos;
 using LagoVista.AI.Managers;
-using LagoVista.AI.Rag.ContractPacks.Content.Interfaces;
 using LagoVista.Core.Interfaces;
 using System;
 

@@ -437,7 +437,7 @@ namespace LagoVista.AI.Services.Qdrant
 
     public class QdrantMatch {
         [JsonProperty("value", NullValueHandling = NullValueHandling.Ignore)]
-        public object? Value { get; set; }
+        public object Value { get; set; }
 
         [JsonProperty("any", NullValueHandling = NullValueHandling.Ignore)]
         public IEnumerable<string> Any { get; set; }
@@ -447,7 +447,7 @@ namespace LagoVista.AI.Services.Qdrant
 
         // Optional, only if you decide to support substring/full-text later:
         [JsonProperty("text", NullValueHandling = NullValueHandling.Ignore)]
-        public string? Text { get; set; }
+        public string Text { get; set; }
     }
 
     public class QdrantRange
@@ -470,7 +470,7 @@ namespace LagoVista.AI.Services.Qdrant
 
     static class QdrantRagScopeTranslator
     {
-        public static QdrantFilter? ToQdrantFilter(this RagScope? scope)
+        public static QdrantFilter ToQdrantFilter(this RagScope scope)
         {
             if (scope == null || scope.Conditions == null || scope.Conditions.Count == 0)
                 return null;
