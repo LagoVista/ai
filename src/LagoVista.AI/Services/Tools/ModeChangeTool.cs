@@ -9,6 +9,7 @@ using LagoVista.AI.Models;
 using LagoVista.Core;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Newtonsoft.Json;
 
 namespace LagoVista.AI.Services.Tools
@@ -62,6 +63,8 @@ Provide a short reason. Set branch=true when starting a separate session.
             [JsonProperty("errorMessage")]
             public string ErrorMessage { get; set; }
 
+            [JsonProperty("results")]
+            public string Results { get; set; }
 
             [JsonProperty("canRetry")]
             public bool CanRetry { get; set; }
@@ -86,9 +89,7 @@ Provide a short reason. Set branch=true when starting a separate session.
         }
 
         public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext ctx)
-
         {
-            Console.WriteLine($"----\r\n{argumentsJson}\r\n---");
 
             if (string.IsNullOrWhiteSpace(argumentsJson))
             {
@@ -113,6 +114,21 @@ Provide a short reason. Set branch=true when starting a separate session.
                 {
                     return Task.FromResult(InvokeResult<string>.FromError( "ModeChangeTool requires a non-empty 'reason' string explaining why the mode change is needed."));
                 }
+
+                if (ctx.Session.Mode == args.Mode)
+                {
+                    var noOpResult = new ModeChangeResult
+                    {
+                        Success = false,
+                        Mode = args.Mode,
+                        CanRetry = false,
+                        Branch = args.Branch.Value,
+                        Reason = args.Reason,
+                        Results = $"Rejected: agent_change_mode called with mode={args.Mode} but current mode is already {ctx.Session.Mode}. DO NOT RETRY. CONTINUE WIHTOUT CALLING agent_change_mode."
+                    };
+                    var noOpJson = JsonConvert.SerializeObject(noOpResult);
+                    return Task.FromResult(InvokeResult<string>.Create(noOpJson));
+                }   
 
                 var mode = ctx.AgentContext.AgentModes.SingleOrDefault(md => md.Key == args.Mode);
                 if(mode == null)
@@ -151,7 +167,8 @@ Provide a short reason. Set branch=true when starting a separate session.
                     Success = true,
                     Mode = args.Mode,
                     Branch = args.Branch.Value,
-                    Reason = args.Reason
+                    Reason = args.Reason,
+                    Results = $"Mode changed to {args.Mode} successfully.",
                 };
 
                 _logger.Trace($"[ModeChangeTool_ExecuteAsync] - Changed mode via tool from {previousMode} to {args.Mode}"); 

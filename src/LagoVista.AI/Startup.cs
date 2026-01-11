@@ -62,7 +62,6 @@ namespace LagoVista.AI
             
             services.AddSingleton<IContentHashService, DefaultContentHashService>();
             services.AddSingleton<IChunkerServices, ChunkerServices>();
-            services.AddSingleton<ICodeDescriptionService, CodeDescriptionService>();
             services.AddSingleton<IResourceExtractor, ResxResourceExtractor>();
             services.AddSingleton<IResxLabelScanner, ResxLabelScanner>();
 

@@ -16,7 +16,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
-    <PackageReference Include="LagoVista.Core.DependencyInjection" Version="3.0.3161.0956" />
+    <PackageReference Include="LagoVista.Core.DependencyInjection" Version="3.0.3161.1756" />
   </ItemGroup>
 
   <ItemGroup>

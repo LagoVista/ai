@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Collections.Specialized.BitVector32;
 
 namespace LagoVista.AI.Services
 {
@@ -71,6 +72,18 @@ namespace LagoVista.AI.Services
 
             ctx.PromptKnowledgeProvider.ActiveTools.AddRange(apk.ActiveTools);
 
+            var modeBlock =
+$@"## CURRENT MODE 
+- Mode Key (authoritative): {ctx.Mode.Key}
+- Display Name (non-authoritative): {ctx.Mode.Name}
+- MUST NEVER call the agent_change_mode tool with the parameter [{ctx.Mode.Key}] as we are already in that mode.
+- The assistant MUST NOT call agent_change_mode inside any multi/parallel tool wrapper. Mode changes must be a single direct call only when required
+- Never call agent_change_mode as a “keep alive”, “no - op safeguard”, or “continue” action.";
+
+            var modeRegister = ctx.PromptKnowledgeProvider.GetOrCreateRegister(KnowledgeKind.AgentModelContext, Models.Context.ContextClassification.Session);
+            modeRegister.Add(modeBlock);
+
+
             var currentBranch = String.IsNullOrEmpty(ctx.Session.CurrentBranch) ? AgentSession.DefaultBranch : ctx.Session.CurrentBranch;
 
             if (!ctx.Session.Kfrs.ContainsKey(currentBranch))
@@ -82,9 +95,7 @@ These entries are authoritative for near-term correctness.
 They may be replaced or removed at any time.
 
 For agent/session state, rely only on KFR.
-### Agent Mode Key (authoritative): {ctx.Mode.Key}
-### Agent Mode Display Name (non-authoritative): {ctx.Mode.Name}
-### Mode Change Rule (for model): “Only request a mode change if Agent Mode Key != requested mode key.”
+”
 ### Goal (single): -
 ### Plan (single): -
 ### ActiveContracts: -
@@ -107,9 +118,6 @@ They may be replaced or removed at any time.
 
 Do not infer or assume facts outside this registry.
 
-### Agent Mode Key (authoritative): {ctx.Mode.Key}
-### Agent Mode Display Name (non-authoritative): {ctx.Mode.Name}
-### Mode Change Rule (for model): “Only request a mode change if Agent Mode Key != requested mode key.”
 ### Goal (single)
 {BuildKfrSection(branchKfrs.Where(kfr => kfr.Kind == KfrKind.Goal && kfr.IsActive))}
 ### Plan (single)

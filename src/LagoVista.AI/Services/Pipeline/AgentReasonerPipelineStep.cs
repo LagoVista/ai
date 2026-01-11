@@ -81,7 +81,7 @@ namespace LagoVista.AI.Services
 
                 if (!ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCalls.Where(tc => tc.Name == ActivateToolsTool.ToolName).Any())
                 {
-                    ctx.SetInstructions("Tools Completed - Continue.");
+                    ctx.SetInstructions("Continue, the assistant MUST NOT call any tool unless it is required to produce the next artifact (e.g., get_current_timestamp)");
                 }
 
                 if (originalMode != ctx.Session.AgentMode.Id)

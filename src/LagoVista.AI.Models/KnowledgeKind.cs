@@ -5,6 +5,7 @@ namespace LagoVista.AI.Models
     /// </summary>
     public enum KnowledgeKind
     {
+        AgentModelContext,
         AgentContextInstructions,
         AgentPersona,
         Instruction,

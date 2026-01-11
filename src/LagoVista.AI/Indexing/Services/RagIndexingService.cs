@@ -113,7 +113,7 @@ namespace LagoVista.AI.Indexing.Services
                         {
                             var issuesFilename = ragContent.Payload.Meta.DocId == entity.Id ? $"{entity.Id}.issues.json" : $"{entity.Id}.{ragContent.Payload.Meta.DocId}.issues.json";
                             await _llmContentRepo.AddTextContentAsync(agentContext, path: entity.EntityType, fileName: issuesFilename, content: ragContent.Issues, contentType: "application/json");
-                            point.Payload.Extra.IssuesFileName = issuesFilename;
+                            point.Payload.Extra.IssuesContentUrl = issuesFilename;
                             point.Payload.Meta.HasIssues = true;
                         }
                         var validationResult = point.Payload.ValidateForIndex();
@@ -186,7 +186,7 @@ namespace LagoVista.AI.Indexing.Services
                     point.Payload.Extra.ModelContentUri = modelFileName;
                     point.Payload.Extra.HumanContentUrl = userFileName;
                     if (!string.IsNullOrEmpty(lens.Lenses.CleanupGuidance))
-                        point.Payload.Extra.IssuesFileName = cleanUpFileName;
+                        point.Payload.Extra.IssuesContentUrl = cleanUpFileName;
 
                     point.Payload.Meta.HasIssues = !string.IsNullOrEmpty(lens.Lenses.CleanupGuidance);
                     point.Vector = vectors.Result.Vector;

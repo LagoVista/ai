@@ -17,7 +17,7 @@ namespace LagoVista.AI.Managers
             services.AddTransient<IHubManager, HubManager>();
             services.AddTransient<ITrainingDataSetManager, TrainingDataSetManager>();
             services.AddTransient<ISampleManager, SampleManager>();
-            services.AddTransient<ILabelManager, LabelManager>();
+            services.AddTransient<Interfaces.Managers.ILabelManager, LabelManager>();
             services.AddTransient<IExperimentResultManager, ExperimentResultManager>();
             services.AddTransient<IDdrManager, DdrManager>();
             services.AddTransient<IWorkflowDefinitionManager, WorkflowDefinitionManager>();

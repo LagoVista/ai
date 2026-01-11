@@ -46,6 +46,7 @@ OUTPUT RULES
 - Do NOT invent identifiers, types, status, approvals, rules, or constraints not present in the Markdown.
 - If a required value cannot be extracted with confidence, set it to null and set needsHumanConfirmation=true with a reason.
 - If DryRun is set to TRUE you MUST notify the user that this is a preview and no DDR has been imported.
+- Must provide the full raw content of this DDR in markdown format compliant with SYS-000010 in the required markdown argument.
 
 EXTRACT (from Markdown)
 Populate these fields (null if unknown/ambiguous):

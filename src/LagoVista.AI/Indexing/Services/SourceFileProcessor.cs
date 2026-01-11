@@ -23,15 +23,13 @@ namespace LagoVista.AI.Indexing.Services
     public class SourceFileProcessor : ISourceFileProcessor
     {
         private readonly IChunkerServices _chunkerServics;
-        private readonly ICodeDescriptionService _descriptionServices;
         private readonly IAdminLogger _adminLogger;
         private readonly IInterfaceSemanticEnricher _enricher;
 
-        public SourceFileProcessor(IChunkerServices chunkerServices, ICodeDescriptionService descriptionServices, IInterfaceSemanticEnricher enricher,
+        public SourceFileProcessor(IChunkerServices chunkerServices,  IInterfaceSemanticEnricher enricher,
             IAdminLogger adminLogger)
         {
             _chunkerServics = chunkerServices ?? throw new ArgumentNullException(nameof(chunkerServices));
-            _descriptionServices = descriptionServices ?? throw new ArgumentNullException(nameof(descriptionServices));
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
             _enricher = enricher ?? throw new ArgumentNullException(nameof(enricher));
         }
@@ -76,100 +74,100 @@ namespace LagoVista.AI.Indexing.Services
                     continue;
                 }
 
-                var symbolText = splitSymbol.Text;
-                switch (subKindResult.SubKind)
-                {
-                    case SubtypeKind.Model:
-                        {
-                            var modelStructureDescription = _descriptionServices.BuildModelStructureDescription(ctx, symbolText, resources);
-                            if (modelStructureDescription.Successful)
-                            {
-                                var headerInfo = FindDomainHeaderInfo(catalog, modelStructureDescription.Result);
-                                modelStructureDescription.Result.BuildFinderSnippetSections(headerInfo.Result);
-                                var stucturedResults = modelStructureDescription.Result.BuildRagPoints();
-                                result.Result.RagPoints.AddRange(stucturedResults.Select(rp => rp.Result));
+                //var symbolText = splitSymbol.Text;
+                //switch (subKindResult.SubKind)
+                //{
+                //    case SubtypeKind.Model:
+                //        {
+                //            var modelStructureDescription = _descriptionServices.BuildModelStructureDescription(ctx, symbolText, resources);
+                //            if (modelStructureDescription.Successful)
+                //            {
+                //                var headerInfo = FindDomainHeaderInfo(catalog, modelStructureDescription.Result);
+                //                modelStructureDescription.Result.BuildFinderSnippetSections(headerInfo.Result);
+                //                var stucturedResults = modelStructureDescription.Result.BuildRagPoints();
+                //                result.Result.RagPoints.AddRange(stucturedResults.Select(rp => rp.Result));
 
-                            }
+                //            }
 
-                            var modelMetaDataDescription = _descriptionServices.BuildModelMetadataDescription(ctx, symbolText, resources);
-                            if (modelMetaDataDescription.Successful)
-                            {
-                                var headerInfo = FindDomainHeaderInfo(catalog, modelMetaDataDescription.Result);
-                                modelMetaDataDescription.Result.BuildSections(headerInfo.Result);
-                                var metaDataResults = modelMetaDataDescription.Result.BuildRagPoints();
-                                result.Result.RagPoints.AddRange(metaDataResults.Select(rp => rp.Result));
-                            }
-                        }
+                //            var modelMetaDataDescription = _descriptionServices.BuildModelMetadataDescription(ctx, symbolText, resources);
+                //            if (modelMetaDataDescription.Successful)
+                //            {
+                //                var headerInfo = FindDomainHeaderInfo(catalog, modelMetaDataDescription.Result);
+                //                modelMetaDataDescription.Result.BuildSections(headerInfo.Result);
+                //                var metaDataResults = modelMetaDataDescription.Result.BuildRagPoints();
+                //                result.Result.RagPoints.AddRange(metaDataResults.Select(rp => rp.Result));
+                //            }
+                //        }
 
-                        break;
-                    case SubtypeKind.Manager:
-                        {
-                            var managerDescription = _descriptionServices.BuildManagerDescription(ctx, symbolText);
-                            if (managerDescription.Successful)
-                            {
-                                var headerInfo = FindDomainHeaderInfo(catalog, managerDescription.Result);
-                                managerDescription.Result.BuildSections(headerInfo.Result);
-                                var managerResults = managerDescription.Result.BuildRagPoints();
-                                managerDescription.Result.BuildSections(headerInfo.Result);
-                                result.Result.RagPoints.AddRange(managerResults.Select(rp => rp.Result));
-                            }
-                        }
-                        break;
+                //        break;
+                //    case SubtypeKind.Manager:
+                //        {
+                //            var managerDescription = _descriptionServices.BuildManagerDescription(ctx, symbolText);
+                //            if (managerDescription.Successful)
+                //            {
+                //                var headerInfo = FindDomainHeaderInfo(catalog, managerDescription.Result);
+                //                managerDescription.Result.BuildSections(headerInfo.Result);
+                //                var managerResults = managerDescription.Result.BuildRagPoints();
+                //                managerDescription.Result.BuildSections(headerInfo.Result);
+                //                result.Result.RagPoints.AddRange(managerResults.Select(rp => rp.Result));
+                //            }
+                //        }
+                //        break;
 
-                    case SubtypeKind.Interface:
-                        {
-                            var interfaceDescription = _descriptionServices.BuildInterfaceDescription(ctx, symbolText);
-                            if (interfaceDescription.Successful)
-                            {
-                                var headerInfo = FindDomainHeaderInfo(catalog, interfaceDescription.Result);
-                                interfaceDescription.Result.BuildSections(headerInfo.Result);
-                                var enrichResult = await _enricher.EnrichAsync(interfaceDescription.Result, config);
-                                var interfaceResults = interfaceDescription.Result.BuildRagPoints();
-                                result.Result.RagPoints.AddRange(interfaceResults.Select(rp => rp.Result));
-                            }
-                        }
-                        break;
+                //    case SubtypeKind.Interface:
+                //        {
+                //            var interfaceDescription = _descriptionServices.BuildInterfaceDescription(ctx, symbolText);
+                //            if (interfaceDescription.Successful)
+                //            {
+                //                var headerInfo = FindDomainHeaderInfo(catalog, interfaceDescription.Result);
+                //                interfaceDescription.Result.BuildSections(headerInfo.Result);
+                //                var enrichResult = await _enricher.EnrichAsync(interfaceDescription.Result, config);
+                //                var interfaceResults = interfaceDescription.Result.BuildRagPoints();
+                //                result.Result.RagPoints.AddRange(interfaceResults.Select(rp => rp.Result));
+                //            }
+                //        }
+                //        break;
 
-                    case SubtypeKind.Repository:
-                        {
-                            var repoDescription = _descriptionServices.BuildRepositoryDescription(ctx, symbolText);
-                            if (repoDescription.Successful)
-                            {
-                                var headerInfo = FindDomainHeaderInfo(catalog, repoDescription.Result);
-                                repoDescription.Result.BuildSections(headerInfo.Result);
-                                var repoResults = repoDescription.Result.BuildRagPoints();
-                                result.Result.RagPoints.AddRange(repoResults.Select(rp => rp.Result));
-                            }
-                        }
-                        break;
-                    case SubtypeKind.Controller:
-                        {
-                            var controllerDescription = _descriptionServices.BuildEndpointDescriptions(ctx, symbolText);
-                            if (controllerDescription.Successful)
-                            {
-                                foreach (var endpoint in controllerDescription.Result)
-                                {
-                                    var headerInfo = FindDomainHeaderInfo(catalog, endpoint);
-                                    endpoint.BuildSections(headerInfo.Result);
-                                    var endpointRagPoints = endpoint.BuildRagPoints();
-                                    result.Result.RagPoints.AddRange(endpointRagPoints.Select(rp => rp.Result));
-                                }
-                            }
-                        }
+                //    case SubtypeKind.Repository:
+                //        {
+                //            var repoDescription = _descriptionServices.BuildRepositoryDescription(ctx, symbolText);
+                //            if (repoDescription.Successful)
+                //            {
+                //                var headerInfo = FindDomainHeaderInfo(catalog, repoDescription.Result);
+                //                repoDescription.Result.BuildSections(headerInfo.Result);
+                //                var repoResults = repoDescription.Result.BuildRagPoints();
+                //                result.Result.RagPoints.AddRange(repoResults.Select(rp => rp.Result));
+                //            }
+                //        }
+                //        break;
+                //    case SubtypeKind.Controller:
+                //        {
+                //            var controllerDescription = _descriptionServices.BuildEndpointDescriptions(ctx, symbolText);
+                //            if (controllerDescription.Successful)
+                //            {
+                //                foreach (var endpoint in controllerDescription.Result)
+                //                {
+                //                    var headerInfo = FindDomainHeaderInfo(catalog, endpoint);
+                //                    endpoint.BuildSections(headerInfo.Result);
+                //                    var endpointRagPoints = endpoint.BuildRagPoints();
+                //                    result.Result.RagPoints.AddRange(endpointRagPoints.Select(rp => rp.Result));
+                //                }
+                //            }
+                //        }
 
-                        break;
+                //        break;
 
-                    case SubtypeKind.SummaryListModel:
-                        var summaryListDescription = _descriptionServices.BuildSummaryDescription(ctx, symbolText, resources);
-                        if (summaryListDescription.Successful)
-                        {
-                            var headerInfo = FindDomainHeaderInfo(catalog, summaryListDescription.Result);
-                            summaryListDescription.Result.BuildSections(headerInfo.Result);
-                            var summaryResults = summaryListDescription.Result.BuildRagPoints();
-                            result.Result.RagPoints.AddRange(summaryResults.Select(rp => rp.Result));
-                        }
-                        break;
-                }
+                //    case SubtypeKind.SummaryListModel:
+                //        var summaryListDescription = _descriptionServices.BuildSummaryDescription(ctx, symbolText, resources);
+                //        if (summaryListDescription.Successful)
+                //        {
+                //            var headerInfo = FindDomainHeaderInfo(catalog, summaryListDescription.Result);
+                //            summaryListDescription.Result.BuildSections(headerInfo.Result);
+                //            var summaryResults = summaryListDescription.Result.BuildRagPoints();
+                //            result.Result.RagPoints.AddRange(summaryResults.Select(rp => rp.Result));
+                //        }
+                //        break;
+                //}
 
                 //var chunks = _chunkerServics.ChunkCSharpWithRoslyn(symbolText, fileInfo.Kind);
                 //foreach (var chunk in chunks.Result)

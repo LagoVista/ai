@@ -22,12 +22,10 @@ namespace LagoVista.AI.Indexing.Services
     {
         private readonly IChunkerServices _chunkerServices;
         private readonly IAdminLogger _adminLogger;
-        private readonly ICodeDescriptionService _codeDescriptionService;
 
-        public DomainModelCatalogBuilder(IChunkerServices chunkerServices, ICodeDescriptionService codeDescriptionService, IAdminLogger adminLogger)
+        public DomainModelCatalogBuilder(IChunkerServices chunkerServices,IAdminLogger adminLogger)
         {
             _chunkerServices = chunkerServices ?? throw new ArgumentNullException(nameof(chunkerServices));
-            _codeDescriptionService = codeDescriptionService ?? throw new ArgumentNullException(nameof(codeDescriptionService));
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
         }
 
@@ -110,22 +108,23 @@ namespace LagoVista.AI.Indexing.Services
                                 }
                             }
 
-                            // 2) Models: BuildStructuredDescriptionForModel returns null for non-model snippets.
-                            var modelResult = _codeDescriptionService.BuildModelStructureDescription(snippet, resources);
+                            // TODO: Need to access a provider
+                            //// 2) Models: BuildStructuredDescriptionForModel returns null for non-model snippets.
+                            //var modelResult = _codeDescriptionService.BuildModelStructureDescription(snippet, resources);
 
-                            if (modelResult != null && modelResult.Successful && modelResult.Result != null &&
-                                !string.IsNullOrWhiteSpace(modelResult.Result.QualifiedName))
-                            {
-                                var modelStructure = modelResult.Result;
+                            //if (modelResult != null && modelResult.Successful && modelResult.Result != null &&
+                            //    !string.IsNullOrWhiteSpace(modelResult.Result.QualifiedName))
+                            //{
+                            //    var modelStructure = modelResult.Result;
 
-                                modelsByQualifiedName[modelStructure.QualifiedName] = new ModelCatalogEntry
-                                {
-                                    RepoId = repoId,
-                                    RelativePath = file.RelativePath,
-                                    SubKind = result.SubKind,
-                                    Structure = modelStructure
-                                };
-                            }
+                            //    modelsByQualifiedName[modelStructure.QualifiedName] = new ModelCatalogEntry
+                            //    {
+                            //        RepoId = repoId,
+                            //        RelativePath = file.RelativePath,
+                            //        SubKind = result.SubKind,
+                            //        Structure = modelStructure
+                            //    };
+                            //}
                         }
                     }
                 }
