@@ -44,6 +44,7 @@ OUTPUT RULES
 - Output exactly ONE valid JSON object (no markdown fences, no commentary).
 - Do NOT invent identifiers, types, status, approvals, rules, or constraints not present in the Markdown.
 - If a required value cannot be extracted with confidence, set it to null and set needsHumanConfirmation=true with a reason.
+- If DryRun is set to TRUE you MUST notify the user that this is a preview and no DDR has been imported.
 
 EXTRACT (from Markdown)
 Populate these fields (null if unknown/ambiguous):
@@ -301,23 +302,18 @@ dryRun, confirmed, markdown, source
                     return InvokeResult<string>.FromError("import_ddr did not create 'ragIndexCard'.");
 
                 // Type-conditional derived fields
-                if (string.Equals(finalType, "Instruction", StringComparison.Ordinal) ||
-                    string.Equals(finalType, "Referential", StringComparison.Ordinal))
+                if (string.Equals(finalType, "Instruction", StringComparison.Ordinal))
                 {
                     if (args.AgentInstructions == null || args.AgentInstructions.Length == 0)
-                        return InvokeResult<string>.FromError("import_ddr did not create 'agentInstructions' for an Instruction or Referential DDR.");
-
+                        return InvokeResult<string>.FromError("import_ddr did not create 'agentInstructions' for an Instruction.");
+            
                     if (string.IsNullOrWhiteSpace(args.ReferentialSummary))
-                        return InvokeResult<string>.FromError("import_ddr did not create 'referentialSummary' for an Instruction or Referential DDR.");
+                        return InvokeResult<string>.FromError("import_ddr did not create 'referentialSummary' for an Instruction DDR.");
                 }
-                else
+                else if (string.Equals(finalType, "Referential", StringComparison.Ordinal))
                 {
-                    // Generation or Policy / Rules / Governance or unknown
-                    if (!string.IsNullOrWhiteSpace(args.ReferentialSummary))
-                        return InvokeResult<string>.FromError($"import_ddr must not include 'referentialSummary' for this DDR type ({finalType}).");
-
-                    if (args.AgentInstructions != null && args.AgentInstructions.Length > 0)
-                        return InvokeResult<string>.FromError($"import_ddr must not include 'agentInstructions' for this DDR type ({finalType}).");
+                    if (string.IsNullOrWhiteSpace(args.ReferentialSummary))
+                        return InvokeResult<string>.FromError("import_ddr did not create 'referentialSummary' for an Referential DDR.");
                 }
 
                 // Compute needsHumanConfirmation (compatibility mode)
@@ -331,7 +327,7 @@ dryRun, confirmed, markdown, source
 
                 // If needs confirmation and not confirmed, return preview
                 var dryRun = args.DryRun.GetValueOrDefault(false);
-                if (dryRun || args.Confirmed != true || needsHumanConfirmation)
+                if (dryRun || args.Confirmed != true)
                 {
                     var preview = new ImportDdrResult
                     {

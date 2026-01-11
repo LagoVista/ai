@@ -112,13 +112,13 @@ Return a small JSON result indicating success and any indexing details available
                 };
 
                 var addContentResult = await _llmContentRepo.AddContentAsync(ctx.DocumentIdentity.OrgNamespace, $"ddrs/{ddr.DdrIdentifier.Replace("-",String.Empty).ToLower()}.model.txt", ddr.CondensedDdrContent);
-                if(addContentResult.Successful)
+                if(!addContentResult.Successful)
                 {
                     return InvokeResult<string>.FromInvokeResult(addContentResult.ToInvokeResult());
                 }
 
                 var humanContentResult = await _llmContentRepo.AddContentAsync(ctx.DocumentIdentity.OrgNamespace, $"ddrs/{ddr.DdrIdentifier.Replace("-", String.Empty).ToLower()}.human.txt", ddr.CondensedDdrContent);
-                if (humanContentResult.Successful)
+                if (!humanContentResult.Successful)
                 {
                     return InvokeResult<string>.FromInvokeResult(humanContentResult.ToInvokeResult());   
                 }
