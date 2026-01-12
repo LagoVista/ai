@@ -56,7 +56,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                 SectionKey = "entity-model-finder-snippet",
                 SectionType = "FinderSnippet",
                 Flavor = "EntityModelDescription",
-                Symbol = artifact,
+                SymbolName = artifact,
                 SymbolType = "Model",
                 DomainKey = headerInfo?.DomainKey ?? BusinessDomainKey,
                 ModelClassName = headerInfo?.ModelClassName ?? headerInfo?.ModelClassName ?? QualifiedName,

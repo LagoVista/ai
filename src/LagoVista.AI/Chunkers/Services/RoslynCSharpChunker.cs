@@ -13,7 +13,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace LagoVista.AI.Rag.Chunkers.Services
 {
     /// <summary>
-    /// Symbol-aware C# chunker using Roslyn. Produces chunks for types and members
+    /// SymbolName-aware C# chunker using Roslyn. Produces chunks for types and members
     /// with line numbers, character ranges, and token-aware size limiting.
     /// Includes robust cursor-advance logic to avoid infinite loops even with
     /// extreme settings (e.g., tiny token budgets or large overlaps).
@@ -23,7 +23,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
         /// <summary>
         /// Chunk a C# file into a collection of CSharpComponentChunk, including:
         /// - A file-level summary chunk (header comments + using directives)
-        /// - Symbol-level chunks for types/members (methods, properties, fields, etc.)
+        /// - SymbolName-level chunks for types/members (methods, properties, fields, etc.)
         ///
         /// Chunks are roughly bounded by maxTokensPerChunk using a simple token estimator.
         /// Overlap is applied between symbol chunks to give the embedder continuity.
@@ -79,7 +79,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                     chunks.Add(summary);
                 }
 
-                // 2) Symbol-level chunks
+                // 2) SymbolName-level chunks
                 foreach (var node in root.DescendantNodes())
                 {
                     switch (node.GetType().Name)

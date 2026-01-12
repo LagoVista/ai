@@ -83,31 +83,31 @@ namespace LagoVista.AI.Rag.Services
                     continue;
                 }
 
-                var splitterResults = CSharpSymbolSplitter.Split(source);
-                if (!splitterResults.Successful)
-                {
-                    throw new InvalidOperationException(
-                        $"SymbolSplitter failed for file '{file.RelativePath ?? file.FullPath}'.");
-                }
+                //var splitterResults = CSharpSymbolSplitter.Split(source);
+                //if (!splitterResults.Successful)
+                //{
+                //    throw new InvalidOperationException(
+                //        $"SymbolSplitter failed for file '{file.RelativePath ?? file.FullPath}'.");
+                //}
 
-                foreach (var snippet in splitterResults.Result)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
+                //foreach (var snippet in splitterResults.Result)
+                //{
+                //    cancellationToken.ThrowIfCancellationRequested();
 
-                    var text = snippet.Text;
-                    if (string.IsNullOrWhiteSpace(text))
-                    {
-                        continue;
-                    }
+                //    var text = snippet.Text;
+                //    if (string.IsNullOrWhiteSpace(text))
+                //    {
+                //        continue;
+                //    }
 
-                    var modelEntry = ExtractModelFromSnippet(text, relative, resources);
-                    if (modelEntry == null)
-                    {
-                        continue; // not an interesting or incomplete model
-                    }
+                //    var modelEntry = ExtractModelFromSnippet(text, relative, resources);
+                //    if (modelEntry == null)
+                //    {
+                //        continue; // not an interesting or incomplete model
+                //    }
 
-                    models.Add(modelEntry);
-                }
+                //    models.Add(modelEntry);
+                //}
             }
 
             return models;

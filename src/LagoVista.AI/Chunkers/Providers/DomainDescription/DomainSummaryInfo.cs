@@ -109,7 +109,7 @@ namespace LagoVista.AI.Chunkers.Providers.DomainDescription
                 new SummarySection
                 {
                     SectionKey = $"domain-{(DomainKey ?? Title ?? SourcePropertyName).Replace(" ", "-").ToLowerInvariant()}",
-                    Symbol = SourceTypeName,                  // e.g. LagoVista.AI.Models.AIDomain
+                    SymbolName = SourceTypeName,                  // e.g. LagoVista.AI.Models.AIDomain
                     SymbolType = "Domain",                    // your logical kind
                     SectionNormalizedText = sb.ToString()
                 }

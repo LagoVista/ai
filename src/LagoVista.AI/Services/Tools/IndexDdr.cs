@@ -92,7 +92,7 @@ Return a small JSON result indicating success and any indexing details available
                     return InvokeResult<string>.FromError("index_ddr - Summary is empty, can not index.");
                 var ctx = new IndexFileContext()
                 {
-                    Contents = System.Text.UTF32Encoding.UTF32.GetBytes(ddr.FullDDRMarkDown),
+                    Contents = ddr.FullDDRMarkDown,
                     FullPath = $"/{context.Org.Id.ToLower()}/{args.Identifier}.md",
                     RelativePath = $"/{context.Org.Id.ToLower()}/{args.Identifier}.md",
                     DocumentIdentity = new DocumentIdentity()

@@ -19,7 +19,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         public class CSharpComponentChunk
         {
             /// <summary>
-            /// Symbol name (method, type, property, etc.).
+            /// SymbolName name (method, type, property, etc.).
             /// </summary>
             public string SymbolName { get; set; }
 
@@ -116,7 +116,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                     CommitSha = fileContext.GitRepoInfo.CommitSha,
                     CharStart = StartCharacter,
                     CharEnd = EndCharacter,
-                    Symbol = SymbolName,
+                    SymbolName = SymbolName,
                     SymbolType = SymbolKind,
                 }
             };

@@ -40,7 +40,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
 
             var sections = new List<SummarySection>();
 
-            // Symbol: prefer logical model name; fall back to CLR model name.
+            // SymbolName: prefer logical model name; fall back to CLR model name.
             var symbol = !string.IsNullOrWhiteSpace(headerInfo?.ModelName)
                 ? headerInfo.ModelName
                 : !string.IsNullOrWhiteSpace(ModelName)
@@ -154,7 +154,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                 SectionKey = "model-structure-overview",
                 SectionType = "Overview",
                 Flavor = "ModelStructureDescription",
-                Symbol = symbol,
+                SymbolName = symbol,
                 SymbolType = "Model",
                 DomainKey = headerInfo?.DomainKey,
                 ModelClassName = headerInfo?.ModelClassName,
@@ -243,7 +243,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                 SectionKey = "model-structure-properties",
                 SectionType = "Properties",
                 Flavor = "ModelStructureDescription",
-                Symbol = symbol,
+                SymbolName = symbol,
                 SymbolType = "Model",
                 DomainKey = headerInfo?.DomainKey,
                 ModelClassName = headerInfo?.ModelClassName,
@@ -409,7 +409,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                 SectionKey = "model-structure-relationships",
                 SectionType = "Relationships",
                 Flavor = "ModelStructureDescription",
-                Symbol = symbol,
+                SymbolName = symbol,
                 SymbolType = "Model",
                 DomainKey = headerInfo?.DomainKey,
                 ModelClassName = headerInfo?.ModelClassName,

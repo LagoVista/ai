@@ -81,49 +81,49 @@ namespace LagoVista.AI.Rag.Services
                     continue;
                 }
 
-                var splitterResults = CSharpSymbolSplitter.Split(source);
-                if (!splitterResults.Successful)
-                {
-                    throw new InvalidOperationException(
-                        $"SymbolSplitter failed for file '{file.RelativePath ?? file.FullPath}'.");
-                }
+                //var splitterResults = CSharpSymbolSplitter.Split(source);
+                //if (!splitterResults.Successful)
+                //{
+                //    throw new InvalidOperationException(
+                //        $"SymbolSplitter failed for file '{file.RelativePath ?? file.FullPath}'.");
+                //}
 
-                // CSharpSymbolSplitter guarantees each snippet contains only one class.
-                foreach (var snippet in splitterResults.Result)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
+                //// CSharpSymbolSplitter guarantees each snippet contains only one class.
+                //foreach (var snippet in splitterResults.Result)
+                //{
+                //    cancellationToken.ThrowIfCancellationRequested();
 
-                    var text = snippet.Text;
-                    if (string.IsNullOrWhiteSpace(text))
-                    {
-                        continue;
-                    }
+                //    var text = snippet.Text;
+                //    if (string.IsNullOrWhiteSpace(text))
+                //    {
+                //        continue;
+                //    }
 
-                    var summaries = ExtractDomainsFromSnippet(text);
-                    if (summaries == null || summaries.Count == 0)
-                    {
-                        continue;
-                    }
+                //    var summaries = ExtractDomainsFromSnippet(text);
+                //    if (summaries == null || summaries.Count == 0)
+                //    {
+                //        continue;
+                //    }
 
-                    foreach (var summary in summaries)
-                    {
-                        if (string.IsNullOrWhiteSpace(summary.DomainKey) ||
-                            string.IsNullOrWhiteSpace(summary.Title) ||
-                            string.IsNullOrWhiteSpace(summary.Description))
-                        {
-                            throw new InvalidOperationException(
-                                $"Domain descriptor in '{file.RelativePath ?? file.FullPath}' produced an incomplete DomainSummaryInfo. DomainKey, Title, and Description are all required.");
-                        }
+                //    foreach (var summary in summaries)
+                //    {
+                //        if (string.IsNullOrWhiteSpace(summary.DomainKey) ||
+                //            string.IsNullOrWhiteSpace(summary.Title) ||
+                //            string.IsNullOrWhiteSpace(summary.Description))
+                //        {
+                //            throw new InvalidOperationException(
+                //                $"Domain descriptor in '{file.RelativePath ?? file.FullPath}' produced an incomplete DomainSummaryInfo. DomainKey, Title, and Description are all required.");
+                //        }
 
-                        if (!domainsByKey.ContainsKey(summary.DomainKey))
-                        {
-                            domainsByKey.Add(summary.DomainKey, summary);
-                        }
-                        // If the key already exists, we keep the first definition. If
-                        // you want stricter duplicate detection, we can add that later
-                        // without changing this method signature.
-                    }
-                }
+                //        if (!domainsByKey.ContainsKey(summary.DomainKey))
+                //        {
+                //            domainsByKey.Add(summary.DomainKey, summary);
+                //        }
+                //        // If the key already exists, we keep the first definition. If
+                //        // you want stricter duplicate detection, we can add that later
+                //        // without changing this method signature.
+                //    }
+                //}
             }
 
             return domainsByKey.Values.ToList();

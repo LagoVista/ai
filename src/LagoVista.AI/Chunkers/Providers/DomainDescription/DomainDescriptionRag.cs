@@ -75,7 +75,7 @@ namespace LagoVista.AI.Chunkers.Providers.DomainDescription
                 PartIndex = 1,
                 PartTotal = 1,
                 SymbolType = "Domain",
-                Symbol = DomainName,
+                SymbolName = DomainName,
                 DomainKey = DomainName,
                 FinderSnippet = DomainDescriptionSectionBuilder.BuildFinderSnippet(DomainName, DomainSummary),
                 BackingArtifact = DomainDescriptionSectionBuilder.BuildBackingArtifact(DomainName, DomainSummary, DomainNarrative, Classes),

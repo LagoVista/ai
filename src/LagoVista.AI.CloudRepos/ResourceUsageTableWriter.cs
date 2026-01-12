@@ -268,7 +268,7 @@ namespace LagoVista.AI.CloudRepos
         /// </summary>
         public string AttributePropertyName { get; set; }
 
-        // ---------- Symbol / File Location ----------
+        // ---------- SymbolName / File Location ----------
 
         public string RelativePath { get; set; }
         public string SymbolName { get; set; }

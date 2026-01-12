@@ -77,7 +77,6 @@ namespace LagoVista.AI
             services.AddSingleton<IDomainModelCatalogBuilder, DomainModelCatalogBuilder>();
             services.AddSingleton<ILocalIndexStore, JsonLocalIndexStore>();
             services.AddSingleton<IInterfaceSemanticEnricher, InterfaceSemanticEnricher>();
-            services.AddSingleton<ISourceFileProcessor, SourceFileProcessor>();
             services.AddSingleton<IIndexingPipeline, DefaultIndexingPipeline>();
             services.AddSingleton<IFacetAccumulator, InMemoryFacetAccumulator>();
             services.AddSingleton<IGitRepoInspector, GitRepoInspector>();

@@ -21,11 +21,13 @@ namespace LagoVista.AI.Indexing.Services
     {
         private readonly IChunkerServices _chunkerServices;
         private readonly IAdminLogger _adminLogger;
+        private readonly ICSharpSymbolSplitterService _splitterService;
 
-        public DomainModelCatalogBuilder(IChunkerServices chunkerServices,IAdminLogger adminLogger)
+        public DomainModelCatalogBuilder(IChunkerServices chunkerServices, ICSharpSymbolSplitterService splitterService, IAdminLogger adminLogger)
         {
             _chunkerServices = chunkerServices ?? throw new ArgumentNullException(nameof(chunkerServices));
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
+            _splitterService = splitterService ?? throw new ArgumentNullException(nameof(splitterService));
         }
 
         public Task<DomainModelCatalog> BuildAsync(
@@ -73,7 +75,7 @@ namespace LagoVista.AI.Indexing.Services
 
                 var source = await File.ReadAllTextAsync(file.FullPath, token).ConfigureAwait(false);
 
-                var splitterResults = CSharpSymbolSplitter.Split(source);
+                var splitterResults = _splitterService.Split(source);
                 if (splitterResults.Successful)
                 {
                     foreach (var splitrResult in splitterResults.Result)

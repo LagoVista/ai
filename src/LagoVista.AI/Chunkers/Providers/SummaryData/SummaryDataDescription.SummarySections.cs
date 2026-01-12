@@ -37,7 +37,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
             var sections = new List<SummarySection>();
             _summarySections = sections;
 
-            // Symbol: prefer logical underlying entity name; fall back to list name.
+            // SymbolName: prefer logical underlying entity name; fall back to list name.
             var symbol = !string.IsNullOrWhiteSpace(UnderlyingEntityTypeName)
                 ? UnderlyingEntityTypeName
                 : !string.IsNullOrWhiteSpace(ListName)
@@ -145,7 +145,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                 SectionKey = "summary-list-overview",
                 SectionType = "Overview",
                 Flavor = "SummaryDataDescription",
-                Symbol = symbol,
+                SymbolName = symbol,
                 SymbolType = "SummaryList",
                 DomainKey = headerInfo?.DomainKey,
                 ModelClassName = headerInfo?.ModelClassName,
@@ -228,7 +228,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                 SectionKey = "summary-list-fields",
                 SectionType = "Fields",
                 Flavor = "SummaryDataDescription",
-                Symbol = symbol,
+                SymbolName = symbol,
                 SymbolType = "SummaryList",
                 DomainKey = headerInfo?.DomainKey,
                 ModelClassName = headerInfo?.ModelClassName,

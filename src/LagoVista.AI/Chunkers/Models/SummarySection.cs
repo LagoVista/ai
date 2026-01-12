@@ -18,7 +18,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         public int PartIndex { get; set; } = 1;
         public int PartTotal { get; set; } = 1;
 
-        public string Symbol { get; set; }
+        public string SymbolName { get; set; }
         public string SymbolType { get; set; }
 
         public string DomainKey { get; set; }
@@ -64,7 +64,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
 
         public InvokeResult PopulateRagPayload(RagVectorPayload payload)
         {
-            payload.Extra.Symbol = Symbol;
+            payload.Extra.SymbolName = SymbolName;
             payload.Extra.SymbolType = SymbolType;
             payload.Meta.SectionKey = SectionKey;
             payload.Meta.PartIndex = PartIndex;

@@ -124,8 +124,8 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                     }
                 };
 
-                payload.Meta.Title = $"{section.SymbolType}: {section.Symbol} - {section.SectionKey} (Chunk {section.PartIndex} of {section.PartTotal})";
-                payload.Meta.SemanticId = $"{this.OrgNamespace}:{this.ProjectId}:{this.RepoId}:{section.SymbolType}:{section.Symbol}:{section.SectionKey}:{section.PartIndex}".ToLower();
+                payload.Meta.Title = $"{section.SymbolType}: {section.SymbolName} - {section.SectionKey} (Chunk {section.PartIndex} of {section.PartTotal})";
+                payload.Meta.SemanticId = $"{this.OrgNamespace}:{this.ProjectId}:{this.RepoId}:{section.SymbolType}:{section.SymbolName}:{section.SectionKey}:{section.PartIndex}".ToLower();
 
                 if(dualColonRegEx.Match(payload.Meta.SemanticId).Success)
                 {

@@ -124,7 +124,7 @@ namespace LagoVista.AI.Services.Qdrant
                         ? payload.Extra.FullDocumentBlobUri
                         : string.Empty;
 
-                var sym = payload.Extra.Symbol ?? string.Empty;
+                var sym = payload.Extra.SymbolName ?? string.Empty;
                 var key = path + "::" + sym;
 
                 if (!byKey.ContainsKey(key))
