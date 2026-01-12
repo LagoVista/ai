@@ -29,8 +29,9 @@ namespace LagoVista.AI.Rag.Chunkers.Models
 
         public string BlobUri { get; set; }
 
-        public byte[] Contents { get; set; }
+        public string Contents { get; set; }
 
+ 
         public GitRepoInfo GitRepoInfo { get; set; }
 
         /// <summary>

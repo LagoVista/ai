@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Chunkers.Interfaces;
 using LagoVista.AI.Chunkers.Providers.DomainDescription;
-using LagoVista.AI.Chunkers.Utils;
 using LagoVista.AI.Indexing.Models;
 using LagoVista.AI.Rag.Chunkers.Interfaces;
 using LagoVista.AI.Rag.Chunkers.Services;
@@ -74,7 +73,7 @@ namespace LagoVista.AI.Indexing.Services
 
                 var source = await File.ReadAllTextAsync(file.FullPath, token).ConfigureAwait(false);
 
-                var splitterResults = SymbolSplitter.Split(source);
+                var splitterResults = CSharpSymbolSplitter.Split(source);
                 if (splitterResults.Successful)
                 {
                     foreach (var splitrResult in splitterResults.Result)

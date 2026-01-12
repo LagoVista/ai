@@ -1,5 +1,5 @@
+using LagoVista.AI.Rag.Chunkers.Models;
 using System;
-using System.Collections.Generic;
 
 namespace LagoVista.AI.Indexing.Models
 {
@@ -8,7 +8,13 @@ namespace LagoVista.AI.Indexing.Models
     /// </summary>
     public class IndexingResources
     {
-        public IDictionary<string, object> Items { get; } =
-            new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+        public IndexingResources(IndexFileContext fileCtx)
+        {
+            FileContext = FileContext ?? throw new ArgumentNullException(nameof(fileCtx));
+        }
+
+
+        public IndexFileContext FileContext { get; }
+
     }
 }

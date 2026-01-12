@@ -7,7 +7,7 @@ namespace LagoVista.AI.Indexing.PipeLine
 {
     public sealed class BuildDescriptionStep : IndexingPipelineStepBase, IBuildDescriptionStep
     {
-        public BuildDescriptionStep(LagoVista.AI.Indexing.Interfaces.IIndexingPipelineStep next = null) : base(next) { }
+        public BuildDescriptionStep(IUploadContentStep next) : base(next) { }
 
         public override IndexingPipelineSteps StepType => IndexingPipelineSteps.BuildDescription;
 

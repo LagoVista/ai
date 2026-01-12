@@ -1,10 +1,10 @@
 namespace LagoVista.AI.Indexing.Interfaces
 {
-    public interface IProcessorRegistry<TProcessor>
+    public interface IProcessorRegistry<TKey, TProcessor>
     {
-        bool TryGet(string subKind, out TProcessor processor);
+        bool TryGet(TKey subKind, out TProcessor processor);
 
-        TProcessor GetOrDefault(string subKind);
+        TProcessor GetOrDefault(TKey subKind);
 
         TProcessor Default { get; }
     }

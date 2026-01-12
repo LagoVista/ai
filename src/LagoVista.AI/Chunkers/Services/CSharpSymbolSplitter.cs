@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using LagoVista.AI.Chunkers.Interfaces;
 using LagoVista.Core.Validation;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace LagoVista.AI.Chunkers.Utils
+namespace LagoVista.AI.Chunkers.Services
 {
     /// <summary>
     /// Splits a C# file into isolated symbol-level segments.
@@ -17,9 +18,9 @@ namespace LagoVista.AI.Chunkers.Utils
     /// 1) Split symbols (including nested types)
     /// 2) Analyze each independently (SubKind, metadata, etc)
     /// </summary>
-    public static class SymbolSplitter
+    public class CSharpSymbolSplitterService : ICSharpSymbolSplitterService
     {
-        public static InvokeResult<IReadOnlyList<SplitSymbolResult>> Split(string sourceText)
+        public InvokeResult<IReadOnlyList<SplitSymbolResult>> Split(string sourceText)
         {
             if (string.IsNullOrWhiteSpace(sourceText))
                 throw new ArgumentNullException(nameof(sourceText));

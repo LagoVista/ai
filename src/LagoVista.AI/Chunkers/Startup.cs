@@ -10,6 +10,7 @@ namespace LagoVista.AI.Chunkers
         {
             Registries.Startup.ConfigureServices(services, adminLogger);
             PipeLine.Startup.ConfigureServices(services, adminLogger);
+            Services.Startup.ConfigureServices(services, adminLogger);
         }
     }
 }

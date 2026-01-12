@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using LagoVista.AI.Chunkers.Providers.DomainDescription;
-using LagoVista.AI.Chunkers.Utils;
+using LagoVista.AI.Chunkers.Services;
 using LagoVista.AI.Indexing.Interfaces;
 using LagoVista.AI.Indexing.Models;
 using LagoVista.AI.Quality.Services;
@@ -225,7 +225,7 @@ namespace LagoVista.AI.Indexing.Services
 
         private InvokeResult<IReadOnlyList<SplitSymbolResult>> SplitSymbols(string sourceText)
         {
-            return SymbolSplitter.Split(sourceText);
+            return CSharpSymbolSplitter.Split(sourceText);
         }
 
         // 7.2 - Source Kind Analysis ---------------------------------------

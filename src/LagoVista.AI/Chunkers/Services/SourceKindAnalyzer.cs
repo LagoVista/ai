@@ -14,7 +14,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
     ///
     /// This is the canonical home for all SubKind heuristics that used to live
     /// in SubKindDetector. It is intended to be called on isolated symbol text
-    /// (e.g., output of SymbolSplitter). If more than one top-level type is
+    /// (e.g., output of CSharpSymbolSplitter). If more than one top-level type is
     /// detected, an InvalidOperationException is thrown.
     /// </summary>
     public static class SourceKindAnalyzer

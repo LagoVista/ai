@@ -1,12 +1,13 @@
+using LagoVista.AI.Indexing.Interfaces;
 using LagoVista.AI.Indexing.Models;
 using LagoVista.Core.Validation;
 using System.Threading.Tasks;
 
 namespace LagoVista.AI.Indexing.PipeLine
 {
-    public sealed class SegmentContentStep : IndexingPipelineStepBase
+    public sealed class SegmentContentStep : IndexingPipelineStepBase, ISegmentContentStep
     {
-        public SegmentContentStep(LagoVista.AI.Indexing.Interfaces.IIndexingPipelineStep next = null) : base(next) { }
+        public SegmentContentStep(IBuildDescriptionStep next) : base(next) { }
 
         public override IndexingPipelineSteps StepType => IndexingPipelineSteps.SegmentContent;
 

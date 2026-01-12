@@ -1,3 +1,5 @@
+using LagoVista.Core.Utils.Types.Nuviot.RagIndexing;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 
@@ -9,12 +11,8 @@ namespace LagoVista.AI.Indexing.Models
 
         public IndexingPipelineContext()
         {
-            Resources = new IndexingResources();
+            //Resources = new IndexingResources();
         }
-
-        public string FullSource { get; set; }
-
-        public string FullSourceUrl { get; set; }
 
         public IndexingResources Resources { get; }
 
@@ -39,16 +37,18 @@ namespace LagoVista.AI.Indexing.Models
         {
             if (parent == null) throw new ArgumentNullException(nameof(parent));
 
-            // Deep copy TODO:
-            // - Once RagPayload is RagVectorPayload, deep clone it and set ParentPointId = parent.PointId.
-            // - Once Lenses is EntityIndexLenses, deep clone it.
-
             var child = new IndexingWorkItem
             {
                 PointId = Guid.NewGuid(),
                 Vector = null,
-                RagPayload = parent.RagPayload,
-                Lenses = parent.Lenses
+                RagPayload = JsonConvert.DeserializeObject<RagVectorPayload>(JsonConvert.SerializeObject(parent.RagPayload)),
+                Lenses = new EntityIndexLenses()
+                {
+                    ModelSummary = parent.Lenses.ModelSummary,
+                    UserDetail = parent.Lenses.UserDetail,
+                    CleanupGuidance = parent.Lenses.CleanupGuidance,
+                    SymbolText = parent.Lenses.SymbolText
+                }
             };
 
             _workItems.Add(child);

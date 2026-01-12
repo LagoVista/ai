@@ -4,9 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using LagoVista.AI.Chunkers.Utils;
 using LagoVista.AI.Indexing.Models;
-using LagoVista.AI.Rag.Chunkers.Services;              // SymbolSplitter, ModelSourceAnalyzer
+using LagoVista.AI.Rag.Chunkers.Services;              // CSharpSymbolSplitter, ModelSourceAnalyzer
 
 namespace LagoVista.AI.Rag.Services
 {
@@ -26,7 +25,7 @@ namespace LagoVista.AI.Rag.Services
         /// Rules:
         /// - Only .cs files are considered.
         /// - Any file under tests/... is ignored.
-        /// - Uses SymbolSplitter to obtain one-class snippets.
+        /// - Uses CSharpSymbolSplitter to obtain one-class snippets.
         /// - For each snippet, calls ModelSourceAnalyzer.Analyze with the
         ///   provided resources dictionary.
         /// - Only models with all required fields are included in the catalog.
@@ -77,14 +76,14 @@ namespace LagoVista.AI.Rag.Services
 
                 var source = await File.ReadAllTextAsync(file.FullPath, cancellationToken).ConfigureAwait(false);
 
-                // Fast pre-check: only pay SymbolSplitter/analyzer cost if the file
+                // Fast pre-check: only pay CSharpSymbolSplitter/analyzer cost if the file
                 // even mentions [EntityDescription].
                 if (source.IndexOf("[EntityDescription", StringComparison.Ordinal) < 0)
                 {
                     continue;
                 }
 
-                var splitterResults = SymbolSplitter.Split(source);
+                var splitterResults = CSharpSymbolSplitter.Split(source);
                 if (!splitterResults.Successful)
                 {
                     throw new InvalidOperationException(

@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Chunkers.Providers.DomainDescription;
-using LagoVista.AI.Chunkers.Utils;
 using LagoVista.AI.Indexing.Models;
 using LagoVista.Core.Models.UIMetaData;                // DomainDescription
 using Microsoft.CodeAnalysis;
@@ -16,7 +15,7 @@ namespace LagoVista.AI.Rag.Services
 {
     /// <summary>
     /// Partial class containing the guts for domain extraction logic.
-    /// Roslyn + SymbolSplitter pipeline is kept here so the primary service
+    /// Roslyn + CSharpSymbolSplitter pipeline is kept here so the primary service
     /// file stays stable.
     /// </summary>
     public sealed partial class DomainCatalogService
@@ -27,7 +26,7 @@ namespace LagoVista.AI.Rag.Services
         /// Rules:
         /// - Only .cs files are considered.
         /// - Any file under tests/... is ignored.
-        /// - Uses SymbolSplitter to get one-class snippets.
+        /// - Uses CSharpSymbolSplitter to get one-class snippets.
         /// - Each snippet is parsed with Roslyn to find [DomainDescriptor]
         ///   classes and their DomainSummaryInfo.
         /// - Enforces mandatory fields (DomainKey, Title, Description) at this level.
@@ -75,21 +74,21 @@ namespace LagoVista.AI.Rag.Services
 
                 var source = await File.ReadAllTextAsync(file.FullPath, cancellationToken).ConfigureAwait(false);
 
-                // Fast pre-check: only pay SymbolSplitter/Roslyn cost if the file
+                // Fast pre-check: only pay CSharpSymbolSplitter/Roslyn cost if the file
                 // even mentions [DomainDescriptor].
                 if (source.IndexOf("[DomainDescriptor", StringComparison.Ordinal) < 0)
                 {
                     continue;
                 }
 
-                var splitterResults = SymbolSplitter.Split(source);
+                var splitterResults = CSharpSymbolSplitter.Split(source);
                 if (!splitterResults.Successful)
                 {
                     throw new InvalidOperationException(
                         $"SymbolSplitter failed for file '{file.RelativePath ?? file.FullPath}'.");
                 }
 
-                // SymbolSplitter guarantees each snippet contains only one class.
+                // CSharpSymbolSplitter guarantees each snippet contains only one class.
                 foreach (var snippet in splitterResults.Result)
                 {
                     cancellationToken.ThrowIfCancellationRequested();

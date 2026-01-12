@@ -47,6 +47,7 @@ namespace LagoVista.AI.Indexing
 
     public sealed class EntityIndexLenses
     {
+        public string SymbolText { get; set; }
         public string EmbedSnippet { get; set; }
         public string ModelSummary { get; set; }
         public string UserDetail { get; set; }

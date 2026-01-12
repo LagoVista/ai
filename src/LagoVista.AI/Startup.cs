@@ -48,6 +48,7 @@ namespace LagoVista.AI
             Services.Startup.ConfigureServices(services, adminLogger);
             Services.OpenAI.Startup.ConfigureServices(services, adminLogger);
             Managers.Startup.ConfigureServices(services, adminLogger);
+            Chunkers.Startup.ConfigureServices(services, adminLogger);
 
             services.AddSingleton<IHttpClientFactory>(new LagoVistaClientFactory());
             services.AddTransient<IAgentToolFactory, AgentToolFactory>();

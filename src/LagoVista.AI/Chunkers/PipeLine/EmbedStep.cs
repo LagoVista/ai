@@ -1,12 +1,13 @@
+using LagoVista.AI.Indexing.Interfaces;
 using LagoVista.AI.Indexing.Models;
 using LagoVista.Core.Validation;
 using System.Threading.Tasks;
 
 namespace LagoVista.AI.Indexing.PipeLine
 {
-    public sealed class EmbedStep : IndexingPipelineStepBase
+    public sealed class EmbedStep : IndexingPipelineStepBase, IEmbedStep
     {
-        public EmbedStep(LagoVista.AI.Indexing.Interfaces.IIndexingPipelineStep next = null) : base(next) { }
+        public EmbedStep(IStoreUpsertPointStep next) : base(next) { }
 
         public override IndexingPipelineSteps StepType => IndexingPipelineSteps.Embed;
 

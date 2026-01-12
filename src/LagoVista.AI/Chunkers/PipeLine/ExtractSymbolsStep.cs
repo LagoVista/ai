@@ -1,3 +1,5 @@
+using LagoVista.AI.Chunkers.Interfaces;
+using LagoVista.AI.Indexing.Interfaces;
 using LagoVista.AI.Indexing.Models;
 using LagoVista.Core.Validation;
 using System;
@@ -5,19 +7,27 @@ using System.Threading.Tasks;
 
 namespace LagoVista.AI.Indexing.PipeLine
 {
-    public sealed class ExtractSymbolsStep : IndexingPipelineStepBase
+    public sealed class ExtractSymbolsStep : IndexingPipelineStepBase, IExtractSymbolsStep
     {
-        public ExtractSymbolsStep(LagoVista.AI.Indexing.Interfaces.IIndexingPipelineStep next = null) : base(next) { }
+        IExtractSymbolsProcessorRegistry _extractSymbolRegistry;
+
+        public ExtractSymbolsStep(ICategorizeContentStep next, IExtractSymbolsProcessorRegistry extrctSymbolService) : base(next)
+        {
+            _extractSymbolRegistry = extrctSymbolService ?? throw new ArgumentNullException(nameof(extrctSymbolService));
+        }
 
         public override IndexingPipelineSteps StepType => IndexingPipelineSteps.ExtractSymbols;
 
         protected override Task<InvokeResult> ExecuteAsync(IndexingPipelineContext ctx, IndexingWorkItem workItem)
         {
-            // TODO:
-            // - Parse ctx.FullSource
-            // - Expand ctx.WorkItems to one per symbol
-            // - For each symbol item: PointId = Guid.NewGuid(); populate symbol text + optional metadata
-            return Task.FromResult(InvokeResult.Success);
+            if (_extractSymbolRegistry.TryGet(ctx.Resources.FileContext.DocumentIdentity.Type, out IExtractSymbolsProcessor splitter))
+            {
+                return splitter.ProcessAsync(ctx, workItem);
+            }
+            else
+            {
+                return Task.FromResult(InvokeResult.Success);
+            }
         }
     }
 }
