@@ -5,9 +5,9 @@ using System.Collections.Generic;
 
 namespace LagoVista.AI.Indexing.Registries
 {
-    public sealed class SubtypeKindCategorizerRegistry : ProcessorRegistry<SubtypeKind, ISubtypeKindCategorizer>, ISubtypeKindCategorizerRegistry
+    public sealed class SubtypeKindCategorizerRegistry : ProcessorRegistry<DocumentType, ISubtypeKindCategorizer>, ISubtypeKindCategorizerRegistry
     {
-        public SubtypeKindCategorizerRegistry(IDictionary<SubtypeKind, ISubtypeKindCategorizer> processors, ISubtypeKindCategorizer @default)
+        public SubtypeKindCategorizerRegistry(IDictionary<DocumentType, ISubtypeKindCategorizer> processors, ISubtypeKindCategorizer @default)
             : base(processors, @default)
         {
         }
