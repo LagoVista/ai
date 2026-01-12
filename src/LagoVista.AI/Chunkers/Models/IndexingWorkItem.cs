@@ -1,10 +1,13 @@
 using System;
+using LagoVista.AI.Rag.Chunkers.Models;
 using LagoVista.Core.Utils.Types.Nuviot.RagIndexing;
 
 namespace LagoVista.AI.Indexing.Models
 {
     public sealed class IndexingWorkItem
     {
+        public SubtypeKind Kind { get; set; }
+
         public Guid PointId { get; set; }
 
         public float[] Vector { get; set; }
