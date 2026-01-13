@@ -110,6 +110,8 @@ namespace LagoVista.AI.Models
 
         public string DefaultLanguage { get; set; }
 
+        public int CurrentChapterIndex { get; set; }
+
         public EntityHeader<OperationKinds> OperationKind { get; set; }
 
         public List<AgentSessionTurn> Turns { get; set; } = new List<AgentSessionTurn>();
