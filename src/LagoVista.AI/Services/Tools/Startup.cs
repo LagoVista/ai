@@ -49,6 +49,7 @@ namespace LagoVista.AI.Services.Tools
             toolRegistry.RegisterTool<WorkspaceWritePatchTool>();
             toolRegistry.RegisterTool<CodeHashNormalizedTool>();
             toolRegistry.RegisterTool<WorkspaceCreateFileTool>();
+            toolRegistry.RegisterTool<WorkspaceTocGetTool>();
 
             ///* workflow authoring + registry tools */
             toolRegistry.RegisterTool<ListWorkflowsTool>();

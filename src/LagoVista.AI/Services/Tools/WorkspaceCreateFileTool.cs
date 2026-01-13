@@ -17,11 +17,6 @@ namespace LagoVista.AI.Services.Tools
     /// This tool definition follows AGN-005 for schema and usage metadata,
     /// but the actual filesystem operation is performed on the client side.
     ///
-    /// Server behavior:
-    /// - Exposes schema and ToolUsageMetadata to the LLM.
-    /// - Should NOT call ExecuteAsync() in normal operation.
-    /// - If ExecuteAsync() is called, it returns a structured error payload
-    ///   indicating that this tool is client-executed only.
     /// </summary>
     public class WorkspaceCreateFileTool : IAgentTool
     {
