@@ -1,4 +1,4 @@
-﻿/*1/3/2026 2:32:04 PM*/
+﻿/*1/13/2026 5:34:06 PM*/
 using System.Globalization;
 using System.Reflection;
 
@@ -282,6 +282,15 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:AgentMode_StrongSignals_Help
 
 		public static string AgentMode_StrongSignals_Help { get { return GetResourceString("AgentMode_StrongSignals_Help"); } }
+//Resources:AIResources:AgentMode_Tla
+
+		public static string AgentMode_Tla { get { return GetResourceString("AgentMode_Tla"); } }
+//Resources:AIResources:AgentMode_Tla_Help
+
+		public static string AgentMode_Tla_Help { get { return GetResourceString("AgentMode_Tla_Help"); } }
+//Resources:AIResources:AgentMode_Tla_RegEx_Validation
+
+		public static string AgentMode_Tla_RegEx_Validation { get { return GetResourceString("AgentMode_Tla_RegEx_Validation"); } }
 //Resources:AIResources:AgentMode_ToolBoxes
 
 		public static string AgentMode_ToolBoxes { get { return GetResourceString("AgentMode_ToolBoxes"); } }
@@ -417,9 +426,15 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:Common_Description
 
 		public static string Common_Description { get { return GetResourceString("Common_Description"); } }
+//Resources:AIResources:Common_High
+
+		public static string Common_High { get { return GetResourceString("Common_High"); } }
 //Resources:AIResources:Common_Icon
 
 		public static string Common_Icon { get { return GetResourceString("Common_Icon"); } }
+//Resources:AIResources:Common_IsActive
+
+		public static string Common_IsActive { get { return GetResourceString("Common_IsActive"); } }
 //Resources:AIResources:Common_Key
 
 		public static string Common_Key { get { return GetResourceString("Common_Key"); } }
@@ -429,12 +444,21 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:Common_Key_Validation
 
 		public static string Common_Key_Validation { get { return GetResourceString("Common_Key_Validation"); } }
+//Resources:AIResources:Common_Low
+
+		public static string Common_Low { get { return GetResourceString("Common_Low"); } }
+//Resources:AIResources:Common_Medium
+
+		public static string Common_Medium { get { return GetResourceString("Common_Medium"); } }
 //Resources:AIResources:Common_Name
 
 		public static string Common_Name { get { return GetResourceString("Common_Name"); } }
 //Resources:AIResources:Common_Notes
 
 		public static string Common_Notes { get { return GetResourceString("Common_Notes"); } }
+//Resources:AIResources:Common_Scope
+
+		public static string Common_Scope { get { return GetResourceString("Common_Scope"); } }
 //Resources:AIResources:Common_SelectCategory
 
 		public static string Common_SelectCategory { get { return GetResourceString("Common_SelectCategory"); } }
@@ -459,6 +483,9 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:Common_Status_Pending
 
 		public static string Common_Status_Pending { get { return GetResourceString("Common_Status_Pending"); } }
+//Resources:AIResources:Common_Unknown
+
+		public static string Common_Unknown { get { return GetResourceString("Common_Unknown"); } }
 //Resources:AIResources:ConfirmationStrictness_High
 
 		public static string ConfirmationStrictness_High { get { return GetResourceString("ConfirmationStrictness_High"); } }
@@ -888,6 +915,99 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:PreprocessorSetting_Value
 
 		public static string PreprocessorSetting_Value { get { return GetResourceString("PreprocessorSetting_Value"); } }
+//Resources:AIResources:ReferenceEntries_Title
+
+		public static string ReferenceEntries_Title { get { return GetResourceString("ReferenceEntries_Title"); } }
+//Resources:AIResources:ReferenceEntry_AnswerConfidence
+
+		public static string ReferenceEntry_AnswerConfidence { get { return GetResourceString("ReferenceEntry_AnswerConfidence"); } }
+//Resources:AIResources:ReferenceEntry_AnswerConfidence_Select
+
+		public static string ReferenceEntry_AnswerConfidence_Select { get { return GetResourceString("ReferenceEntry_AnswerConfidence_Select"); } }
+//Resources:AIResources:ReferenceEntry_AnswerSource
+
+		public static string ReferenceEntry_AnswerSource { get { return GetResourceString("ReferenceEntry_AnswerSource"); } }
+//Resources:AIResources:ReferenceEntry_AnswerSource_Select
+
+		public static string ReferenceEntry_AnswerSource_Select { get { return GetResourceString("ReferenceEntry_AnswerSource_Select"); } }
+//Resources:AIResources:ReferenceEntry_AppliesTo
+
+		public static string ReferenceEntry_AppliesTo { get { return GetResourceString("ReferenceEntry_AppliesTo"); } }
+//Resources:AIResources:ReferenceEntry_Confidence
+
+		public static string ReferenceEntry_Confidence { get { return GetResourceString("ReferenceEntry_Confidence"); } }
+//Resources:AIResources:ReferenceEntry_Confidence_High
+
+		public static string ReferenceEntry_Confidence_High { get { return GetResourceString("ReferenceEntry_Confidence_High"); } }
+//Resources:AIResources:ReferenceEntry_Confidence_Low
+
+		public static string ReferenceEntry_Confidence_Low { get { return GetResourceString("ReferenceEntry_Confidence_Low"); } }
+//Resources:AIResources:ReferenceEntry_Confidence_Medium
+
+		public static string ReferenceEntry_Confidence_Medium { get { return GetResourceString("ReferenceEntry_Confidence_Medium"); } }
+//Resources:AIResources:ReferenceEntry_Confidence_Unknown
+
+		public static string ReferenceEntry_Confidence_Unknown { get { return GetResourceString("ReferenceEntry_Confidence_Unknown"); } }
+//Resources:AIResources:ReferenceEntry_Description
+
+		public static string ReferenceEntry_Description { get { return GetResourceString("ReferenceEntry_Description"); } }
+//Resources:AIResources:ReferenceEntry_EmbedQuestion
+
+		public static string ReferenceEntry_EmbedQuestion { get { return GetResourceString("ReferenceEntry_EmbedQuestion"); } }
+//Resources:AIResources:ReferenceEntry_Help
+
+		public static string ReferenceEntry_Help { get { return GetResourceString("ReferenceEntry_Help"); } }
+//Resources:AIResources:ReferenceEntry_MetadataQuality
+
+		public static string ReferenceEntry_MetadataQuality { get { return GetResourceString("ReferenceEntry_MetadataQuality"); } }
+//Resources:AIResources:ReferenceEntry_MetadataQuality_Select
+
+		public static string ReferenceEntry_MetadataQuality_Select { get { return GetResourceString("ReferenceEntry_MetadataQuality_Select"); } }
+//Resources:AIResources:ReferenceEntry_ModelAnswer
+
+		public static string ReferenceEntry_ModelAnswer { get { return GetResourceString("ReferenceEntry_ModelAnswer"); } }
+//Resources:AIResources:ReferenceEntry_ModelFormattedQuestion
+
+		public static string ReferenceEntry_ModelFormattedQuestion { get { return GetResourceString("ReferenceEntry_ModelFormattedQuestion"); } }
+//Resources:AIResources:ReferenceEntry_NormalizedModelQuestion
+
+		public static string ReferenceEntry_NormalizedModelQuestion { get { return GetResourceString("ReferenceEntry_NormalizedModelQuestion"); } }
+//Resources:AIResources:ReferenceEntry_NormalizedModelQuestion_Help
+
+		public static string ReferenceEntry_NormalizedModelQuestion_Help { get { return GetResourceString("ReferenceEntry_NormalizedModelQuestion_Help"); } }
+//Resources:AIResources:ReferenceEntry_ReferenceIdentifier
+
+		public static string ReferenceEntry_ReferenceIdentifier { get { return GetResourceString("ReferenceEntry_ReferenceIdentifier"); } }
+//Resources:AIResources:ReferenceEntry_Source_Imported
+
+		public static string ReferenceEntry_Source_Imported { get { return GetResourceString("ReferenceEntry_Source_Imported"); } }
+//Resources:AIResources:ReferenceEntry_Source_Inferred
+
+		public static string ReferenceEntry_Source_Inferred { get { return GetResourceString("ReferenceEntry_Source_Inferred"); } }
+//Resources:AIResources:ReferenceEntry_Source_UserProvided
+
+		public static string ReferenceEntry_Source_UserProvided { get { return GetResourceString("ReferenceEntry_Source_UserProvided"); } }
+//Resources:AIResources:ReferenceEntry_SourceRef
+
+		public static string ReferenceEntry_SourceRef { get { return GetResourceString("ReferenceEntry_SourceRef"); } }
+//Resources:AIResources:ReferenceEntry_Supersedes
+
+		public static string ReferenceEntry_Supersedes { get { return GetResourceString("ReferenceEntry_Supersedes"); } }
+//Resources:AIResources:ReferenceEntry_Title
+
+		public static string ReferenceEntry_Title { get { return GetResourceString("ReferenceEntry_Title"); } }
+//Resources:AIResources:ReferenceEntry_TLA
+
+		public static string ReferenceEntry_TLA { get { return GetResourceString("ReferenceEntry_TLA"); } }
+//Resources:AIResources:ReferenceEntry_TLA_Help
+
+		public static string ReferenceEntry_TLA_Help { get { return GetResourceString("ReferenceEntry_TLA_Help"); } }
+//Resources:AIResources:ReferenceEntry_UserAnswer
+
+		public static string ReferenceEntry_UserAnswer { get { return GetResourceString("ReferenceEntry_UserAnswer"); } }
+//Resources:AIResources:ReferenceEntry_UserQuestion
+
+		public static string ReferenceEntry_UserQuestion { get { return GetResourceString("ReferenceEntry_UserQuestion"); } }
 //Resources:AIResources:ReflectionLevel_Light
 
 		public static string ReflectionLevel_Light { get { return GetResourceString("ReflectionLevel_Light"); } }
@@ -1141,6 +1261,9 @@ namespace LagoVista.AI.Models.Resources
 			public const string AgentMode_Status_Help = "AgentMode_Status_Help";
 			public const string AgentMode_StrongSignals = "AgentMode_StrongSignals";
 			public const string AgentMode_StrongSignals_Help = "AgentMode_StrongSignals_Help";
+			public const string AgentMode_Tla = "AgentMode_Tla";
+			public const string AgentMode_Tla_Help = "AgentMode_Tla_Help";
+			public const string AgentMode_Tla_RegEx_Validation = "AgentMode_Tla_RegEx_Validation";
 			public const string AgentMode_ToolBoxes = "AgentMode_ToolBoxes";
 			public const string AgentMode_ToolBoxes_Help = "AgentMode_ToolBoxes_Help";
 			public const string AgentMode_ToolGroupHints = "AgentMode_ToolGroupHints";
@@ -1186,12 +1309,17 @@ namespace LagoVista.AI.Models.Resources
 			public const string Common_Category = "Common_Category";
 			public const string Common_Datestamp = "Common_Datestamp";
 			public const string Common_Description = "Common_Description";
+			public const string Common_High = "Common_High";
 			public const string Common_Icon = "Common_Icon";
+			public const string Common_IsActive = "Common_IsActive";
 			public const string Common_Key = "Common_Key";
 			public const string Common_Key_Help = "Common_Key_Help";
 			public const string Common_Key_Validation = "Common_Key_Validation";
+			public const string Common_Low = "Common_Low";
+			public const string Common_Medium = "Common_Medium";
 			public const string Common_Name = "Common_Name";
 			public const string Common_Notes = "Common_Notes";
+			public const string Common_Scope = "Common_Scope";
 			public const string Common_SelectCategory = "Common_SelectCategory";
 			public const string Common_Status_Aborted = "Common_Status_Aborted";
 			public const string Common_Status_Active = "Common_Status_Active";
@@ -1200,6 +1328,7 @@ namespace LagoVista.AI.Models.Resources
 			public const string Common_Status_Failed = "Common_Status_Failed";
 			public const string Common_Status_New = "Common_Status_New";
 			public const string Common_Status_Pending = "Common_Status_Pending";
+			public const string Common_Unknown = "Common_Unknown";
 			public const string ConfirmationStrictness_High = "ConfirmationStrictness_High";
 			public const string ConfirmationStrictness_Low = "ConfirmationStrictness_Low";
 			public const string ConfirmationStrictness_Normal = "ConfirmationStrictness_Normal";
@@ -1343,6 +1472,37 @@ namespace LagoVista.AI.Models.Resources
 			public const string PreprocessorSetting_Help = "PreprocessorSetting_Help";
 			public const string PreprocessorSetting_Title = "PreprocessorSetting_Title";
 			public const string PreprocessorSetting_Value = "PreprocessorSetting_Value";
+			public const string ReferenceEntries_Title = "ReferenceEntries_Title";
+			public const string ReferenceEntry_AnswerConfidence = "ReferenceEntry_AnswerConfidence";
+			public const string ReferenceEntry_AnswerConfidence_Select = "ReferenceEntry_AnswerConfidence_Select";
+			public const string ReferenceEntry_AnswerSource = "ReferenceEntry_AnswerSource";
+			public const string ReferenceEntry_AnswerSource_Select = "ReferenceEntry_AnswerSource_Select";
+			public const string ReferenceEntry_AppliesTo = "ReferenceEntry_AppliesTo";
+			public const string ReferenceEntry_Confidence = "ReferenceEntry_Confidence";
+			public const string ReferenceEntry_Confidence_High = "ReferenceEntry_Confidence_High";
+			public const string ReferenceEntry_Confidence_Low = "ReferenceEntry_Confidence_Low";
+			public const string ReferenceEntry_Confidence_Medium = "ReferenceEntry_Confidence_Medium";
+			public const string ReferenceEntry_Confidence_Unknown = "ReferenceEntry_Confidence_Unknown";
+			public const string ReferenceEntry_Description = "ReferenceEntry_Description";
+			public const string ReferenceEntry_EmbedQuestion = "ReferenceEntry_EmbedQuestion";
+			public const string ReferenceEntry_Help = "ReferenceEntry_Help";
+			public const string ReferenceEntry_MetadataQuality = "ReferenceEntry_MetadataQuality";
+			public const string ReferenceEntry_MetadataQuality_Select = "ReferenceEntry_MetadataQuality_Select";
+			public const string ReferenceEntry_ModelAnswer = "ReferenceEntry_ModelAnswer";
+			public const string ReferenceEntry_ModelFormattedQuestion = "ReferenceEntry_ModelFormattedQuestion";
+			public const string ReferenceEntry_NormalizedModelQuestion = "ReferenceEntry_NormalizedModelQuestion";
+			public const string ReferenceEntry_NormalizedModelQuestion_Help = "ReferenceEntry_NormalizedModelQuestion_Help";
+			public const string ReferenceEntry_ReferenceIdentifier = "ReferenceEntry_ReferenceIdentifier";
+			public const string ReferenceEntry_Source_Imported = "ReferenceEntry_Source_Imported";
+			public const string ReferenceEntry_Source_Inferred = "ReferenceEntry_Source_Inferred";
+			public const string ReferenceEntry_Source_UserProvided = "ReferenceEntry_Source_UserProvided";
+			public const string ReferenceEntry_SourceRef = "ReferenceEntry_SourceRef";
+			public const string ReferenceEntry_Supersedes = "ReferenceEntry_Supersedes";
+			public const string ReferenceEntry_Title = "ReferenceEntry_Title";
+			public const string ReferenceEntry_TLA = "ReferenceEntry_TLA";
+			public const string ReferenceEntry_TLA_Help = "ReferenceEntry_TLA_Help";
+			public const string ReferenceEntry_UserAnswer = "ReferenceEntry_UserAnswer";
+			public const string ReferenceEntry_UserQuestion = "ReferenceEntry_UserQuestion";
 			public const string ReflectionLevel_Light = "ReflectionLevel_Light";
 			public const string ReflectionLevel_None = "ReflectionLevel_None";
 			public const string ReflectionLevel_Normal = "ReflectionLevel_Normal";

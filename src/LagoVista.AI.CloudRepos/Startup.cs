@@ -42,7 +42,7 @@ namespace LagoVista.AI.CloudRepos
             services.AddSingleton<IToolCallManifestRepo,  ToolCallManifestRepo>();
             services.AddSingleton<IAgentTurnChatHistoryRepo, AgentTurnTranscriptBlobStore>();
             services.AddSingleton<IMemoryNoteRepo, MemoryNoteRepo>();
-            services.AddSingleton<IAuthoritativeAnswerRepository, AuthoritativeAnswerRepo>();
+            services.AddSingleton<IReferenceEntryRepo, ReferenceEntryRepo>();
             services.AddSingleton<IAgentPersonaDefinitionRepo, AgentPersonaDefinitionRepo>();
         }
     }

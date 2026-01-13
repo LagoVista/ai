@@ -1,8 +1,6 @@
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Managers;
-using LagoVista.AI.Managers;
 using LagoVista.AI.Models;
-using LagoVista.AI.Models.AuthoritativeAnswers;
 using LagoVista.Core;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
@@ -19,69 +17,66 @@ namespace LagoVista.AI.Services.Tools
 
         public string Name => ToolName;
 
+        public const string ToolSummary = "Ask a precise clarification question. Tool attempts to answer from Reference Entries only (no user prompting, no writes).";
+
         public const string ToolUsageMetadata = @"
-Purpose: Attempt to resolve a single, specific clarification question from authoritative stores. This tool does not ask the user and does not write data. When to call
+Purpose
+- Attempt to resolve a single, specific clarification question from Reference Entries.
+- This tool does not ask the user and does not write data.
 
-Call when you need a clarification to proceed and you want to check whether it’s already settled.
-Call before asking the human anything (policy handled elsewhere). Inputs (JSON)
-orgId (string, required): Organization id (PartitionKey).
-question (string, required): One precise question. Keep it singular (no multi-part).
-tags (string[], optional): Symbol/type/property tokens to improve matching. Output Returns a JSON string that deserializes to AuthoritativeAnswerLookupResult:
-status: Answered | NotFound | Conflict
-answer: string (present when Answered)
-sourceRef: string (e.g., aq:<id> or ddr:<id> if later added)
-confidence: high | medium | low
-conflicts: array of { aqId, answer, sourceRef, confidence } (present when Conflict) How to use the output
-If status == Answered: use answer as authoritative and continue.
-If status == NotFound: you still do not have an authoritative answer.
-If status == Conflict: do not pick arbitrarily; you have multiple competing authoritative answers. Do / Don’t
-Do: ask exactly one question per call.
-Do: include tags when you know relevant symbols (e.g., OrgId, AgentSession, OwnerOrganization.Id).
-Don’t: include multiple unrelated questions in one question string.
-Don’t: fabricate an answer if NotFound or Conflict. Example call
-json
-{
-  ""question"": ""How should OrgId be resolved when persisting AgentSession?"",
-  ""tags"": [""OrgId"", ""AgentSession""]
-}";
+When to call
+- Call when you are blocked and need a clarification to proceed.
+- Call before asking the human anything.
 
+Required inputs (JSON)
+- modelQuestion (string): The question formatted for model consumption. Must be a single, specific question.
 
-        private readonly IAuthoritativeAnswerManager _aqManager;
+Optional inputs (JSON)
+- tags (string[]): Optional symbol/type/property tokens. Used only as hints.
+
+Output
+Returns a JSON string that deserializes to AuthoritativeAnswerLookupResult:
+- status: Answered | NotFound | Conflict
+- answer: string (present when Answered)
+- sourceRef: string (e.g., ref:<ReferenceIdentifier> or ddr:<id>)
+- confidence: high | medium | low | unknown
+- conflicts: array of { aqId, answer, sourceRef, confidence } (present when Conflict)
+
+Rules
+- Ask exactly one question per call.
+- Do not include multiple unrelated questions in one call.
+- If status is NotFound or Conflict, do not fabricate an answer.
+";
+
+        private readonly IReferenceEntryManager _referenceEntryManager;
         private readonly IAdminLogger _logger;
 
-        public AskAgentFirstTool(IAuthoritativeAnswerManager aqManager, IAdminLogger logger)
+        public AskAgentFirstTool(IReferenceEntryManager referenceEntryManager, IAdminLogger logger)
         {
-            _aqManager = aqManager ?? throw new ArgumentNullException(nameof(aqManager));
+            _referenceEntryManager = referenceEntryManager ?? throw new ArgumentNullException(nameof(referenceEntryManager));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public const string ToolSummary = "Ask a precise clarification question. Tool attempts to answer from authoritative sources only (no user prompting, no writes).";
-
         public bool IsToolFullyExecutedOnServer => true;
-
 
         public static OpenAiToolDefinition GetSchema()
         {
             return ToolSchema.Function(ToolName, ToolSummary, p =>
             {
-                p.String("question", "Single, specific clarification question.", required: true);
+                p.String("modelQuestion", "The question formatted for model consumption. Must be a single, specific question.", required: true);
                 p.StringArray("tags", "Optional tags (symbols/types/properties)");
             });
         }
 
-
-        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentToolExecutionContext context, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
-
         public async Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context)
-        {  try
+        {
+            try
             {
                 var args = Newtonsoft.Json.JsonConvert.DeserializeObject<AskAgentFirstArgs>(argumentsJson);
                 if (args == null) return InvokeResult<string>.FromError("invalid_args");
+                if (String.IsNullOrWhiteSpace(args.ModelQuestion)) return InvokeResult<string>.FromError("modelQuestion is required");
 
-                var result = await _aqManager.LookupAsync(context.Envelope.Org.Id, args.Question, args.Tags);
+                var result = await _referenceEntryManager.LookupAsync(context.Envelope.Org.Id, args.ModelQuestion);
                 return InvokeResult<string>.Create(Newtonsoft.Json.JsonConvert.SerializeObject(result));
             }
             catch (Exception ex)
@@ -91,9 +86,15 @@ json
             }
         }
 
+        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentToolExecutionContext context, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+
         private class AskAgentFirstArgs
         {
-            public string Question { get; set; }
+            public string ModelQuestion { get; set; }
             public List<string> Tags { get; set; }
         }
     }

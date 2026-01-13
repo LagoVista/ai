@@ -79,6 +79,10 @@ namespace LagoVista.AI.Models
 
         [FormField(LabelResource: AIResources.Names.AgentMode_RagScopeHints, HelpResource: AIResources.Names.AgentMode_RagScopeHints_Help, FieldType: FieldTypes.StringList, ResourceType: typeof(AIResources))]
         public string[] RagScopeHints { get; set; } = Array.Empty<string>();
+ 
+        [FormField(LabelResource: AIResources.Names.AgentMode_Tla, ValidationRegEx:"^[A-Z]{3}$", RegExValidationMessageResource: AIResources.Names.AgentMode_Tla_RegEx_Validation, HelpResource: AIResources.Names.AgentMode_Tla_Help, IsRequired:true, FieldType: FieldTypes.Text, ResourceType: typeof(AIResources))]
+         public string ModeTla {get; set;}
+
 
         // 3.5 Recognition Metadata
 
@@ -145,6 +149,7 @@ namespace LagoVista.AI.Models
             {
                 nameof(Name),
                 nameof(Key),
+                nameof(ModeTla),
                 nameof(Icon),
                 nameof(IsDefault),
                 nameof(Version),

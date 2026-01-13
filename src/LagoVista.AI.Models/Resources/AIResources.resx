@@ -1129,4 +1129,124 @@
   <data name="AgentContext_DefaultPersona_Select" xml:space="preserve">
     <value>-select default persona-</value>
   </data>
+  <data name="ReferenceEntry_Confidence_Unknown" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+  <data name="ReferenceEntry_Confidence_Low" xml:space="preserve">
+    <value>Low</value>
+  </data>
+  <data name="ReferenceEntry_Confidence_Medium" xml:space="preserve">
+    <value>Medium</value>
+  </data>
+  <data name="ReferenceEntry_Confidence_High" xml:space="preserve">
+    <value>High</value>
+  </data>
+  <data name="ReferenceEntry_Confidence" xml:space="preserve">
+    <value>Confidence</value>
+  </data>
+  <data name="ReferenceEntry_Title" xml:space="preserve">
+    <value>Reference Entry</value>
+  </data>
+  <data name="ReferenceEntries_Title" xml:space="preserve">
+    <value>Reference Library</value>
+  </data>
+  <data name="ReferenceEntry_ReferenceIdentifier" xml:space="preserve">
+    <value>Reference Identifier</value>
+  </data>
+  <data name="ReferenceEntry_Help" xml:space="preserve">
+    <value>A Reference Entry is created during an AI-assisted conversation: the model asks a clarifying question, the user provides an answer, and that answer is saved as an authoritative reference for future use.</value>
+  </data>
+  <data name="ReferenceEntry_Description" xml:space="preserve">
+    <value>A Reference Entry is created during an AI-assisted conversation: the model asks a clarifying question, the user provides an answer, and that answer is saved as an authoritative reference for future use.</value>
+  </data>
+  <data name="ReferenceEntry_UserQuestion" xml:space="preserve">
+    <value>User Formatted Question</value>
+  </data>
+  <data name="ReferenceEntry_ModelFormattedQuestion" xml:space="preserve">
+    <value>Model Formatted Question</value>
+  </data>
+  <data name="ReferenceEntry_NormalizedModelQuestion" xml:space="preserve">
+    <value>Normalized Model Question</value>
+  </data>
+  <data name="ReferenceEntry_NormalizedModelQuestion_Help" xml:space="preserve">
+    <value>This field is used by the system to dedup questions</value>
+  </data>
+  <data name="ReferenceEntry_EmbedQuestion" xml:space="preserve">
+    <value>Question as optimized for embedding</value>
+  </data>
+  <data name="ReferenceEntry_UserAnswer" xml:space="preserve">
+    <value>Answer as formatted for a user.</value>
+  </data>
+  <data name="ReferenceEntry_ModelAnswer" xml:space="preserve">
+    <value>Answer as optimized for a model</value>
+  </data>
+  <data name="ReferenceEntry_AppliesTo" xml:space="preserve">
+    <value>Applies To</value>
+  </data>
+  <data name="ReferenceEntry_SourceRef" xml:space="preserve">
+    <value>Source Reference</value>
+  </data>
+  <data name="Common_Scope" xml:space="preserve">
+    <value>Scope</value>
+  </data>
+  <data name="ReferenceEntry_AnswerConfidence" xml:space="preserve">
+    <value>Answer Confidence</value>
+  </data>
+  <data name="ReferenceEntry_MetadataQuality" xml:space="preserve">
+    <value>Metadata Confidence</value>
+  </data>
+  <data name="ReferenceEntry_TLA" xml:space="preserve">
+    <value>Primary TLA</value>
+  </data>
+  <data name="ReferenceEntry_TLA_Help" xml:space="preserve">
+    <value>The Primary TLA or Three Letter Acronym is a high level grouping for reference items. They are assigned by the mode that user was in when they answered the question</value>
+  </data>
+  <data name="Common_IsActive" xml:space="preserve">
+    <value>Is Active</value>
+  </data>
+  <data name="ReferenceEntry_Supersedes" xml:space="preserve">
+    <value>Supersedes</value>
+  </data>
+  <data name="ReferenceEntry_AnswerConfidence_Select" xml:space="preserve">
+    <value>-select answer confidence-</value>
+  </data>
+  <data name="ReferenceEntry_MetadataQuality_Select" xml:space="preserve">
+    <value>-select metadata quality-</value>
+  </data>
+  <data name="Common_Unknown" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+  <data name="Common_Low" xml:space="preserve">
+    <value>Low</value>
+  </data>
+  <data name="Common_Medium" xml:space="preserve">
+    <value>Medium</value>
+  </data>
+  <data name="Common_High" xml:space="preserve">
+    <value>High</value>
+  </data>
+  <data name="ReferenceEntry_Source_UserProvided" xml:space="preserve">
+    <value>User Provided</value>
+  </data>
+  <data name="ReferenceEntry_Source_Inferred" xml:space="preserve">
+    <value>Inferred</value>
+  </data>
+  <data name="ReferenceEntry_AnswerSource" xml:space="preserve">
+    <value>Answer Source</value>
+  </data>
+  <data name="ReferenceEntry_AnswerSource_Select" xml:space="preserve">
+    <value>-select answer source-</value>
+  </data>
+  <data name="ReferenceEntry_Source_Imported" xml:space="preserve">
+    <value>Imported</value>
+  </data>
+  <data name="AgentMode_Tla" xml:space="preserve">
+    <value>Mode TLA</value>
+  </data>
+  <data name="AgentMode_Tla_Help" xml:space="preserve">
+    <value>The Mode TLA is a three letter acroynm that is used to uniquely identify the mode when creating assets.</value>
+  </data>
+  <data name="AgentMode_Tla_RegEx_Validation" xml:space="preserve">
+    <value>The TLA must be exactly 3 character A-Z and must always be upper case.</value>
+  </data>
 </root>
