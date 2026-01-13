@@ -51,6 +51,10 @@ namespace LagoVista.AI.Services.Tools
             toolRegistry.RegisterTool<WorkspaceCreateFileTool>();
             toolRegistry.RegisterTool<WorkspaceTocGetTool>();
 
+            toolRegistry.RegisterTool<AskAgentFirstTool>();
+            toolRegistry.RegisterTool<WriteAuthoritativeAnswerTool>();
+
+
             ///* workflow authoring + registry tools */
             toolRegistry.RegisterTool<ListWorkflowsTool>();
             toolRegistry.RegisterTool<GetWorkflowManifestTool>();
