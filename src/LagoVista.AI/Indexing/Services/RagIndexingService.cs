@@ -95,9 +95,9 @@ namespace LagoVista.AI.Indexing.Services
                         var userFileName = ragContent.Payload.Meta.DocId == entity.Id ? $"{entity.Id}.user.json" : $"{entity.Id}.{ragContent.Payload.Meta.DocId}.user.json";
 
                         var modelSummaryUrl = await _llmContentRepo.AddContentAsync(org.Namespace, modelFileName, ragContent.ModelDescription);
-                        var userDetails = await _llmContentRepo.AddContentAsync(org.Namespace, modelFileName, ragContent.HumanDescription);
+                        var userDetails = await _llmContentRepo.AddContentAsync(org.Namespace, userFileName, ragContent.HumanDescription);
 
-                        point.Payload.Extra.ModelContentUri = modelSummaryUrl.Result.ToString();
+                        point.Payload.Extra.ModelContentUrl = modelSummaryUrl.Result.ToString();
                         point.Payload.Extra.HumanContentUrl = userDetails.Result.ToString();
                         point.Payload.Extra.Path = entity.EntityType;
                         point.Payload.Meta.EmbeddingModel = agentContext.EmbeddingModel;
@@ -183,7 +183,7 @@ namespace LagoVista.AI.Indexing.Services
                     point.PointId = entity.Id.ToGuidString();
                     point.Payload.Extra.Path = entity.EntityType;
                     point.Payload.Meta.OrgNamespace = org.Namespace;
-                    point.Payload.Extra.ModelContentUri = modelFileName;
+                    point.Payload.Extra.ModelContentUrl = modelFileName;
                     point.Payload.Extra.HumanContentUrl = userFileName;
                     if (!string.IsNullOrEmpty(lens.Lenses.CleanupGuidance))
                         point.Payload.Extra.IssuesContentUrl = cleanUpFileName;

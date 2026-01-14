@@ -21,5 +21,7 @@ namespace LagoVista.AI.Interfaces.Repos
         Task<InvokeResult<Uri>> AddContentAsync(string orgNs, string blobName, string content);
 
         Task<InvokeResult<Uri>> AddContentAsync(string orgNs, string blobName, byte[] content);
+        Task<InvokeResult<byte[]>> GetContentAsync(string orgNs, string blobName);
+        Task<InvokeResult<string>> GetTextContentAsync(string orgNs, string blobName);
     }
 }

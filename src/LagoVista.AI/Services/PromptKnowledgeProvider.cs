@@ -32,8 +32,8 @@ namespace LagoVista.AI.Services
 
             var apk = apkResult.Result;
 
-            ctx.PromptKnowledgeProvider.ClearSession();
-            ctx.PromptKnowledgeProvider.ClearConsumables();
+         //   ctx.PromptKnowledgeProvider.ClearSession();
+         //   ctx.PromptKnowledgeProvider.ClearConsumables();
             ctx.PromptKnowledgeProvider.ActiveTools.Clear();
 
             foreach (var key in apk.KindCatalog.Keys)

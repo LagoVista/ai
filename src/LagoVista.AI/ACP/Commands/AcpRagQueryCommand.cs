@@ -1,9 +1,7 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
-using LagoVista.Core.Interfaces;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 
@@ -28,7 +26,7 @@ namespace LagoVista.AI.ACP.Commands
         private const int TopK = 10;
 
         private readonly IRagContextBuilder _ragContextBuilder;
-
+        private readonly IAgentStreamingContext _agentStreamingContext;
         private readonly IAdminLogger _adminLogger;
 
         /// <summary>
@@ -36,16 +34,16 @@ namespace LagoVista.AI.ACP.Commands
         /// </summary>
         public string CollectionName { get; set; } = "TODO_DDR_COLLECTION";
 
-        public AcpRagQueryCommand(IRagContextBuilder ragContextBuilder, IAdminLogger adminLogger)
+        public AcpRagQueryCommand(IRagContextBuilder ragContextBuilder, IAgentStreamingContext agentStreamingContext, IAdminLogger adminLogger)
         {
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
             _ragContextBuilder = ragContextBuilder ?? throw new ArgumentNullException(nameof(ragContextBuilder));
+            _agentStreamingContext = agentStreamingContext ?? throw new ArgumentNullException(nameof(agentStreamingContext));
         }
 
         public async Task<InvokeResult<IAgentPipelineContext>> ExecuteAsync(IAgentPipelineContext context, string[] args)
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
-
 
             var topic = args == null ? null : String.Join(" ", args).Trim();
             if (String.IsNullOrWhiteSpace(topic))
@@ -55,20 +53,26 @@ namespace LagoVista.AI.ACP.Commands
 
             // Optional: scope filter may be present on the request payload.
             // TODO: Replace with your actual request shape/property.
-            object ragScope = null;
-            try
-            {
-                ragScope = context.Envelope.RagScope;
-            }
-            catch
-            {
-                // ignore; scope is optional
-            }
+            //object ragScope = null;
+            //try
+            //{
+            //    ragScope = context.Envelope.RagScope;
+            //}
+            //catch
+            //{
+            //    // ignore; scope is optional
+            //}
 
+            var sw = Stopwatch.StartNew();
 
-            _adminLogger.Trace($"{this.Tag()} Created Embedding for: [{(args == null ? "" : String.Join(", ", args))}]");
+            await _agentStreamingContext.AddMilestoneAsync("Consulting RAG knowledge base...");
 
-            return await _ragContextBuilder.BuildContextSectionAsync(context, topic);
+            _adminLogger.Trace($"{this.Tag()} created embedding for: [{(args == null ? "" : String.Join(", ", args))}] in {sw.Elapsed.TotalMilliseconds}ms.");
+
+            var buildResult = await _ragContextBuilder.BuildContextSectionAsync(context, topic);
+         
+
+            return buildResult; 
         }
     }
 }

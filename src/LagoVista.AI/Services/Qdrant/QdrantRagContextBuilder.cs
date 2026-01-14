@@ -12,6 +12,7 @@ using LagoVista.Core.Interfaces;
 using LagoVista.Core.AI.Models;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.AI.Interfaces.Repos;
+using LagoVista.Core;
 
 namespace LagoVista.AI.Services.Qdrant
 {
@@ -26,6 +27,7 @@ namespace LagoVista.AI.Services.Qdrant
         private readonly ILLMContentRepo _contentRepo;
         private readonly int _topK;
         private readonly IAdminLogger _adminLogger;
+        private readonly IAgentStreamingContext _agentStreamingContext;
 
         /// <summary>
         /// Creates a new <see cref="QdrantRagContextBuilder"/>.
@@ -33,12 +35,13 @@ namespace LagoVista.AI.Services.Qdrant
         /// <param name="embedder">Embedder with an EmbedAsync(string, int) method that returns a vector result.</param>
         /// <param name="qdrantClient">Qdrant client abstraction.</param>
         /// <param name="contentRepo">Repository used to resolve raw text content for blobs/paths.</param>
-        public QdrantRagContextBuilder(IEmbedder embedder, IQdrantClient qdrantClient, ILLMContentRepo contentRepo, IAdminLogger adminLogger)
+        public QdrantRagContextBuilder(IEmbedder embedder, IQdrantClient qdrantClient, IAgentStreamingContext agentStreamingContext, ILLMContentRepo contentRepo, IAdminLogger adminLogger)
         {
             _embedder = embedder ?? throw new ArgumentNullException(nameof(embedder));
             _qdrantClient = qdrantClient ?? throw new ArgumentNullException(nameof(qdrantClient));
             _contentRepo = contentRepo ?? throw new ArgumentNullException(nameof(contentRepo));
             _adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
+            _agentStreamingContext = agentStreamingContext ?? throw new ArgumentNullException(nameof(agentStreamingContext));
             _topK = 8;
         }
 
@@ -76,7 +79,7 @@ namespace LagoVista.AI.Services.Qdrant
 
             var hits = await _qdrantClient.SearchAsync(piplineContext.AgentContext.VectorDatabaseCollectionName, searchRequest);
 
-            _adminLogger.Trace($"[QdrantRagContextBuilder__BuildContextSectionAsync] Query Completed, found {hits.Count} results.");
+            _adminLogger.Trace($"{this.Tag()} Query Completed, found {hits.Count} results.");
 
             if (hits == null || hits.Count == 0)
             {
@@ -91,10 +94,16 @@ namespace LagoVista.AI.Services.Qdrant
                 return InvokeResult<IAgentPipelineContext>.Create(piplineContext);
             }
 
+            await _agentStreamingContext.AddMilestoneAsync($"Found {selected.Count} chunks of information.");
+          
             // 5) Build the AGN-002 compliant context block
             var contextBlock = await BuildContextBlockAsync(piplineContext.AgentContext, selected).ConfigureAwait(false);
+            if(!String.IsNullOrEmpty(contextBlock))
+            {
+                var ragRegister = piplineContext.PromptKnowledgeProvider.GetOrCreateRegister(AI.Models.KnowledgeKind.Rag, AI.Models.Context.ContextClassification.Consumable);
+                ragRegister.Add(contextBlock);
+            }
 
-            //TODO: Need to be smarter about doing our RAG query.
             return InvokeResult<IAgentPipelineContext>.Create(piplineContext);
         }
 
@@ -116,12 +125,12 @@ namespace LagoVista.AI.Services.Qdrant
                     continue;
                 }
 
-                var payload = RagVectorPayload.FromDictionary(h.Payload);
+                var payload = h.Payload;
 
                 var path = !string.IsNullOrWhiteSpace(payload.Extra.Path)
                     ? payload.Extra.Path
-                    : !string.IsNullOrWhiteSpace(payload.Extra.FullDocumentBlobUri)
-                        ? payload.Extra.FullDocumentBlobUri
+                    : !string.IsNullOrWhiteSpace(payload.Extra.ModelContentUrl)
+                        ? payload.Extra.ModelContentUrl
                         : string.Empty;
 
                 var sym = payload.Extra.SymbolName ?? string.Empty;
@@ -146,35 +155,30 @@ namespace LagoVista.AI.Services.Qdrant
         /// </summary>
         private async Task<string> BuildContextBlockAsync(AgentContext agentContext, IReadOnlyList<QdrantScoredPoint> selected)
         {
+            if (selected == null || selected.Count == 0)
+            {
+                return String.Empty;
+            }
 
             var sb = new StringBuilder();
             sb.AppendLine("[CONTEXT]");
             sb.AppendLine();
 
-            if (selected == null || selected.Count == 0)
-            {
-                return sb.ToString();
-            }
-
             var chunkIndex = 1;
+
+            _adminLogger.Trace($"{this.Tag()} Building context block with {selected.Count} chunks.");
 
             foreach (var hit in selected)
             {
                 if (hit.Payload == null)
                 {
-                    _adminLogger.AddError($"[QdrantRagContextBuilder__BuildContextBlockAsync]", "[QdrantRagContextBuilder__BuildContextSectionAsync] Query Completed, did not have have payload.");
+                    _adminLogger.AddError(this.Tag(), "Query Completed, did not have have payload.");
                     continue;
                 }
 
-                var payload = RagVectorPayload.FromDictionary(hit.Payload);
+                var payload = hit.Payload;
 
-                _adminLogger.Trace($"[QdrantRagContextBuilder__BuildContextBlockAsync] Processing payload {payload.Meta.SemanticId}, path {payload.Extra.SourceSliceBlobUri}.");
-
-                var path = !string.IsNullOrWhiteSpace(payload.Extra.Path)
-                    ? payload.Extra.Path
-                    : !string.IsNullOrWhiteSpace(payload.Extra.FullDocumentBlobUri)
-                        ? payload.Extra.FullDocumentBlobUri
-                        : string.Empty;
+                _adminLogger.Trace($"{this.Tag()} Processing payload {payload.Meta.SemanticId}, path {payload.Extra.SourceSliceBlobUri}.");
 
                 var startLine = payload.Extra.LineStart ?? payload.Extra.StartLine ?? 1;
                 var endLine = payload.Extra.LineEnd ?? payload.Extra.EndLine ?? startLine;
@@ -183,46 +187,41 @@ namespace LagoVista.AI.Services.Qdrant
                     endLine = startLine;
                 }
 
-                var language = !string.IsNullOrWhiteSpace(payload.Meta.Language)
-                    ? payload.Meta.Language
-                    : InferLanguageFromPath(path);
-
-                // Resolve blob/file name: prefer BlobUri, then FullDocumentBlobUri, then Path
-                var blobName = !string.IsNullOrWhiteSpace(payload.Extra.SourceSliceBlobUri)
-                    ? payload.Extra.SourceSliceBlobUri
-                    : !string.IsNullOrWhiteSpace(payload.Extra.FullDocumentBlobUri)
-                        ? payload.Extra.FullDocumentBlobUri
-                        : payload.Extra.Path;
-
-                if (string.IsNullOrWhiteSpace(blobName))
+                if (string.IsNullOrWhiteSpace(payload.Extra.ModelContentUrl))
                 {
+                    _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Warning, this.Tag(), $"{payload.Meta.Title} does not have ModelContentUrl", payload.Meta.Title.ToKVP("title"));
                     continue;
                 }
+                var uri = new Uri(payload.Extra.ModelContentUrl);
+                var startFileName = uri.AbsolutePath.Substring(1).IndexOf('/');    
+                var fileName = uri.AbsolutePath.Substring(startFileName + 1);
+                _adminLogger.Trace($"{this.Tag()} - Requesting blob {payload.Meta.OrgNamespace} - {fileName}");
 
-                var contentResult = await _contentRepo.GetTextContentAsync(agentContext, blobName).ConfigureAwait(false);
+                var contentResult = await _contentRepo.GetTextContentAsync(payload.Meta.OrgNamespace, fileName);
                 if (!contentResult.Successful || string.IsNullOrWhiteSpace(contentResult.Result))
                 {
+                    _adminLogger.AddCustomEvent( Core.PlatformSupport.LogLevel.Warning, this.Tag(), $"Could Not Load ModelContentUrl - {payload.Extra.ModelContentUrl }", payload.Meta.Title.ToKVP("title"));
                     continue;
                 }
 
-                var snippet = SliceLines(contentResult.Result, startLine, endLine);
+             //   var snippet = SliceLines(contentResult.Result, startLine, endLine);
 
                 // AGN-002 chunk block
                 sb.AppendLine("=== CHUNK " + chunkIndex + " ===");
                 sb.AppendLine("Id: " + (string.IsNullOrWhiteSpace(payload.Meta.SemanticId) ? hit.Id : payload.Meta.SemanticId));
-                sb.AppendLine("Path: " + (path ?? string.Empty));
-                sb.AppendLine("Lines: " + startLine + "-" + endLine);
-                sb.AppendLine("Language: " + language);
-
-                Console.WriteLine($"---\r\n{sb.ToString()}\r\n----\r\n\r\n");
-
-                sb.AppendLine("```" + language);
+                sb.AppendLine($"Title: {payload.Meta.Title}");
+                sb.AppendLine($"ViewUrl: {payload.Extra.HumanContentUrl}");
                 sb.AppendLine(contentResult.Result);
                 sb.AppendLine("```");
                 sb.AppendLine();
 
+                _adminLogger.Trace($"{this.Tag()} Added chunk for {payload.Meta.Title} {payload.Meta.Subtype}");
+
                 chunkIndex++;
             }
+
+            await _agentStreamingContext.AddMilestoneAsync($"Added {chunkIndex} of those chunks.");
+
 
             return sb.ToString();
         }

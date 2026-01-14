@@ -213,7 +213,7 @@ namespace LagoVista.AI.Services.Qdrant
             _adminLogger.Trace($"{this.Tag()} Search started with collection {collection}");
 
             var queryJson = JsonConvert.SerializeObject(req);
-            _adminLogger.Trace($"[JSON.QDrantQuery={queryJson}");
+            _adminLogger.Trace($"[JSON.QDrantQuery]={queryJson}");
 
             var resp = await _http.PostAsJsonAsync($"/collections/{collection}/points/search", req);
 
@@ -221,8 +221,7 @@ namespace LagoVista.AI.Services.Qdrant
             {
                 resp.EnsureSuccessStatusCode();
                 var json = await resp.Content.ReadAsAsync<QdrantSearchResponse>();
-                _adminLogger.Trace($"[JSON.QDrantResult={json}");
-
+                _adminLogger.Trace($"[JSON.QDrantResult]={JsonConvert.SerializeObject(json)}");
                 _adminLogger.Trace($"{this.Tag()} Search completed in {sw.Elapsed.TotalMilliseconds}ms, found {json.Result.Count} results.");
 
                 return json!.Result ?? new List<QdrantScoredPoint>();
@@ -230,6 +229,7 @@ namespace LagoVista.AI.Services.Qdrant
             else
             {
                 var response = await resp.Content.ReadAsStringAsync();
+                _adminLogger.AddError(this.Tag(), $"ERROR Requesting Point: {response}");
                 throw new QdrantHttpException("Qdrant search failed", resp.StatusCode, response);
             }
         }
@@ -465,7 +465,7 @@ namespace LagoVista.AI.Services.Qdrant
     {
         [JsonProperty("id")] public string Id { get; set; } = string.Empty;
         [JsonProperty("score")] public double Score { get; set; }
-        [JsonProperty("payload")] public Dictionary<string, object> Payload { get; set; }
+        [JsonProperty("payload")] public RagVectorPayload Payload { get; set; }
     }
 
     static class QdrantRagScopeTranslator

@@ -59,7 +59,7 @@ namespace LagoVista.AI.Models.AuthoritativeAnswers
     /// </summary>
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.ReferenceEntry_Title, AIResources.Names.ReferenceEntry_Help, AIResources.Names.ReferenceEntry_Description, EntityDescriptionAttribute.EntityTypes.Ai, typeof(AIResources),
         GetUrl: "/api/referenceentry/{id}", GetListUrl: "/api/referenceentries", FactoryUrl: "/api/referenceentry/factory", SaveUrl: "/api/referenceentry", DeleteUrl: "/api/referenceentry/{id}",
-        PreviewUIUrl: "/contentmanagement/reference/{id}/preview", ListUIUrl: "/contentmanagement/references", EditUIUrl: "/contentmanagement/reference/{id}", CreateUIUrl: "/contentmanagement/reference/add", Icon: "icon-ae-database-3")]
+        PreviewUIUrl: "/contentmanagement/reference/{id}/preview", ListUIUrl: "/contentmanagement/references", EditUIUrl: "/contentmanagement/reference/{id}", CreateUIUrl: "/contentmanagement/reference/add", Icon: "icon-fo-mobile-book")]
     public class ReferenceEntry : EntityBase, IValidateable, ISummaryFactory, IFormDescriptor, IFormDescriptorCol2, IRagableEntity
     {
         public const string ReferenceEntry_Unknown = "unknown";

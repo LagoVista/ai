@@ -124,10 +124,23 @@ namespace LagoVista.AI.CloudRepos
         {
             var sw = Stopwatch.StartNew();
             var container = $"llmcontent{orgNs}";
-            _adminLogger.Trace($"{this.Tag()} - Add blob {container} - {blobName}");
             var result = await AddFileAsync(container, blobName, content);
-            _adminLogger.Trace($"{this.Tag()} - Added {blobName}, Size: {content.Length} bytes in {sw.Elapsed.TotalMilliseconds}ms");
             return result;
+        }
+
+        public async Task<InvokeResult<byte[]>> GetContentAsync(string orgNs, string blobName)
+        {
+            var sw = Stopwatch.StartNew();
+            var container = $"llmcontent{orgNs}";
+            var result = await GetFileAsync(container, blobName);
+            return result;
+        }
+
+        public async Task<InvokeResult<string>> GetTextContentAsync(string orgNs, string blobName)
+        {
+            var buffer = await GetContentAsync(orgNs, blobName);
+            var text = System.Text.UTF8Encoding.UTF8.GetString(buffer.Result);  
+            return InvokeResult<string>.Create(text);
         }
 
         public async Task<InvokeResult<Uri>> AddContentAsync(string orgNs, string blobName, byte[] content)
