@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Managers;
 using LagoVista.AI.Interfaces.Pipeline;
-using LagoVista.AI.Managers;
 using LagoVista.AI.Models;
 using LagoVista.Core.AI.Models;
 using LagoVista.Core.Exceptions;
@@ -19,7 +18,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using MongoDB.Bson;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
@@ -33,7 +31,6 @@ namespace LagoVista.AI.Rest
         private readonly IAgentSessionManager _sessionManager;
         private readonly IAdminLogger _adminLogger;
         private readonly IAgentPersonaDefinitionManager _agentPersonaDefinitionManager;
-
 
         public AgentExecutionController(IAgentRequestHandlerStep agentRequestHandler, IAgentPersonaDefinitionManager agentPersonaDefinitionManager, IAgentSessionManager sessionManager, UserManager<AppUser> userManager, IAdminLogger logger)
             : base(userManager, logger)
@@ -60,7 +57,6 @@ namespace LagoVista.AI.Rest
 
             try
             {
-
                 if (request.Streaming)
                 {
                     Response.StatusCode = 200;
@@ -70,7 +66,6 @@ namespace LagoVista.AI.Rest
                     await Response.Body.FlushAsync();
                     streamingContext.Current = async ev =>
                     {
-
                         var json = JsonConvert.SerializeObject(
                             ev,
                             Formatting.None,
@@ -80,7 +75,6 @@ namespace LagoVista.AI.Rest
                                 NullValueHandling = NullValueHandling.Ignore
                             });
 
-                    
                         await Response.WriteAsync(json, cancellationToken);
                         await Response.WriteAsync("\n", cancellationToken);
                         await Response.Body.FlushAsync(cancellationToken);
@@ -92,29 +86,30 @@ namespace LagoVista.AI.Rest
                     _adminLogger.Trace($"[JSON.RAWAPIRESPONSE]={responseJson}");
 
                     if (streamingContext.Current != null)
+                    {
+                        await streamingContext.Current(new AgentStreamEvent
                         {
-                            await streamingContext.Current(new AgentStreamEvent
-                            {
-                                Kind = "final",
-                                Final = result,
-                                Index = 99999
-                            });
-                        } 
+                            Kind = "final",
+                            Final = result,
+                            Index = 99999
+                        });
+                    }
 
-                        return new EmptyResult();
+                    return new EmptyResult();
                 }
-                else {
+                else
+                {
                     var result = await _agentRequestHandler.HandleAsync(request, OrgEntityHeader, UserEntityHeader, cancellationToken);
                     if (result.Successful)
                     {
                         var responseJSON = JsonConvert.SerializeObject(result.Result);
                         _adminLogger.Trace($"[JSON.RAWREQUEST]={responseJSON}");
                     }
-                   
+
                     return new JsonResult(result);
-                }           
+                }
             }
-            catch(OperationCanceledException)
+            catch (OperationCanceledException)
             {
                 _adminLogger.Trace("[AgentExecutionController_ExecuteAsync] Operation Cancelled");
 
@@ -130,7 +125,7 @@ namespace LagoVista.AI.Rest
 
                 return new EmptyResult();
             }
-            catch(ValidationException val)
+            catch (ValidationException val)
             {
                 if (streamingContext.Current != null)
                 {
@@ -144,7 +139,7 @@ namespace LagoVista.AI.Rest
 
                 return new EmptyResult();
             }
-            catch(RecordNotFoundException ex)
+            catch (RecordNotFoundException ex)
             {
                 _adminLogger.AddException("[AgentExecutionController_ExecuteAsync] - Record Not Found Exception", ex);
 
@@ -160,7 +155,7 @@ namespace LagoVista.AI.Rest
 
                 return new EmptyResult();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _adminLogger.AddException("[AgentExecutionController_ExecuteAsync]", ex);
 
@@ -176,21 +171,24 @@ namespace LagoVista.AI.Rest
 
                 return new EmptyResult();
             }
+            finally
+            {
+                sw.Stop();
+            }
         }
 
         [HttpGet("/api/ai/agent/session/{sessionid}/persona/change/{personaid}")]
         public async Task<IActionResult> ChangeAgentSessionPersona(string sessionid, string personaid)
         {
             var cancellationToken = HttpContext?.RequestAborted ?? CancellationToken.None;
-            var session = await _sessionManager.GetAgentSessionAsync(sessionid, OrgEntityHeader, UserEntityHeader); 
+            var session = await _sessionManager.GetAgentSessionAsync(sessionid, OrgEntityHeader, UserEntityHeader);
 
             var request = new AgentExecuteRequest()
             {
                 SessionId = sessionid,
-                               
                 Streaming = false
-
             };
+
             var persona = await _agentPersonaDefinitionManager.GetAgentPersonaDefinitionAsync(personaid, OrgEntityHeader, UserEntityHeader);
             var result = await _agentRequestHandler.HandleAsync(request, OrgEntityHeader, UserEntityHeader, cancellationToken);
             if (result.Successful)
@@ -223,11 +221,11 @@ namespace LagoVista.AI.Rest
         [HttpGet("/api/ai/agent/session/{id}")]
         public async Task<InvokeResult<AgentSession>> GetSession(string id)
         {
-            return InvokeResult<AgentSession>.Create(await  _sessionManager.GetAgentSessionAsync(id, OrgEntityHeader, UserEntityHeader));
+            return InvokeResult<AgentSession>.Create(await _sessionManager.GetAgentSessionAsync(id, OrgEntityHeader, UserEntityHeader));
         }
 
         [HttpDelete("/api/ai/agent/session/{id}")]
-        public  Task<InvokeResult<AgentSessionSummary>> DeleteSession(string id)
+        public Task<InvokeResult<AgentSessionSummary>> DeleteSession(string id)
         {
             return _sessionManager.DeleteSessionAsync(id, OrgEntityHeader, UserEntityHeader);
         }

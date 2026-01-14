@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
+using LagoVista.AI.Interfaces.Services;
 using LagoVista.AI.Models;
 using LagoVista.Core;
 using LagoVista.Core.Validation;
@@ -22,11 +23,13 @@ namespace LagoVista.AI.Services.Tools
     {
         public const string ToolName = "workspace_create_file";
         private readonly IAdminLogger _logger;
+        private readonly IContentHashService _hashService;
         public bool IsToolFullyExecutedOnServer => false;
 
-        public WorkspaceCreateFileTool(IAdminLogger logger)
+        public WorkspaceCreateFileTool(IAdminLogger logger, IContentHashService hashService)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _hashService = hashService ?? throw new ArgumentNullException(nameof(hashService)); 
         }
 
         public const string ToolSummary = "create a file on the user machine with a client side tool";
@@ -67,9 +70,13 @@ namespace LagoVista.AI.Services.Tools
             public string Message { get; set; } = string.Empty;
         }
 
-        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
-        /// <inheritdoc/>
-        public async Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentToolExecutionContext context, CancellationToken cancellationToken = default)
+        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentToolExecutionContext context, CancellationToken cancellationToken = default)
+        {
+            
+            return Task.FromResult(InvokeResult<string>.FromError("not_supported"));      
+        }
+
+        public async Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) 
         {
             try
             {
@@ -84,6 +91,12 @@ namespace LagoVista.AI.Services.Tools
                         args = JsonConvert.DeserializeObject<Args>(argumentsJson);
                         if( String.IsNullOrEmpty(args.Path)) return InvokeResult<string>.FromError("workspace_create_file requires a non-empty 'path' argument.");
                         if (String.IsNullOrEmpty(args.Content)) return InvokeResult<string>.FromError("workspace_create_file requires a non-empty 'content' argument.");
+                        context.Session.TouchedFiles.Add(new TouchedFile()
+                        {
+                            Path = args.Path,
+                            ContentHash =  await _hashService.ComputeFileHashAsync(args.Content),
+                            LastAccess = DateTime.UtcNow.ToJSONString(),        
+                        });                      
                     }
                     catch (Exception ex)
                     {

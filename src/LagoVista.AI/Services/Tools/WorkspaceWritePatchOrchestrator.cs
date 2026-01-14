@@ -1,8 +1,10 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
+using LagoVista.Core;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json;
@@ -18,7 +20,7 @@ namespace LagoVista.AI.Services.Tools
     {
         Task<InvokeResult<string>> ExecuteAsync(
             string argumentsJson,
-            AgentToolExecutionContext context,
+            IAgentPipelineContext context,
             CancellationToken cancellationToken = default);
     }
 
@@ -27,36 +29,43 @@ namespace LagoVista.AI.Services.Tools
         public const string ToolUsageMetadata = @"workspace_write_patch — Usage Guide
 
 Primary purpose:
-- Capture a multi-file, line-based patch batch for one or more workspace files.
-- Each patch batch is stored server-side with stable ids so the client can later:
-  - validate SHA256 against local files, and
-  - apply the exact line changes you described.
+- Capture a multi-file patch batch for one or more workspace files.
+- The server validates and stores the patch batch; the client later applies it to local files.
 
-Rules:
+Key rules:
 - Always compute a SHA256 of the full file content before proposing any edits.
-- Always send the SHA256 you computed in originalSha256 for each file.
+- Always send the SHA256 you computed in originalSha256 for each file (required).
 - Always treat docPath as the canonical identifier for the file. It is lower-case and unique.
-- Only propose full-line operations (insert, replace, delete).
-- Do not send partial-line edits. Always send full lines.
-- Prefer fewer, larger line blocks over many tiny changes when they are logically related.
-- You may patch multiple files in a single call by adding more entries to files[].
-- You should provide a short description for each change so humans can quickly review.
+- Only propose full-line operations. Do not send partial-line edits.
 
-Line operations:
+Safety/validation notes:
+- originalSha256 is required per file and is used to detect drift before applying patches.
+- expectedOriginalLines is a safety guard for replaceByRange/delete: it is NOT a search key.
+  It is validated against the exact [startLine..endLine] range.
+
+Operations:
 - Insert:
   - operation: ""insert""
-  - Use afterLine to indicate the 1-based line AFTER which the newLines should be inserted.
+  - Use afterLine to indicate the 1-based line number AFTER which newLines should be inserted.
   - Use afterLine = 0 to insert at the very top of the file.
   - Provide newLines with the exact lines to insert.
-- Replace:
-  - operation: ""replace""
-  - Use startLine and endLine (inclusive) to indicate the block to replace.
-  - Provide newLines with the replacement lines.
-  - Optionally include expectedOriginalLines to help the client validate.
+
 - Delete:
   - operation: ""delete""
   - Use startLine and endLine (inclusive) to indicate the block to remove.
-  - Optionally include expectedOriginalLines to help the client validate.
+  - expectedOriginalLines (optional but recommended): exact original lines expected at [startLine..endLine].
+
+- Replace (context-based):
+  - operation: ""replace""
+  - Provide matchLines (the exact contiguous block of lines to find) and newLines (replacement).
+  - Optional: occurrence (single|first|last), matchMode (ignoreLineEndings|exact)
+  - This is resilient to line-number drift.
+
+- ReplaceByRange (line-based):
+  - operation: ""replaceByRange""
+  - Use startLine and endLine (inclusive) to indicate the block to replace.
+  - Provide newLines with the replacement lines.
+  - expectedOriginalLines (optional but recommended): exact original lines expected at [startLine..endLine].
 
 Ids and keys:
 - The server will assign:
@@ -64,30 +73,11 @@ Ids and keys:
   - filePatchId for each file,
   - changeId for each individual change.
 - You may provide batchKey, fileKey, and changeKey if you want stable labels you can reuse in later turns.
-- When asking follow-up questions about a specific change, always reference the ids or keys from the previous tool result.
-
-When to use:
-- Use this tool whenever you want the client to apply concrete code changes to one or more files.
-- Good examples:
-  - Add tests for AgentOrchestrator (multiple new files).
-  - Refactor RagAnswerService to use the responses API (multi-block edits).
-- Do not use this tool just to explore or read files; use workspace_read_file and RAG search tools for that.
 
 Error behavior:
 - If arguments are invalid (missing docPath, SHA, or changes), the tool returns Success = false with an ErrorCode.
 - If internal persistence fails, the tool returns Success = false with ErrorCode = ""STORE_ERROR"".
 - The tool never throws across the wire; errors are encoded in the JSON payload.
-
-Good usage:
-- Prepare a plan, read the relevant files, compute SHA256, then call workspace_write_patch with:
-  - clear docPath and SHA per file,
-  - minimal but coherent sets of changes,
-  - concise descriptions for each change.
-
-Bad usage:
-- Calling workspace_write_patch without first computing SHA256.
-- Attempting character-level edits inside a line.
-- Spamming many tiny patches when a single coherent patch would suffice.
 ";
 
         private readonly IAdminLogger _logger;
@@ -109,7 +99,7 @@ Bad usage:
 
         public async Task<InvokeResult<string>> ExecuteAsync(
             string argumentsJson,
-            AgentToolExecutionContext context,
+            IAgentPipelineContext context,
             CancellationToken cancellationToken = default)
         {
             if (cancellationToken.IsCancellationRequested)
@@ -119,7 +109,7 @@ Bad usage:
                     Success = false,
                     ErrorCode = "CANCELLED",
                     ErrorMessage = "workspace_write_patch execution was cancelled before processing.",
-                    SessionId = context?.SessionId,
+                    SessionId = context.Session.Id,
                 });
 
                 return InvokeResult<string>.Create(cancelledPayload);
@@ -134,7 +124,7 @@ Bad usage:
                         Success = false,
                         ErrorCode = "MISSING_ARGUMENTS",
                         ErrorMessage = "workspace_write_patch requires a non-empty JSON arguments payload.",
-                        SessionId = context?.SessionId,
+                        SessionId = context.Session.Id,
                     });
 
                     return InvokeResult<string>.Create(missingPayload);
@@ -155,7 +145,7 @@ Bad usage:
                         Success = false,
                         ErrorCode = "DESERIALIZATION_ERROR",
                         ErrorMessage = "Unable to deserialize workspace_write_patch arguments.",
-                        SessionId = context?.SessionId,
+                        SessionId = context.Session.Id,
                     });
 
                     return InvokeResult<string>.Create(errorPayload);
@@ -169,13 +159,33 @@ Bad usage:
                         Success = false,
                         ErrorCode = "VALIDATION_FAILED",
                         ErrorMessage = validationResult.ErrorMessage,
-                        SessionId = context?.SessionId,
+                        SessionId = context.Session.Id,
                     });
 
                     return InvokeResult<string>.Create(validationPayload);
                 }
 
                 var batch = _batchFactory.BuildBatch(args, context, NewId);
+
+                foreach(var file in batch.Files)
+                {
+                    var existingFile = context.Session.TouchedFiles.FirstOrDefault(f => f.Path == file.DocPath);
+
+                    if(existingFile != null)
+                    {
+                        existingFile.ContentHash = file.OriginalSha256;
+                        existingFile.LastAccess = DateTime.UtcNow.ToJSONString();
+                    }
+                    else 
+                    {
+                        context.Session.TouchedFiles.Add(new TouchedFile()
+                        {
+                            Path = file.DocPath,
+                            ContentHash = file.OriginalSha256,
+                            LastAccess = DateTime.UtcNow.ToJSONString(),        
+                        });
+                    }
+                }
 
                 var storeResult = await _patchStore.SaveAsync(batch, cancellationToken);
                 if (!storeResult.Successful)
@@ -185,7 +195,8 @@ Bad usage:
                         Success = false,
                         ErrorCode = "STORE_ERROR",
                         ErrorMessage = storeResult.ErrorMessage,
-                        SessionId = context?.SessionId,
+                        SessionId = context.Session.Id,
+
                     });
 
                     return InvokeResult<string>.Create(storePayload);
@@ -208,7 +219,7 @@ Bad usage:
                     Success = false,
                     ErrorCode = "UNEXPECTED_ERROR",
                     ErrorMessage = "workspace_write_patch failed to process arguments.",
-                    SessionId = context?.SessionId,
+                    SessionId = context?.Session.Id,
                 });
 
                 return InvokeResult<string>.Create(errorPayload);

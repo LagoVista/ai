@@ -13,6 +13,7 @@ namespace LagoVista.AI.Models
         ToolUsage,
         ToolSummary,
         Kfr,
-        Rag
+        Rag,
+        NewChapterInitialPrompt
     }
 }

@@ -1,14 +1,14 @@
 using LagoVista.AI.Models.Resources;
 using LagoVista.Core;
+using LagoVista.Core.AI.Models;
 using LagoVista.Core.Attributes;
 using LagoVista.Core.Interfaces;
 using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http.Headers;
-
 
 namespace LagoVista.AI.Models
 {
@@ -63,6 +63,35 @@ namespace LagoVista.AI.Models
         Gotcha
     }
 
+
+
+    /// <summary>
+    /// Tiny operational capsule stored as JSON on AgentSession (CurrentCapsuleJson).
+    /// Stored as JSON to avoid schema churn.
+    /// </summary>
+    public class ContextCapsule
+    {
+        public string CapsuleVersion { get; set; } = "1";
+
+        public int ChapterIndex { get; set; }
+
+        public string ChapterTitle { get; set; }
+
+        public string Goal { get; set; }
+
+        public List<string> Decisions { get; set; } = new List<string>();
+
+        public List<string> Constraints { get; set; } = new List<string>();
+
+        public List<TouchedFile> TouchedFiles { get; set; } = new List<TouchedFile>();
+
+        public List<string> OpenQuestions { get; set; } = new List<string>();
+
+        public List<string> NextSteps { get; set; } = new List<string>();
+
+        public string PreviousChapterSummary { get; set; }
+    }
+
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.AgentSession_Title, AIResources.Names.AgentSession_Help, AIResources.Names.AgentSession_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIDomain),
         Icon: "icon-ae-creativity", ListUIUrl: "/mlworkbench/aptixsessions", EditUIUrl: "/mlworkbench/aptixsession/{id}", GetListUrl: "/api/ai/agent/sessions", GetUrl: "/api/ai/agent/session/{id}")]
     public class AgentSession : EntityBase, ISummaryFactory, IValidateable
@@ -80,12 +109,10 @@ namespace LagoVista.AI.Models
         [Obsolete]
         public EntityHeader ConversationContext { get; set; }
 
-       
         private EntityHeader _role;
 #pragma warning disable CS0612 // Type or member is obsolete
         public EntityHeader Role { get => _role ?? ConversationContext; set => _role = value; }
 #pragma warning restore CS0612 // Type or member is obsolete
-
 
         public Dictionary<string, string> DdrCache { get; set; } = new Dictionary<string, string>();
 
@@ -94,13 +121,13 @@ namespace LagoVista.AI.Models
         public string Repo { get; set; }
 
         /// <summary>
-        ///  Eventually this will go away...
+        /// Eventually this will go away...
         /// </summary>
-        public string Mode { get; set; } = AgentSession.DefaultMode;
+        public string Mode { get; set; } = DefaultMode;
 
         public EntityHeader AgentMode { get; set; }
 
-        public string CurrentBranch { get; set; } = AgentSession.DefaultBranch;
+        public string CurrentBranch { get; set; } = DefaultBranch;
 
         public string ModeSetTimestamp { get; set; }
 
@@ -110,7 +137,20 @@ namespace LagoVista.AI.Models
 
         public string DefaultLanguage { get; set; }
 
-        public int CurrentChapterIndex { get; set; }
+        /// <summary>
+        /// Current chapter index for the session.
+        /// </summary>
+        public int CurrentChapterIndex { get; set; } = 0;
+
+        /// <summary>
+        /// Archive pointers for completed chapters.
+        /// </summary>
+        public List<AgentSessionArchive> Archives { get; set; } = new List<AgentSessionArchive>();
+
+        /// <summary>
+        /// JSON serialized ContextCapsule.
+        /// </summary>
+        public ContextCapsule CurrentCapsule { get; set; }
 
         public EntityHeader<OperationKinds> OperationKind { get; set; }
 
@@ -120,6 +160,7 @@ namespace LagoVista.AI.Models
 
         public List<ModeHistory> ModeHistory { get; set; } = new List<ModeHistory>();
 
+        public List<TouchedFile> TouchedFiles { get; set; } = new List<TouchedFile>();    
 
         /// <summary>
         /// List of KFRs (Short Term Memory for Session)
@@ -180,7 +221,7 @@ namespace LagoVista.AI.Models
 
         ISummaryData ISummaryFactory.CreateSummary()
         {
-            return this.CreateSummary();
+            return CreateSummary();
         }
     }
 
@@ -224,6 +265,15 @@ namespace LagoVista.AI.Models
         public string SessionId { get; set; }
     }
 
+    public class TouchedFile
+    {
+        public string Path { get; set; }
+
+        public string ContentHash { get; set; }
+
+        public string LastAccess {get; set;}
+    } 
+
     public class ModeHistory
     {
         public string PreviousMode { get; set; }
@@ -242,7 +292,6 @@ namespace LagoVista.AI.Models
         public const string AgentSessionTurnStatuses_RolledBackTurn = "rolledbackturn";
 
         public string Id { get; set; } = Guid.NewGuid().ToId();
-
 
         public int SequenceNumber { get; set; }
 
@@ -275,6 +324,7 @@ namespace LagoVista.AI.Models
         public bool InstructionsTruncated { get; set; }
 
         public string AgentAnswerSummary { get; set; }
+
         public bool AgentAnswerTruncated { get; set; }
 
         public string SessionId { get; set; }
@@ -301,43 +351,56 @@ namespace LagoVista.AI.Models
         public List<string> Warnings { get; set; } = new List<string>();
 
         public List<string> Errors { get; set; } = new List<string>();
+
         public int PromptTokens { get; set; }
+
         public int CompletionTokens { get; set; }
+
         public int TotalTokens { get; set; }
+
         public int ReasoningTokens { get; set; }
+
         public int CachedTokens { get; set; }
 
-        public List<AgentSessionTurnIteration> Iterations { get; set; } = new List<AgentSessionTurnIteration>();        
+        public List<AgentSessionTurnIteration> Iterations { get; set; } = new List<AgentSessionTurnIteration>();
     }
 
     public class AgentSessionTurnIteration
     {
         public string Id { get; set; } = Guid.NewGuid().ToId();
+
         public int Index { get; set; }
 
         public double ExecutionMs { get; set; }
 
         public EntityHeader<AgentSessionTurnStatuses> Status { get; set; } = EntityHeader<AgentSessionTurnStatuses>.Create(AgentSessionTurnStatuses.New);
+
         public string PreviousOpenAIResponseId { get; set; }
+
         public string OpenAiResponseId { get; set; }
+
         public int PromptTokens { get; set; }
+
         public int CompletionTokens { get; set; }
+
         public int TotalTokens { get; set; }
+
         public int ReasoningTokens { get; set; }
+
         public int CachedTokens { get; set; }
+
         public List<string> ToolCalls { get; set; }
+
         public List<string> Errors { get; set; } = new List<string>();
 
         public string OpenAIRequestBlobUrl { get; set; }
 
         public string OpenAIResponseBlobUrl { get; set; }
 
-
         /// <summary>
         /// Timestamp of the last status change for this turn.
         /// </summary>
         public string StatusTimeStamp { get; set; }
-
     }
 
     public class AgentSessionChunkRef
@@ -424,6 +487,7 @@ namespace LagoVista.AI.Models
     public sealed class AgentSessionKfrEntry
     {
         public string CreatedByUser { get; set; }
+
         public string CreatedByUserId { get; set; }
 
         public string KfrId { get; set; }
@@ -441,10 +505,8 @@ namespace LagoVista.AI.Models
         public string LastUpdatedDate { get; set; } = DateTime.UtcNow.ToString("o");
     }
 
-
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.AgentSessions_Title, AIResources.Names.AgentSession_Help, AIResources.Names.AgentSession_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIDomain),
         Icon: "icon-ae-creativity", ListUIUrl: "/mlworkbench/aptixsessions", EditUIUrl: "/mlworkbench/aptixsession/{id}", GetListUrl: "/api/ai/agent/sessions", GetUrl: "/api/ai/agent/session/{id}")]
-
     public class AgentSessionSummary : SummaryData
     {
         public string AgentContextId { get; set; }
@@ -462,11 +524,15 @@ namespace LagoVista.AI.Models
         public int TurnCount { get; set; }
 
         public string Mode { get; set; }
+
         public string ModeSetTimestamp { get; set; }
+
         public string ModeReason { get; set; }
 
         public bool Shared { get; set; }
+
         public bool Completed { get; set; }
+
         public bool Archived { get; set; }
     }
 }

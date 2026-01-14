@@ -10,6 +10,8 @@ namespace LagoVista.AI.Models
         public int ChapterIndex { get; set; }
         public string Title { get; set; }
 
+        public string Summary { get; set; }
+
         public string CreationDate { get; set; }
     
         public int TurnCount { get; set; }

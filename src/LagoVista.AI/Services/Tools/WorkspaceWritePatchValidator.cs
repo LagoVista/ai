@@ -28,7 +28,6 @@ namespace LagoVista.AI.Services.Tools
                 return InvokeResult.FromError("At least one file patch must be provided in files[].");
             }
 
-            // Ensure docPath uniqueness within batch.
             var duplicateDocPaths = args.Files
                 .GroupBy(f => (f.DocPath ?? string.Empty).Trim().ToLowerInvariant())
                 .Where(g => g.Count() > 1 && !string.IsNullOrWhiteSpace(g.Key))
@@ -70,7 +69,7 @@ namespace LagoVista.AI.Services.Tools
                     }
 
                     var op = change.Operation.Trim().ToLowerInvariant();
-                    if (op != "insert" && op != "replace" && op != "delete")
+                    if (op != "insert" && op != "delete" && op != "replace" && op != "replacebyrange")
                     {
                         return InvokeResult.FromError($"File '{file.DocPath}' has a change with unsupported operation '{change.Operation}'.");
                     }
@@ -87,25 +86,58 @@ namespace LagoVista.AI.Services.Tools
                             return InvokeResult.FromError($"INSERT changes for file '{file.DocPath}' must include at least one new line in newLines.");
                         }
                     }
-                    else if (op == "replace" || op == "delete")
+                    else if (op == "delete")
                     {
                         if (!change.StartLine.HasValue || !change.EndLine.HasValue ||
                             change.StartLine.Value <= 0 || change.EndLine.Value < change.StartLine.Value)
                         {
-                            return InvokeResult.FromError($"REPLACE or DELETE changes for file '{file.DocPath}' must specify valid startLine and endLine (1-based, start <= end).");
+                            return InvokeResult.FromError($"DELETE changes for file '{file.DocPath}' must specify valid startLine and endLine (1-based, start <= end).");
+                        }
+                    }
+                    else if (op == "replacebyrange")
+                    {
+                        if (!change.StartLine.HasValue || !change.EndLine.HasValue ||
+                            change.StartLine.Value <= 0 || change.EndLine.Value < change.StartLine.Value)
+                        {
+                            return InvokeResult.FromError($"REPLACEBYRANGE changes for file '{file.DocPath}' must specify valid startLine and endLine (1-based, start <= end).");
                         }
 
-                        if (op == "replace")
+                        if (change.NewLines == null || change.NewLines.Count == 0)
                         {
-                            if (change.NewLines == null || change.NewLines.Count == 0)
+                            return InvokeResult.FromError($"REPLACEBYRANGE changes for file '{file.DocPath}' must include at least one new line in newLines.");
+                        }
+                    }
+                    else if (op == "replace")
+                    {
+                        if (change.MatchLines == null || change.MatchLines.Count == 0)
+                        {
+                            return InvokeResult.FromError($"REPLACE changes for file '{file.DocPath}' must include at least one line in matchLines.");
+                        }
+
+                        if (change.NewLines == null || change.NewLines.Count == 0)
+                        {
+                            return InvokeResult.FromError($"REPLACE changes for file '{file.DocPath}' must include at least one new line in newLines.");
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(change.Occurrence))
+                        {
+                            var occurrence = change.Occurrence.Trim().ToLowerInvariant();
+                            if (occurrence != "single" && occurrence != "first" && occurrence != "last")
                             {
-                                return InvokeResult.FromError($"REPLACE changes for file '{file.DocPath}' must include at least one new line in newLines.");
+                                return InvokeResult.FromError($"REPLACE changes for file '{file.DocPath}' has invalid occurrence '{change.Occurrence}'. Expected: single, first, last.");
+                            }
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(change.MatchMode))
+                        {
+                            var matchMode = change.MatchMode.Trim().ToLowerInvariant();
+                            if (matchMode != "ignorelineendings" && matchMode != "exact")
+                            {
+                                return InvokeResult.FromError($"REPLACE changes for file '{file.DocPath}' has invalid matchMode '{change.MatchMode}'. Expected: ignoreLineEndings, exact.");
                             }
                         }
                     }
                 }
-
-                // Optional: non-overlap / ordering checks could be added here later.
             }
 
             return InvokeResult.Success;
@@ -169,6 +201,16 @@ namespace LagoVista.AI.Services.Tools
 
         [JsonProperty("newLines")]
         public List<string> NewLines { get; set; } = new List<string>();
+
+        // Context-based replace fields (operation: replace)
+        [JsonProperty("matchLines")]
+        public List<string> MatchLines { get; set; } = new List<string>();
+
+        [JsonProperty("occurrence")]
+        public string Occurrence { get; set; }
+
+        [JsonProperty("matchMode")]
+        public string MatchMode { get; set; }
     }
 
     #endregion

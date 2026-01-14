@@ -1,4 +1,3 @@
-﻿using ICSharpCode.SharpZipLib.Core;
 using LagoVista.AI.Interfaces.Managers;
 using LagoVista.AI.Interfaces.Repos;
 using LagoVista.AI.Models;
@@ -11,24 +10,30 @@ using LagoVista.Core.Models.UIMetaData;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json;
-using NLog.LayoutRenderers.Wrappers;
-using RingCentral;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace LagoVista.AI.Managers
 {
     public class AgentSessionManager : ManagerBase, IAgentSessionManager
     {
-        IAgentSessionRepo _repo;
+        private readonly IAgentSessionRepo _repo;
+        private readonly IAgentSessionTurnArchiveStore _archiveStore;
+        private readonly IAdminLogger _adminLogger;
 
-        public AgentSessionManager(IAgentSessionRepo repo, IAdminLogger logger, IAppConfig appConfig, IDependencyManager dependencyManager, ISecurity security) :
-            base(logger, appConfig, dependencyManager, security)
+        public AgentSessionManager(
+            IAgentSessionRepo repo,
+            IAgentSessionTurnArchiveStore archiveStore,
+            IAdminLogger logger,
+            IAppConfig appConfig,
+            IDependencyManager dependencyManager,
+            ISecurity security) : base(logger, appConfig, dependencyManager, security)
         {
+            _adminLogger = logger ?? throw new ArgumentNullException(nameof(logger));
             _repo = repo ?? throw new ArgumentNullException(nameof(repo));
+            _archiveStore = archiveStore ?? throw new ArgumentNullException(nameof(archiveStore));
         }
 
         public async Task AddAgentSessionAsync(AgentSession session, EntityHeader org, EntityHeader user)
@@ -39,7 +44,6 @@ namespace LagoVista.AI.Managers
 
             await _repo.AddSessionAsync(session);
         }
-
 
         public async Task<AgentSession> GetAgentSessionAsync(string agentSessionId, EntityHeader org, EntityHeader user)
         {
@@ -62,7 +66,6 @@ namespace LagoVista.AI.Managers
             return sessions;
         }
 
-    
         public async Task<InvokeResult<AgentSessionSummary>> SetSessionNameAsync(string sessionid, string name, EntityHeader org, EntityHeader user)
         {
             var session = await GetAgentSessionAsync(sessionid, org, user);
@@ -96,7 +99,6 @@ namespace LagoVista.AI.Managers
             return InvokeResult<AgentSessionSummary>.Create(session.CreateSummary());
         }
 
-
         public async Task<InvokeResult<AgentSessionSummary>> DeleteSessionAsync(string sessionid, EntityHeader org, EntityHeader user)
         {
             var session = await GetAgentSessionAsync(sessionid, org, user);
@@ -120,23 +122,80 @@ namespace LagoVista.AI.Managers
             return InvokeResult<AgentSessionSummary>.Create(session.CreateSummary());
         }
 
+        /// <summary>
+        /// Chapter boundary operation:
+        /// - generate/store capsule JSON
+        /// - archive current turns out-of-band
+        /// - append archive pointer
+        /// - increment chapter index
+        /// - clear Turns
+        /// </summary>
+        public async Task<InvokeResult<AgentSessionArchive>> CheckpointAndResetAsync(AgentSession session, string chapterTitle, EntityHeader org, EntityHeader user)
+        {
+            if (session == null) return InvokeResult<AgentSessionArchive>.FromError("Session not found.");
+
+            session.Turns ??= new List<AgentSessionTurn>();
+            session.Archives ??= new List<AgentSessionArchive>();
+
+            // Archive turns.
+            var archive = await _archiveStore.SaveAsync(session, session.Turns, chapterTitle, session.CurrentCapsule.PreviousChapterSummary, user);
+            session.Archives.Add(archive);
+
+            // Advance chapter and clear heavy state.
+            session.CurrentChapterIndex++;
+            session.Turns = new List<AgentSessionTurn>();
+
+            session.LastUpdatedDate = DateTime.UtcNow.ToJSONString();
+            session.LastUpdatedBy = user;
+
+            return InvokeResult<AgentSessionArchive>.Create(archive);
+        }
+
+        private static string ExtractKfrValue(AgentSession session, string mode, KfrKind kind)
+        {
+            if (session == null) return null;
+            if (string.IsNullOrWhiteSpace(mode)) return null;
+            if (session.Kfrs == null) return null;
+
+            if (!session.Kfrs.ContainsKey(mode)) return null;
+
+            var entries = session.Kfrs[mode] ?? new List<AgentSessionKfrEntry>();
+            var entry = entries.FirstOrDefault(e => e != null && e.IsActive && e.Kind == kind);
+            return entry?.Value;
+        }
+
+        private static List<string> ExtractKfrValues(AgentSession session, string mode, KfrKind kind)
+        {
+            if (session == null) return new List<string>();
+            if (string.IsNullOrWhiteSpace(mode)) return new List<string>();
+            if (session.Kfrs == null) return new List<string>();
+
+            if (!session.Kfrs.ContainsKey(mode)) return new List<string>();
+
+            var entries = session.Kfrs[mode] ?? new List<AgentSessionKfrEntry>();
+            return entries
+                .Where(e => e != null && e.IsActive && e.Kind == kind && !string.IsNullOrWhiteSpace(e.Value))
+                .Select(e => e.Value)
+                .ToList();
+        }
+
         public async Task<InvokeResult<AgentSession>> RollbackAsync(string sessionId, string turnId, EntityHeader org, EntityHeader user)
         {
             var session = await GetAgentSessionAsync(sessionId, org, user);
             var turn = session.Turns.SingleOrDefault(t => t.Id == turnId);
-            if(turn == null)
+            if (turn == null)
                 return InvokeResult<AgentSession>.FromError($"Turn '{turnId}' not found in session '{sessionId}'.");
 
             var cloned = JsonConvert.DeserializeObject<AgentSessionTurn>(
                 JsonConvert.SerializeObject(turn)
             );
 
-            cloned.Id = Guid.NewGuid().ToId();  
-            cloned.Status = EntityHeader < AgentSessionTurnStatuses>.Create(AgentSessionTurnStatuses.RolledBackTurn);
+            cloned.Id = Guid.NewGuid().ToId();
+            cloned.Status = EntityHeader<AgentSessionTurnStatuses>.Create(AgentSessionTurnStatuses.RolledBackTurn);
             cloned.StatusTimeStamp = DateTime.UtcNow.ToJSONString();
             cloned.InstructionSummary = $"Rolled Back to on {DateTime.UtcNow.ToJSONString()}\r\n{turn.InstructionSummary}";
 
-            if(session.Mode != cloned.Mode)
+            if (session.Mode != cloned.Mode)
             {
                 session.ModeHistory.Add(new ModeHistory()
                 {
@@ -177,12 +236,11 @@ namespace LagoVista.AI.Managers
             clonedSession.SourceTurnSourceId = null;
             clonedSession.RestoreOperationId = null;
             clonedSession.RestoredOnUtc = null;
-            
+
             await AddAgentSessionAsync(clonedSession, org, user);
 
             return InvokeResult<AgentSession>.Create(clonedSession);
         }
-
 
         public async Task<InvokeResult<AgentSessionCheckpoint>> AddSessionCheckpointAsync(string sessionId, AgentSessionCheckpoint checkpoint, EntityHeader org, EntityHeader user)
         {
@@ -227,7 +285,7 @@ namespace LagoVista.AI.Managers
             if (sourceSession == null) return InvokeResult<AgentSession>.FromError("Session not found.");
 
             if (string.IsNullOrWhiteSpace(checkpointId)) return InvokeResult<AgentSession>.FromError("RestoreSessionCheckpointAsync requires checkpointId.");
-         
+
             var cps = sourceSession.Checkpoints ?? new List<AgentSessionCheckpoint>();
             var cp = cps.FirstOrDefault(c => string.Equals(c.CheckpointId, checkpointId.Trim(), StringComparison.OrdinalIgnoreCase));
             if (cp == null) return InvokeResult<AgentSession>.FromError($"Checkpoint '{checkpointId}' not found.");
@@ -304,49 +362,6 @@ namespace LagoVista.AI.Managers
             return InvokeResult<AgentSession>.Create(branchedSession);
         }
 
-
-        private static AgentSessionMemoryNoteKinds? ParseMemoryKind(string kind)
-        {
-            if (string.IsNullOrWhiteSpace(kind)) return null;
-
-            switch (kind.Trim().ToLowerInvariant())
-            {
-                case "invariant":
-                    return AgentSessionMemoryNoteKinds.Invariant;
-                case "decision":
-                    return AgentSessionMemoryNoteKinds.Decision;
-                case "constraint":
-                    return AgentSessionMemoryNoteKinds.Constraint;
-                case "fact":
-                    return AgentSessionMemoryNoteKinds.Fact;
-                case "todo":
-                    return AgentSessionMemoryNoteKinds.Todo;
-                case "gotcha":
-                    return AgentSessionMemoryNoteKinds.Gotcha;
-                default:
-                    return null;
-            }
-        }
-
-        private static AgentSessionMemoryNoteImportance? ParseMemoryImportance(string importanceMin)
-        {
-            if (string.IsNullOrWhiteSpace(importanceMin)) return null;
-
-            switch (importanceMin.Trim().ToLowerInvariant())
-            {
-                case "low":
-                    return AgentSessionMemoryNoteImportance.Low;
-                case "normal":
-                    return AgentSessionMemoryNoteImportance.Normal;
-                case "high":
-                    return AgentSessionMemoryNoteImportance.High;
-                case "critical":
-                    return AgentSessionMemoryNoteImportance.Critical;
-                default:
-                    return null;
-            }
-        }
-
         private static DateTime SafeIsoToDateTime(string iso)
         {
             if (string.IsNullOrWhiteSpace(iso)) return DateTime.MinValue;
@@ -374,7 +389,7 @@ namespace LagoVista.AI.Managers
 
         public Task<InvokeResult> UpdateKFRsAsync(AgentSession session, string mode, List<AgentSessionKfrEntry> entries)
         {
-            if(session.Kfrs.ContainsKey(mode))
+            if (session.Kfrs.ContainsKey(mode))
                 session.Kfrs[mode] = entries;
             else
                 session.Kfrs.Add(mode, entries);

@@ -1,4 +1,4 @@
-﻿using LagoVista.AI.Interfaces;
+using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Services;
 using LagoVista.AI.Models;
 using LagoVista.Core.Validation;
@@ -15,7 +15,6 @@ namespace LagoVista.AI.Services
 {
     public class PromptKnowledgeProvider : IPromptKnowledgeProvider
     {
-
         private readonly IAdminLogger _adminLogger;
         private readonly IAgentKnowledgePackService _apkProvider;
 
@@ -27,13 +26,17 @@ namespace LagoVista.AI.Services
 
         public async Task<InvokeResult<IAgentPipelineContext>> PopulateAsync(IAgentPipelineContext ctx, bool changeMode)
         {
-            var apkResult = await _apkProvider.CreateAsync(ctx, changeMode);
-            if (!apkResult.Successful) return InvokeResult<IAgentPipelineContext>.FromInvokeResult(apkResult.ToInvokeResult());    
+            var newChapter = ctx.Session.Turns.Count == 0 &&
+                 ctx.Session.CurrentChapterIndex > 0 &&
+                 ctx.Session.CurrentCapsule != null;
+
+            var apkResult = await _apkProvider.CreateAsync(ctx, newChapter || changeMode);
+            if (!apkResult.Successful) return InvokeResult<IAgentPipelineContext>.FromInvokeResult(apkResult.ToInvokeResult());
 
             var apk = apkResult.Result;
 
-         //   ctx.PromptKnowledgeProvider.ClearSession();
-         //   ctx.PromptKnowledgeProvider.ClearConsumables();
+            //   ctx.PromptKnowledgeProvider.ClearSession();
+            //   ctx.PromptKnowledgeProvider.ClearConsumables();
             ctx.PromptKnowledgeProvider.ActiveTools.Clear();
 
             foreach (var key in apk.KindCatalog.Keys)
@@ -70,6 +73,53 @@ namespace LagoVista.AI.Services
                 }
             }
 
+            // ---------------------------------------------------------------------
+            // NEW CHAPTER REHYDRATE (inject capsule after /chapter/reset)
+            // Condition: no turns + archives exist + capsule exists
+            // ---------------------------------------------------------------------
+            if (newChapter)
+            {
+                var capsuleBlock = new StringBuilder();
+                capsuleBlock.AppendLine("## NEW CHAPTER CONTINUATION (AUTHORITATIVE)");
+                capsuleBlock.AppendLine("You are continuing a multi-chapter session.");
+                capsuleBlock.AppendLine("You do NOT have access to prior chapter turns.");
+                capsuleBlock.AppendLine("Treat the following capsule JSON as the ONLY authoritative summary of prior chapters.");
+                capsuleBlock.AppendLine("If details are missing, ask clarifying questions rather than guessing.");
+                capsuleBlock.AppendLine();
+                capsuleBlock.AppendLine($"CurrentChapterIndex: {ctx.Session.CurrentChapterIndex}");
+                capsuleBlock.AppendLine("ContextCapsuleJson:");
+                capsuleBlock.AppendLine($"Title: {ctx.Session.CurrentCapsule.ChapterTitle}");
+                capsuleBlock.AppendLine($"Idx: {ctx.Session.CurrentCapsule.ChapterIndex}");
+                capsuleBlock.AppendLine($"V: {ctx.Session.CurrentCapsule.CapsuleVersion}");
+                capsuleBlock.AppendLine();
+
+                var newChapterRegister = ctx.PromptKnowledgeProvider.GetOrCreateRegister(KnowledgeKind.NewChapterInitialPrompt, Models.Context.ContextClassification.Session);
+                newChapterRegister.Add(capsuleBlock.ToString());
+  
+                var touchedFilesLog = new StringBuilder();
+                touchedFilesLog.AppendLine("## RECENTLY TOUCHED FILES");
+                touchedFilesLog.AppendLine("- The following files were recently edited in the last chapter. Do not assume their presence or content, but you may reference them if relevant.");
+                touchedFilesLog.AppendLine("- You may use workspace_read_client_file to read their current content if needed.");
+                touchedFilesLog.AppendLine("- You may call the workspace_toc_get to get the complete directory structure and files.");
+                foreach(var file in ctx.Session.TouchedFiles)
+                {
+                    touchedFilesLog.AppendLine($"- {file.Path} - SHA256={file.ContentHash} - Last Access={file.LastAccess}");
+                }
+                newChapterRegister.Add(touchedFilesLog.ToString());
+  
+                var previousChapterSummary = new StringBuilder();
+                previousChapterSummary.AppendLine("## PREVIOUS CHAPTERS SUMMARY");
+                previousChapterSummary.AppendLine("- The following is a summary of prior chapters for context.");
+                previousChapterSummary.AppendLine("- Do NOT assume any details beyond what is provided here.");
+                previousChapterSummary.AppendLine("- If details are missing, ask clarifying questions rather than guessing.");
+                previousChapterSummary.AppendLine(ctx.Session.CurrentCapsule.PreviousChapterSummary);
+                previousChapterSummary.AppendLine("---");
+                previousChapterSummary.AppendLine();
+        
+                newChapterRegister.Add(previousChapterSummary.ToString());
+
+            }
+
             ctx.PromptKnowledgeProvider.ActiveTools.AddRange(apk.ActiveTools);
 
             var modeBlock =
@@ -82,7 +132,6 @@ $@"## CURRENT MODE
 
             var modeRegister = ctx.PromptKnowledgeProvider.GetOrCreateRegister(KnowledgeKind.AgentModelContext, Models.Context.ContextClassification.Session);
             modeRegister.Add(modeBlock);
-
 
             var currentBranch = String.IsNullOrEmpty(ctx.Session.CurrentBranch) ? AgentSession.DefaultBranch : ctx.Session.CurrentBranch;
 

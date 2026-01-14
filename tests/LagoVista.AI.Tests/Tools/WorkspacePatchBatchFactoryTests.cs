@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
 using LagoVista.AI.Services.Tools;
+using Moq;
 using NUnit.Framework;
 
 namespace LagoVista.AI.Tests.Tools
@@ -47,7 +49,7 @@ namespace LagoVista.AI.Tests.Tools
                 }
             };
 
-            var batch = _factory.BuildBatch(args, new AgentToolExecutionContext(), FakeId);
+            var batch = _factory.BuildBatch(args,new Mock<IAgentPipelineContext>().Object, FakeId);
 
             Assert.That(batch.BatchId, Is.EqualTo("id123"));
             Assert.That(batch.BatchKey, Is.EqualTo("batch-key"));
@@ -102,7 +104,7 @@ namespace LagoVista.AI.Tests.Tools
                 }
             };
 
-            var result = _factory.BuildResponse(batch, new AgentToolExecutionContext());
+            var result = _factory.BuildResponse(batch, new Mock<IAgentPipelineContext>().Object);
 
             Assert.That(result.Success, Is.True);
             Assert.That(result.BatchId, Is.EqualTo("b1"));

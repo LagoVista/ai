@@ -74,7 +74,13 @@ namespace LagoVista.AI.Helpers
                 _adminLogger.Trace($"[Builder_Response_Chain] No Previous Respons Id");
             }
 
-            foreach (var register in ctx.PromptKnowledgeProvider.Registers)
+            // Ensure NewChapterInitialPrompt (rehydrate capsule) is injected early in system content.
+            // Everything else follows existing register order.
+            var orderedRegisters = ctx.PromptKnowledgeProvider.Registers
+                .OrderByDescending(r => r.Kind == KnowledgeKind.NewChapterInitialPrompt)
+                .ToList();
+
+            foreach (var register in orderedRegisters)
             {
                 if (register.Classification == Models.Context.ContextClassification.Session)
                 {
@@ -140,17 +146,19 @@ namespace LagoVista.AI.Helpers
                 {
                     if (!String.IsNullOrEmpty(file.Contents))
                     {
-                        sb.AppendLine($"--- BEGIN ACTIVE FILE ---");
-                        sb.AppendLine($"@Source: {file.FileSource}");
-                        sb.AppendLine($"@Workspace: {file.WorkSpace}");
-                        sb.AppendLine($"@Relative Path: {file.RelativePath}");
-                        sb.AppendLine($"@File Name: {file.FileName}");
-                        sb.AppendLine($"@SHA 256: {file.Sha256Hash}");
-                        sb.AppendLine($"@Language: {file.Language}");
-                        sb.AppendLine();
-                        sb.AppendLine(file.Contents);
-                        sb.AppendLine($"--- END ACTIVE FILE ---");
-                        sb.AppendLine();
+                        sb.AppendLine($"<<<BEGINFILE>>>");
+                        sb.AppendLine("<<METADATA>>");
+                        sb.AppendLine($"@Source: {file.FileSource};");
+                        sb.AppendLine($"@Workspace: {file.WorkSpace};");
+                        sb.AppendLine($"@Relative Path: {file.RelativePath};");
+                        sb.AppendLine($"@File Name: {file.FileName};");
+                        sb.AppendLine($"@SHA 256: {file.Sha256Hash};");
+                        sb.AppendLine($"@Language: {file.Language};");
+                        sb.AppendLine("<<ENDMETADATA>>");
+                        sb.Append("<<CONTENT>>");
+                        sb.Append(file.Contents);
+                        sb.Append($"<<ENDCONTENT>>");
+                        sb.AppendLine("<<ENDFILE>>");
                     }
                 }
 

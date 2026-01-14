@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
 using LagoVista.Core.Validation;
 
@@ -12,12 +13,12 @@ namespace LagoVista.AI.Services.Tools
     {
         WorkspacePatchBatch BuildBatch(
             WorkspaceWritePatchArgs args,
-            AgentToolExecutionContext context,
+            IAgentPipelineContext context,
             Func<string> idGenerator);
 
         WorkspaceWritePatchResponse BuildResponse(
             WorkspacePatchBatch batch,
-            AgentToolExecutionContext context);
+            IAgentPipelineContext context);
     }
 
     /// <summary>
@@ -28,7 +29,7 @@ namespace LagoVista.AI.Services.Tools
     {
         public WorkspacePatchBatch BuildBatch(
             WorkspaceWritePatchArgs args,
-            AgentToolExecutionContext context,
+            IAgentPipelineContext context,
             Func<string> idGenerator)
         {
             if (args == null) throw new ArgumentNullException(nameof(args));
@@ -39,7 +40,7 @@ namespace LagoVista.AI.Services.Tools
                 BatchId = idGenerator(),
                 BatchLabel = args.BatchLabel,
                 BatchKey = args.BatchKey,
-                SessionId = context?.SessionId,
+                SessionId = context?.Session.Id,
                 Files = new List<WorkspaceFilePatch>()
             };
 
@@ -69,7 +70,12 @@ namespace LagoVista.AI.Services.Tools
                         StartLine = change.StartLine,
                         EndLine = change.EndLine,
                         ExpectedOriginalLines = change.ExpectedOriginalLines?.ToList() ?? new List<string>(),
-                        NewLines = change.NewLines?.ToList() ?? new List<string>()
+                        NewLines = change.NewLines?.ToList() ?? new List<string>(),
+
+                        // Planned (future) context-based patching support
+                        MatchLines = change.MatchLines?.ToList() ?? new List<string>(),
+                        Occurrence = change.Occurrence,
+                        MatchMode = change.MatchMode
                     };
 
                     filePatch.Changes.Add(changeModel);
@@ -83,7 +89,7 @@ namespace LagoVista.AI.Services.Tools
 
         public WorkspaceWritePatchResponse BuildResponse(
             WorkspacePatchBatch batch,
-            AgentToolExecutionContext context)
+            IAgentPipelineContext context)
         {
             if (batch == null) throw new ArgumentNullException(nameof(batch));
 
@@ -95,7 +101,7 @@ namespace LagoVista.AI.Services.Tools
                 BatchId = batch.BatchId,
                 BatchKey = batch.BatchKey,
                 BatchLabel = batch.BatchLabel,
-                SessionId = batch.SessionId ?? context.SessionId,
+                SessionId = batch.SessionId ?? context.Session.Id,
                 Files = new List<WorkspaceWritePatchResponseFile>()
             };
 
@@ -123,7 +129,12 @@ namespace LagoVista.AI.Services.Tools
                         StartLine = change.StartLine,
                         EndLine = change.EndLine,
                         ExpectedOriginalLines = change.ExpectedOriginalLines?.ToList() ?? new List<string>(),
-                        NewLines = change.NewLines?.ToList() ?? new List<string>()
+                        NewLines = change.NewLines?.ToList() ?? new List<string>(),
+
+                        // Planned (future) context-based patching support
+                        MatchLines = change.MatchLines?.ToList() ?? new List<string>(),
+                        Occurrence = change.Occurrence,
+                        MatchMode = change.MatchMode
                     };
 
                     fileDto.Changes.Add(changeDto);
@@ -150,7 +161,6 @@ namespace LagoVista.AI.Services.Tools
         public string BatchKey { get; set; }
 
         public string SessionId { get; set; }
-
 
         public IList<WorkspaceFilePatch> Files { get; set; } = new List<WorkspaceFilePatch>();
     }
@@ -189,6 +199,13 @@ namespace LagoVista.AI.Services.Tools
         public IList<string> ExpectedOriginalLines { get; set; } = new List<string>();
 
         public IList<string> NewLines { get; set; } = new List<string>();
+
+        // Planned (future) context-based patching support
+        public IList<string> MatchLines { get; set; } = new List<string>();
+
+        public string Occurrence { get; set; }
+
+        public string MatchMode { get; set; }
     }
 
     #endregion
@@ -217,7 +234,6 @@ namespace LagoVista.AI.Services.Tools
         }
     }
 
-
     #endregion
 
     #region Response DTOs
@@ -242,7 +258,6 @@ namespace LagoVista.AI.Services.Tools
 
         public string SessionId { get; set; }
 
-     
         public List<WorkspaceWritePatchResponseFile> Files { get; set; } = new List<WorkspaceWritePatchResponseFile>();
     }
 
@@ -280,6 +295,13 @@ namespace LagoVista.AI.Services.Tools
         public List<string> ExpectedOriginalLines { get; set; } = new List<string>();
 
         public List<string> NewLines { get; set; } = new List<string>();
+
+        // Planned (future) context-based patching support
+        public List<string> MatchLines { get; set; } = new List<string>();
+
+        public string Occurrence { get; set; }
+
+        public string MatchMode { get; set; }
     }
 
     #endregion

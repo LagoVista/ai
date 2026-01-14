@@ -3,7 +3,6 @@ using LagoVista.AI.Models;
 using LagoVista.CloudStorage.Storage;
 using LagoVista.Core;
 using LagoVista.Core.Models;
-using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json;
 using System;
@@ -34,6 +33,23 @@ namespace LagoVista.AI.CloudRepos
         private static string BuildArchivePath(string orgId, string sessionId, int chapterIndex, string archiveId)
             => $"{orgId}/sessions/{sessionId}/archives/chapter-{chapterIndex:0000}/{archiveId}.json".ToLowerInvariant();
 
+        private static string GetOrgIdFromSession(AgentSession session)
+        {
+            var orgId = session?.OwnerOrganization?.Id;
+            if (string.IsNullOrWhiteSpace(orgId))
+                throw new InvalidOperationException("AgentSession.OwnerOrganization.Id is required to store chapter archives.");
+            return orgId;
+        }
+
+        private static string GetOrgIdFromBlobKey(string blobKey)
+        {
+            // blobKey format: {orgId}/sessions/{sessionId}/archives/...
+            if (string.IsNullOrWhiteSpace(blobKey)) return null;
+            var idx = blobKey.IndexOf('/');
+            if (idx <= 0) return null;
+            return blobKey.Substring(0, idx);
+        }
+
         private sealed class ArchivePayload
         {
             public string SessionId { get; set; }
@@ -50,7 +66,7 @@ namespace LagoVista.AI.CloudRepos
             Formatting = Formatting.None
         };
 
-        public async Task<AgentSessionArchive> SaveAsync(AgentSession session, IReadOnlyList<AgentSessionTurn> turns, string title, EntityHeader user, CancellationToken ct = default)
+        public async Task<AgentSessionArchive> SaveAsync(AgentSession session, IReadOnlyList<AgentSessionTurn> turns, string title, string summary, EntityHeader user, CancellationToken ct = default)
         {
             if (session == null) throw new ArgumentNullException(nameof(session));
             if (turns == null) throw new ArgumentNullException(nameof(turns));
@@ -60,6 +76,7 @@ namespace LagoVista.AI.CloudRepos
                 Id = Guid.NewGuid().ToId(),
                 ChapterIndex = session.CurrentChapterIndex,
                 Title = title,
+                Summary = summary,
                 CreationDate = DateTime.UtcNow.ToString("o"),
                 CreatedBy = user,
                 TurnCount = turns.Count,
@@ -87,14 +104,13 @@ namespace LagoVista.AI.CloudRepos
             var json = JsonConvert.SerializeObject(payload, _jsonSettings);
             archive.ContentSha256 = ComputeSha256Hex(json);
 
-            var container = GetContainerName(session.OwnerOrganization?.Id ?? session.OwnerOrganization.Id);
-            var blobKey = BuildArchivePath(session.OwnerOrganization?.Id ?? session.OwnerOrganization.Id, session.Id, session.CurrentChapterIndex, archive.Id);
+            var orgId = GetOrgIdFromSession(session);
+            var container = GetContainerName(orgId);
+            var blobKey = BuildArchivePath(orgId, session.Id, session.CurrentChapterIndex, archive.Id);
 
             var uriResult = await AddFileAsync(container, blobKey, json);
             if (!uriResult.Successful)
-            {
                 throw new Exception($"Failed to save archive blob: {uriResult.Errors?[0]?.Message}");
-            }
 
             archive.BlobKey = blobKey;
             archive.BlobUrl = uriResult.Result?.ToString();
@@ -109,20 +125,35 @@ namespace LagoVista.AI.CloudRepos
             if (archive == null) throw new ArgumentNullException(nameof(archive));
             if (string.IsNullOrWhiteSpace(archive.BlobKey)) throw new ArgumentNullException(nameof(archive.BlobKey));
 
-            // NOTE: We do not have orgId/sessionId here; BlobKey includes orgId in the path.
-            // Container name is not derivable from BlobKey alone, so v1 requires BlobUrl OR caller-provided orgId.
-            // For now, prefer BlobUrl usage in UI; server-side load can be added when needed.
-            throw new NotImplementedException("LoadAsync requires org/container context; implement when needed.");
+            var orgId = GetOrgIdFromBlobKey(archive.BlobKey);
+            if (string.IsNullOrWhiteSpace(orgId))
+                throw new InvalidOperationException("Unable to determine orgId from archive.BlobKey.");
+
+            var container = GetContainerName(orgId);
+            var bufferResult = await GetFileAsync(container, archive.BlobKey);
+            if (!bufferResult.Successful)
+                throw new Exception($"Failed to load archive blob: {bufferResult.Errors?[0]?.Message}");
+
+            var json = Encoding.UTF8.GetString(bufferResult.Result);
+            var sha = ComputeSha256Hex(json);
+            if (!string.IsNullOrWhiteSpace(archive.ContentSha256) && !string.Equals(archive.ContentSha256, sha, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException($"Archive content sha mismatch. Expected {archive.ContentSha256}, got {sha}.");
+
+            var payload = JsonConvert.DeserializeObject<ArchivePayload>(json);
+            if (payload?.Turns == null) return Array.Empty<AgentSessionTurn>();
+            return payload.Turns;
         }
 
         private static string ComputeSha256Hex(string text)
         {
-            using var sha = SHA256.Create();
-            var bytes = Encoding.UTF8.GetBytes(text ?? string.Empty);
-            var hash = sha.ComputeHash(bytes);
-            var sb = new StringBuilder(hash.Length * 2);
-            foreach (var b in hash) sb.Append(b.ToString("x2"));
-            return sb.ToString();
+            using (var sha = SHA256.Create())
+            {
+                var bytes = Encoding.UTF8.GetBytes(text ?? string.Empty);
+                var hash = sha.ComputeHash(bytes);
+                var sb = new StringBuilder(hash.Length * 2);
+                foreach (var b in hash) sb.Append(b.ToString("x2"));
+                return sb.ToString();
+            }
         }
     }
 }

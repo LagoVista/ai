@@ -1,6 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Castle.Core.Logging;
+using LagoVista.AI.Interfaces.Services;
 using LagoVista.AI.Models;
 using LagoVista.AI.Services.Tools;
 using LagoVista.Core.AI.Models;
@@ -20,7 +21,7 @@ namespace LagoVista.AI.Tests
         [Test]
         public void Name_Matches_ToolName_Constant()
         {
-            var tool = new WorkspaceCreateFileTool(_logger.Object);
+            var tool = new WorkspaceCreateFileTool(_logger.Object, new Mock<IContentHashService>().Object);
 
             Assert.That(tool.Name, Is.EqualTo(WorkspaceCreateFileTool.ToolName));
         }
@@ -67,7 +68,7 @@ namespace LagoVista.AI.Tests
         [Test]
         public async Task ExecuteAsync_Does_Not_Throw_And_Returns_Json_Result()
         {
-            var tool = new WorkspaceCreateFileTool(_logger.Object);
+            var tool = new WorkspaceCreateFileTool(_logger.Object, new  Mock<IContentHashService>().Object);
 
             var context = new AgentToolExecutionContext
             {
