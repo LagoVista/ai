@@ -212,7 +212,9 @@ namespace LagoVista.AI.Models
 
                 return ResponseTypes.NotReady;
             }
-        } 
+        }
+
+        public IEnumerable<RagContent> RagContent { get; private set; } = new List<RagContent>();
 
         private void RefreshEnvelope()
         {
@@ -232,6 +234,16 @@ namespace LagoVista.AI.Models
             this.Session = session;
             this.ThisTurn = turn;
             this.PreviousTurn = turn;
+        }
+
+        public void AddRagContent(IEnumerable<RagContent> content)
+        {
+            RagContent = content;;
+        }
+
+        public void ClearRagConent()
+        {
+            RagContent = new List<RagContent>();
         }
     }
 

@@ -20,12 +20,10 @@ namespace LagoVista.AI.Managers
     public class AgentSessionManager : ManagerBase, IAgentSessionManager
     {
         private readonly IAgentSessionRepo _repo;
-        private readonly IAgentSessionTurnArchiveStore _archiveStore;
         private readonly IAdminLogger _adminLogger;
 
         public AgentSessionManager(
             IAgentSessionRepo repo,
-            IAgentSessionTurnArchiveStore archiveStore,
             IAdminLogger logger,
             IAppConfig appConfig,
             IDependencyManager dependencyManager,
@@ -33,7 +31,6 @@ namespace LagoVista.AI.Managers
         {
             _adminLogger = logger ?? throw new ArgumentNullException(nameof(logger));
             _repo = repo ?? throw new ArgumentNullException(nameof(repo));
-            _archiveStore = archiveStore ?? throw new ArgumentNullException(nameof(archiveStore));
         }
 
         public async Task AddAgentSessionAsync(AgentSession session, EntityHeader org, EntityHeader user)
@@ -120,35 +117,6 @@ namespace LagoVista.AI.Managers
             await _repo.UpdateSessionAsyunc(session);
 
             return InvokeResult<AgentSessionSummary>.Create(session.CreateSummary());
-        }
-
-        /// <summary>
-        /// Chapter boundary operation:
-        /// - generate/store capsule JSON
-        /// - archive current turns out-of-band
-        /// - append archive pointer
-        /// - increment chapter index
-        /// - clear Turns
-        /// </summary>
-        public async Task<InvokeResult<AgentSessionArchive>> CheckpointAndResetAsync(AgentSession session, string chapterTitle, EntityHeader org, EntityHeader user)
-        {
-            if (session == null) return InvokeResult<AgentSessionArchive>.FromError("Session not found.");
-
-            session.Turns ??= new List<AgentSessionTurn>();
-            session.Archives ??= new List<AgentSessionArchive>();
-
-            // Archive turns.
-            var archive = await _archiveStore.SaveAsync(session, session.Turns, chapterTitle, session.CurrentCapsule.PreviousChapterSummary, user);
-            session.Archives.Add(archive);
-
-            // Advance chapter and clear heavy state.
-            session.CurrentChapterIndex++;
-            session.Turns = new List<AgentSessionTurn>();
-
-            session.LastUpdatedDate = DateTime.UtcNow.ToJSONString();
-            session.LastUpdatedBy = user;
-
-            return InvokeResult<AgentSessionArchive>.Create(archive);
         }
 
         private static string ExtractKfrValue(AgentSession session, string mode, KfrKind kind)

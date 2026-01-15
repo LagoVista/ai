@@ -31,6 +31,9 @@ namespace LagoVista.AI.Models
 
         [EnumLabel(AgentSessionTurn.AgentSessionTurnStatuses_RolledBackTurn, AIResources.Names.AgentSessionTurnStatuses_RolledBackTurn, typeof(AIResources))]
         RolledBackTurn,
+
+        [EnumLabel(AgentSessionTurn.AgentSessionTurnStatuses_ChapterEnd, AIResources.Names.AgentSessionTurnStatuses_ChapterEnd, typeof(AIResources))]
+        ChapterEnd,
     }
 
     public enum OperationKinds
@@ -71,23 +74,10 @@ namespace LagoVista.AI.Models
     /// </summary>
     public class ContextCapsule
     {
-        public string CapsuleVersion { get; set; } = "1";
 
         public int ChapterIndex { get; set; }
 
         public string ChapterTitle { get; set; }
-
-        public string Goal { get; set; }
-
-        public List<string> Decisions { get; set; } = new List<string>();
-
-        public List<string> Constraints { get; set; } = new List<string>();
-
-        public List<TouchedFile> TouchedFiles { get; set; } = new List<TouchedFile>();
-
-        public List<string> OpenQuestions { get; set; } = new List<string>();
-
-        public List<string> NextSteps { get; set; } = new List<string>();
 
         public string PreviousChapterSummary { get; set; }
     }
@@ -141,6 +131,14 @@ namespace LagoVista.AI.Models
         /// Current chapter index for the session.
         /// </summary>
         public int CurrentChapterIndex { get; set; } = 0;
+
+        public string ChapterTitle { get; set; }
+
+        /// <summary>
+        /// When we create a new chapter, we generate a seed value to help guide LLM responses
+        /// based on progress in the previous channel
+        /// </summary>
+        public string ChapterSeed { get; set; }
 
         /// <summary>
         /// Archive pointers for completed chapters.
@@ -290,6 +288,7 @@ namespace LagoVista.AI.Models
         public const string AgentSessionTurnStatuses_Failed = "failed";
         public const string AgentSessionTurnStatuses_Aborted = "aborted";
         public const string AgentSessionTurnStatuses_RolledBackTurn = "rolledbackturn";
+        public const string AgentSessionTurnStatuses_ChapterEnd = "chapaterEnd";
 
         public string Id { get; set; } = Guid.NewGuid().ToId();
 

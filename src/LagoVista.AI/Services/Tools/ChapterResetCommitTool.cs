@@ -1,10 +1,15 @@
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Managers;
+using LagoVista.AI.Interfaces.Repos;
 using LagoVista.AI.Models;
+using LagoVista.AI.Models.Resources;
+using LagoVista.Core;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json.Linq;
+using RingCentral;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -51,10 +56,13 @@ Rules
 
         private readonly IAgentSessionManager _sessionManager;
         private readonly IAdminLogger _logger;
+        private readonly IAgentSessionTurnArchiveStore _archiveStore;
+        
 
-        public ChapterResetCommitTool(IAgentSessionManager sessionManager, IAdminLogger logger)
+        public ChapterResetCommitTool(IAgentSessionManager sessionManager, IAgentSessionTurnArchiveStore archiveStore, IAdminLogger logger)
         {
             _sessionManager = sessionManager ?? throw new ArgumentNullException(nameof(sessionManager));
+            _archiveStore = archiveStore ?? throw new ArgumentNullException(nameof(archiveStore));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -102,22 +110,22 @@ Rules
                 if (tokenChapterIndex != context.Session.CurrentChapterIndex)
                     return InvokeResult<string>.FromError("prepare_token_chapter_mismatch");
 
-                //if (tokenTurnCount != currentTurnCount - 1)
-                //    return InvokeResult<string>.FromError($"prepare_token_stale_turn_count Expected: {tokenTurnCount}, Current: {currentTurnCount}");
 
-                //// Strict: last turn id must match too.
-                //if (!string.Equals(tokenLastTurnId, currentLastTurnId, StringComparison.OrdinalIgnoreCase))
-                //    return InvokeResult<string>.FromError("prepare_token_stale_last_turn");
+                // Archive turns.
+                var archive = await _archiveStore.SaveAsync(context.Session, context.Session.Turns, context.Session.ChapterTitle, 
+                    context.Session.CurrentCapsule.PreviousChapterSummary, context.Envelope.User);
+                context.Session.Archives.Add(archive);
 
-                // Title: minimal v1 uses a generic title.
-                var chapterTitle = $"Chapter {context.Session.CurrentChapterIndex}";
+                context.Session.Turns = new List<AgentSessionTurn>();
 
-                var resetResult = await _sessionManager.CheckpointAndResetAsync(context.Session, chapterTitle, context.Envelope.Org, context.Envelope.User);
-                if (!resetResult.Successful)
-                    return InvokeResult<string>.FromInvokeResult(resetResult.ToInvokeResult());
-
-                var archive = resetResult.Result;
-
+                context.Session.LastUpdatedDate = DateTime.UtcNow.ToJSONString();
+                context.Session.LastUpdatedBy = context.Envelope.User;
+                context.Session.CurrentChapterIndex = context.Session.CurrentChapterIndex + 1;
+                context.Session.ChapterTitle = $"{AIResources.AgentChapter_ChaterLabel} {context.Session.CurrentChapterIndex}";
+                context.Session.ChapterSeed = context.Session.CurrentCapsule.PreviousChapterSummary;
+           
+                context.ThisTurn.Status = Core.Models.EntityHeader<AgentSessionTurnStatuses>.Create(AgentSessionTurnStatuses.ChapterEnd);
+               
                 var envelope = new JObject
                 {
                     ["ok"] = true,

@@ -1,4 +1,4 @@
-﻿/*1/13/2026 5:34:06 PM*/
+﻿/*1/15/2026 5:39:28 AM*/
 using System.Globalization;
 using System.Reflection;
 
@@ -57,6 +57,9 @@ namespace LagoVista.AI.Models.Resources
         }*/
 		
 		public static string Agent_Context_Mode_Title { get { return GetResourceString("Agent_Context_Mode_Title"); } }
+//Resources:AIResources:AgentChapter_ChaterLabel
+
+		public static string AgentChapter_ChaterLabel { get { return GetResourceString("AgentChapter_ChaterLabel"); } }
 //Resources:AIResources:AgentContext_ActiveTools
 
 		public static string AgentContext_ActiveTools { get { return GetResourceString("AgentContext_ActiveTools"); } }
@@ -348,9 +351,19 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:AgentSessions_Title
 
 		public static string AgentSessions_Title { get { return GetResourceString("AgentSessions_Title"); } }
+//Resources:AIResources:AgentSessionTurnStatuses_ChapterEnd
+
+		public static string AgentSessionTurnStatuses_ChapterEnd { get { return GetResourceString("AgentSessionTurnStatuses_ChapterEnd"); } }
 //Resources:AIResources:AgentSessionTurnStatuses_RolledBackTurn
 
 		public static string AgentSessionTurnStatuses_RolledBackTurn { get { return GetResourceString("AgentSessionTurnStatuses_RolledBackTurn"); } }
+//Resources:AIResources:AgentSesssion_ChapterSeed_Initial
+
+
+		///<summary>
+		///summary to be injected at the first session
+		///</summary>
+		public static string AgentSesssion_ChapterSeed_Initial { get { return GetResourceString("AgentSesssion_ChapterSeed_Initial"); } }
 //Resources:AIResources:AgentToolBox_Description
 
 		public static string AgentToolBox_Description { get { return GetResourceString("AgentToolBox_Description"); } }
@@ -1186,6 +1199,7 @@ namespace LagoVista.AI.Models.Resources
 		public static class Names
 		{
 			public const string Agent_Context_Mode_Title = "Agent_Context_Mode_Title";
+			public const string AgentChapter_ChaterLabel = "AgentChapter_ChaterLabel";
 			public const string AgentContext_ActiveTools = "AgentContext_ActiveTools";
 			public const string AgentContext_ActiveTools_Help = "AgentContext_ActiveTools_Help";
 			public const string AgentContext_AvailableTools = "AgentContext_AvailableTools";
@@ -1283,7 +1297,9 @@ namespace LagoVista.AI.Models.Resources
 			public const string AgentSession_Help = "AgentSession_Help";
 			public const string AgentSession_Title = "AgentSession_Title";
 			public const string AgentSessions_Title = "AgentSessions_Title";
+			public const string AgentSessionTurnStatuses_ChapterEnd = "AgentSessionTurnStatuses_ChapterEnd";
 			public const string AgentSessionTurnStatuses_RolledBackTurn = "AgentSessionTurnStatuses_RolledBackTurn";
+			public const string AgentSesssion_ChapterSeed_Initial = "AgentSesssion_ChapterSeed_Initial";
 			public const string AgentToolBox_Description = "AgentToolBox_Description";
 			public const string AgentToolBox_Help = "AgentToolBox_Help";
 			public const string AgentToolBox_SummaryInstructions = "AgentToolBox_SummaryInstructions";

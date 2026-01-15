@@ -79,6 +79,8 @@ namespace LagoVista.AI.Tests.Helpers
 
             public bool IsTerminal => throw new NotImplementedException();
 
+            public IEnumerable<RagContent> RagContent => throw new NotImplementedException();
+
             public void LogStepErrorDetails(IAdminLogger logger, PipelineSteps step, string error, TimeSpan ts) { }
             public void LogStepErrorDetails(IAdminLogger logger, PipelineSteps step, InvokeResult error, TimeSpan ts) { }
             public void LogDetails(IAdminLogger logger, PipelineSteps step, TimeSpan? ts = null) { }
@@ -99,6 +101,16 @@ namespace LagoVista.AI.Tests.Helpers
             }
 
             public void AttachClientToolSession(AgentSession session, AgentSessionTurn thisTurn)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void AddRagContent(IEnumerable<RagContent> content)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void ClearRagConent()
             {
                 throw new NotImplementedException();
             }

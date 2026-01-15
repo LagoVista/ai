@@ -41,13 +41,13 @@ namespace LagoVista.AI.Helpers
                 return InvokeResult<AgentExecuteResponse>.FromError("Pipeline context is null.");
             }
 
-            if(ctx.ResponseType == ResponseTypes.NotReady)
+            if (ctx.ResponseType == ResponseTypes.NotReady)
             {
                 return InvokeResult<AgentExecuteResponse>.FromError("Response not ready.");
             }
 
             var validationResult = _validator.ValidatePreStep(ctx, PipelineSteps.ResponseBuilder);
-            if(!validationResult.Successful) 
+            if (!validationResult.Successful)
                 return InvokeResult<AgentExecuteResponse>.FromInvokeResult(validationResult);
 
             var mode = ctx.AgentContext.AgentModes.SingleOrDefault(md => md.Key == ctx.Session.Mode);
@@ -59,9 +59,14 @@ namespace LagoVista.AI.Helpers
             var response = new AgentExecuteResponse
             {
                 SessionId = ctx.Session.Id,
-                TurnId = ctx.ThisTurn.Id,
                 ModeDisplayName = mode.Name
             };
+
+            // Starting fresh!
+            if (ctx.ThisTurn.Status.Value != AgentSessionTurnStatuses.ChapterEnd)
+            {
+                response.TurnId = ctx.ThisTurn?.Id;
+            }
 
             switch(ctx.ResponseType)
             {

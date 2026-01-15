@@ -19,11 +19,12 @@ namespace LagoVista.AI.Services.Tools
     {
         private readonly IAdminLogger _logger;
         public const string ToolName = "agent_list_modes";
-        public const string ToolUsageMetadata = @"Use this tool to list available agent modes and their high-level descriptions.
-Call it when the user asks about modes, needs help choosing one, or before invoking the agent_change_mode tool.
-Return Display Name (Key) with description.";
+        public const string ToolUsageMetadata =
+@"Call agent_list_modes only if the user explicitly asks to see modes (e.g., “what modes are available?”) or if you are about to call agent_change_mode.
+Do not call agent_list_modes for persistence actions (e.g., “persist …”, “save …”, “store …”).
+If you already called agent_list_modes once in the last 2 turns, do not call it again unless the user explicitly asks.";
 
-        public const string ToolSummary = "used to list agent modes that the user can choose from to customzie agent behavior";
+        public const string ToolSummary = "used to list agent modes that the user can choose from to customize agent behavior";
         public AgentListModesTool(IAdminLogger logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -114,7 +115,7 @@ Return Display Name (Key) with description.";
 
         public static OpenAiToolDefinition GetSchema()
         {
-            return ToolSchema.Function(ToolName, "List the available agent modes and their high-level descriptions. " + "Use this to explain mode options to the user or decide which mode might be appropriate.", p =>
+            return ToolSchema.Function(ToolName, "List available agent modes for display to the user. Call only when the user explicitly asks what modes exist, or immediately before calling agent_change_mode.", p =>
             {
                 p.Boolean("includeExamples", "If true, include example user utterances for each mode when available. " + "If false or omitted, examples may be omitted.");
             });

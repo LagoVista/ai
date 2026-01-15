@@ -94,15 +94,11 @@ namespace LagoVista.AI.Services.Qdrant
                 return InvokeResult<IAgentPipelineContext>.Create(piplineContext);
             }
 
+            var results = await BuildContextBlockAsync(piplineContext.AgentContext, selected);
+            piplineContext.AddRagContent(results);
+
             await _agentStreamingContext.AddMilestoneAsync($"Found {selected.Count} chunks of information.");
           
-            // 5) Build the AGN-002 compliant context block
-            var contextBlock = await BuildContextBlockAsync(piplineContext.AgentContext, selected).ConfigureAwait(false);
-            if(!String.IsNullOrEmpty(contextBlock))
-            {
-                var ragRegister = piplineContext.PromptKnowledgeProvider.GetOrCreateRegister(AI.Models.KnowledgeKind.Rag, AI.Models.Context.ContextClassification.Consumable);
-                ragRegister.Add(contextBlock);
-            }
 
             return InvokeResult<IAgentPipelineContext>.Create(piplineContext);
         }
@@ -153,16 +149,10 @@ namespace LagoVista.AI.Services.Qdrant
         /// <summary>
         /// Builds the full AGN-002 [CONTEXT] block from the selected points.
         /// </summary>
-        private async Task<string> BuildContextBlockAsync(AgentContext agentContext, IReadOnlyList<QdrantScoredPoint> selected)
+        private async Task<List<RagContent>> BuildContextBlockAsync(AgentContext agentContext, IReadOnlyList<QdrantScoredPoint> selected)
         {
-            if (selected == null || selected.Count == 0)
-            {
-                return String.Empty;
-            }
 
-            var sb = new StringBuilder();
-            sb.AppendLine("[CONTEXT]");
-            sb.AppendLine();
+            var contentItems = new List<RagContent>();
 
             var chunkIndex = 1;
 
@@ -204,26 +194,24 @@ namespace LagoVista.AI.Services.Qdrant
                     continue;
                 }
 
-             //   var snippet = SliceLines(contentResult.Result, startLine, endLine);
-
-                // AGN-002 chunk block
-                sb.AppendLine("=== CHUNK " + chunkIndex + " ===");
-                sb.AppendLine("Id: " + (string.IsNullOrWhiteSpace(payload.Meta.SemanticId) ? hit.Id : payload.Meta.SemanticId));
-                sb.AppendLine($"Title: {payload.Meta.Title}");
-                sb.AppendLine($"ViewUrl: {payload.Extra.HumanContentUrl}");
-                sb.AppendLine(contentResult.Result);
-                sb.AppendLine("```");
-                sb.AppendLine();
+                contentItems.Add(new RagContent()
+                {
+                    PointId = hit.Id,
+                    FullContentUrl = payload.Extra.FullDocumentBlobUri,
+                    HumanContentUrl = payload.Extra.HumanContentUrl,
+                    ModelContent = contentResult.Result,
+                    RagContentIndex = chunkIndex++,
+                    ScemanticId = payload.Meta.SemanticId,
+                    Title = payload.Meta.Title
+                });
 
                 _adminLogger.Trace($"{this.Tag()} Added chunk for {payload.Meta.Title} {payload.Meta.Subtype}");
 
-                chunkIndex++;
             }
 
             await _agentStreamingContext.AddMilestoneAsync($"Added {chunkIndex} of those chunks.");
 
-
-            return sb.ToString();
+            return contentItems;
         }
 
         /// <summary>

@@ -27,16 +27,17 @@ namespace LagoVista.AI.Services
         public async Task<InvokeResult<IAgentPipelineContext>> PopulateAsync(IAgentPipelineContext ctx, bool changeMode)
         {
             var newChapter = ctx.Session.Turns.Count == 0 &&
-                 ctx.Session.CurrentChapterIndex > 0 &&
-                 ctx.Session.CurrentCapsule != null;
+                 ctx.Session.CurrentChapterIndex > 1;
 
             var apkResult = await _apkProvider.CreateAsync(ctx, newChapter || changeMode);
             if (!apkResult.Successful) return InvokeResult<IAgentPipelineContext>.FromInvokeResult(apkResult.ToInvokeResult());
 
+            _adminLogger.Trace($"{this.Tag()} populate, mode change {changeMode}, new chapter {newChapter}.");
+
             var apk = apkResult.Result;
 
-            //   ctx.PromptKnowledgeProvider.ClearSession();
-            //   ctx.PromptKnowledgeProvider.ClearConsumables();
+            ctx.PromptKnowledgeProvider.ClearSession();
+            ctx.PromptKnowledgeProvider.ClearConsumables();
             ctx.PromptKnowledgeProvider.ActiveTools.Clear();
 
             foreach (var key in apk.KindCatalog.Keys)
@@ -73,6 +74,28 @@ namespace LagoVista.AI.Services
                 }
             }
 
+
+            if (ctx.RagContent.Any())
+            {
+                var ragRegister = ctx.PromptKnowledgeProvider.GetOrCreateRegister(AI.Models.KnowledgeKind.Rag, AI.Models.Context.ContextClassification.Consumable);
+                var sb = new StringBuilder();
+                sb.AppendLine("<RAG_CONTEXT>");
+                sb.AppendLine("Rules:");
+                sb.AppendLine("1) Treat exhibits as retrieved reference text.");
+                sb.AppendLine("2) If the answer isn’t supported by exhibits, say so.");
+                sb.AppendLine("3) Cite exhibits like [R1], [R2] next to the relevant claims.");
+                sb.AppendLine();
+
+                foreach (var ragContent in ctx.RagContent)
+                    sb.AppendLine(ragContent.ToContentBlock());
+
+                sb.AppendLine("</RAG_CONTEXT>");
+            
+                ragRegister.Add(sb.ToString());
+
+                _adminLogger.Trace($"{this.Tag()} added {ctx.RagContent.Count()} rag items.");
+            }
+
             // ---------------------------------------------------------------------
             // NEW CHAPTER REHYDRATE (inject capsule after /chapter/reset)
             // Condition: no turns + archives exist + capsule exists
@@ -90,7 +113,6 @@ namespace LagoVista.AI.Services
                 capsuleBlock.AppendLine("ContextCapsuleJson:");
                 capsuleBlock.AppendLine($"Title: {ctx.Session.CurrentCapsule.ChapterTitle}");
                 capsuleBlock.AppendLine($"Idx: {ctx.Session.CurrentCapsule.ChapterIndex}");
-                capsuleBlock.AppendLine($"V: {ctx.Session.CurrentCapsule.CapsuleVersion}");
                 capsuleBlock.AppendLine();
 
                 var newChapterRegister = ctx.PromptKnowledgeProvider.GetOrCreateRegister(KnowledgeKind.NewChapterInitialPrompt, Models.Context.ContextClassification.Session);
@@ -118,6 +140,7 @@ namespace LagoVista.AI.Services
         
                 newChapterRegister.Add(previousChapterSummary.ToString());
 
+                _adminLogger.Trace($"{this.Tag()} added new chapter summary");
             }
 
             ctx.PromptKnowledgeProvider.ActiveTools.AddRange(apk.ActiveTools);

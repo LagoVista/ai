@@ -5,6 +5,8 @@ using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using System;
 using System.ComponentModel;
+using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
 
 namespace LagoVista.AI.Interfaces
 {
@@ -76,7 +78,12 @@ namespace LagoVista.AI.Interfaces
 
         bool IsTerminal { get;}
 
-        void SetTerminal(string reason);      
+        void SetTerminal(string reason);
+
+        IEnumerable<RagContent> RagContent { get; }
+
+        void AddRagContent(IEnumerable<RagContent> content);
+        void ClearRagConent();
     }
 }
 

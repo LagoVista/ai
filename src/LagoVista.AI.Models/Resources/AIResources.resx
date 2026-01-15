@@ -1249,4 +1249,14 @@
   <data name="AgentMode_Tla_RegEx_Validation" xml:space="preserve">
     <value>The TLA must be exactly 3 character A-Z and must always be upper case.</value>
   </data>
+  <data name="AgentSessionTurnStatuses_ChapterEnd" xml:space="preserve">
+    <value>Chapter End</value>
+  </data>
+  <data name="AgentChapter_ChaterLabel" xml:space="preserve">
+    <value>Chapter</value>
+  </data>
+  <data name="AgentSesssion_ChapterSeed_Initial" xml:space="preserve">
+    <value>New Session</value>
+    <comment>summary to be injected at the first session</comment>
+  </data>
 </root>

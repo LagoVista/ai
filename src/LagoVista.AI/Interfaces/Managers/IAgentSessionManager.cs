@@ -42,7 +42,6 @@ namespace LagoVista.AI.Interfaces.Managers
 
 
         Task<InvokeResult> UpdateSessionAsync(AgentSession session, EntityHeader org, EntityHeader user);
-        Task<InvokeResult<AgentSessionArchive>> CheckpointAndResetAsync(AgentSession session, string chapterTitle, EntityHeader org, EntityHeader user);
-
+   
     }
 }

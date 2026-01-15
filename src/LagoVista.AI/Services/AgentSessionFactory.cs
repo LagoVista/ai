@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Services;
 using LagoVista.AI.Models;
+using LagoVista.AI.Models.Resources;
 using LagoVista.Core;
 using LagoVista.Core.AI.Models;
 using LagoVista.Core.Models;
@@ -44,6 +45,9 @@ namespace LagoVista.AI.Services
                 AgentMode = ctx. Mode.ToEntityHeader(),
                 Role = ctx.Role.ToEntityHeader(),
                 Name = generatedName,
+                CurrentChapterIndex = 1,
+                ChapterTitle = $"{AIResources.AgentChapter_ChaterLabel} 1",
+                ChapterSeed = AIResources.AgentSesssion_ChapterSeed_Initial
             };
 
             session.Key = session.Id.ToLower();
@@ -66,7 +70,6 @@ namespace LagoVista.AI.Services
                 InstructionSummary = BuildInstructionSummary(ctx.Envelope.Instructions),
                 SessionId = session.Id,
                 Mode = session.Mode
-
             };
 
             return turn;

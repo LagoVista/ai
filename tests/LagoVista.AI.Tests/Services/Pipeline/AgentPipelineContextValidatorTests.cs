@@ -49,6 +49,8 @@ namespace LagoVista.AI.Tests.Services.Pipeline
 
             public bool IsTerminal => throw new NotImplementedException();
 
+            public IEnumerable<RagContent> RagContent => throw new NotImplementedException();
+
             public AgentToolExecutionContext ToToolContext() => new AgentToolExecutionContext();
 
             public void AttachAgentContext(AgentContext context, AgentContextRole role, AgentMode mode)
@@ -90,6 +92,16 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             }
 
             public void AttachClientToolSession(AgentSession session, AgentSessionTurn thisTurn)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void AddRagContent(IEnumerable<RagContent> content)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void ClearRagConent()
             {
                 throw new NotImplementedException();
             }

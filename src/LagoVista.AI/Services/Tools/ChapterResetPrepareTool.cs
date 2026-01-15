@@ -1,6 +1,7 @@
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Managers;
 using LagoVista.AI.Models;
+using LagoVista.AI.Models.Resources;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json;
@@ -88,7 +89,7 @@ Rules
             return Task.FromResult(InvokeResult<string>.FromError("not_supported"));
         }
 
-        public async Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context)
+        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context)
         {
             const string baseTag = "[ChapterResetPrepareTool]";
 
@@ -98,7 +99,7 @@ Rules
                 var summary = payload.Value<string>("summary")?.Trim();
 
                 if (string.IsNullOrWhiteSpace(summary))
-                    return InvokeResult<string>.FromError("summary is required");
+                    return  Task.FromResult(InvokeResult<string>.FromError("summary is required"));
 
                 var turnCount = context.Session.Turns?.Count ?? 0;
                 var lastTurnId = context.Session.Turns?.LastOrDefault()?.Id;
@@ -108,7 +109,7 @@ Rules
                 var capsule = new ContextCapsule
                 {
                     ChapterIndex = context.Session.CurrentChapterIndex,
-                    ChapterTitle = $"Chapter {context.Session.CurrentChapterIndex}",
+                    ChapterTitle = $"{AIResources.AgentChapter_ChaterLabel} {context.Session.CurrentChapterIndex}",
                     PreviousChapterSummary = summary,
                 };
 
@@ -125,15 +126,16 @@ Rules
                     ["capsuleJson"] = JsonConvert.SerializeObject( context.Session.CurrentCapsule),
                     ["currentChapterIndex"] = context.Session.CurrentChapterIndex,
                     ["turnCount"] = turnCount,
+                    ["summary"] = summary,
                     ["lastTurnId"] = lastTurnId,
                 };
 
-                return InvokeResult<string>.Create(envelope.ToString(Formatting.None));
+                return Task.FromResult(InvokeResult<string>.Create(envelope.ToString(Formatting.None)));
             }
             catch (Exception ex)
             {
                 _logger.AddException(baseTag, ex);
-                return InvokeResult<string>.FromException(baseTag, ex);
+                return Task.FromResult(InvokeResult<string>.FromException(baseTag, ex));
             }
         }
     }
