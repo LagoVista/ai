@@ -26,8 +26,7 @@ namespace LagoVista.AI.Services
 
         public async Task<InvokeResult<IAgentPipelineContext>> PopulateAsync(IAgentPipelineContext ctx, bool changeMode)
         {
-            var newChapter = ctx.Session.Turns.Count == 0 &&
-                 ctx.Session.CurrentChapterIndex > 1;
+            var newChapter = ctx.ThisTurn.Type.Value == AgentSessionTurnType.ChapterStart;
 
             var apkResult = await _apkProvider.CreateAsync(ctx, newChapter || changeMode);
             if (!apkResult.Successful) return InvokeResult<IAgentPipelineContext>.FromInvokeResult(apkResult.ToInvokeResult());
@@ -146,8 +145,9 @@ namespace LagoVista.AI.Services
             ctx.PromptKnowledgeProvider.ActiveTools.AddRange(apk.ActiveTools);
 
             var modeBlock =
-$@"## CURRENT MODE 
+$@"## CURRENT Status 
 - Mode Key (authoritative): {ctx.Mode.Key}
+- Chapter: {ctx.Session.ChapterTitle}
 - Display Name (non-authoritative): {ctx.Mode.Name}
 - MUST NEVER call the agent_change_mode tool with the parameter [{ctx.Mode.Key}] as we are already in that mode.
 - The assistant MUST NOT call agent_change_mode inside any multi/parallel tool wrapper. Mode changes must be a single direct call only when required

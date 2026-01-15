@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Services;
 using LagoVista.AI.Models;
+using LagoVista.AI.Services.Tools;
 using LagoVista.Core;
-using LagoVista.Core.AI.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
-using RingCentral;
 
 namespace LagoVista.AI.Services
 {
@@ -23,13 +21,20 @@ namespace LagoVista.AI.Services
     {
         private readonly IAgentToolFactory _toolFactory;
         private readonly IAdminLogger _logger;
-        private readonly IAgentToolRegistry _toolRegistry;
+        private readonly IAgentStreamingContext _agentStreamingContext;
 
-        public AgentToolExecutor(IAgentToolFactory agentToolFactory, IAgentToolRegistry agentToolRegistry, IAdminLogger logger)
+        private class DuplicateToolCallResult
+        {
+            public bool Success { get; } = true;
+            public bool CanRetry { get; } = false;
+            public string Reason { get; set; } 
+        }
+
+        public AgentToolExecutor(IAgentToolFactory agentToolFactory, IAgentStreamingContext agentStreamingContext, IAdminLogger logger)
         {
             _toolFactory = agentToolFactory ?? throw new ArgumentNullException(nameof(agentToolFactory));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _toolRegistry = agentToolRegistry ?? throw new ArgumentNullException(nameof(agentToolRegistry));
+            _agentStreamingContext = agentStreamingContext ?? throw new ArgumentNullException(nameof(agentStreamingContext));
         }
 
         public async Task<InvokeResult<AgentToolCallResult>> ExecuteServerToolAsync(AgentToolCall call, IAgentPipelineContext context)
@@ -47,13 +52,11 @@ namespace LagoVista.AI.Services
                 return InvokeResult<AgentToolCallResult>.FromError($"[AgentToolExecutor_ExecuteServerToolAsync__EmptyName] {errorMessage}");
             }
 
-            _logger.Trace($"{this.Tag()} Tool '{call.Name}' Was Called, Starting Execution");
-            _logger.Trace($"[JSON.ToolCallArgs]={call.ArgumentsJson}");
-           
+
             var toolResult = _toolFactory.GetTool(call.Name);
             if (!toolResult.Successful)
             {
-                var errorMessage = toolResult.ErrorMessage ?? "Failed to resolve server tool.";                
+                var errorMessage = toolResult.ErrorMessage ?? "Failed to resolve server tool.";
                 _logger.AddError(this.Tag(),
                     $"Tool '{call.Name}' resolve failed: {errorMessage}");
 
@@ -69,6 +72,34 @@ namespace LagoVista.AI.Services
                 return InvokeResult<AgentToolCallResult>.FromError($"{this.Tag()} {errorMessage}");
             }
 
+
+            await _agentStreamingContext.AddWorkflowAsync("calling tool " + call.Name + "...", context.CancellationToken);
+            _logger.Trace($"{this.Tag()} Tool '{call.Name}' Was Called, Starting Execution");
+            _logger.Trace($"[JSON.ToolCallArgs]={call.ArgumentsJson}");
+
+            if(call.Name != ActivateToolsTool.ToolName && tool.IsToolFullyExecutedOnServer)
+            {
+                var callCount = context.GetToolCallCount(call.Name);
+                if(callCount > 0)
+                {
+
+                    var dupResult = new DuplicateToolCallResult()
+                    {
+                        Reason = $"tool '{call.Name}' was already called {callCount} time(s) in this the last few turns. To prevent infinite loops, the tool will not be executed again."
+                    };
+
+                    var toolCallResult = new AgentToolCallResult()
+                    {
+                        RequiresClientExecution = !tool.IsToolFullyExecutedOnServer,
+                        Name = call.Name,
+                        ExecutionMs = 0,
+                        ToolCallId = call.ToolCallId,
+                    };
+                    var result = InvokeResult<AgentToolCallResult>.Create(toolCallResult);
+                    result.AddWarning($"The tool {call.Name} was previously called {callCount} time(s).  Please use previous resuts and to not call again until arguments change.");
+                }
+            }              
+            
             try
             {
                 call.RequiresClientExecution = !tool.IsToolFullyExecutedOnServer;

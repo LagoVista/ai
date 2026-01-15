@@ -105,6 +105,21 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             {
                 throw new NotImplementedException();
             }
+
+            public int GetToolCallCount(string toolName)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void AddToolCall(string toolName)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void AttachNewChapterTurn(AgentSessionTurn newChapterTurn)
+            {
+                throw new NotImplementedException();
+            }
         }
 
         private static Envelope NewEnvelope(string agentContextId = null, string conversationContextId = null, string sessionId = null, string turnId = null, bool stream = false, IEnumerable<ToolResultSubmission> toolResults = null)
@@ -159,7 +174,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
         {
             var sut = new AgentPipelineContextValidator();
 
-            // Create an envelope with empty Instructions and no artifacts/clipboard.
+            // Create an envelope with empty OriginalInstructions and no artifacts/clipboard.
             var org = EntityHeader.Create("org_1", "Org");
             var user = EntityHeader.Create("user_1", "User");
             var env = new Envelope(null, null, null, null, null, null, instructions: null, stream: false, toolResults: null, clipboardImages: null, inputArtifacts: null, ragScope: new RagScope(), org: org, user: user);

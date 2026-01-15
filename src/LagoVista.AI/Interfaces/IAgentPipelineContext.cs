@@ -68,6 +68,7 @@ namespace LagoVista.AI.Interfaces
         void AttachAgentContext(AgentContext context, AgentContextRole conversationContext, AgentMode mode);
         void AttachSession(AgentSession session, AgentSessionTurn thisTurn);
         void AttachClientToolSession(AgentSession session, AgentSessionTurn thisTurn);
+        void AttachNewChapterTurn(AgentSessionTurn newChapterTurn);
         void AttachSession(AgentSession session, AgentSessionTurn previousSessoin, AgentSessionTurn thisTurn);
         void AttachToolManifest(ToolCallManifest toolManifest);
 
@@ -84,6 +85,10 @@ namespace LagoVista.AI.Interfaces
 
         void AddRagContent(IEnumerable<RagContent> content);
         void ClearRagConent();
+
+        int GetToolCallCount(string toolName);
+
+        void AddToolCall(string toolName);
     }
 }
 

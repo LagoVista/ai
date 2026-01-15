@@ -158,19 +158,16 @@ namespace LagoVista.AI.Services.Pipeline
 
         private static void ValidateCore_TypeBasedEnvelopeRules(IAgentPipelineContext ctx, PipelineSteps step, bool postStep, InvokeResult result)
         {
-            var hasInstructions = !String.IsNullOrWhiteSpace(ctx.Envelope?.Instructions);
+            var hasInstructions = !String.IsNullOrWhiteSpace(ctx.Envelope?.OriginalInstructions);
             var hasArtifacts = (ctx.Envelope?.InputArtifacts?.Count ?? 0) > 0;
             var hasClipboard = (ctx.Envelope?.ClipBoardImages?.Count ?? 0) > 0;
-
-            if (ctx.Type == AgentPipelineContextTypes.Initial || ctx.Type == AgentPipelineContextTypes.FollowOn)
-            {
-                if (!hasInstructions && !hasArtifacts && !hasClipboard)
-                    result.Errors.Add(new ErrorMessage("At least one of Instructions, InputArtifacts, or ClipBoardImages must be provided."));
-            }
 
             switch (ctx.Type)
             {
                 case AgentPipelineContextTypes.Initial:
+                    if (!hasInstructions && !hasArtifacts && !hasClipboard)
+                        result.Errors.Add(new ErrorMessage("At least one of Instructions, InputArtifacts, or ClipBoardImages must be provided."));
+
                     if (!String.IsNullOrEmpty(ctx.Envelope?.RoleId) && String.IsNullOrEmpty(ctx.Envelope?.AgentContextId))
                         result.Errors.Add(new ErrorMessage("RoleId must be empty when AgentContextId is not provided."));
 
@@ -252,7 +249,7 @@ namespace LagoVista.AI.Services.Pipeline
             if (ctx.Session != null && String.IsNullOrWhiteSpace(ctx.Session.Mode))
                 result.Errors.Add(new ErrorMessage("SessionRestorer POST: Session.Mode must have a value."));
 
-            if (ctx.ThisTurn != null && String.Equals(ctx.ThisTurn.Id, ctx.Envelope?.PreviousTurnId, StringComparison.Ordinal))
+            if (ctx.ThisTurn.Type.Value != AgentSessionTurnType.ChapterStart && ctx.ThisTurn != null && String.Equals(ctx.ThisTurn.Id, ctx.Envelope?.PreviousTurnId, StringComparison.Ordinal))
                 result.Errors.Add(new ErrorMessage("SessionRestorer POST: ThisTurn.Id must NOT equal Envelope.PreviousTurnId."));
 
             return result;

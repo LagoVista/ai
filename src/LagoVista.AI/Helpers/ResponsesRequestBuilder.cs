@@ -55,9 +55,9 @@ namespace LagoVista.AI.Helpers
             var userMessage = new ResponsesInputMessage("user");
 
             var isContinuation = !string.IsNullOrWhiteSpace(ctx.ThisTurn.PreviousOpenAIResponseId);
+            var newChapter = ctx.ThisTurn.Type.Value == AgentSessionTurnType.ChapterStart;
 
-           // if (isContinuation && !ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCallResults.Any())
-            if(isContinuation || ctx.ThisTurn.Iterations.Any())
+            if(!newChapter && (isContinuation || ctx.ThisTurn.Iterations.Any()))
             {
                 var lastIteration = ctx.ThisTurn.Iterations.LastOrDefault();
                 var previousResponseId = lastIteration == null ? ctx.ThisTurn.PreviousOpenAIResponseId : lastIteration.OpenAiResponseId;
@@ -67,11 +67,15 @@ namespace LagoVista.AI.Helpers
 
                 dto.PreviousResponseId = previousResponseId;
 
-                _adminLogger.Trace($"[Builder_Response_Chain] Previous Response Id {previousResponseId}.");
+                _adminLogger.Trace($"{this.Tag()} Previous Response Id {previousResponseId}.");
+            }
+            else if(newChapter)
+            {
+                _adminLogger.Trace($"{this.Tag()} New Chapter - No Previous Response Id.");
             }
             else
             {
-                _adminLogger.Trace($"[Builder_Response_Chain] No Previous Respons Id");
+                _adminLogger.Trace($"{this.Tag()} No Previous Respons Id");
             }
 
             // Ensure NewChapterInitialPrompt (rehydrate capsule) is injected early in system content.
@@ -105,11 +109,11 @@ namespace LagoVista.AI.Helpers
                 }
             }
 
-            if (!String.IsNullOrEmpty(ctx.Envelope.Instructions))
+            if (!String.IsNullOrEmpty(ctx.Envelope.OriginalInstructions))
             {
                 userMessage.Content.Add(new ResponsesMessageContent
                 {
-                    Text = ctx.Envelope.Instructions
+                    Text = ctx.Envelope.OriginalInstructions
                 });
             }
             // ---------------------------------------------------------------------

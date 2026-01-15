@@ -59,14 +59,9 @@ namespace LagoVista.AI.Helpers
             var response = new AgentExecuteResponse
             {
                 SessionId = ctx.Session.Id,
+                TurnId = ctx.ThisTurn.Id,
                 ModeDisplayName = mode.Name
             };
-
-            // Starting fresh!
-            if (ctx.ThisTurn.Status.Value != AgentSessionTurnStatuses.ChapterEnd)
-            {
-                response.TurnId = ctx.ThisTurn?.Id;
-            }
 
             switch(ctx.ResponseType)
             {

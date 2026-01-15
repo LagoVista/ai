@@ -114,6 +114,21 @@ namespace LagoVista.AI.Tests.Helpers
             {
                 throw new NotImplementedException();
             }
+
+            public int GetToolCallCount(string toolName)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void AddToolCall(string toolName)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void AttachNewChapterTurn(AgentSessionTurn newChapterTurn)
+            {
+                throw new NotImplementedException();
+            }
         }
 
         private static AgentContext CreateAgentContextWithMode(string modeKey, string displayName)

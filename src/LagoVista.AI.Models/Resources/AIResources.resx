@@ -1259,4 +1259,16 @@
     <value>New Session</value>
     <comment>summary to be injected at the first session</comment>
   </data>
+  <data name="AgentSessionTurnTypes_Initial" xml:space="preserve">
+    <value>Initial</value>
+  </data>
+  <data name="AgentSessionTurnTypes_ChapterStart" xml:space="preserve">
+    <value>Chapter Start</value>
+  </data>
+  <data name="AgentSessionTurnTypes_Normal" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="AgentSessionTurnTypes_ChapterEnd" xml:space="preserve">
+    <value>Chapter End</value>
+  </data>
 </root>

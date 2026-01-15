@@ -17,7 +17,7 @@ namespace LagoVista.AI.Interfaces.Services
         /// Non-generic convenience overload for simple string scenarios.
         /// Conceptually equivalent to ExecuteAsync&lt;string&gt;.
         /// </summary>
-        /// <param name="systemPrompt">Instructions describing how the model should behave.</param>
+        /// <param name="systemPrompt">OriginalInstructions describing how the model should behave.</param>
         /// <param name="inputText">Single text payload to operate on.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>InvokeResult containing the resulting string on success, or errors on failure.</returns>
@@ -31,7 +31,7 @@ namespace LagoVista.AI.Interfaces.Services
         /// Conceptually equivalent to ExecuteAsync&lt;string&gt;.
         /// </summary>
         /// <param name="openAiSettings">Settings for OpenAI.</param>
-        /// <param name="systemPrompt">Instructions describing how the model should behave.</param>
+        /// <param name="systemPrompt">OriginalInstructions describing how the model should behave.</param>
         /// <param name="inputText">Single text payload to operate on.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>InvokeResult containing the resulting string on success, or errors on failure.</returns>
@@ -45,7 +45,7 @@ namespace LagoVista.AI.Interfaces.Services
         /// Execute a typed LLM operation with explicit model and optional correlation/operation metadata.
         /// </summary>
         /// <typeparam name="TResult">The result type that defines the expected output shape.</typeparam>
-        /// <param name="systemPrompt">Instructions describing how the model should behave.</param>
+        /// <param name="systemPrompt">OriginalInstructions describing how the model should behave.</param>
         /// <param name="inputText">Single text payload to operate on.</param>
         /// <param name="model">Optional model identifier; if null/empty, a default model is used.</param>
         /// <param name="operationName">Optional logical operation name for diagnostics.</param>

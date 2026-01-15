@@ -77,6 +77,9 @@ Provide a short reason. Set branch=true when starting a separate session.
 
             [JsonProperty("reason")]
             public string Reason { get; set; }
+
+            [JsonProperty("changed")]
+            public bool Changed { get; set; }
         }
 
 
@@ -119,11 +122,12 @@ Provide a short reason. Set branch=true when starting a separate session.
                 {
                     var noOpResult = new ModeChangeResult
                     {
-                        Success = false,
+                        Success = true,
                         Mode = args.Mode,
                         CanRetry = false,
                         Branch = args.Branch.Value,
                         Reason = args.Reason,
+                        Changed = false,
                         Results = $"Rejected: agent_change_mode called with mode={args.Mode} but current mode is already {ctx.Session.Mode}. DO NOT RETRY. CONTINUE WIHTOUT CALLING agent_change_mode."
                     };
                     var noOpJson = JsonConvert.SerializeObject(noOpResult);
@@ -168,7 +172,8 @@ Provide a short reason. Set branch=true when starting a separate session.
                     Mode = args.Mode,
                     Branch = args.Branch.Value,
                     Reason = args.Reason,
-                    Results = $"Mode changed to {args.Mode} successfully.",
+                    Changed = true,
+                    Results = $"mode changed from {previousMode} to {args.Mode} successfully.",
                 };
 
                 _logger.Trace($"[ModeChangeTool_ExecuteAsync] - Changed mode via tool from {previousMode} to {args.Mode}"); 

@@ -33,19 +33,26 @@ namespace LagoVista.AI.Services.Pipeline
             // throws record not found exception if session is not available.
             var session = await _sessionManager.GetAgentSessionAsync(ctx.Envelope.SessionId, ctx.Envelope.Org, ctx.Envelope.User);
 
-            var previousTurn = session.Turns.FirstOrDefault(t => t.Id == ctx.Envelope.PreviousTurnId);
-            if (previousTurn == null)
-                return InvokeResult<IAgentPipelineContext>.FromError("Turn Id not found in Previous Turns", "AGENT_SESSION_RESTORE_NO_PREVIOUS_TURN");
-         
-            var turn = _sessionFactory.CreateTurnForExistingSession(ctx, session);
-            if(String.IsNullOrEmpty(previousTurn.OpenAIResponseId))
-                return InvokeResult<IAgentPipelineContext>.FromError("Previous Turn MUST have OpenAIResponseId but is missing", "AGENT_SESSION_RESTORE_NO_PREVIOUS_RESPONSE_ID");
+            if (session.Turns.Count == 1 && session.Turns[0].Type.Value == AgentSessionTurnType.ChapterStart)
+            {
+                ctx.AttachSession(session, session.Turns[0]);
+            }
+            else
+            {
+                var previousTurn = session.Turns.FirstOrDefault(t => t.Id == ctx.Envelope.PreviousTurnId);
+                if (previousTurn == null)
+                    return InvokeResult<IAgentPipelineContext>.FromError("Turn Id not found in Previous Turns", "AGENT_SESSION_RESTORE_NO_PREVIOUS_TURN");
 
-            turn.PreviousOpenAIResponseId = previousTurn.OpenAIResponseId;
+                var turn = _sessionFactory.CreateTurnForExistingSession(ctx, session);
+                if (String.IsNullOrEmpty(previousTurn.OpenAIResponseId))
+                    return InvokeResult<IAgentPipelineContext>.FromError("Previous Turn MUST have OpenAIResponseId but is missing", "AGENT_SESSION_RESTORE_NO_PREVIOUS_RESPONSE_ID");
 
-            session.Turns.Add(turn);
+                turn.PreviousOpenAIResponseId = previousTurn.OpenAIResponseId;
 
-            ctx.AttachSession(session, previousTurn, turn);
+                session.Turns.Add(turn);
+
+                ctx.AttachSession(session, previousTurn, turn);
+            }
 
             return InvokeResult<IAgentPipelineContext>.Create(ctx);
         }

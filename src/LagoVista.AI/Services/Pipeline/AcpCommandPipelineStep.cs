@@ -34,7 +34,7 @@ namespace LagoVista.AI.Services.Pipeline
         {
             if (ctx == null) throw new ArgumentNullException(nameof(ctx));
 
-            var inputText = ctx.Envelope?.Instructions;
+            var inputText = ctx.Envelope?.OriginalInstructions;
 
             if (String.IsNullOrWhiteSpace(inputText))
                 return InvokeResult<IAgentPipelineContext>.Create(ctx);

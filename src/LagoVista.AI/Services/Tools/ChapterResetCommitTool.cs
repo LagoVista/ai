@@ -4,6 +4,7 @@ using LagoVista.AI.Interfaces.Repos;
 using LagoVista.AI.Models;
 using LagoVista.AI.Models.Resources;
 using LagoVista.Core;
+using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json.Linq;
@@ -57,13 +58,15 @@ Rules
         private readonly IAgentSessionManager _sessionManager;
         private readonly IAdminLogger _logger;
         private readonly IAgentSessionTurnArchiveStore _archiveStore;
-        
+        private readonly IAgentSessionFactory _sessionFactory;        
 
-        public ChapterResetCommitTool(IAgentSessionManager sessionManager, IAgentSessionTurnArchiveStore archiveStore, IAdminLogger logger)
+
+        public ChapterResetCommitTool(IAgentSessionManager sessionManager, IAgentSessionFactory factory, IAgentSessionTurnArchiveStore archiveStore, IAdminLogger logger)
         {
             _sessionManager = sessionManager ?? throw new ArgumentNullException(nameof(sessionManager));
             _archiveStore = archiveStore ?? throw new ArgumentNullException(nameof(archiveStore));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _sessionFactory = factory ?? throw new ArgumentNullException(nameof(factory));
         }
 
         public static OpenAiToolDefinition GetSchema()
@@ -86,7 +89,6 @@ Rules
 
             try
             {
-
                 var payload = JObject.Parse(argumentsJson ?? "{}");
                 var prepareToken = payload.Value<string>("prepareToken")?.Trim();
                 if (string.IsNullOrWhiteSpace(prepareToken)) return InvokeResult<string>.FromError("prepareToken is required");
@@ -110,7 +112,6 @@ Rules
                 if (tokenChapterIndex != context.Session.CurrentChapterIndex)
                     return InvokeResult<string>.FromError("prepare_token_chapter_mismatch");
 
-
                 // Archive turns.
                 var archive = await _archiveStore.SaveAsync(context.Session, context.Session.Turns, context.Session.ChapterTitle, 
                     context.Session.CurrentCapsule.PreviousChapterSummary, context.Envelope.User);
@@ -123,9 +124,8 @@ Rules
                 context.Session.CurrentChapterIndex = context.Session.CurrentChapterIndex + 1;
                 context.Session.ChapterTitle = $"{AIResources.AgentChapter_ChaterLabel} {context.Session.CurrentChapterIndex}";
                 context.Session.ChapterSeed = context.Session.CurrentCapsule.PreviousChapterSummary;
-           
-                context.ThisTurn.Status = Core.Models.EntityHeader<AgentSessionTurnStatuses>.Create(AgentSessionTurnStatuses.ChapterEnd);
-               
+                context.ThisTurn.Type = EntityHeader<AgentSessionTurnType>.Create(AgentSessionTurnType.ChapterEnd);
+
                 var envelope = new JObject
                 {
                     ["ok"] = true,

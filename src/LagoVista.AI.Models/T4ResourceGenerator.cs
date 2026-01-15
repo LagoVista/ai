@@ -1,4 +1,4 @@
-﻿/*1/15/2026 5:39:28 AM*/
+﻿/*1/15/2026 11:08:57 AM*/
 using System.Globalization;
 using System.Reflection;
 
@@ -357,6 +357,18 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:AgentSessionTurnStatuses_RolledBackTurn
 
 		public static string AgentSessionTurnStatuses_RolledBackTurn { get { return GetResourceString("AgentSessionTurnStatuses_RolledBackTurn"); } }
+//Resources:AIResources:AgentSessionTurnTypes_ChapterEnd
+
+		public static string AgentSessionTurnTypes_ChapterEnd { get { return GetResourceString("AgentSessionTurnTypes_ChapterEnd"); } }
+//Resources:AIResources:AgentSessionTurnTypes_ChapterStart
+
+		public static string AgentSessionTurnTypes_ChapterStart { get { return GetResourceString("AgentSessionTurnTypes_ChapterStart"); } }
+//Resources:AIResources:AgentSessionTurnTypes_Initial
+
+		public static string AgentSessionTurnTypes_Initial { get { return GetResourceString("AgentSessionTurnTypes_Initial"); } }
+//Resources:AIResources:AgentSessionTurnTypes_Normal
+
+		public static string AgentSessionTurnTypes_Normal { get { return GetResourceString("AgentSessionTurnTypes_Normal"); } }
 //Resources:AIResources:AgentSesssion_ChapterSeed_Initial
 
 
@@ -1299,6 +1311,10 @@ namespace LagoVista.AI.Models.Resources
 			public const string AgentSessions_Title = "AgentSessions_Title";
 			public const string AgentSessionTurnStatuses_ChapterEnd = "AgentSessionTurnStatuses_ChapterEnd";
 			public const string AgentSessionTurnStatuses_RolledBackTurn = "AgentSessionTurnStatuses_RolledBackTurn";
+			public const string AgentSessionTurnTypes_ChapterEnd = "AgentSessionTurnTypes_ChapterEnd";
+			public const string AgentSessionTurnTypes_ChapterStart = "AgentSessionTurnTypes_ChapterStart";
+			public const string AgentSessionTurnTypes_Initial = "AgentSessionTurnTypes_Initial";
+			public const string AgentSessionTurnTypes_Normal = "AgentSessionTurnTypes_Normal";
 			public const string AgentSesssion_ChapterSeed_Initial = "AgentSesssion_ChapterSeed_Initial";
 			public const string AgentToolBox_Description = "AgentToolBox_Description";
 			public const string AgentToolBox_Help = "AgentToolBox_Help";

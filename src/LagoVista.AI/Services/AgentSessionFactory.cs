@@ -27,7 +27,7 @@ namespace LagoVista.AI.Services
 
             var now = DateTime.UtcNow.ToJSONString();
 
-            var potentialName = String.IsNullOrEmpty(ctx.Envelope.Instructions) ? "File Upload" : ctx.Envelope.Instructions;
+            var potentialName = String.IsNullOrEmpty(ctx.Envelope.OriginalInstructions) ? "File Upload" : ctx.Envelope.OriginalInstructions;
             var generatedName = await _namingService.GenerateNameAsync(ctx.AgentContext, potentialName, ctx.CancellationToken);
 
             var session = new AgentSession
@@ -66,13 +66,37 @@ namespace LagoVista.AI.Services
                 SequenceNumber = 1,
                 CreatedByUser = ctx.Envelope.User,
                 CreationDate = now,
+                Type = EntityHeader<AgentSessionTurnType>.Create(AgentSessionTurnType.Initial),
                 StatusTimeStamp = now,
-                InstructionSummary = BuildInstructionSummary(ctx.Envelope.Instructions),
+                InstructionSummary = BuildInstructionSummary(ctx.Envelope.OriginalInstructions),
                 SessionId = session.Id,
                 Mode = session.Mode
             };
 
             return turn;
+        }
+
+        public AgentSessionTurn CreateTurnForNewChapter(IAgentPipelineContext ctx, AgentSession session)
+        {
+            if (ctx == null) throw new ArgumentNullException(nameof(ctx));
+            if (session == null) throw new ArgumentNullException(nameof(session));
+
+            var now = DateTime.UtcNow.ToJSONString();
+            var turn = new AgentSessionTurn
+            {
+                SequenceNumber = 1,
+                CreatedByUser = ctx.Envelope.User,
+                CreationDate = now,
+                StatusTimeStamp = now,
+                Mode = session.Mode,
+                Type = EntityHeader<AgentSessionTurnType>.Create(AgentSessionTurnType.ChapterStart),
+                InstructionSummary = BuildInstructionSummary(ctx.Envelope.OriginalInstructions),
+                SessionId = session.Id,
+                OpenAIResponseId = null
+            };
+
+            return turn;
+
         }
 
         public AgentSessionTurn CreateTurnForExistingSession(IAgentPipelineContext ctx, AgentSession session)
@@ -89,7 +113,8 @@ namespace LagoVista.AI.Services
                 CreationDate = now,
                 StatusTimeStamp = now,
                 Mode = session.Mode,
-                InstructionSummary = BuildInstructionSummary(ctx.Envelope.Instructions),
+                Type = EntityHeader<AgentSessionTurnType>.Create(AgentSessionTurnType.Normal),
+                InstructionSummary = BuildInstructionSummary(ctx.Envelope.OriginalInstructions),
                 SessionId = session.Id
             };
 

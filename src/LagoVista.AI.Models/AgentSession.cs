@@ -31,9 +31,6 @@ namespace LagoVista.AI.Models
 
         [EnumLabel(AgentSessionTurn.AgentSessionTurnStatuses_RolledBackTurn, AIResources.Names.AgentSessionTurnStatuses_RolledBackTurn, typeof(AIResources))]
         RolledBackTurn,
-
-        [EnumLabel(AgentSessionTurn.AgentSessionTurnStatuses_ChapterEnd, AIResources.Names.AgentSessionTurnStatuses_ChapterEnd, typeof(AIResources))]
-        ChapterEnd,
     }
 
     public enum OperationKinds
@@ -66,6 +63,17 @@ namespace LagoVista.AI.Models
         Gotcha
     }
 
+    public enum AgentSessionTurnType
+    {
+        [EnumLabel(AgentSessionTurn.AgentSessionTurnTypes_Initial, AIResources.Names.AgentSessionTurnTypes_Initial, typeof(AIResources))]
+        Initial,
+        [EnumLabel(AgentSessionTurn.AgentSessionTurnTypes_ChapterStart, AIResources.Names.AgentSessionTurnTypes_ChapterStart, typeof(AIResources))]
+        ChapterStart,
+        [EnumLabel(AgentSessionTurn.AgentSessionTurnTypes_Normal, AIResources.Names.AgentSessionTurnTypes_Normal, typeof(AIResources))]
+        Normal,
+        [EnumLabel(AgentSessionTurn.AgentSessionTurnTypes_ChapterEnd, AIResources.Names.AgentSessionTurnTypes_ChapterEnd, typeof(AIResources))]
+        ChapterEnd
+    }
 
 
     /// <summary>
@@ -290,6 +298,12 @@ namespace LagoVista.AI.Models
         public const string AgentSessionTurnStatuses_RolledBackTurn = "rolledbackturn";
         public const string AgentSessionTurnStatuses_ChapterEnd = "chapaterEnd";
 
+        public const string AgentSessionTurnTypes_Initial = "initial";
+        public const string AgentSessionTurnTypes_ChapterStart = "chapaterStart";
+        public const string AgentSessionTurnTypes_Normal = "normal";
+        public const string AgentSessionTurnTypes_ChapterEnd = "chapaterEnd";
+
+
         public string Id { get; set; } = Guid.NewGuid().ToId();
 
         public int SequenceNumber { get; set; }
@@ -342,6 +356,8 @@ namespace LagoVista.AI.Models
 
         public EntityHeader<AgentSessionTurnStatuses> Status { get; set; } =
             EntityHeader<AgentSessionTurnStatuses>.Create(AgentSessionTurnStatuses.New);
+
+        public EntityHeader<AgentSessionTurnType> Type { get; set; } = EntityHeader<AgentSessionTurnType>.Create(AgentSessionTurnType.Normal);
 
         public List<AgentSessionChunkRef> ChunkRefs { get; set; } = new List<AgentSessionChunkRef>();
 

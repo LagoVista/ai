@@ -108,6 +108,12 @@ namespace LagoVista.AI.Models
             RefreshEnvelope();
         }
 
+        public void AttachNewChapterTurn(AgentSessionTurn newChapterTurn)
+        {
+            ThisTurn = newChapterTurn ?? throw new ArgumentNullException(nameof(newChapterTurn));
+            RefreshEnvelope();
+        }
+
         public void AttachToolManifest(ToolCallManifest toolManifest)
         {
             if (toolManifest == null) throw new ArgumentNullException(nameof(toolManifest));
@@ -245,6 +251,18 @@ namespace LagoVista.AI.Models
         {
             RagContent = new List<RagContent>();
         }
+
+        private List<string> _toolCalls = new List<string>();
+
+        public int GetToolCallCount(string toolName)
+        {
+            return _toolCalls.Where(tc => tc == toolName).Count();
+        }
+
+        public void AddToolCall(string toolName)
+        {
+            _toolCalls.Add(toolName);
+        }
     }
 
     public class Envelope
@@ -264,7 +282,7 @@ namespace LagoVista.AI.Models
             ToolResults = toolResults?.ToList() ?? new List<ToolResultSubmission>();
             ClipBoardImages = clipboardImages?.ToList() ?? new List<ClipboardImage>();
             InputArtifacts = inputArtifacts?.ToList() ?? new List<InputArtifact>();
-            Instructions = instructions;
+            OriginalInstructions = instructions;
             RagScope = ragScope ?? new RagScope();
             Stream = stream;
         }
@@ -275,7 +293,7 @@ namespace LagoVista.AI.Models
         public IReadOnlyList<ClipboardImage> ClipBoardImages { get; }
         public IReadOnlyList<InputArtifact> InputArtifacts { get; }
 
-        public string Instructions { get; }
+        public string OriginalInstructions { get; }
         public string AgentContextId { get; }
         public string AgentPersonaId { get; }
         public string RoleId { get; }
