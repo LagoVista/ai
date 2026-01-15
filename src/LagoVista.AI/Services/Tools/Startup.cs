@@ -117,6 +117,13 @@ namespace LagoVista.AI.Services.Tools
             // --- DDR Retrieval ---
             toolRegistry.RegisterTool<GetDdrAgentTool>();
             toolRegistry.RegisterTool<ListDdrsAgentTool>();
+
+
+            // -- chapter tools --
+            toolRegistry.RegisterTool<ListChaptersTool>();
+            toolRegistry.RegisterTool<SwitchChapterTool>();
+            toolRegistry.RegisterTool<RenameCurrentChapterTool>();
+
             /*--*/
 
             services.AddSingleton<IAgentToolRegistry>(toolRegistry);

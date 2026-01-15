@@ -135,12 +135,12 @@ namespace LagoVista.AI.Models
 
         public string DefaultLanguage { get; set; }
 
+        public EntityHeader CurrentChapter { get; set; } 
+
         /// <summary>
         /// Current chapter index for the session.
         /// </summary>
         public int CurrentChapterIndex { get; set; } = 0;
-
-        public string ChapterTitle { get; set; }
 
         /// <summary>
         /// When we create a new chapter, we generate a seed value to help guide LLM responses
@@ -151,7 +151,7 @@ namespace LagoVista.AI.Models
         /// <summary>
         /// Archive pointers for completed chapters.
         /// </summary>
-        public List<AgentSessionArchive> Archives { get; set; } = new List<AgentSessionArchive>();
+        public List<AgentSessionChapter> Chapters { get; set; } = new List<AgentSessionChapter>();
 
         /// <summary>
         /// JSON serialized ContextCapsule.
@@ -214,6 +214,7 @@ namespace LagoVista.AI.Models
             summary.Shared = Shared;
             summary.Completed = Completed;
             summary.Archived = Archived;
+            summary.Chapters = Chapters.Select(arc=> EntityHeader.Create(arc.Id, arc.Title)).ToList();
 
             var lastTurn = Turns.LastOrDefault();
             if (lastTurn != null)
@@ -549,5 +550,7 @@ namespace LagoVista.AI.Models
         public bool Completed { get; set; }
 
         public bool Archived { get; set; }
+    
+        public List<EntityHeader> Chapters { get; set; } 
     }
 }

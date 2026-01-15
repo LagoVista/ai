@@ -105,6 +105,7 @@ namespace LagoVista.AI.Services.Pipeline
             {
                 _adminLogger.Trace($"[PipelineStep__ExecuteAsync] Line: 00 - Success {nameof(AgentRequestHandlerPipelineStep)} {sw.Elapsed.TotalMilliseconds}ms");
 
+                ctx.ThisTurn.Status = EntityHeader<AgentSessionTurnStatuses>.Create(AgentSessionTurnStatuses.Completed);
                 ctx.ThisTurn.ExecutionMs = sw.Elapsed.TotalMilliseconds;
                 await _agentSessionManager.UpdateSessionAsync(result.Result.Session, org, user);
 

@@ -5,10 +5,12 @@ using System.Text;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Pipeline;
+using LagoVista.AI.Interfaces.Repos;
 using LagoVista.AI.Interfaces.Services;
 using LagoVista.AI.Models;
 using LagoVista.AI.Services.Pipeline;
 using LagoVista.AI.Services.Tools;
+using LagoVista.Core;
 using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
@@ -24,15 +26,17 @@ namespace LagoVista.AI.Services
         private readonly IAgentStreamingContext _agentStreamingContext;
         private readonly IPromptKnowledgeProvider _pkpService;
         private readonly IAgentSessionFactory _sessionFactory;
+        private readonly IAgentSessionTurnChapterStore _archiveStore;
         private const int MaxReasoningIterations = 8;
 
         public AgentReasonerPipelineStep(ILLMClient llmClient, IAgentToolExecutor toolExecutor,
             IAgentPipelineContextValidator validator, IPromptKnowledgeProvider pkpService, 
-            IAdminLogger logger, IAgentStreamingContext agentStreamingContext, IAgentSessionFactory sessionFactory) : base(validator, logger)
+            IAdminLogger logger, IAgentStreamingContext agentStreamingContext, IAgentSessionTurnChapterStore archiveStore, IAgentSessionFactory sessionFactory) : base(validator, logger)
         {
             _llmClient = llmClient ?? throw new ArgumentNullException(nameof(llmClient));
             _toolExecutor = toolExecutor ?? throw new ArgumentNullException(nameof(toolExecutor));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _archiveStore = archiveStore ?? throw new ArgumentNullException(nameof(archiveStore));
             _pkpService = pkpService ?? throw new ArgumentNullException(nameof(pkpService));
             _agentStreamingContext = agentStreamingContext ?? throw new ArgumentNullException(nameof(agentStreamingContext));
             _sessionFactory = sessionFactory ?? throw new ArgumentNullException(nameof(sessionFactory));
@@ -56,10 +60,19 @@ namespace LagoVista.AI.Services
                 {
                     if (ctx.ThisTurn.Type.Value == AgentSessionTurnType.ChapterEnd)
                     {
-                        ctx.ThisTurn.Type = EntityHeader<AgentSessionTurnType>.Create(AgentSessionTurnType.ChapterStart);
-                        var chapterStartTurn = _sessionFactory.CreateTurnForNewChapter(ctx, ctx.Session);
-                        ctx.Session.Turns.Add(chapterStartTurn);
+                        var currentChapter = ctx.Session.Chapters?.FirstOrDefault(c => c.Id == ctx.Session.CurrentChapter.Id);
+                        if (currentChapter == null)
+                            return InvokeResult<IAgentPipelineContext>.FromError("current chapter not found, potentially legacy session and not supported.");
+
+                        // Archive turns.
+                        var archive = await _archiveStore.SaveAsync(ctx.Session, currentChapter, ctx.Session.Turns, ctx.Envelope.User, ctx.CancellationToken);
+                        var newChapter = _sessionFactory.CreateNextChapter(ctx);
+                        ctx.Session.Chapters.Add(newChapter);
+                        var chapterStartTurn = _sessionFactory.CreateTurnForNewChapter(ctx);
                         ctx.AttachNewChapterTurn(chapterStartTurn);
+                        ctx.Session.Turns.Clear();
+                        ctx.Session.Turns.Add(chapterStartTurn);
+                        ctx.ResponsePayload.Usage = new Core.AI.Models.LlmUsage();
                     }
 
                     return llmResult;

@@ -18,7 +18,7 @@ namespace LagoVista.AI.CloudRepos
     /// Stores chapter archives (serialized turn payloads) as blobs.
     /// This keeps AgentSession small while making chapter reset deterministic.
     /// </summary>
-    public class AgentSessionTurnArchiveStore : CloudFileStorage, IAgentSessionTurnArchiveStore
+    public class AgentSessionTurnArchiveStore : CloudFileStorage, IAgentSessionTurnChapterStore
     {
         private readonly IAdminLogger _adminLogger;
 
@@ -66,61 +66,41 @@ namespace LagoVista.AI.CloudRepos
             Formatting = Formatting.None
         };
 
-        public async Task<AgentSessionArchive> SaveAsync(AgentSession session, IReadOnlyList<AgentSessionTurn> turns, string title, string summary, EntityHeader user, CancellationToken ct = default)
+        public async Task<AgentSessionChapter> SaveAsync(AgentSession session, AgentSessionChapter chapter, IReadOnlyList<AgentSessionTurn> turns, EntityHeader user, CancellationToken ct = default)
         {
             if (session == null) throw new ArgumentNullException(nameof(session));
             if (turns == null) throw new ArgumentNullException(nameof(turns));
-
-            var archive = new AgentSessionArchive
-            {
-                Id = Guid.NewGuid().ToId(),
-                ChapterIndex = session.CurrentChapterIndex,
-                Title = title,
-                Summary = summary,
-                CreationDate = DateTime.UtcNow.ToString("o"),
-                CreatedBy = user,
-                TurnCount = turns.Count,
-            };
-
-            if (turns.Count > 0)
-            {
-                archive.FirstTurnId = turns[0]?.Id;
-                archive.LastTurnId = turns[turns.Count - 1]?.Id;
-
-                archive.FirstOpenAIResponseId = turns[0]?.OpenAIResponseId;
-                archive.LastOpenAIResponseId = turns[turns.Count - 1]?.OpenAIResponseId;
-            }
 
             var payload = new ArchivePayload
             {
                 SessionId = session.Id,
                 ChapterIndex = session.CurrentChapterIndex,
-                Title = title,
-                CreationDate = archive.CreationDate,
+                Title = chapter.Title,
+                CreationDate = DateTime.UtcNow.ToJSONString(),
                 TurnCount = turns.Count,
                 Turns = new List<AgentSessionTurn>(turns)
             };
 
             var json = JsonConvert.SerializeObject(payload, _jsonSettings);
-            archive.ContentSha256 = ComputeSha256Hex(json);
+            chapter.ContentSha256 = ComputeSha256Hex(json);
 
             var orgId = GetOrgIdFromSession(session);
             var container = GetContainerName(orgId);
-            var blobKey = BuildArchivePath(orgId, session.Id, session.CurrentChapterIndex, archive.Id);
+            var blobKey = BuildArchivePath(orgId, session.Id, session.CurrentChapterIndex, chapter.Id);
 
             var uriResult = await AddFileAsync(container, blobKey, json);
             if (!uriResult.Successful)
                 throw new Exception($"Failed to save archive blob: {uriResult.Errors?[0]?.Message}");
 
-            archive.BlobKey = blobKey;
-            archive.BlobUrl = uriResult.Result?.ToString();
+            chapter.BlobKey = blobKey;
+            chapter.BlobUrl = uriResult.Result?.ToString();
 
-            _adminLogger.Trace($"[AgentSessionTurnArchiveStore] Saved archive {archive.Id} for session {session.Id} chapter {session.CurrentChapterIndex} turns={turns.Count} sha={archive.ContentSha256}");
+            _adminLogger.Trace($"{this.Tag()} Saved archive {chapter.Id} for session {session.Id} chapter {session.CurrentChapterIndex} turns={turns.Count} sha={chapter.ContentSha256}");
 
-            return archive;
+            return chapter;
         }
 
-        public async Task<IReadOnlyList<AgentSessionTurn>> LoadAsync(AgentSessionArchive archive, CancellationToken ct = default)
+        public async Task<IReadOnlyList<AgentSessionTurn>> LoadAsync(AgentSessionChapter archive, CancellationToken ct = default)
         {
             if (archive == null) throw new ArgumentNullException(nameof(archive));
             if (string.IsNullOrWhiteSpace(archive.BlobKey)) throw new ArgumentNullException(nameof(archive.BlobKey));
@@ -154,6 +134,37 @@ namespace LagoVista.AI.CloudRepos
                 foreach (var b in hash) sb.Append(b.ToString("x2"));
                 return sb.ToString();
             }
+        }
+
+        public async Task UpdateAsync(AgentSessionChapter archive, AgentSession session, IReadOnlyList<AgentSessionTurn> turns, EntityHeader user, CancellationToken ct = default)
+        {   
+            if (session == null) throw new ArgumentNullException(nameof(session));
+            if (turns == null) throw new ArgumentNullException(nameof(turns));
+
+            var payload = new ArchivePayload
+            {
+                SessionId = session.Id,
+                ChapterIndex = session.CurrentChapterIndex,
+                CreationDate = archive.CreationDate,
+                TurnCount = turns.Count,
+                Turns = new List<AgentSessionTurn>(turns)
+            };
+
+            var json = JsonConvert.SerializeObject(payload, _jsonSettings);
+            archive.ContentSha256 = ComputeSha256Hex(json);
+
+            var orgId = GetOrgIdFromSession(session);
+            var container = GetContainerName(orgId);
+            var blobKey = BuildArchivePath(orgId, session.Id, session.CurrentChapterIndex, archive.Id);
+
+            var uriResult = await UpdateFileAsync(container, blobKey, json);
+            if (!uriResult.Successful)
+                throw new Exception($"Failed to save archive blob: {uriResult.Errors?[0]?.Message}");
+
+            archive.BlobKey = blobKey;
+            archive.BlobUrl = uriResult.Result?.ToString();
+
+            _adminLogger.Trace($"{this.Tag()} Updated archive {archive.Id} for session {session.Id} chapter {session.CurrentChapterIndex} turns={turns.Count} sha={archive.ContentSha256}");
         }
     }
 }

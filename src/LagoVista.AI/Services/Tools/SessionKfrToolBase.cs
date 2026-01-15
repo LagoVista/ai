@@ -62,6 +62,9 @@ namespace LagoVista.AI.Services.Tools
 
         protected sealed class Result
         {
+            public bool Success { get; set; }
+            public string Status { get; set; }
+            public bool CanRetry { get; set; }
             public string Operation { get; set; }
             public List<AgentSessionKfrEntry> Items { get; set; }
             public string SessionId { get; set; }
@@ -72,8 +75,10 @@ namespace LagoVista.AI.Services.Tools
             var result = new Result
             {
                 Operation = op,
+                CanRetry = false,
+                Success = true,
+                Status = "success",
                 Items = items ?? new List<AgentSessionKfrEntry>(),
-                SessionId = context?.Session?.Id
             };
 
             return InvokeResult<string>.Create(JsonConvert.SerializeObject(result));

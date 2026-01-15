@@ -147,7 +147,7 @@ namespace LagoVista.AI.Services
             var modeBlock =
 $@"## CURRENT Status 
 - Mode Key (authoritative): {ctx.Mode.Key}
-- Chapter: {ctx.Session.ChapterTitle}
+- Chapter: {ctx.Session.CurrentChapter.Text}
 - Display Name (non-authoritative): {ctx.Mode.Name}
 - MUST NEVER call the agent_change_mode tool with the parameter [{ctx.Mode.Key}] as we are already in that mode.
 - The assistant MUST NOT call agent_change_mode inside any multi/parallel tool wrapper. Mode changes must be a single direct call only when required

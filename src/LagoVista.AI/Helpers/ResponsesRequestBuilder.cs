@@ -55,9 +55,8 @@ namespace LagoVista.AI.Helpers
             var userMessage = new ResponsesInputMessage("user");
 
             var isContinuation = !string.IsNullOrWhiteSpace(ctx.ThisTurn.PreviousOpenAIResponseId);
-            var newChapter = ctx.ThisTurn.Type.Value == AgentSessionTurnType.ChapterStart;
-
-            if(!newChapter && (isContinuation || ctx.ThisTurn.Iterations.Any()))
+            
+            if (isContinuation || ctx.ThisTurn.Iterations.Any())
             {
                 var lastIteration = ctx.ThisTurn.Iterations.LastOrDefault();
                 var previousResponseId = lastIteration == null ? ctx.ThisTurn.PreviousOpenAIResponseId : lastIteration.OpenAiResponseId;
@@ -68,10 +67,6 @@ namespace LagoVista.AI.Helpers
                 dto.PreviousResponseId = previousResponseId;
 
                 _adminLogger.Trace($"{this.Tag()} Previous Response Id {previousResponseId}.");
-            }
-            else if(newChapter)
-            {
-                _adminLogger.Trace($"{this.Tag()} New Chapter - No Previous Response Id.");
             }
             else
             {
@@ -90,10 +85,13 @@ namespace LagoVista.AI.Helpers
                 {
                     foreach (var item in register.Items)
                     {
-                        systemMessage.Content.Add(new ResponsesMessageContent
+                        if (!String.IsNullOrEmpty(item))
                         {
-                            Text = item
-                        });
+                            systemMessage.Content.Add(new ResponsesMessageContent
+                            {
+                                Text = item.Replace("\n", "\\n").Replace("\r", "\\r")
+                            });
+                        }
                     }
                 }
 
@@ -101,10 +99,13 @@ namespace LagoVista.AI.Helpers
                 {
                     foreach (var item in register.Items)
                     {
-                        userMessage.Content.Add(new ResponsesMessageContent
+                        if (!String.IsNullOrEmpty(item))
                         {
-                            Text = item
-                        });
+                            userMessage.Content.Add(new ResponsesMessageContent
+                            {
+                                Text = item.Replace("\n", "\\n").Replace("\r", "\\r")
+                            });
+                        }
                     }
                 }
             }

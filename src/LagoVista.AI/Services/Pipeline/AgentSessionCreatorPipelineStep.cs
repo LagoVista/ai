@@ -25,10 +25,10 @@ namespace LagoVista.AI.Services.Pipeline
 
         protected override async Task<InvokeResult<IAgentPipelineContext>> ExecuteStepAsync(IAgentPipelineContext ctx)
         {
-            var session = await _sessionFactory.CreateSession(ctx);
-            var turn = _sessionFactory.CreateTurnForNewSession(ctx, session);
-            session.Turns.Add(turn);
-            ctx.AttachSession(session, turn);
+            var newSession = await _sessionFactory.CreateSession(ctx);
+            var turn = _sessionFactory.CreateTurnForNewSession(ctx, newSession);
+            newSession.Turns.Add(turn);
+            ctx.AttachSession(newSession, turn);
             
             return InvokeResult<IAgentPipelineContext>.Create(ctx);
         }

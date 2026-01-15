@@ -57,14 +57,13 @@ Rules
 
         private readonly IAgentSessionManager _sessionManager;
         private readonly IAdminLogger _logger;
-        private readonly IAgentSessionTurnArchiveStore _archiveStore;
+        
         private readonly IAgentSessionFactory _sessionFactory;        
 
 
-        public ChapterResetCommitTool(IAgentSessionManager sessionManager, IAgentSessionFactory factory, IAgentSessionTurnArchiveStore archiveStore, IAdminLogger logger)
+        public ChapterResetCommitTool(IAgentSessionManager sessionManager, IAgentSessionFactory factory,  IAdminLogger logger)
         {
             _sessionManager = sessionManager ?? throw new ArgumentNullException(nameof(sessionManager));
-            _archiveStore = archiveStore ?? throw new ArgumentNullException(nameof(archiveStore));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _sessionFactory = factory ?? throw new ArgumentNullException(nameof(factory));
         }
@@ -83,20 +82,25 @@ Rules
             return Task.FromResult(InvokeResult<string>.FromError("not_supported"));
         }
 
-        public async Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context)
+        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context)
         {
             const string baseTag = "[ChapterResetCommitTool]";
+
+            if (EntityHeader.IsNullOrEmpty(context.Session.CurrentChapter))
+            {
+                return Task.FromResult( InvokeResult<string>.FromError("CurrentChapter not set, likely a legacy session.  Resetting is not supported.")); 
+            }
 
             try
             {
                 var payload = JObject.Parse(argumentsJson ?? "{}");
                 var prepareToken = payload.Value<string>("prepareToken")?.Trim();
-                if (string.IsNullOrWhiteSpace(prepareToken)) return InvokeResult<string>.FromError("prepareToken is required");
+                if (string.IsNullOrWhiteSpace(prepareToken)) return Task.FromResult(InvokeResult<string>.FromError("prepareToken is required"));
 
                 // Expected: v1|<sessionId>|<chapterIndex>|<turnCount>|<lastTurnId>
                 var parts = prepareToken.Split('|');
                 if (parts.Length != 5 || !string.Equals(parts[0], "v1", StringComparison.OrdinalIgnoreCase))
-                    return InvokeResult<string>.FromError("invalid_prepare_token");
+                    return Task.FromResult(InvokeResult<string>.FromError("invalid_prepare_token"));
 
                 var tokenSessionId = parts[1];
                 var tokenChapterIndex = int.TryParse(parts[2], out var ci) ? ci : -1;
@@ -104,41 +108,28 @@ Rules
                 var tokenLastTurnId = parts[4];
 
                 if (!string.Equals(tokenSessionId, context.Session.Id, StringComparison.OrdinalIgnoreCase))
-                    return InvokeResult<string>.FromError("prepare_token_session_mismatch");
+                    return Task.FromResult(InvokeResult<string>.FromError("prepare_token_session_mismatch"));
 
-                var currentTurnCount = context.Session.Turns?.Count ?? 0;
-                var currentLastTurnId = context.Session.Turns?.LastOrDefault()?.Id;
+  //              var currentTurnCount = context.Session.Turns?.Count ?? 0;
+//                var currentLastTurnId = context.Session.Turns?.LastOrDefault()?.Id;
 
                 if (tokenChapterIndex != context.Session.CurrentChapterIndex)
-                    return InvokeResult<string>.FromError("prepare_token_chapter_mismatch");
+                    return Task.FromResult(InvokeResult<string>.FromError("prepare_token_chapter_mismatch"));
 
-                // Archive turns.
-                var archive = await _archiveStore.SaveAsync(context.Session, context.Session.Turns, context.Session.ChapterTitle, 
-                    context.Session.CurrentCapsule.PreviousChapterSummary, context.Envelope.User);
-                context.Session.Archives.Add(archive);
-
-                context.Session.Turns = new List<AgentSessionTurn>();
-
-                context.Session.LastUpdatedDate = DateTime.UtcNow.ToJSONString();
-                context.Session.LastUpdatedBy = context.Envelope.User;
-                context.Session.CurrentChapterIndex = context.Session.CurrentChapterIndex + 1;
-                context.Session.ChapterTitle = $"{AIResources.AgentChapter_ChaterLabel} {context.Session.CurrentChapterIndex}";
-                context.Session.ChapterSeed = context.Session.CurrentCapsule.PreviousChapterSummary;
                 context.ThisTurn.Type = EntityHeader<AgentSessionTurnType>.Create(AgentSessionTurnType.ChapterEnd);
 
                 var envelope = new JObject
                 {
                     ["ok"] = true,
-                    ["archive"] = JObject.FromObject(archive),
                     ["newChapterIndex"] = context.Session.CurrentChapterIndex + 1,
                 };
 
-                return InvokeResult<string>.Create(envelope.ToString(Newtonsoft.Json.Formatting.None));
+                return Task.FromResult(InvokeResult<string>.Create(envelope.ToString(Newtonsoft.Json.Formatting.None)));
             }
             catch (Exception ex)
             {
                 _logger.AddException(baseTag, ex);
-                return InvokeResult<string>.FromException(baseTag, ex);
+                return Task.FromResult(InvokeResult<string>.FromException(baseTag, ex));
             }
         }
     }

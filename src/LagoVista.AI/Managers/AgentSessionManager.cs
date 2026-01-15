@@ -1,6 +1,7 @@
 using LagoVista.AI.Interfaces.Managers;
 using LagoVista.AI.Interfaces.Repos;
 using LagoVista.AI.Models;
+using LagoVista.AI.Models.Resources;
 using LagoVista.Core;
 using LagoVista.Core.Exceptions;
 using LagoVista.Core.Interfaces;
@@ -13,6 +14,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace LagoVista.AI.Managers
@@ -20,17 +22,20 @@ namespace LagoVista.AI.Managers
     public class AgentSessionManager : ManagerBase, IAgentSessionManager
     {
         private readonly IAgentSessionRepo _repo;
-        private readonly IAdminLogger _adminLogger;
+        private readonly IAdminLogger _adminLogger;        
+        private readonly IAgentSessionTurnChapterStore _chapterStore;
 
         public AgentSessionManager(
             IAgentSessionRepo repo,
             IAdminLogger logger,
             IAppConfig appConfig,
+            IAgentSessionTurnChapterStore archiveStore,
             IDependencyManager dependencyManager,
             ISecurity security) : base(logger, appConfig, dependencyManager, security)
         {
             _adminLogger = logger ?? throw new ArgumentNullException(nameof(logger));
             _repo = repo ?? throw new ArgumentNullException(nameof(repo));
+            _chapterStore = archiveStore ?? throw new ArgumentNullException(nameof(archiveStore));
         }
 
         public async Task AddAgentSessionAsync(AgentSession session, EntityHeader org, EntityHeader user)
@@ -369,6 +374,38 @@ namespace LagoVista.AI.Managers
         {
             await _repo.UpdateSessionAsyunc(session);
             return InvokeResult.Success;
+        }
+
+        public async Task<InvokeResult<AgentSession>> RestoreSessionChapterAsync(string sessionId, string chapterId, EntityHeader org, EntityHeader user)
+        {
+            var session = await GetAgentSessionAsync(sessionId, org, user);
+            return await RestoreSessionChapterAsync(session, chapterId, org, user);
+        }
+
+         public async Task<InvokeResult<AgentSession>> RestoreSessionChapterAsync(AgentSession session, string chapterId, EntityHeader org, EntityHeader user)
+        {
+
+            var archive = session.Chapters?.FirstOrDefault(a => a.Id == chapterId); 
+            if(archive == null)
+                throw new RecordNotFoundException(nameof(AgentSessionChapter), chapterId);
+
+            if(session.Turns.Any())
+            {
+                session.Turns.Last().Type = EntityHeader<AgentSessionTurnType>.Create(AgentSessionTurnType.ChapterEnd);
+                session.Turns = new List<AgentSessionTurn>();
+
+                var currentArchive = session.Chapters?.FirstOrDefault(a => a.ChapterIndex == session.CurrentChapterIndex);
+                if(currentArchive != null)
+                    await _chapterStore.UpdateAsync(currentArchive, session, session.Turns, user);
+            }
+
+            var turns = await _chapterStore.LoadAsync(archive);
+            session.Turns = new List<AgentSessionTurn>(turns);
+            session.ChapterSeed = archive.Summary;
+            session.CurrentChapterIndex = archive.ChapterIndex;
+            session.CurrentChapter = EntityHeader.Create(archive.Id, archive.Title);
+      
+            return InvokeResult<AgentSession>.Create(session);
         }
     }
 }

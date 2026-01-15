@@ -78,7 +78,15 @@ namespace LagoVista.AI.Helpers
 
                     // Final response path.
                     response.Kind = AgentExecuteResponseKind.Final;
-                    response.Usage = ctx.ResponsePayload.Usage;
+                    if (ctx.ThisTurn.Type.Value == AgentSessionTurnType.ChapterEnd)
+                    {
+                        response.Usage = new LlmUsage() { };
+                    }
+                    else
+                    {
+                        response.Usage = ctx.ResponsePayload.Usage;
+                    }
+
                     response.Files = ctx.ResponsePayload.Files;
                     response.ToolCalls = null;
                     response.ClientAcpCalls = null;

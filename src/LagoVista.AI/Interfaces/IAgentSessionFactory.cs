@@ -7,9 +7,11 @@ namespace LagoVista.AI.Interfaces
     {
         Task<AgentSession> CreateSession(IAgentPipelineContext ctx);
 
-        AgentSessionTurn CreateTurnForNewSession(IAgentPipelineContext ctx, AgentSession session);
+        AgentSessionTurn CreateTurnForNewSession(IAgentPipelineContext ctx, AgentSession newSession);
 
-        AgentSessionTurn CreateTurnForExistingSession(IAgentPipelineContext ctx, AgentSession session);
-        AgentSessionTurn CreateTurnForNewChapter(IAgentPipelineContext ctx, AgentSession session);
+        AgentSessionTurn CreateTurnForExistingSession(IAgentPipelineContext ctx, AgentSession existingSession);
+        AgentSessionTurn CreateTurnForNewChapter(IAgentPipelineContext ctx);
+
+        AgentSessionChapter CreateNextChapter(IAgentPipelineContext ctx);
     }
 }

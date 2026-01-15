@@ -30,6 +30,15 @@ namespace LagoVista.AI.Services
             var potentialName = String.IsNullOrEmpty(ctx.Envelope.OriginalInstructions) ? "File Upload" : ctx.Envelope.OriginalInstructions;
             var generatedName = await _namingService.GenerateNameAsync(ctx.AgentContext, potentialName, ctx.CancellationToken);
 
+
+            var chapter = new AgentSessionChapter()
+            {
+                Title = $"{AIResources.AgentChapter_ChaterLabel} 1",
+                ChapterIndex = 1,
+                CreatedBy = ctx.Envelope.User,
+                CreationDate = now,
+            };
+
             var session = new AgentSession
             {
                 OwnerOrganization = ctx.Envelope.Org,
@@ -45,11 +54,13 @@ namespace LagoVista.AI.Services
                 AgentMode = ctx. Mode.ToEntityHeader(),
                 Role = ctx.Role.ToEntityHeader(),
                 Name = generatedName,
-                CurrentChapterIndex = 1,
-                ChapterTitle = $"{AIResources.AgentChapter_ChaterLabel} 1",
+                CurrentChapterIndex = chapter.ChapterIndex,
                 ChapterSeed = AIResources.AgentSesssion_ChapterSeed_Initial
             };
 
+            session.CurrentChapter = EntityHeader.Create(chapter.Id, chapter.Title);
+
+            session.Chapters.Add(chapter);
             session.Key = session.Id.ToLower();
             return session;
         }
@@ -58,7 +69,6 @@ namespace LagoVista.AI.Services
         public AgentSessionTurn CreateTurnForNewSession(IAgentPipelineContext ctx, AgentSession session)
         {
             if (ctx == null) throw new ArgumentNullException(nameof(ctx));
-            if (session == null) throw new ArgumentNullException(nameof(session));
 
             var now = DateTime.UtcNow.ToJSONString();
             var turn = new AgentSessionTurn
@@ -76,18 +86,18 @@ namespace LagoVista.AI.Services
             return turn;
         }
 
-        public AgentSessionTurn CreateTurnForNewChapter(IAgentPipelineContext ctx, AgentSession session)
+        public AgentSessionTurn CreateTurnForNewChapter(IAgentPipelineContext ctx)
         {
             if (ctx == null) throw new ArgumentNullException(nameof(ctx));
-            if (session == null) throw new ArgumentNullException(nameof(session));
+            var session = ctx.Session ?? throw new ArgumentNullException(nameof(ctx.Session));
 
-            var now = DateTime.UtcNow.ToJSONString();
+
             var turn = new AgentSessionTurn
             {
                 SequenceNumber = 1,
                 CreatedByUser = ctx.Envelope.User,
-                CreationDate = now,
-                StatusTimeStamp = now,
+                CreationDate = ctx.TimeStamp,
+                StatusTimeStamp = ctx.TimeStamp,
                 Mode = session.Mode,
                 Type = EntityHeader<AgentSessionTurnType>.Create(AgentSessionTurnType.ChapterStart),
                 InstructionSummary = BuildInstructionSummary(ctx.Envelope.OriginalInstructions),
@@ -102,7 +112,6 @@ namespace LagoVista.AI.Services
         public AgentSessionTurn CreateTurnForExistingSession(IAgentPipelineContext ctx, AgentSession session)
         {
             if (ctx == null) throw new ArgumentNullException(nameof(ctx));
-            if (session == null) throw new ArgumentNullException(nameof(session));
 
             var now = DateTime.UtcNow.ToJSONString();
 
@@ -136,6 +145,24 @@ namespace LagoVista.AI.Services
             return instruction.Substring(0, InstructionSummaryMaxLength);
         }
 
-     
+        public AgentSessionChapter CreateNextChapter(IAgentPipelineContext ctx)
+        {
+            var newChapter = new AgentSessionChapter()
+            {
+                Title = $"Chapter {ctx.Session.Chapters.Count + 1}",
+                ChapterIndex = ctx.Session.Chapters.Count + 1,
+                Summary = ctx.Session.CurrentCapsule.PreviousChapterSummary,
+                CreatedBy = ctx.Envelope.User,
+                CreationDate = ctx.TimeStamp
+            };
+
+            ctx.Session.LastUpdatedDate = DateTime.UtcNow.ToJSONString();
+            ctx.Session.LastUpdatedBy = ctx.Envelope.User;
+            ctx.Session.CurrentChapterIndex = ctx.Session.CurrentChapterIndex + 1;
+            ctx.Session.CurrentChapter = EntityHeader.Create(newChapter.Id, newChapter.Title);
+            ctx.Session.ChapterSeed = ctx.Session.CurrentCapsule.PreviousChapterSummary;
+
+            return newChapter;
+        }
     }
 }
