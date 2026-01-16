@@ -89,7 +89,7 @@ namespace LagoVista.AI.Helpers
                         {
                             systemMessage.Content.Add(new ResponsesMessageContent
                             {
-                                Text = item.Replace("\n", "\\n").Replace("\r", "\\r")
+                                Text = JsonConvert.SerializeObject(item)
                             });
                         }
                     }
@@ -103,7 +103,7 @@ namespace LagoVista.AI.Helpers
                         {
                             userMessage.Content.Add(new ResponsesMessageContent
                             {
-                                Text = item.Replace("\n", "\\n").Replace("\r", "\\r")
+                                Text = JsonConvert.SerializeObject(item)
                             });
                         }
                     }
