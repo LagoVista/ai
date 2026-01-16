@@ -26,12 +26,12 @@ namespace LagoVista.AI.Services
 
         public async Task<InvokeResult<IAgentPipelineContext>> PopulateAsync(IAgentPipelineContext ctx, bool changeMode)
         {
-            var newChapter = ctx.ThisTurn.Type.Value == AgentSessionTurnType.ChapterStart;
+            var newChapter = ctx.ThisTurn.Type.Value == AgentSessionTurnType.Initial && ctx.ThisTurn.SequenceNumber == 2;
 
             var apkResult = await _apkProvider.CreateAsync(ctx, newChapter || changeMode);
             if (!apkResult.Successful) return InvokeResult<IAgentPipelineContext>.FromInvokeResult(apkResult.ToInvokeResult());
 
-            _adminLogger.Trace($"{this.Tag()} populate, mode change {changeMode}, new chapter {newChapter}.");
+            _adminLogger.Trace($"{this.Tag()} populate, mode change {changeMode}, newChapter {newChapter}.");
 
             var apk = apkResult.Result;
 
@@ -109,9 +109,7 @@ namespace LagoVista.AI.Services
                 capsuleBlock.AppendLine("If details are missing, ask clarifying questions rather than guessing.");
                 capsuleBlock.AppendLine();
                 capsuleBlock.AppendLine($"CurrentChapterIndex: {ctx.Session.CurrentChapterIndex}");
-                capsuleBlock.AppendLine("ContextCapsuleJson:");
                 capsuleBlock.AppendLine($"Title: {ctx.Session.CurrentCapsule.ChapterTitle}");
-                capsuleBlock.AppendLine($"Idx: {ctx.Session.CurrentCapsule.ChapterIndex}");
                 capsuleBlock.AppendLine();
 
                 var newChapterRegister = ctx.PromptKnowledgeProvider.GetOrCreateRegister(KnowledgeKind.NewChapterInitialPrompt, Models.Context.ContextClassification.Session);

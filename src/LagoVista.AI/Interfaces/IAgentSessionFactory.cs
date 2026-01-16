@@ -11,7 +11,8 @@ namespace LagoVista.AI.Interfaces
 
         AgentSessionTurn CreateTurnForExistingSession(IAgentPipelineContext ctx, AgentSession existingSession);
         AgentSessionTurn CreateTurnForNewChapter(IAgentPipelineContext ctx);
+        AgentSessionTurn CreateFirstTurnForNewChapter(IAgentPipelineContext ctx, AgentSession existingSessoin);
 
-        AgentSessionChapter CreateNextChapter(IAgentPipelineContext ctx);
+        AgentSessionChapter CreateBoundaryTurnForNewChapter(IAgentPipelineContext ctx);
     }
 }
