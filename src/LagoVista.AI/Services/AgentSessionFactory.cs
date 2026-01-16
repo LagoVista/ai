@@ -91,7 +91,6 @@ namespace LagoVista.AI.Services
             if (ctx == null) throw new ArgumentNullException(nameof(ctx));
             var session = ctx.Session ?? throw new ArgumentNullException(nameof(ctx.Session));
 
-
             var turn = new AgentSessionTurn
             {
                 SequenceNumber = 1,
@@ -145,7 +144,7 @@ namespace LagoVista.AI.Services
             return instruction.Substring(0, InstructionSummaryMaxLength);
         }
 
-        public AgentSessionChapter CreateNextChapter(IAgentPipelineContext ctx)
+        public AgentSessionChapter CreateBoundaryTurnForNewChapter(IAgentPipelineContext ctx)
         {
             var newChapter = new AgentSessionChapter()
             {
@@ -163,6 +162,26 @@ namespace LagoVista.AI.Services
             ctx.Session.ChapterSeed = ctx.Session.CurrentCapsule.PreviousChapterSummary;
 
             return newChapter;
+        }
+
+        public AgentSessionTurn CreateFirstTurnForNewChapter(IAgentPipelineContext ctx, AgentSession session)
+        {
+            if (ctx == null) throw new ArgumentNullException(nameof(ctx));
+
+            var now = DateTime.UtcNow.ToJSONString();
+            var turn = new AgentSessionTurn
+            {
+                SequenceNumber = 2,
+                CreatedByUser = ctx.Envelope.User,
+                CreationDate = now,
+                Type = EntityHeader<AgentSessionTurnType>.Create(AgentSessionTurnType.Initial),
+                StatusTimeStamp = now,
+                InstructionSummary = BuildInstructionSummary(ctx.Envelope.OriginalInstructions),
+                SessionId = session.Id,
+                Mode = session.Mode
+            };
+
+            return turn;
         }
     }
 }

@@ -66,7 +66,7 @@ namespace LagoVista.AI.Services
 
                         // Archive turns.
                         var archive = await _archiveStore.SaveAsync(ctx.Session, currentChapter, ctx.Session.Turns, ctx.Envelope.User, ctx.CancellationToken);
-                        var newChapter = _sessionFactory.CreateNextChapter(ctx);
+                        var newChapter = _sessionFactory.CreateBoundaryTurnForNewChapter(ctx);
                         ctx.Session.Chapters.Add(newChapter);
                         var chapterStartTurn = _sessionFactory.CreateTurnForNewChapter(ctx);
                         ctx.AttachNewChapterTurn(chapterStartTurn);

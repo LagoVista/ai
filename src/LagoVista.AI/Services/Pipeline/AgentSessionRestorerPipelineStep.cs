@@ -35,7 +35,9 @@ namespace LagoVista.AI.Services.Pipeline
 
             if (session.Turns.Count == 1 && session.Turns[0].Type.Value == AgentSessionTurnType.ChapterStart)
             {
-                ctx.AttachSession(session, session.Turns[0]);
+                var turn = _sessionFactory.CreateFirstTurnForNewChapter(ctx, session);
+                ctx.AttachSession(session, turn);
+                ctx.Session.Turns.Add(turn);
             }
             else
             {
