@@ -18,7 +18,7 @@ namespace LagoVista.AI.Services.Tools
     /// </summary>
     public class ListChaptersAgentTool : DdrAgentToolBase
     {
-        public const string ToolName = "list_chapters";
+        public const string ToolName = "list_ddr_chapters";
         public const string ToolUsageMetadata = "Retrieves the list of chapters for a DDR, including approval state. Used for navigation, summarization, or planning follow-up work.";
         public ListChaptersAgentTool(IDdrManager ddrManager, IAdminLogger adminLogger) : base(ddrManager, adminLogger)
         {

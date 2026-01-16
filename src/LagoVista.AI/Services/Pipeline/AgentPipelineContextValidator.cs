@@ -165,7 +165,7 @@ namespace LagoVista.AI.Services.Pipeline
             switch (ctx.Type)
             {
                 case AgentPipelineContextTypes.Initial:
-                    if (!hasInstructions && !hasArtifacts && !hasClipboard)
+                    if (!hasInstructions && !hasArtifacts && !hasClipboard && ctx.ThisTurn.Iterations.Count == 0)
                         result.Errors.Add(new ErrorMessage("At least one of Instructions, InputArtifacts, or ClipBoardImages must be provided."));
 
                     if (!String.IsNullOrEmpty(ctx.Envelope?.RoleId) && String.IsNullOrEmpty(ctx.Envelope?.AgentContextId))
