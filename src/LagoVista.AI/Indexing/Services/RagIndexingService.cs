@@ -14,6 +14,7 @@ using LagoVista.Core.Utils.Types.Nuviot.RagIndexing;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.UserAdmin.Interfaces.Repos.Orgs;
+using LagoVista.UserAdmin.Models.Orgs;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -59,9 +60,26 @@ namespace LagoVista.AI.Indexing.Services
 
         public async Task<InvokeResult> IndexAsync(IEntityBase entity)
         {
-            var org = await _orgRepo.GetOrganizationAsync(entity.OwnerOrganization.Id);
+            Organization org = entity as Organization;
+            if (org == null && EntityHeader.IsNullOrEmpty(entity.OwnerOrganization))
+            {
+                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Warning, this.Tag(), $"Could not identify org for {entity.GetType().Name} with Id: {entity.Id}, can not index entity.");
+                return InvokeResult.Success;
+            }
+            
+            if(org == null)
+                org = await _orgRepo.GetOrganizationAsync(entity.OwnerOrganization.Id);
+
+            if (org == null)
+            {
+                return InvokeResult.Success;
+            }
+
             if (EntityHeader.IsNullOrEmpty(org.DefaultAgentContext))
-                return InvokeResult.FromError("Organization does not have a default agent context defined, content can not be indexed.");
+            {
+                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Warning, this.Tag(), $"Organization {org.Name} ({org.Id}) does not have a default agent context defined, content can not be indexed.");
+                return InvokeResult.Success;
+            }
 
             _adminLogger.Trace($"{this.Tag()} Queue index for {entity.Name} ({entity.EntityType})");
 
@@ -102,6 +120,7 @@ namespace LagoVista.AI.Indexing.Services
                         point.Payload.Extra.Path = entity.EntityType;
                         point.Payload.Meta.EmbeddingModel = agentContext.EmbeddingModel;
                         point.Payload.Meta.OrgNamespace = org.Namespace;
+                        point.Payload.Meta.Deleted = entity.IsDeleted.HasValue && entity.IsDeleted.Value;
 
                         if (string.IsNullOrEmpty(point.Payload.Extra.EditorUrl))
                             point.Payload.Extra.EditorUrl = entityDescription.EditUIUrl;
