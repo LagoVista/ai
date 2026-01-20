@@ -516,6 +516,9 @@ namespace LagoVista.AI.Models
 
         public bool IsActive { get; set; } = true;
 
+        public List<string> Tags { get; set; } = new List<string>();
+        public string Category { get; set; }
+
         public string CreationDate { get; set; } = DateTime.UtcNow.ToString("o");
 
         public string LastUpdatedDate { get; set; } = DateTime.UtcNow.ToString("o");

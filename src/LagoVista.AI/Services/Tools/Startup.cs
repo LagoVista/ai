@@ -96,6 +96,13 @@ namespace LagoVista.AI.Services.Tools
             toolRegistry.RegisterTool<SessionKfrEvictTool>();
             toolRegistry.RegisterTool<SessionKfrListTool>();
             toolRegistry.RegisterTool<SessionKfrUpsertTool>();
+            
+            toolRegistry.RegisterTool<KfrListCategoriesTool>();
+            toolRegistry.RegisterTool<KfrListTagsTool>();
+            toolRegistry.RegisterTool<KfrQueryByCategoryTool>();
+            toolRegistry.RegisterTool<KfrQueryByTagsTool>();
+            toolRegistry.RegisterTool<KfrSetCategoryTool>();
+            toolRegistry.RegisterTool<KfrSetTagsTool>();
 
             // --- Chapter ActiveTools ---
             toolRegistry.RegisterTool<AddChapterAgentTool>();
