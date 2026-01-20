@@ -131,6 +131,18 @@ namespace LagoVista.AI.Services.Tools
             toolRegistry.RegisterTool<SwitchChapterTool>();
             toolRegistry.RegisterTool<RenameCurrentChapterTool>();
 
+            // -- Session Lists ActiveTools --
+            toolRegistry.RegisterTool<SessionListCreateTool>();
+            toolRegistry.RegisterTool<SessionListListTool>();
+            toolRegistry.RegisterTool<SessionListGetTool>();
+            toolRegistry.RegisterTool<SessionListUpdateTool>();
+            toolRegistry.RegisterTool<SessionListDeleteTool>();
+            toolRegistry.RegisterTool<SessionListItemAddTool>();
+            toolRegistry.RegisterTool<SessionListItemUpdateTool>();
+            toolRegistry.RegisterTool<SessionListItemRemoveTool>();
+            toolRegistry.RegisterTool<SessionListItemMoveTool>();
+            toolRegistry.RegisterTool<SessionListSummaryItemListTool>();
+
             /*--*/
 
             services.AddSingleton<IAgentToolRegistry>(toolRegistry);

@@ -50,11 +50,17 @@ namespace LagoVista.AI.Services.Tools
             public string SessionId { get; set; }
         }
 
+
+        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentToolExecutionContext context, CancellationToken cancellationToken = default)
+        {
+            // Need to keep for interface compatibility, but not used, will eventually be removed.
+            throw new NotImplementedException();    
+        }
+        
         /* --------------------------------------------------------------
          * EXECUTION LOGIC (Contract §4)
          * -------------------------------------------------------------- */
-        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context) => ExecuteAsync(argumentsJson, context.ToToolContext(), context.CancellationToken);
-        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, AgentToolExecutionContext context, CancellationToken cancellationToken = default)
+        public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context)
         {
             if (string.IsNullOrWhiteSpace(argumentsJson))
             {
@@ -72,7 +78,7 @@ namespace LagoVista.AI.Services.Tools
                 var reply = new HelloWorldResult
                 {
                     Message = $"Hello, {args.Name}!",
-                    SessionId = context?.Request?.SessionId,
+                    SessionId = context.Session.Id,
                 };
                 var json = JsonConvert.SerializeObject(reply);
                 return Task.FromResult(InvokeResult<string>.Create(json));

@@ -6,6 +6,7 @@ using LagoVista.Core.Interfaces;
 using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -167,6 +168,7 @@ namespace LagoVista.AI.Models
         public List<ModeHistory> ModeHistory { get; set; } = new List<ModeHistory>();
 
         public List<TouchedFile> TouchedFiles { get; set; } = new List<TouchedFile>();    
+        public List<AgentSessionListDefinition> Lists { get; set; } = new List<AgentSessionListDefinition>();   
 
         /// <summary>
         /// List of KFRs (Short Term Memory for Session)
@@ -555,5 +557,102 @@ namespace LagoVista.AI.Models
         public bool Archived { get; set; }
     
         public List<EntityHeader> Chapters { get; set; } 
+    }
+
+      /// <summary>
+    /// Top-level list definition. Contains optional schema fields for item metadata.
+    /// </summary>
+    public class AgentSessionListDefinition
+    {
+        public Guid Id { get; set; } = Guid.NewGuid();
+
+        /// <summary>
+        /// Unique across all lists.
+        /// </summary>
+        public string Slug { get; set; } = string.Empty;
+
+        public string Name { get; set; } = string.Empty;
+
+        public string Description { get; set; }
+
+        public int SchemaVersion { get; set; } = 1;
+
+        public List<AgentSessionListItem> Items { get; set; } = new List<AgentSessionListItem>();
+
+
+        public List<AgentSessionFieldDefinition> Fields { get; set; } = new List<AgentSessionFieldDefinition>();
+
+        public string CreationDate { get; set; } = DateTime.UtcNow.ToString("o");
+
+        public string LastUpdatedDate { get; set; } = DateTime.UtcNow.ToString("o");
+    }
+
+    /// <summary>
+    /// Defines a single metadata field in a list schema.
+    /// </summary>
+    public class AgentSessionFieldDefinition
+    {
+        /// <summary>
+        /// Unique within the list. Used as the key in ListItem.Data.
+        /// </summary>
+        public string Key { get; set; } = string.Empty;
+
+        public string Label { get; set; } = string.Empty;
+
+        [JsonConverter(typeof(StringEnumConverter))]
+        public AgentSessionListFieldDataType Type { get; set; } = AgentSessionListFieldDataType.Text;
+
+        public bool Required { get; set; }
+
+        /// <summary>
+        /// Only applicable when Type == Enum.
+        public List<string> EnumValues { get; set; } = new List<string>();
+
+        public int SortOrder { get; set; }
+    }
+
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum AgentSessionListFieldDataType
+    {
+        Text,
+        Number,
+        Bool,
+        Date,
+        DateTime,
+        Enum
+    }
+
+    /// <summary>
+    /// Item within a list. Optional Data dictionary holds values for schema-defined fields.
+    /// </summary>
+    public class AgentSessionListItem
+    {
+        public Guid Id { get; set; } = Guid.NewGuid();
+
+        public Guid ListId { get; set; }
+
+        /// <summary>
+        /// Unique within the list.
+        /// </summary>
+        public string Slug { get; set; } = string.Empty;
+
+        public string Name { get; set; } = string.Empty;
+
+        public string Description { get; set; }
+
+        /// <summary>
+        /// Used for ordering/reordering. V1 can renumber freely.
+        /// </summary>
+        public int Order { get; set; }
+
+        /// <summary>
+        /// Metadata values keyed by FieldDefinition.Key.
+        /// Use JToken to support multiple primitive types while staying Json.NET-friendly.
+        /// </summary>
+        public Dictionary<string, string> Data { get; set; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        public string CreationDate { get; set; } = DateTime.UtcNow.ToString("o");
+
+        public string LastUpdatedDate { get; set; } = DateTime.UtcNow.ToString("o");
     }
 }
