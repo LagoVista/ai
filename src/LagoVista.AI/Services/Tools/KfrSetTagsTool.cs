@@ -16,7 +16,7 @@ namespace LagoVista.AI.Services.Tools
     /// </summary>
     public sealed class KfrSetTagsTool : SessionKfrToolBase
     {
-        public const string ToolName = "kfr_set_tags";
+        public const string ToolName = "session_kfr_set_tags";
         public const string ToolSummary = "KFR: set tags on an entry";
 
         public const string ToolUsageMetadata = @"KFR: Set Tags

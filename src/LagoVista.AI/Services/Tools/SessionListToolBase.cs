@@ -40,7 +40,16 @@ namespace LagoVista.AI.Services.Tools
         public abstract Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context);
 
         protected static Task<InvokeResult<string>> Fail(string message)
-            => Task.FromResult(InvokeResult<string>.FromError(message));
+        {
+            var result = new
+            {
+                success = false,
+                status = "error",
+                error = message
+            };
+
+            return Task.FromResult(InvokeResult<string>.Create(JsonConvert.SerializeObject(result)));
+        }
 
         protected static string UtcStamp() => DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture);
 

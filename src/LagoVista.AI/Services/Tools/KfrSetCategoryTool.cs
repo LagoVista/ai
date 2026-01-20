@@ -16,7 +16,7 @@ namespace LagoVista.AI.Services.Tools
     /// </summary>
     public sealed class KfrSetCategoryTool : SessionKfrToolBase
     {
-        public const string ToolName = "kfr_set_category";
+        public const string ToolName = "session_kfr_set_category";
         public const string ToolSummary = "KFR: set category on an entry";
 
         public const string ToolUsageMetadata = @"KFR: Set Category

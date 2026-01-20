@@ -17,7 +17,7 @@ namespace LagoVista.AI.Services.Tools
     /// </summary>
     public sealed class KfrQueryByTagsTool : SessionKfrToolBase
     {
-        public const string ToolName = "kfr_query_by_tags";
+        public const string ToolName = "session_kfr_query_by_tags";
         public const string ToolSummary = "KFR: query entries by tags";
 
         public const string ToolUsageMetadata = @"KFR: Query By Tags
