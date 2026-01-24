@@ -40,7 +40,7 @@ namespace LagoVista.AI.Models
 
         public Model()
         {
-            Revisions = new List<ModelRevision>();
+            Revisions = new List<AiModelRevision>();
             Experiments = new List<Experiment>();
             Notes = new List<ModelNotes>();
             Icon = "icon-ae-database-3";
@@ -57,7 +57,7 @@ namespace LagoVista.AI.Models
         public EntityHeader ModelLabelSet { get; set; }
 
         [FormField(LabelResource: AIResources.Names.Model_Revisions, FactoryUrl: "/api/ml/model/revision/factory", FieldType: FieldTypes.ChildList, ResourceType: typeof(AIResources))]
-        public List<ModelRevision> Revisions { get; set; }
+        public List<AiModelRevision> Revisions { get; set; }
 
         [FormField(LabelResource: AIResources.Names.Model_ModelType, FieldType: FieldTypes.Picker, EnumType: typeof(ModelType), IsRequired: true, WaterMark: AIResources.Names.Model_Type_Select, ResourceType: typeof(AIResources))]
         public EntityHeader<ModelType> ModelType { get; set; }

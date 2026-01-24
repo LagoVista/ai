@@ -45,7 +45,7 @@ namespace LagoVista.AI.Managers
             return InvokeResult.Success;
         }
 
-        public async Task<InvokeResult<ModelRevision>> UploadModelAsync(string modelId, int revisionIndex, byte[] mlModel, EntityHeader org, EntityHeader user)
+        public async Task<InvokeResult<AiModelRevision>> UploadModelAsync(string modelId, int revisionIndex, byte[] mlModel, EntityHeader org, EntityHeader user)
         {
             await AuthorizeOrgAccessAsync(user, org, typeof(Model), Actions.Update);
             await this._modelRepo.AddModelAsync(org.Id, modelId, revisionIndex, mlModel);
@@ -54,10 +54,10 @@ namespace LagoVista.AI.Managers
 
 
 
-            var revision = new ModelRevision();
+            var revision = new AiModelRevision();
 
 
-            return InvokeResult<ModelRevision>.Create(revision);
+            return InvokeResult<AiModelRevision>.Create(revision);
         }
 
         public async Task<DependentObjectCheckResult> CheckInUseAsync(string id, EntityHeader org, EntityHeader user)
@@ -120,7 +120,7 @@ namespace LagoVista.AI.Managers
             return await _modelRepo.GetModelAsync(org.Id, modelId, revision);
         }
 
-        public async Task<InvokeResult<ModelRevision>> AddRevisionAsync(string modelId, ModelRevision revision, EntityHeader org, EntityHeader user)
+        public async Task<InvokeResult<AiModelRevision>> AddRevisionAsync(string modelId, AiModelRevision revision, EntityHeader org, EntityHeader user)
         {
             revision.Id = Guid.NewGuid().ToId();
 
@@ -149,7 +149,7 @@ namespace LagoVista.AI.Managers
 
             await this.UpdateModelAsync(model, org, user);
 
-            return InvokeResult<ModelRevision>.Create(revision);
+            return InvokeResult<AiModelRevision>.Create(revision);
         }
     }
 }

@@ -45,7 +45,7 @@ namespace LagoVista.AI.Managers
 
         public async Task<ListResponse<AgentPersonaDefinitionSummary>> GetAgentPersonaDefinitionsForOrgAsync(EntityHeader org, EntityHeader user, ListRequest listRequest)
         {
-            await AuthorizeOrgAccessAsync(user, org.Id, typeof(Models.Label));
+            await AuthorizeOrgAccessAsync(user, org.Id, typeof(Models.AiModelLabel));
             return await _repo.GetAgentPersonaDefinitionSummariesForOrgAsync(org.Id, listRequest);
         }
 

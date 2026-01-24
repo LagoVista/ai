@@ -72,7 +72,7 @@ namespace LagoVista.AI.Rest
         /// <returns></returns>
         [HttpPost("/client/api/ml/model/{modelid}/{revision}")]
         [DisableRequestSizeLimit]
-        public Task<InvokeResult<ModelRevision>> UploadModel(string modelid, int revision, IFormFile file)
+        public Task<InvokeResult<AiModelRevision>> UploadModel(string modelid, int revision, IFormFile file)
         {
             if (file == null)
             {

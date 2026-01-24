@@ -28,7 +28,7 @@ namespace LagoVista.AI.Managers
             _labelSetRepo = labelSetRepo ?? throw new NullReferenceException(nameof(labelSetRepo));
         }
 
-        public async Task<InvokeResult> AddLabelAsync(Models.Label label, EntityHeader org, EntityHeader user)
+        public async Task<InvokeResult> AddLabelAsync(Models.AiModelLabel label, EntityHeader org, EntityHeader user)
         {
             ValidationCheck(label, Actions.Create);
             await AuthorizeAsync(label, AuthorizeResult.AuthorizeActions.Create, user, org);
@@ -58,7 +58,7 @@ namespace LagoVista.AI.Managers
             return InvokeResult.Success;
         }
 
-        public async Task<Models.Label> GetLabelAsync(string id, EntityHeader org, EntityHeader user)
+        public async Task<Models.AiModelLabel> GetLabelAsync(string id, EntityHeader org, EntityHeader user)
         {
             var model = await _repo.GetLabelAsync(id);
             await AuthorizeAsync(model, AuthorizeResult.AuthorizeActions.Read, user, org);
@@ -78,19 +78,19 @@ namespace LagoVista.AI.Managers
             return await _labelSetRepo.GetLabelSetsForOrgAsync(org.Id, listRequest);
         }
 
-        public async Task<ListResponse<LabelSummary>> GetLabelsForOrgAsync(EntityHeader org, EntityHeader user, ListRequest request)
+        public async Task<ListResponse<AiModelLabelSummary>> GetLabelsForOrgAsync(EntityHeader org, EntityHeader user, ListRequest request)
         {
-            await AuthorizeOrgAccessAsync(user, org.Id, typeof(Models.Label));
+            await AuthorizeOrgAccessAsync(user, org.Id, typeof(Models.AiModelLabel));
             return await _repo.GetLabelsForOrgAsync(org.Id, request);
         }
 
-        public async Task<ListResponse<LabelSummary>> SearchLabelsAsync(string search, EntityHeader org, EntityHeader user, ListRequest request)
+        public async Task<ListResponse<AiModelLabelSummary>> SearchLabelsAsync(string search, EntityHeader org, EntityHeader user, ListRequest request)
         {
-            await AuthorizeOrgAccessAsync(user, org.Id, typeof(Models.Label));
+            await AuthorizeOrgAccessAsync(user, org.Id, typeof(Models.AiModelLabel));
             return await _repo.SearchLabelsForOrgAsync(org.Id, search, request);
         }
 
-        public async Task<InvokeResult> UpdateLabelAsync(Models.Label label, EntityHeader org, EntityHeader user)
+        public async Task<InvokeResult> UpdateLabelAsync(Models.AiModelLabel label, EntityHeader org, EntityHeader user)
         {
             await AuthorizeAsync(label, AuthorizeResult.AuthorizeActions.Update, user, org);
 

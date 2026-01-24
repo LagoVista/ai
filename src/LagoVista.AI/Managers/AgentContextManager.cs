@@ -112,7 +112,7 @@ namespace LagoVista.AI.Managers
 
         public async Task<ListResponse<AgentContextSummary>> GetAgentContextsForOrgAsync(EntityHeader org, EntityHeader user, ListRequest listRequest)
         {
-            await AuthorizeOrgAccessAsync(user, org.Id, typeof(Models.Label));
+            await AuthorizeOrgAccessAsync(user, org.Id, typeof(Models.AiModelLabel));
             return await _repo.GetAgentContextSummariesForOrgAsync(org.Id, listRequest);
         }
 

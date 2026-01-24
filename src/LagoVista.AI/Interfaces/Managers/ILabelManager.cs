@@ -12,11 +12,11 @@ namespace LagoVista.AI.Interfaces.Managers
 {
     public interface ILabelManager
     {
-        Task<InvokeResult> AddLabelAsync(Models.Label label, EntityHeader org, EntityHeader user);
-        Task<InvokeResult> UpdateLabelAsync(Models.Label label, EntityHeader org, EntityHeader user);
-        Task<Models.Label> GetLabelAsync(string id, EntityHeader org, EntityHeader user);
-        Task<ListResponse<LabelSummary>> GetLabelsForOrgAsync(EntityHeader org, EntityHeader user, ListRequest listRequest);
-        Task<ListResponse<LabelSummary>> SearchLabelsAsync(string search, EntityHeader org, EntityHeader user, ListRequest listRequest);
+        Task<InvokeResult> AddLabelAsync(Models.AiModelLabel label, EntityHeader org, EntityHeader user);
+        Task<InvokeResult> UpdateLabelAsync(Models.AiModelLabel label, EntityHeader org, EntityHeader user);
+        Task<Models.AiModelLabel> GetLabelAsync(string id, EntityHeader org, EntityHeader user);
+        Task<ListResponse<AiModelLabelSummary>> GetLabelsForOrgAsync(EntityHeader org, EntityHeader user, ListRequest listRequest);
+        Task<ListResponse<AiModelLabelSummary>> SearchLabelsAsync(string search, EntityHeader org, EntityHeader user, ListRequest listRequest);
 
 
         Task<InvokeResult> AddLabelSetAsync(ModelLabelSet label, EntityHeader org, EntityHeader user);

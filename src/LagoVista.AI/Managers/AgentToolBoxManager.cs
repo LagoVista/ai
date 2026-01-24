@@ -58,7 +58,7 @@ namespace LagoVista.AI.Managers
 
         public async Task<ListResponse<AgentToolBoxSummary>> GetAgentToolBoxesForOrgAsync(EntityHeader org, EntityHeader user, ListRequest listRequest)
         {
-            await AuthorizeOrgAccessAsync(user, org.Id, typeof(Models.Label));
+            await AuthorizeOrgAccessAsync(user, org.Id, typeof(Models.AiModelLabel));
             return await _repo.GetAgentToolBoxSummariesForOrgAsync(org.Id, listRequest);
         }
 

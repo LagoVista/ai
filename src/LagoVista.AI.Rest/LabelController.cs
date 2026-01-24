@@ -40,7 +40,7 @@ namespace LagoVista.AI.Rest
         /// <param name="label"></param>
         /// <returns></returns>
         [HttpPost("/api/ml/label")]
-        public Task<InvokeResult> AddLabelAsync([FromBody] Label label)
+        public Task<InvokeResult> AddLabelAsync([FromBody] AiModelLabel label)
         {
             return _labelManager.AddLabelAsync(label, OrgEntityHeader, UserEntityHeader);
         }
@@ -51,7 +51,7 @@ namespace LagoVista.AI.Rest
         /// <param name="label"></param>
         /// <returns></returns>
         [HttpPut("/api/ml/label")]
-        public Task<InvokeResult> UpdateLabelAsync([FromBody] Label label)
+        public Task<InvokeResult> UpdateLabelAsync([FromBody] AiModelLabel label)
         {
             SetUpdatedProperties(label);
             return _labelManager.UpdateLabelAsync(label, OrgEntityHeader, UserEntityHeader);
@@ -63,9 +63,9 @@ namespace LagoVista.AI.Rest
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("/api/ml/label/{id}")]
-        public async Task<DetailResponse<Label>> GetLabelAsync(string id)
+        public async Task<DetailResponse<AiModelLabel>> GetLabelAsync(string id)
         {
-            return DetailResponse<Label>.Create(await _labelManager.GetLabelAsync(id, OrgEntityHeader, UserEntityHeader));
+            return DetailResponse<AiModelLabel>.Create(await _labelManager.GetLabelAsync(id, OrgEntityHeader, UserEntityHeader));
         }
 
 
@@ -74,9 +74,9 @@ namespace LagoVista.AI.Rest
         /// </summary>
         /// <returns></returns>
         [HttpGet("/api/ml/label/factory")]
-        public DetailResponse<Label> CreateLabelAsync()
+        public DetailResponse<AiModelLabel> CreateLabelAsync()
         {
-            var result = DetailResponse<Label>.Create();
+            var result = DetailResponse<AiModelLabel>.Create();
             result.Model.Id = Guid.NewGuid().ToId();
             SetOwnedProperties(result.Model);
             SetAuditProperties(result.Model);
@@ -89,7 +89,7 @@ namespace LagoVista.AI.Rest
         /// </summary>
         /// <returns></returns>
         [HttpGet("/api/ml/labels")]
-        public Task<ListResponse<LabelSummary>> GetLabelsForOrgAsync()
+        public Task<ListResponse<AiModelLabelSummary>> GetLabelsForOrgAsync()
         {
             return _labelManager.GetLabelsForOrgAsync(OrgEntityHeader, UserEntityHeader, GetListRequestFromHeader());
         }
@@ -100,7 +100,7 @@ namespace LagoVista.AI.Rest
         /// <param name="search">?search= Search text for labels.</param>
         /// <returns></returns>
         [HttpGet("/api/ml/labels/search")]
-        public Task<ListResponse<LabelSummary>> GetLabelsForOrgAsync(string search)
+        public Task<ListResponse<AiModelLabelSummary>> GetLabelsForOrgAsync(string search)
         {
             return _labelManager.SearchLabelsAsync(search, OrgEntityHeader, UserEntityHeader, GetListRequestFromHeader());
         }
