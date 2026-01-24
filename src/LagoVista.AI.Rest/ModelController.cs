@@ -74,7 +74,7 @@ namespace LagoVista.AI.Rest
         /// <returns></returns>
         [HttpPost("/api/ml/model/{modelid}/{revision}")]
         [DisableRequestSizeLimit]
-        public Task<InvokeResult<ModelRevision>> UploadModel(string modelid, int revision, IFormFile file)
+        public Task<InvokeResult<AiModelRevision>> UploadModel(string modelid, int revision, IFormFile file)
         {
             if(file == null)
             {
@@ -145,10 +145,10 @@ namespace LagoVista.AI.Rest
         /// <param name="modelid"></param>
         /// <returns></returns>
         [HttpGet("/api/ml/model/{modelid}/revisions")]
-        public async Task<ListResponse<ModelRevision>> GetModelRevisionsForModel(string modelid)
+        public async Task<ListResponse<AiModelRevision>> GetModelRevisionsForModel(string modelid)
         {
             var model = await _mgr.GetModelAsync(modelid, OrgEntityHeader, UserEntityHeader);
-            return ListResponse<ModelRevision>.Create(model.Revisions);
+            return ListResponse<AiModelRevision>.Create(model.Revisions);
         }
 
         /// <summary>
@@ -182,9 +182,9 @@ namespace LagoVista.AI.Rest
         /// </summary>
         /// <returns></returns>
         [HttpGet("/api/ml/model/revision/factory")]
-        public DetailResponse<ModelRevision> CreateNewModelRevision()
+        public DetailResponse<AiModelRevision> CreateNewModelRevision()
         {
-            var model = DetailResponse<ModelRevision>.Create();
+            var model = DetailResponse<AiModelRevision>.Create();
             model.Model.Id = Guid.NewGuid().ToId();
             model.Model.Datestamp = DateTime.UtcNow.ToString();
             return model;

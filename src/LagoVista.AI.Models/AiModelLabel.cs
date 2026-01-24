@@ -14,9 +14,9 @@ namespace LagoVista.AI.Models
 {
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.Label_Title, AIResources.Names.Label_Help, AIResources.Names.Label_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources),
         FactoryUrl: "/api/ml/label/factory")]
-    public class Label : EntityBase,  IDescriptionEntity, IValidateable, IFormDescriptor, ITitledEntity, IIconEntity
+    public class AiModelLabel : EntityBase,  IDescriptionEntity, IValidateable, IFormDescriptor, ITitledEntity, IIconEntity
     {
-        public Label()
+        public AiModelLabel()
         {
 
         }
@@ -28,9 +28,9 @@ namespace LagoVista.AI.Models
         [FormField(LabelResource: AIResources.Names.Label_Icon, FieldType: FieldTypes.Icon, IsRequired: false, ResourceType: typeof(AIResources))]
         public string Icon { get; set; }
  
-        public LabelSummary CreateSummary()
+        public AiModelLabelSummary CreateSummary()
         {
-            return new LabelSummary()
+            return new AiModelLabelSummary()
             {
                 Id = Id,
                 Name = Name,
@@ -52,7 +52,7 @@ namespace LagoVista.AI.Models
         }
     }
 
-    public class LabelSummary : SummaryData
+    public class AiModelLabelSummary : SummaryData
     {
 
     }

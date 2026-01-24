@@ -156,7 +156,7 @@ namespace LagoVista.AI.Rest
         /// </summary>
         /// <returns></returns>
         [HttpGet("/clientapi/ml/labels")]
-        public Task<ListResponse<LabelSummary>> GetLabelsForOrgAsync()
+        public Task<ListResponse<AiModelLabelSummary>> GetLabelsForOrgAsync()
         {
             return _lblManager.GetLabelsForOrgAsync(OrgEntityHeader, UserEntityHeader, GetListRequestFromHeader());
         }
@@ -183,7 +183,7 @@ namespace LagoVista.AI.Rest
         }
 
         [HttpPost("/clientapi/ml/model/{modelid}/{revision}")]
-        public Task<InvokeResult<ModelRevision>> UploadModel(string modelid, int revision, IFormFile file)
+        public Task<InvokeResult<AiModelRevision>> UploadModel(string modelid, int revision, IFormFile file)
         {
             if (file == null)
             {
@@ -208,7 +208,7 @@ namespace LagoVista.AI.Rest
 
 
         [HttpPost("/clientapi/ml/model/{modelid}")]
-        public Task<InvokeResult<ModelRevision>> UploadRevision(string modelId, [FromBody] ModelRevision revision)
+        public Task<InvokeResult<AiModelRevision>> UploadRevision(string modelId, [FromBody] AiModelRevision revision)
         {
             return _modelManager.AddRevisionAsync(modelId, revision, OrgEntityHeader, UserEntityHeader);
         }

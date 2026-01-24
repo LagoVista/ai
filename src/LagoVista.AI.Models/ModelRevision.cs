@@ -17,45 +17,45 @@ namespace LagoVista.AI.Models
 {
     public enum ModelRevisionStatus
     {
-        [EnumLabel(ModelRevision.Status_New, AIResources.Names.ModelRevision_Status_New, typeof(AIResources))]
+        [EnumLabel(AiModelRevision.Status_New, AIResources.Names.ModelRevision_Status_New, typeof(AIResources))]
         New,
-        [EnumLabel(ModelRevision.Status_Experimental, AIResources.Names.ModelRevision_Status_Experimental, typeof(AIResources))]
+        [EnumLabel(AiModelRevision.Status_Experimental, AIResources.Names.ModelRevision_Status_Experimental, typeof(AIResources))]
         Experimental,
-        [EnumLabel(ModelRevision.Status_Alpha, AIResources.Names.ModelRevision_Status_Alpha, typeof(AIResources))]
+        [EnumLabel(AiModelRevision.Status_Alpha, AIResources.Names.ModelRevision_Status_Alpha, typeof(AIResources))]
         Alpha,
-        [EnumLabel(ModelRevision.Status_Beta, AIResources.Names.ModelRevision_Status_Beta, typeof(AIResources))]
+        [EnumLabel(AiModelRevision.Status_Beta, AIResources.Names.ModelRevision_Status_Beta, typeof(AIResources))]
         Beta,
-        [EnumLabel(ModelRevision.Status_Production, AIResources.Names.ModelRevision_Status_Production, typeof(AIResources))]
+        [EnumLabel(AiModelRevision.Status_Production, AIResources.Names.ModelRevision_Status_Production, typeof(AIResources))]
         Production,
-        [EnumLabel(ModelRevision.Status_Obsolete, AIResources.Names.ModelRevision_Status_Obsolete, typeof(AIResources))]
+        [EnumLabel(AiModelRevision.Status_Obsolete, AIResources.Names.ModelRevision_Status_Obsolete, typeof(AIResources))]
         Obsolete,
     }
 
     public enum ModelQuality
     {
-        [EnumLabel(ModelRevision.ModelQuality_Unknown, AIResources.Names.ModelRevision_Quality_Unknown, typeof(AIResources))]
+        [EnumLabel(AiModelRevision.ModelQuality_Unknown, AIResources.Names.ModelRevision_Quality_Unknown, typeof(AIResources))]
         Unknown,
-        [EnumLabel(ModelRevision.ModelQuality_Poor, AIResources.Names.ModelRevision_Quality_Poor, typeof(AIResources))]
+        [EnumLabel(AiModelRevision.ModelQuality_Poor, AIResources.Names.ModelRevision_Quality_Poor, typeof(AIResources))]
         Poor,
-        [EnumLabel(ModelRevision.ModelQuality_Medium, AIResources.Names.ModelRevision_Quality_Medium, typeof(AIResources))]
+        [EnumLabel(AiModelRevision.ModelQuality_Medium, AIResources.Names.ModelRevision_Quality_Medium, typeof(AIResources))]
         Medium,
-        [EnumLabel(ModelRevision.ModelQuality_Good, AIResources.Names.ModelRevision_Quality_Good, typeof(AIResources))]
+        [EnumLabel(AiModelRevision.ModelQuality_Good, AIResources.Names.ModelRevision_Quality_Good, typeof(AIResources))]
         Good,
-        [EnumLabel(ModelRevision.ModelQuality_Excellent, AIResources.Names.ModelRevision_Quality_Excellent, typeof(AIResources))]
+        [EnumLabel(AiModelRevision.ModelQuality_Excellent, AIResources.Names.ModelRevision_Quality_Excellent, typeof(AIResources))]
         Excellent,
     }
 
     public enum InputType
     {
-        [EnumLabel(ModelRevision.InputType_Image, AIResources.Names.InputType_Image, typeof(AIResources))]
+        [EnumLabel(AiModelRevision.InputType_Image, AIResources.Names.InputType_Image, typeof(AIResources))]
         Image,
-        [EnumLabel(ModelRevision.InputType_DataPoints, AIResources.Names.InputType_DataPoints, typeof(AIResources))]
+        [EnumLabel(AiModelRevision.InputType_DataPoints, AIResources.Names.InputType_DataPoints, typeof(AIResources))]
         DataPoints,
     }
 
     [EntityDescription(AIDomain.AIAdmin, AIResources.Names.ModelRevision_Title, AIResources.Names.ModelRevision_Help, 
         AIResources.Names.ModelRevision_Description,EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources))]
-    public class ModelRevision : IFormDescriptor
+    public class AiModelRevision : IFormDescriptor
     {
         public const string ModelQuality_Unknown = "uknown";
         public const string ModelQuality_Poor = "Poor";
@@ -73,7 +73,7 @@ namespace LagoVista.AI.Models
         public const string InputType_Image = "image";
         public const string InputType_DataPoints = "datapoints";
 
-        public ModelRevision()
+        public AiModelRevision()
         {
             Id = Guid.NewGuid().ToId();
             Labels = new List<ModelLabel>();

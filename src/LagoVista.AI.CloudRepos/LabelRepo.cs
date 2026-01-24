@@ -12,7 +12,7 @@ using LagoVista.IoT.Logging.Loggers;
 
 namespace LagoVista.AI.CloudRepos
 {
-    public class LabelRepo : DocumentDBRepoBase<Label>, ILabelRepo
+    public class LabelRepo : DocumentDBRepoBase<AiModelLabel>, ILabelRepo
     {
         private readonly bool _shouldConsolidateCollections;
 
@@ -24,24 +24,24 @@ namespace LagoVista.AI.CloudRepos
 
         protected override bool ShouldConsolidateCollections => _shouldConsolidateCollections;
 
-        public Task AddLabelAsync(Label label)
+        public Task AddLabelAsync(AiModelLabel label)
         {
             return this.CreateDocumentAsync(label);
         }
 
-        public Task<Label> GetLabelAsync(string id)
+        public Task<AiModelLabel> GetLabelAsync(string id)
         {
             return this.GetDocumentAsync(id);
         }
 
-        public async Task<ListResponse<LabelSummary>> GetLabelsForOrgAsync(string orgId, ListRequest request)
+        public async Task<ListResponse<AiModelLabelSummary>> GetLabelsForOrgAsync(string orgId, ListRequest request)
         {
             var items = await base.QueryAsync(qry => qry.OwnerOrganization.Id == orgId);
 
             var summaries = from item in items
                             select item.CreateSummary();
 
-            return ListResponse<LabelSummary>.Create(request, summaries);
+            return ListResponse<AiModelLabelSummary>.Create(request, summaries);
         }
 
         public async Task<bool> QueryKeyInUseAsync(string key, string orgId)
@@ -50,17 +50,17 @@ namespace LagoVista.AI.CloudRepos
             return items.Any();
         }
 
-        public async Task<ListResponse<LabelSummary>> SearchLabelsForOrgAsync(string orgId, string searchString, ListRequest request)
+        public async Task<ListResponse<AiModelLabelSummary>> SearchLabelsForOrgAsync(string orgId, string searchString, ListRequest request)
         {
             var items = await base.QueryAsync(qry => qry.OwnerOrganization.Id == orgId && qry.Name.Contains(searchString));
 
             var summaries = from item in items
                             select item.CreateSummary();
 
-            return ListResponse<LabelSummary>.Create(request, summaries);
+            return ListResponse<AiModelLabelSummary>.Create(request, summaries);
         }
 
-        public Task UpdateLabelAsync(Label label)
+        public Task UpdateLabelAsync(AiModelLabel label)
         {
             return this.UpsertDocumentAsync(label);
         }

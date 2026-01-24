@@ -10,12 +10,12 @@ namespace LagoVista.AI.Interfaces.Repos
 {
     public interface ILabelRepo
     {
-        Task AddLabelAsync(Label label);
-        Task UpdateLabelAsync(Label label);
+        Task AddLabelAsync(AiModelLabel label);
+        Task UpdateLabelAsync(AiModelLabel label);
 
-        Task<Label> GetLabelAsync(string id);
-        Task<ListResponse<LabelSummary>> SearchLabelsForOrgAsync(string orgId, string searchString, ListRequest listRequest);
-        Task<ListResponse<LabelSummary>> GetLabelsForOrgAsync(string orgId, ListRequest listRequest);
+        Task<AiModelLabel> GetLabelAsync(string id);
+        Task<ListResponse<AiModelLabelSummary>> SearchLabelsForOrgAsync(string orgId, string searchString, ListRequest listRequest);
+        Task<ListResponse<AiModelLabelSummary>> GetLabelsForOrgAsync(string orgId, ListRequest listRequest);
         Task<bool> QueryKeyInUseAsync(string key, string org);
     }
 }
