@@ -9,9 +9,19 @@ using System.Text;
 
 namespace LagoVista.AI.Models
 {
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.AgentSession_Title, AIResources.Names.AgentToolBox_Help, AIResources.Names.AgentToolBox_Description, EntityDescriptionAttribute.EntityTypes.BusinessObject, typeof(AIResources),
-           GetUrl: "/api/ai/toolbox/{id}", GetListUrl: "/api/ai/toolboxes", FactoryUrl: "/api/ai/toolbox/factory", SaveUrl: "/api/ai/toolbox", DeleteUrl: "/api/ai/toolbox/{id}",
-           ListUIUrl: "/mlworkbench/toolboxs", EditUIUrl: "/mlworkbench/toolbox/{id}", CreateUIUrl: "/mlworkbench/toolbox/add", Icon: "icon-ae-direction")]
+    [EntityDescription(
+        AIDomain.AIAdmin, AIResources.Names.AgentSession_Title, AIResources.Names.AgentToolBox_Help, AIResources.Names.AgentToolBox_Description,
+        EntityDescriptionAttribute.EntityTypes.BusinessObject, typeof(AIResources),
+
+        GetUrl: "/api/ai/toolbox/{id}", GetListUrl: "/api/ai/toolboxes", FactoryUrl: "/api/ai/toolbox/factory", SaveUrl: "/api/ai/toolbox",
+        DeleteUrl: "/api/ai/toolbox/{id}",
+
+        ListUIUrl: "/mlworkbench/toolboxs", EditUIUrl: "/mlworkbench/toolbox/{id}", CreateUIUrl: "/mlworkbench/toolbox/add",
+
+        Icon: "icon-ae-direction", ClusterKey: "prompting", ModelType: EntityDescriptionAttribute.ModelTypes.Configuration,
+        Shape: EntityDescriptionAttribute.EntityShapes.Entity, Lifecycle: EntityDescriptionAttribute.Lifecycles.DesignTime,
+        Sensitivity: EntityDescriptionAttribute.Sensitivities.Internal, IndexInclude: true, IndexTier: EntityDescriptionAttribute.IndexTiers.Secondary,
+        IndexPriority: 75, IndexTagsCsv: "ai,prompting,toolbox")]
     public class AgentToolBox : EntityBase, IValidateable, ISummaryFactory, IFormDescriptor, IFormDescriptorCol2, IAgentKnowledgeProvider
     {
 

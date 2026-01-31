@@ -31,8 +31,15 @@ namespace LagoVista.AI.Models
     }
 
 
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.AgentContext_Mode_Title, AIResources.Names.AgentContext_Mode_Description, AIResources.Names.AgentContext_Mode_Description, EntityDescriptionAttribute.EntityTypes.ChildObject, typeof(AIResources),
-    FactoryUrl: "/api/ai/agentcontext/mode/factory")]
+    [EntityDescription(
+        AIDomain.AIAdmin, AIResources.Names.AgentContext_Mode_Title, AIResources.Names.AgentContext_Mode_Description,
+        AIResources.Names.AgentContext_Mode_Description, EntityDescriptionAttribute.EntityTypes.ChildObject, typeof(AIResources),
+
+        FactoryUrl: "/api/ai/agentcontext/mode/factory",
+
+        ClusterKey: "agent", ModelType: EntityDescriptionAttribute.ModelTypes.Configuration, Shape: EntityDescriptionAttribute.EntityShapes.ChildObject,
+        Lifecycle: EntityDescriptionAttribute.Lifecycles.DesignTime, Sensitivity: EntityDescriptionAttribute.Sensitivities.Internal, IndexInclude: true,
+        IndexTier: EntityDescriptionAttribute.IndexTiers.Aux, IndexPriority: 40, IndexTagsCsv: "ai,agent,child")]
     public sealed class AgentMode : IFormDescriptor, IFormDescriptorCol2, IAgentKnowledgeProvider, IToolBoxProvider
     {
         public const string AgentMode_AgentModeStaus_New = "new";

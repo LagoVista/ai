@@ -14,9 +14,19 @@ using System.Text;
 
 namespace LagoVista.AI.Models
 {
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.LabelSet_Title, AIResources.Names.LabelSet_Help, AIResources.Names.LabelSet_Help, EntityDescriptionAttribute.EntityTypes.CoreIoTModel, typeof(AIResources),
-        FactoryUrl: "/api/ml/labelset/factory", GetUrl: "/api/ml/labelset/{id}", DeleteUrl: "/api/ml/labelset/{id}", SaveUrl: "/api/ml/labelset", GetListUrl: "/api/ml/labelsets",
-        ListUIUrl: "/mlworkbench/settings/labels", CreateUIUrl: "/mlworkbench/settings/label/add",  EditUIUrl: "/mlworkbench/settings/label/{id}", Icon: "icon-pz-text-2")]
+    [EntityDescription(
+        AIDomain.AIAdmin, AIResources.Names.LabelSet_Title, AIResources.Names.LabelSet_Help, AIResources.Names.LabelSet_Help,
+        EntityDescriptionAttribute.EntityTypes.CoreIoTModel, typeof(AIResources),
+
+        FactoryUrl: "/api/ml/labelset/factory", GetUrl: "/api/ml/labelset/{id}", DeleteUrl: "/api/ml/labelset/{id}", SaveUrl: "/api/ml/labelset",
+        GetListUrl: "/api/ml/labelsets",
+
+        ListUIUrl: "/mlworkbench/settings/labels", CreateUIUrl: "/mlworkbench/settings/label/add", EditUIUrl: "/mlworkbench/settings/label/{id}",
+
+        Icon: "icon-pz-text-2", ClusterKey: "taxonomy", ModelType: EntityDescriptionAttribute.ModelTypes.Taxonomy,
+        Shape: EntityDescriptionAttribute.EntityShapes.Entity, Lifecycle: EntityDescriptionAttribute.Lifecycles.DesignTime,
+        Sensitivity: EntityDescriptionAttribute.Sensitivities.Internal, IndexInclude: true, IndexTier: EntityDescriptionAttribute.IndexTiers.Primary,
+        IndexPriority: 85, IndexTagsCsv: "ai,taxonomy,labels")]
     public class ModelLabelSet : EntityBase, IDescriptionEntity, IValidateable, IFormDescriptor, ICategorized, IIconEntity
     {
        

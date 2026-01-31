@@ -12,8 +12,15 @@ using System.Collections.Generic;
 
 namespace LagoVista.AI.Models
 {
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.Label_Title, AIResources.Names.Label_Help, AIResources.Names.Label_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources),
-        FactoryUrl: "/api/ml/label/factory")]
+    [EntityDescription(
+        AIDomain.AIAdmin, AIResources.Names.Label_Title, AIResources.Names.Label_Help, AIResources.Names.Label_Description,
+        EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources),
+
+        FactoryUrl: "/api/ml/label/factory",
+
+        ClusterKey: "taxonomy", ModelType: EntityDescriptionAttribute.ModelTypes.Taxonomy, Shape: EntityDescriptionAttribute.EntityShapes.Entity,
+        Lifecycle: EntityDescriptionAttribute.Lifecycles.DesignTime, Sensitivity: EntityDescriptionAttribute.Sensitivities.Internal, IndexInclude: true,
+        IndexTier: EntityDescriptionAttribute.IndexTiers.Aux, IndexPriority: 45, IndexTagsCsv: "ai,taxonomy,label")]
     public class AiModelLabel : EntityBase,  IDescriptionEntity, IValidateable, IFormDescriptor, ITitledEntity, IIconEntity
     {
         public AiModelLabel()

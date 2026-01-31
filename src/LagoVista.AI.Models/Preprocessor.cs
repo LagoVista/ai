@@ -12,8 +12,15 @@ using System.Text;
 
 namespace LagoVista.AI.Models
 {
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.Preprocessor_Title, AIResources.Names.Preprocessor_Help, AIResources.Names.Preprocessor_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources),
-        FactoryUrl: "/api/ml/model/preprocessor/factory")]
+    [EntityDescription(
+        AIDomain.AIAdmin, AIResources.Names.Preprocessor_Title, AIResources.Names.Preprocessor_Help, AIResources.Names.Preprocessor_Description,
+        EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources),
+
+        FactoryUrl: "/api/ml/model/preprocessor/factory",
+
+        ClusterKey: "models", ModelType: EntityDescriptionAttribute.ModelTypes.Configuration, Shape: EntityDescriptionAttribute.EntityShapes.Entity,
+        Lifecycle: EntityDescriptionAttribute.Lifecycles.DesignTime, Sensitivity: EntityDescriptionAttribute.Sensitivities.Internal, IndexInclude: true,
+        IndexTier: EntityDescriptionAttribute.IndexTiers.Secondary, IndexPriority: 70, IndexTagsCsv: "ai,models,preprocessor")]
     public class Preprocessor : IFormDescriptor
     {
         public Preprocessor()

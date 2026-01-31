@@ -91,8 +91,18 @@ namespace LagoVista.AI.Models
         public string PreviousChapterSummary { get; set; }
     }
 
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.AgentSession_Title, AIResources.Names.AgentSession_Help, AIResources.Names.AgentSession_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIDomain),
-        Icon: "icon-ae-creativity", ListUIUrl: "/mlworkbench/aptixsessions", EditUIUrl: "/mlworkbench/aptixsession/{id}", GetListUrl: "/api/ai/agent/sessions", GetUrl: "/api/ai/agent/session/{id}")]
+    [EntityDescription(
+        AIDomain.AIAdmin, AIResources.Names.AgentSession_Title, AIResources.Names.AgentSession_Help, AIResources.Names.AgentSession_Description,
+        EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIDomain),
+
+        GetListUrl: "/api/ai/agent/sessions", GetUrl: "/api/ai/agent/session/{id}",
+
+        ListUIUrl: "/mlworkbench/aptixsessions", EditUIUrl: "/mlworkbench/aptixsession/{id}",
+
+        Icon: "icon-ae-creativity", ClusterKey: "agent", ModelType: EntityDescriptionAttribute.ModelTypes.RuntimeArtifact,
+        Shape: EntityDescriptionAttribute.EntityShapes.Entity, Lifecycle: EntityDescriptionAttribute.Lifecycles.RunTime,
+        Sensitivity: EntityDescriptionAttribute.Sensitivities.Internal, IndexInclude: false, IndexTier: EntityDescriptionAttribute.IndexTiers.Exclude,
+        IndexPriority: 10, IndexTagsCsv: "ai,agent,runtime")]
     public class AgentSession : EntityBase, ISummaryFactory, IValidateable
     {
         public const string OperationKind_Code = "code";

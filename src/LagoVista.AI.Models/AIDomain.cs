@@ -26,11 +26,11 @@ namespace LagoVista.AI.Models
                     Name = "AI Administration",
                     CurrentVersion = new Core.Models.VersionInfo()
                     {
-                        Major = 0,
-                        Minor = 8,
+                        Major=4,
+                        Minor=0,
                         Build = 001,
-                        DateStamp = new DateTime(2019, 11, 16),
-                        Revision = 1,
+                        DateStamp =  new DateTime(2026,1,31),
+                        Revision=1,
                         ReleaseNotes = "Initial unstable preview"
                     }
                 };

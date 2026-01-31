@@ -12,9 +12,15 @@ using System.Collections.Generic;
 
 namespace LagoVista.AI.Models
 {
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.SourceOrganization_Title, AIResources.Names.SourceOrganization_Help, AIResources.Names.SourceOrganization_Help,
-    EntityDescriptionAttribute.EntityTypes.ChildObject, typeof(AIResources),
-    FactoryUrl: "/api/ai/agentcontext/sourceorg/factory")]
+    [EntityDescription(
+        AIDomain.AIAdmin, AIResources.Names.SourceOrganization_Title, AIResources.Names.SourceOrganization_Help, AIResources.Names.SourceOrganization_Help,
+        EntityDescriptionAttribute.EntityTypes.ChildObject, typeof(AIResources),
+
+        FactoryUrl: "/api/ai/agentcontext/sourceorg/factory",
+
+        ClusterKey: "integration", ModelType: EntityDescriptionAttribute.ModelTypes.Integration, Shape: EntityDescriptionAttribute.EntityShapes.Entity,
+        Lifecycle: EntityDescriptionAttribute.Lifecycles.DesignTime, Sensitivity: EntityDescriptionAttribute.Sensitivities.Internal, IndexInclude: true,
+        IndexTier: EntityDescriptionAttribute.IndexTiers.Secondary, IndexPriority: 65, IndexTagsCsv: "ai,integration,source-control")]
 
     public class SourceOrganization : IValidateable, IFormDescriptor
     {

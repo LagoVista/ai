@@ -10,8 +10,15 @@ using System.Collections.Generic;
 
 namespace LagoVista.AI.Models
 {
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.ModelSetting_Title, AIResources.Names.ModelSetting_Help, AIResources.Names.ModelSetting_Description,
-        EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources), FactoryUrl: "/api/ml/model/setting/factory")]
+    [EntityDescription(
+        AIDomain.AIAdmin, AIResources.Names.ModelSetting_Title, AIResources.Names.ModelSetting_Help, AIResources.Names.ModelSetting_Description,
+        EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources),
+
+        FactoryUrl: "/api/ml/model/setting/factory",
+
+        ClusterKey: "models", ModelType: EntityDescriptionAttribute.ModelTypes.Configuration, Shape: EntityDescriptionAttribute.EntityShapes.Entity,
+        Lifecycle: EntityDescriptionAttribute.Lifecycles.DesignTime, Sensitivity: EntityDescriptionAttribute.Sensitivities.Internal, IndexInclude: true,
+        IndexTier: EntityDescriptionAttribute.IndexTiers.Secondary, IndexPriority: 70, IndexTagsCsv: "ai,models,configuration")]
     public class ModelSetting : IFormDescriptor
     {
         [JsonProperty("id")]

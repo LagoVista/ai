@@ -8,7 +8,13 @@ using System.Text;
 
 namespace LagoVista.AI.Models
 {
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.DdrTla_Catalog, AIResources.Names.DdrTla_Catalog_Help, AIResources.Names.DdrTla_Catalog_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIDomain))]
+    [EntityDescription(
+        AIDomain.AIAdmin, AIResources.Names.DdrTla_Catalog, AIResources.Names.DdrTla_Catalog_Help, AIResources.Names.DdrTla_Catalog_Description,
+        EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIDomain),
+
+        ClusterKey: "knowledge", ModelType: EntityDescriptionAttribute.ModelTypes.Taxonomy, Shape: EntityDescriptionAttribute.EntityShapes.Entity,
+        Lifecycle: EntityDescriptionAttribute.Lifecycles.DesignTime, Sensitivity: EntityDescriptionAttribute.Sensitivities.Internal, IndexInclude: true,
+        IndexTier: EntityDescriptionAttribute.IndexTiers.Secondary, IndexPriority: 60, IndexTagsCsv: "ai,knowledge,tla,catalog")]
     public class DdrTlaCatalog : EntityBase, IValidateable
     {
         public List<DdrTla> Tlas { get; set; } = new List<DdrTla>();

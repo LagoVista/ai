@@ -7,9 +7,18 @@ using System.Collections.Generic;
 
 namespace LagoVista.AI.Models
 {
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.DDR_Title, AIResources.Names.DDR_Help, AIResources.Names.DDR_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIDomain), Icon:"icon-ae-brainstorm-1",
-         GetListUrl: "/api/ddrs", GetUrl: "/api/ddr/{id}", SaveUrl: "/api/ddr", DeleteUrl: "/api/ddr/{id}", FactoryUrl: "/api/ddr/factory",
-        CreateUIUrl: "/contentmanagement/ddr/add", EditUIUrl: "/contentmanagement/ddr/{id}", ListUIUrl: "/contentmanagement/ddrs")]
+    [EntityDescription(
+        AIDomain.AIAdmin, AIResources.Names.DDR_Title, AIResources.Names.DDR_Help, AIResources.Names.DDR_Description,
+        EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIDomain),
+
+        GetListUrl: "/api/ddrs", GetUrl: "/api/ddr/{id}", SaveUrl: "/api/ddr", DeleteUrl: "/api/ddr/{id}", FactoryUrl: "/api/ddr/factory",
+
+        CreateUIUrl: "/contentmanagement/ddr/add", EditUIUrl: "/contentmanagement/ddr/{id}", ListUIUrl: "/contentmanagement/ddrs",
+
+        Icon: "icon-ae-brainstorm-1", ClusterKey: "knowledge", ModelType: EntityDescriptionAttribute.ModelTypes.Document,
+        Shape: EntityDescriptionAttribute.EntityShapes.Entity, Lifecycle: EntityDescriptionAttribute.Lifecycles.DesignTime,
+        Sensitivity: EntityDescriptionAttribute.Sensitivities.Internal, IndexInclude: true, IndexTier: EntityDescriptionAttribute.IndexTiers.Primary,
+        IndexPriority: 90, IndexTagsCsv: "ai,knowledge,ddr")]
     public class DetailedDesignReview : EntityBase, IValidateable, ISummaryFactory
     {
 

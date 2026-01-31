@@ -11,7 +11,13 @@ using System.Collections.Generic;
 
 namespace LagoVista.AI.Models.TrainingData
 {
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.TrainingDataSet_Title, AIResources.Names.TrainingDataSet_Help, AIResources.Names.TrainingDataSet_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources))]
+    [EntityDescription(
+        AIDomain.AIAdmin, AIResources.Names.TrainingDataSet_Title, AIResources.Names.TrainingDataSet_Help, AIResources.Names.TrainingDataSet_Description,
+        EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources),
+
+        ClusterKey: "models", ModelType: EntityDescriptionAttribute.ModelTypes.DomainEntity, Shape: EntityDescriptionAttribute.EntityShapes.Entity,
+        Lifecycle: EntityDescriptionAttribute.Lifecycles.DesignTime, Sensitivity: EntityDescriptionAttribute.Sensitivities.Internal, IndexInclude: true,
+        IndexTier: EntityDescriptionAttribute.IndexTiers.Secondary, IndexPriority: 70, IndexTagsCsv: "ai,models,training")]
     public class TrainingDataSet : EntityBase,  IDescriptionEntity, IValidateable
     {
         public TrainingDataSet()

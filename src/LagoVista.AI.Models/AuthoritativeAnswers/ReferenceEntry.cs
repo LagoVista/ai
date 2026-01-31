@@ -57,9 +57,20 @@ namespace LagoVista.AI.Models.AuthoritativeAnswers
     /// - Most metadata should be inferred automatically to keep human interaction low-friction.
     /// - Table Storage constraints apply (per-property ~64KB). Keep answers concise.
     /// </summary>
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.ReferenceEntry_Title, AIResources.Names.ReferenceEntry_Help, AIResources.Names.ReferenceEntry_Description, EntityDescriptionAttribute.EntityTypes.Ai, typeof(AIResources),
-        GetUrl: "/api/referenceentry/{id}", GetListUrl: "/api/referenceentries", FactoryUrl: "/api/referenceentry/factory", SaveUrl: "/api/referenceentry", DeleteUrl: "/api/referenceentry/{id}",
-        PreviewUIUrl: "/contentmanagement/reference/{id}/preview", ListUIUrl: "/contentmanagement/references", EditUIUrl: "/contentmanagement/reference/{id}", CreateUIUrl: "/contentmanagement/reference/add", Icon: "icon-fo-mobile-book")]
+    [EntityDescription(
+        AIDomain.AIAdmin, AIResources.Names.ReferenceEntry_Title, AIResources.Names.ReferenceEntry_Help, AIResources.Names.ReferenceEntry_Description,
+        EntityDescriptionAttribute.EntityTypes.Ai, typeof(AIResources),
+
+        GetUrl: "/api/referenceentry/{id}", GetListUrl: "/api/referenceentries", FactoryUrl: "/api/referenceentry/factory", SaveUrl: "/api/referenceentry",
+        DeleteUrl: "/api/referenceentry/{id}",
+
+        PreviewUIUrl: "/contentmanagement/reference/{id}/preview", ListUIUrl: "/contentmanagement/references", EditUIUrl: "/contentmanagement/reference/{id}",
+        CreateUIUrl: "/contentmanagement/reference/add",
+
+        Icon: "icon-fo-mobile-book", ClusterKey: "rag", ModelType: EntityDescriptionAttribute.ModelTypes.Document,
+        Shape: EntityDescriptionAttribute.EntityShapes.Entity, Lifecycle: EntityDescriptionAttribute.Lifecycles.DesignTime,
+        Sensitivity: EntityDescriptionAttribute.Sensitivities.Internal, IndexInclude: true, IndexTier: EntityDescriptionAttribute.IndexTiers.Primary,
+        IndexPriority: 90, IndexTagsCsv: "ai,rag,reference")]
     public class ReferenceEntry : EntityBase, IValidateable, ISummaryFactory, IFormDescriptor, IFormDescriptorCol2, IRagableEntity
     {
         public const string ReferenceEntry_Unknown = "unknown";

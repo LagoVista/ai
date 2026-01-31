@@ -13,9 +13,19 @@ namespace LagoVista.AI.Models
     /// This is intended to be orthogonal to agent/role/mode and should not change correctness contracts.
     /// </summary>
     /// 
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.AgentPersonaDefinition_Title, AIResources.Names.AgentPersonaDefinition_Help, AIResources.Names.AgentPersonaDefinition_Description, EntityDescriptionAttribute.EntityTypes.CoreIoTModel, typeof(AIResources),
-        GetUrl: "/api/ai/agentpersona/{id}", GetListUrl: "/api/ai/agentpersonas", FactoryUrl: "/api/ai/agentpersona/factory", SaveUrl: "/api/ai/agentpersona", DeleteUrl: "/api/ai/agentpersona/{id}",
-        ListUIUrl: "/mlworkbench/agentpersonas", EditUIUrl: "/mlworkbench/agentpersona/{id}", CreateUIUrl: "/mlworkbench/agentpersona/add", Icon: "icon-ae-call-center")]
+    [EntityDescription(
+        AIDomain.AIAdmin, AIResources.Names.AgentPersonaDefinition_Title, AIResources.Names.AgentPersonaDefinition_Help,
+        AIResources.Names.AgentPersonaDefinition_Description, EntityDescriptionAttribute.EntityTypes.CoreIoTModel, typeof(AIResources),
+
+        GetUrl: "/api/ai/agentpersona/{id}", GetListUrl: "/api/ai/agentpersonas", FactoryUrl: "/api/ai/agentpersona/factory", SaveUrl: "/api/ai/agentpersona",
+        DeleteUrl: "/api/ai/agentpersona/{id}",
+
+        ListUIUrl: "/mlworkbench/agentpersonas", EditUIUrl: "/mlworkbench/agentpersona/{id}", CreateUIUrl: "/mlworkbench/agentpersona/add",
+
+        Icon: "icon-ae-call-center", ClusterKey: "prompting", ModelType: EntityDescriptionAttribute.ModelTypes.Configuration,
+        Shape: EntityDescriptionAttribute.EntityShapes.Entity, Lifecycle: EntityDescriptionAttribute.Lifecycles.DesignTime,
+        Sensitivity: EntityDescriptionAttribute.Sensitivities.Internal, IndexInclude: true, IndexTier: EntityDescriptionAttribute.IndexTiers.Secondary,
+        IndexPriority: 70, IndexTagsCsv: "ai,prompting,configuration")]
     public partial class AgentPersonaDefinition : EntityBase, IValidateable, IFormDescriptor, IFormDescriptorCol2, ISummaryFactory
     {
         public const string ToneStyle_Neutral = "neutral";

@@ -28,9 +28,19 @@ namespace LagoVista.AI.Models
 
     }
 
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.Model_Title, AIResources.Names.Model_Help, AIResources.Names.Model_Description, EntityDescriptionAttribute.EntityTypes.CoreIoTModel, typeof(AIResources),
-        GetUrl: "/api/ml/model/{id}", GetListUrl: "/api/ml/models", FactoryUrl: "/api/ml/model/factory", SaveUrl: "/api/ml/model", DeleteUrl: "/api/ml/model/{id}",
-        ListUIUrl: "/mlworkbench/models", EditUIUrl: "/mlworkbench/model/{id}", CreateUIUrl: "/mlworkbench/model/add", Icon: "icon-ae-database-3")]
+    [EntityDescription(
+        AIDomain.AIAdmin, AIResources.Names.Model_Title, AIResources.Names.Model_Help, AIResources.Names.Model_Description,
+        EntityDescriptionAttribute.EntityTypes.CoreIoTModel, typeof(AIResources),
+
+        GetUrl: "/api/ml/model/{id}", GetListUrl: "/api/ml/models", FactoryUrl: "/api/ml/model/factory", SaveUrl: "/api/ml/model",
+        DeleteUrl: "/api/ml/model/{id}",
+
+        ListUIUrl: "/mlworkbench/models", EditUIUrl: "/mlworkbench/model/{id}", CreateUIUrl: "/mlworkbench/model/add",
+
+        Icon: "icon-ae-database-3", ClusterKey: "models", ModelType: EntityDescriptionAttribute.ModelTypes.DomainEntity,
+        Shape: EntityDescriptionAttribute.EntityShapes.Entity, Lifecycle: EntityDescriptionAttribute.Lifecycles.DesignTime,
+        Sensitivity: EntityDescriptionAttribute.Sensitivities.Internal, IndexInclude: true, IndexTier: EntityDescriptionAttribute.IndexTiers.Primary,
+        IndexPriority: 90, IndexTagsCsv: "ai,models,entity")]
     public class Model : EntityBase, IDescriptionEntity, IValidateable, IFormDescriptor, IIconEntity, ICategorized, IFormDescriptorCol2
     {
         public const string ModelType_TF = "tensorflow";

@@ -10,8 +10,15 @@ using System.Collections.Generic;
 
 namespace LagoVista.AI.Models
 {
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.PreprocessorSetting_Title, AIResources.Names.PreprocessorSetting_Help, AIResources.Names.PreprocessorSetting_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, 
-        typeof(AIResources), FactoryUrl: "/api/ml/model/preprocessor/setting/factory")]
+    [EntityDescription(
+        AIDomain.AIAdmin, AIResources.Names.PreprocessorSetting_Title, AIResources.Names.PreprocessorSetting_Help,
+        AIResources.Names.PreprocessorSetting_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources),
+
+        FactoryUrl: "/api/ml/model/preprocessor/setting/factory",
+
+        ClusterKey: "models", ModelType: EntityDescriptionAttribute.ModelTypes.Configuration, Shape: EntityDescriptionAttribute.EntityShapes.ValueObject,
+        Lifecycle: EntityDescriptionAttribute.Lifecycles.DesignTime, Sensitivity: EntityDescriptionAttribute.Sensitivities.Internal, IndexInclude: true,
+        IndexTier: EntityDescriptionAttribute.IndexTiers.Aux, IndexPriority: 45, IndexTagsCsv: "ai,models,setting")]
     public class PreprocessorSetting : IFormDescriptor
     {
         [JsonProperty("id")]

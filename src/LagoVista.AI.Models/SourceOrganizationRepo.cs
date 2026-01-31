@@ -28,9 +28,15 @@ namespace LagoVista.AI.Models
     }
 
 
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.SourceOrganizationRepository_Title, AIResources.Names.SourceOrganizationRepository_Help, AIResources.Names.SourceOrganizationRepository_Help, 
-        EntityDescriptionAttribute.EntityTypes.ChildObject, typeof(AIResources),
-        FactoryUrl: "/api/ai/agentcontext/sourceorg/repo/factory")]
+    [EntityDescription(
+        AIDomain.AIAdmin, AIResources.Names.SourceOrganizationRepository_Title, AIResources.Names.SourceOrganizationRepository_Help,
+        AIResources.Names.SourceOrganizationRepository_Help, EntityDescriptionAttribute.EntityTypes.ChildObject, typeof(AIResources),
+
+        FactoryUrl: "/api/ai/agentcontext/sourceorg/repo/factory",
+
+        ClusterKey: "integration", ModelType: EntityDescriptionAttribute.ModelTypes.Integration, Shape: EntityDescriptionAttribute.EntityShapes.Entity,
+        Lifecycle: EntityDescriptionAttribute.Lifecycles.DesignTime, Sensitivity: EntityDescriptionAttribute.Sensitivities.Internal, IndexInclude: true,
+        IndexTier: EntityDescriptionAttribute.IndexTiers.Secondary, IndexPriority: 65, IndexTagsCsv: "ai,integration,source-control")]
     public class SourceOrganizationRepo : IValidateable, IFormDescriptor
     {
         public const string MergeMethod_Merge = "merge";

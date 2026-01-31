@@ -13,9 +13,18 @@ using System.Text;
 
 namespace LagoVista.AI.Models
 {
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.AiConversation_Title, AIResources.Names.AIConversation_Description, AIResources.Names.AIConversation_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources),
-       GetListUrl: "/api/ai/conversations", GetUrl: "/api/ai/conversation/{id}", SaveUrl: "/api/ai/conversation", FactoryUrl: "/api/ml/conversation/factory", DeleteUrl: "/api/ai/conversation/{id}",
-       ListUIUrl: "/mlworkbench/conversations", EditUIUrl: "/mlworkbench/conversation/{id}", CreateUIUrl: "/mlworkbench/conversation/add")]
+    [EntityDescription(
+        AIDomain.AIAdmin, AIResources.Names.AiConversation_Title, AIResources.Names.AIConversation_Description, AIResources.Names.AIConversation_Description,
+        EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources),
+
+        GetListUrl: "/api/ai/conversations", GetUrl: "/api/ai/conversation/{id}", SaveUrl: "/api/ai/conversation", FactoryUrl: "/api/ml/conversation/factory",
+        DeleteUrl: "/api/ai/conversation/{id}",
+
+        ListUIUrl: "/mlworkbench/conversations", EditUIUrl: "/mlworkbench/conversation/{id}", CreateUIUrl: "/mlworkbench/conversation/add",
+
+        ClusterKey: "conversations", ModelType: EntityDescriptionAttribute.ModelTypes.RuntimeArtifact, Shape: EntityDescriptionAttribute.EntityShapes.Entity,
+        Lifecycle: EntityDescriptionAttribute.Lifecycles.RunTime, Sensitivity: EntityDescriptionAttribute.Sensitivities.Internal, IndexInclude: false,
+        IndexTier: EntityDescriptionAttribute.IndexTiers.Exclude, IndexPriority: 10, IndexTagsCsv: "ai,conversation,runtime")]
     public class AiConversation : EntityBase, IValidateable, ISummaryFactory
     {
 

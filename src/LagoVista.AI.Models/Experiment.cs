@@ -9,8 +9,15 @@ using System.Collections.Generic;
 
 namespace LagoVista.AI.Models
 {
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.Experiment_Title, AIResources.Names.Experiemnt_Help, AIResources.Names.Experiment_Description, 
-        EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources), FactoryUrl: "/api/ml/model/experiment/factory")]
+    [EntityDescription(
+        AIDomain.AIAdmin, AIResources.Names.Experiment_Title, AIResources.Names.Experiemnt_Help, AIResources.Names.Experiment_Description,
+        EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources),
+
+        FactoryUrl: "/api/ml/model/experiment/factory",
+
+        ClusterKey: "experiments", ModelType: EntityDescriptionAttribute.ModelTypes.Configuration, Shape: EntityDescriptionAttribute.EntityShapes.Entity,
+        Lifecycle: EntityDescriptionAttribute.Lifecycles.DesignTime, Sensitivity: EntityDescriptionAttribute.Sensitivities.Internal, IndexInclude: true,
+        IndexTier: EntityDescriptionAttribute.IndexTiers.Secondary, IndexPriority: 65, IndexTagsCsv: "ai,experiments,configuration")]
     public class Experiment : IFormDescriptor
     {
         public string Id { get; set; }

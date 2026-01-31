@@ -13,8 +13,16 @@ using System.Collections.Generic;
 
 namespace LagoVista.AI.Models
 {
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.Label_Title, AIResources.Names.Label_Help, AIResources.Names.Label_Description, EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources),
-       FactoryUrl: "/api/ml/modellabel/factory", Icon: "icon-fo-nerve")]
+    [EntityDescription(
+        AIDomain.AIAdmin, AIResources.Names.Label_Title, AIResources.Names.Label_Help, AIResources.Names.Label_Description,
+        EntityDescriptionAttribute.EntityTypes.SimpleModel, typeof(AIResources),
+
+        FactoryUrl: "/api/ml/modellabel/factory",
+
+        Icon: "icon-fo-nerve", ClusterKey: "taxonomy", ModelType: EntityDescriptionAttribute.ModelTypes.Taxonomy,
+        Shape: EntityDescriptionAttribute.EntityShapes.Entity, Lifecycle: EntityDescriptionAttribute.Lifecycles.DesignTime,
+        Sensitivity: EntityDescriptionAttribute.Sensitivities.Internal, IndexInclude: true, IndexTier: EntityDescriptionAttribute.IndexTiers.Secondary,
+        IndexPriority: 60, IndexTagsCsv: "ai,taxonomy,label")]
     public class ModelLabel : IFormDescriptor
     {
         public ModelLabel()

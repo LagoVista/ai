@@ -14,8 +14,15 @@ using System.Collections.Generic;
 
 namespace LagoVista.AI.Models
 {
-    [EntityDescription(AIDomain.AIAdmin, AIResources.Names.AgentContext_Role_Title, AIResources.Names.AgentContext_Role_Description, AIResources.Names.AgentContext_Role_Description, EntityDescriptionAttribute.EntityTypes.ChildObject, typeof(AIResources),
-    FactoryUrl: "/api/ai/agentcontext/role/factory")]
+    [EntityDescription(
+        AIDomain.AIAdmin, AIResources.Names.AgentContext_Role_Title, AIResources.Names.AgentContext_Role_Description,
+        AIResources.Names.AgentContext_Role_Description, EntityDescriptionAttribute.EntityTypes.ChildObject, typeof(AIResources),
+
+        FactoryUrl: "/api/ai/agentcontext/role/factory",
+
+        ClusterKey: "agent", ModelType: EntityDescriptionAttribute.ModelTypes.Configuration, Shape: EntityDescriptionAttribute.EntityShapes.ChildObject,
+        Lifecycle: EntityDescriptionAttribute.Lifecycles.DesignTime, Sensitivity: EntityDescriptionAttribute.Sensitivities.Internal, IndexInclude: true,
+        IndexTier: EntityDescriptionAttribute.IndexTiers.Aux, IndexPriority: 45, IndexTagsCsv: "ai,agent,prompting,child")]
     public class AgentContextRole : IFormDescriptor, IValidateable, IAgentKnowledgeProvider, IFormDescriptorCol2, IToolBoxProvider
     {
         public string Id { get; set; } = Guid.NewGuid().ToId();
