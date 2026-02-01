@@ -21,10 +21,11 @@ namespace LagoVista.AI.Indexing.Services
     /// </summary>
     public sealed class DefaultIndexingPipeline : IIndexingPipeline
     {
-        public DefaultIndexingPipeline()
+        private readonly IPersistSourceFileStep _piplineStep;
+
+        public DefaultIndexingPipeline(IPersistSourceFileStep piplineStep)
         {
-            // In future iterations we will add dependencies to Roslyn chunkers,
-            // embedders, Qdrant client, registry client, and manifest tracker.
+            _piplineStep = piplineStep ?? throw new ArgumentNullException(nameof(piplineStep)); 
         }
 
         public async Task IndexFileAsync(IndexFileContext context, CancellationToken token = default)
@@ -33,10 +34,6 @@ namespace LagoVista.AI.Indexing.Services
             if (string.IsNullOrWhiteSpace(context.FullPath))
                 throw new ArgumentException("IndexFileContext.FullPath is required.", nameof(context));
 
-            // For now we simply read the file to prove the pipeline wiring.
-            // The real implementation will be added in a follow-up pass using
-            // the existing RoslynCodeChunker, QdrantIndexingPipeline, etc.
-
             if (!File.Exists(context.FullPath))
                 return;
 
@@ -44,7 +41,11 @@ namespace LagoVista.AI.Indexing.Services
             using (var reader = new StreamReader(stream))
             {
                 var content = await reader.ReadToEndAsync().ConfigureAwait(false);
-                // TODO: chunk, embed, and push to Qdrant using existing helpers.
+                context.Contents = content;
+                var indexContext = new Models.IndexingPipelineContext(context);
+                var workItem = new Models.IndexingWorkItem();
+                indexContext.AddWorkItem(workItem);
+                await _piplineStep.ExecuteAsync(indexContext);
             }
         }
     }

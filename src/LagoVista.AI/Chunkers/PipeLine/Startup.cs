@@ -15,6 +15,7 @@ namespace LagoVista.AI.Chunkers.PipeLine
             services.AddSingleton<IExtractSymbolsStep, ExtractSymbolsStep>();
             services.AddSingleton<IPersistSourceFileStep, PersistSourceFileStep>();
             services.AddSingleton<ISegmentContentStep, SegmentContentStep>();
+            services.AddSingleton<ICategorizeContentStep, CategorizeContentStep>();
             services.AddSingleton<IStoreUpsertPointStep, StoreUpsertPointStep>();
             services.AddSingleton<IUploadContentStep, UploadContentStep>();
         }

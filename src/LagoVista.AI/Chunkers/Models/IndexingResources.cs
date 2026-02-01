@@ -10,7 +10,7 @@ namespace LagoVista.AI.Indexing.Models
     {
         public IndexingResources(IndexFileContext fileCtx)
         {
-            FileContext = FileContext ?? throw new ArgumentNullException(nameof(fileCtx));
+            FileContext = fileCtx ?? throw new ArgumentNullException(nameof(fileCtx));
         }
 
 

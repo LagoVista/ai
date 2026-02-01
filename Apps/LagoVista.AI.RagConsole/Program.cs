@@ -2,15 +2,18 @@
 // ContentHash: 84feeaeb64610697ce02a858eb217cf406b5821707963650d179e5c3e6374064
 // IndexVersion: 2
 // --- END CODE INDEX META ---
-using LagoVista.AI.Rag.Chunkers.Models;
-using LagoVista.AI.Interfaces;
-using LagoVista.IoT.Logging.Loggers;
-using LagoVista.IoT.Logging.Utils;
-using LagoVista.AI.Services.OpenAI;
-using Microsoft.Extensions.DependencyInjection;
+using LagoVista.AI.Chunkers.Interfaces;
+using LagoVista.AI.CloudRepos;
+using LagoVista.AI.Indexing.Interfaces;
 using LagoVista.AI.Indexing.Models;
 using LagoVista.AI.Indexing.Services;
-using LagoVista.AI.Indexing.Interfaces;
+using LagoVista.AI.Interfaces;
+using LagoVista.AI.Rag.Chunkers.Models;
+using LagoVista.AI.Services.OpenAI;
+using LagoVista.Core.Models;
+using LagoVista.IoT.Logging.Loggers;
+using LagoVista.IoT.Logging.Utils;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LagoVista.AI.RagConsole
 {
@@ -126,13 +129,31 @@ namespace LagoVista.AI.RagConsole
             diManagement.AddSingleton<IngestionConfig>(result.Result);
             diManagement.AddSingleton<IOpenAISettings>(openAISettings);
 
+            diManagement.AddSingleton<IMLRepoSettings>(new AiSettings()
+            {
+                 MLBlobStorage = new ConnectionSettings
+                 {
+                     AccountId = result.Result.ContentRepo.AccountId,
+                     AccessKey = result.Result.ContentRepo.AccessKey,
+                 }
+            });
+
+
             LagoVista.AI.Startup.ConfigureServices(diManagement, adminLogger);
             LagoVista.AI.CloudRepos.Startup.ConfigureServices(diManagement);
 
+            //using (var provider = collection.BuildServiceProvider())
+            //{
+            //    var orchestrator = provider.GetRequiredService<IIndexRunOrchestrator>();
+            //    await orchestrator.RunAsync(result.Result, mode, repoId, subKindFilter, verbose, dryRun);
+            //}
+
+            repoId = "ua.useradmin";
+
             using (var provider = collection.BuildServiceProvider())
             {
-                var orchestrator = provider.GetRequiredService<IIndexRunOrchestrator>();
-                await orchestrator.RunAsync(result.Result, mode, repoId, subKindFilter, verbose, dryRun);
+                var orchestrator = provider.GetRequiredService<IIndexRunner>();
+                await orchestrator.RunAsync(result.Result, repoId, subKindFilter);
             }
         }
 

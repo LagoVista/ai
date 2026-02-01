@@ -1,3 +1,4 @@
+using LagoVista.AI.Rag.Chunkers.Models;
 using LagoVista.Core.Utils.Types.Nuviot.RagIndexing;
 using Newtonsoft.Json;
 using System;
@@ -9,9 +10,10 @@ namespace LagoVista.AI.Indexing.Models
     {
         private readonly List<IndexingWorkItem> _workItems = new List<IndexingWorkItem>();
 
-        public IndexingPipelineContext()
+        public IndexingPipelineContext(IndexFileContext context)
         {
-            //Resources = new IndexingResources();
+            if(context == null) throw new ArgumentNullException(nameof(context));
+            Resources = new IndexingResources(context);
         }
 
         public IndexingResources Resources { get; }
