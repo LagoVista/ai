@@ -1,11 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using LagoVista.AI.Indexing.Interfaces;
+using LagoVista.AI.Indexing.Models;
 using LagoVista.AI.Rag.Chunkers.Models;
 using LagoVista.Core.Validation;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace LagoVista.AI.Chunkers.Providers.Interfaces
 {
@@ -14,8 +17,16 @@ namespace LagoVista.AI.Chunkers.Providers.Interfaces
     ///
     /// Pure contract-level description only – no chunking/indexing concerns.
     /// </summary>
-    public static class InterfaceDescriptionBuilder
+    public  class InterfaceDescriptionBuilder : IBuildDescriptionProcessor
     {
+
+        public Task<InvokeResult> ProcessAsync(IndexingPipelineContext ctx, IndexingWorkItem workItem)
+        {
+            var description = InterfaceDescriptionBuilder.CreateInterfaceDescription(ctx.Resources.FileContext, workItem.Lenses.SymbolText);
+            
+            return Task.FromResult(InvokeResult.Success);
+        }
+
         public static InvokeResult<InterfaceDescription> CreateInterfaceDescription(IndexFileContext ctx, string sourceText)
         {
             if (string.IsNullOrWhiteSpace(sourceText))
@@ -96,9 +107,25 @@ namespace LagoVista.AI.Chunkers.Providers.Interfaces
 
                 methods.Add(methodDesc);
             }
-
             description.Methods = methods;
 
+            var properties = new List<InterfacePropertyDescription>();  
+
+            foreach (var property in interfaceDecl.Members.OfType<PropertyDeclarationSyntax>())
+            {
+                var propertyDescription = new InterfacePropertyDescription()
+                {
+                    Name = property.Identifier.Text,
+                    Type = property.Type.ToString(),
+                    HasGetter = property.AccessorList?.Accessors.Any(a => a.Kind() == SyntaxKind.GetAccessorDeclaration) == true,
+                    HasSetter = property.AccessorList?.Accessors.Any(a => a.Kind() == SyntaxKind.SetAccessorDeclaration) == true,
+                    LineStart = GetLine(property.GetLocation()?.GetLineSpan().StartLinePosition.Line),
+                    LineEnd = GetLine(property.GetLocation()?.GetLineSpan().EndLinePosition.Line)
+                };
+
+                properties.Add(propertyDescription);
+            }
+            
             return InvokeResult<InterfaceDescription>.Create(description);
         }
 
@@ -278,5 +305,6 @@ namespace LagoVista.AI.Chunkers.Providers.Interfaces
         {
             return zeroBased.HasValue ? zeroBased + 1 : null;
         }
+
     }
 }

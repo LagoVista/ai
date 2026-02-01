@@ -1,14 +1,17 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using LagoVista.AI;
+using LagoVista.AI.Indexing.Interfaces;
+using LagoVista.AI.Indexing.Models;
 using LagoVista.AI.Rag.Chunkers.Models;
 using LagoVista.AI.Rag.Chunkers.Services;
 using LagoVista.Core.Validation;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
 
 namespace LagoVista.AI.Chunkers.Providers.ModelStructure
 {
@@ -18,8 +21,17 @@ namespace LagoVista.AI.Chunkers.Providers.ModelStructure
     /// result with structural wiring (EntityHeader refs, child objects,
     /// relationships, and EntityBase properties).
     /// </summary>
-    public static class ModelStructureDescriptionBuilder
+    public class ModelStructureDescriptionBuilder : IBuildDescriptionProcessor
     {
+        public Task<InvokeResult> ProcessAsync(IndexingPipelineContext ctx, IndexingWorkItem workItem)
+        {
+
+            var description = ModelStructureDescriptionBuilder.FromSource(ctx.Resources.FileContext, workItem.Lenses.SymbolText, ctx.Resources.ResourceDictionary);
+
+
+            return Task.FromResult(InvokeResult.Success);
+        }
+
 
         public static InvokeResult<ModelStructureDescription> FromSource(IndexFileContext ctx, string sourceText, IReadOnlyDictionary<string, string> resources)
         {
@@ -331,5 +343,6 @@ namespace LagoVista.AI.Chunkers.Providers.ModelStructure
 
             return string.Equals(raw, simpleName, StringComparison.Ordinal);
         }
+
     }
 }

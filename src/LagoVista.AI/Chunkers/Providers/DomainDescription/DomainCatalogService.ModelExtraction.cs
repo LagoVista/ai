@@ -1,11 +1,13 @@
+using LagoVista.AI.Indexing.Interfaces;
+using LagoVista.AI.Indexing.Models;
+using LagoVista.AI.Rag.Chunkers.Services;              // CSharpSymbolSplitter, ModelSourceAnalyzer
+using LagoVista.Core.Validation;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using LagoVista.AI.Indexing.Models;
-using LagoVista.AI.Rag.Chunkers.Services;              // CSharpSymbolSplitter, ModelSourceAnalyzer
 
 namespace LagoVista.AI.Rag.Services
 {
@@ -17,8 +19,13 @@ namespace LagoVista.AI.Rag.Services
     /// for IDX-071 (ModelClassEntry), while still honoring resource-based
     /// resolution of EntityDescription attributes.
     /// </summary>
-    public sealed partial class DomainCatalogService
+    public sealed partial class DomainCatalogService 
     {
+        public Task<InvokeResult> ProcessAsync(IndexingPipelineContext ctx, IndexingWorkItem workItem)
+        {
+            return Task.FromResult(InvokeResult.Success);
+        }
+
         /// <summary>
         /// Extracts all ModelClassEntry instances from the provided files.
         ///
@@ -83,7 +90,7 @@ namespace LagoVista.AI.Rag.Services
                     continue;
                 }
 
-                //var splitterResults = CSharpSymbolSplitter.Split(source);
+                //var splitterResults = CSharpSymbolSplitter.Chunk(source);
                 //if (!splitterResults.Successful)
                 //{
                 //    throw new InvalidOperationException(

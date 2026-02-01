@@ -1,4 +1,4 @@
-﻿using LagoVista.AI.Chunkers.Interfaces;
+﻿using LagoVista.AI.Indexing.Interfaces;
 using LagoVista.AI.Indexing.Models;
 using LagoVista.AI.Rag.Chunkers.Services;
 using LagoVista.Core.Validation;
@@ -9,15 +9,13 @@ using System.Threading.Tasks;
 
 namespace LagoVista.AI.Chunkers.Services
 {
-    public class SubtypeKindCategorizer : ISubtypeKindCategorizer
+    public class SegmentContentProcessor : ISegmentContentProcessor
     {
         public Task<InvokeResult> ProcessAsync(IndexingPipelineContext ctx, IndexingWorkItem workItem)
         {
-
-            var result =  SourceKindAnalyzer.AnalyzeFile(workItem.Lenses.SymbolText, ctx.Resources.FileContext.RelativePath) ;
-            workItem.Kind = result.SubKind;
-
+            var chunks = RoslynCSharpChunker.Chunk(workItem.Lenses.SymbolText, ctx.Resources.FileContext.RelativePath);
             return Task.FromResult(InvokeResult.Success);
+        
         }
     }
 }

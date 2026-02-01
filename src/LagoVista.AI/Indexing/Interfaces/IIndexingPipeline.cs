@@ -1,6 +1,9 @@
+using LagoVista.AI.Chunkers.Providers.DomainDescription;
+using LagoVista.AI.Indexing.Models;
+using LagoVista.AI.Rag.Chunkers.Models;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using LagoVista.AI.Rag.Chunkers.Models;
 
 namespace LagoVista.AI.Indexing.Interfaces
 {
@@ -22,6 +25,6 @@ namespace LagoVista.AI.Indexing.Interfaces
         /// <summary>
         /// Index a single file identified by the context.
         /// </summary>
-        Task IndexFileAsync(IndexFileContext context, CancellationToken token = default);
+        Task IndexFileAsync(DomainModelCatalog domainCatalog, Dictionary<string, string> resourceDictionary, IndexFileContext context, CancellationToken token = default);
     }
 }

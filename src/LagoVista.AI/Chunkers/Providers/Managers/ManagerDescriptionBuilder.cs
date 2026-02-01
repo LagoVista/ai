@@ -1,12 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using LagoVista.AI;
+using LagoVista.AI.Indexing.Interfaces;
+using LagoVista.AI.Indexing.Models;
 using LagoVista.AI.Rag.Chunkers.Models;
 using LagoVista.Core.Validation;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace LagoVista.AI.Chunkers.Providers.Managers
 {
@@ -18,8 +21,13 @@ namespace LagoVista.AI.Chunkers.Providers.Managers
     /// Mirrors RepositoryDescriptionBuilder patterns: multiple ctors, aggregated
     /// dependency interfaces, method shapes, and PrimaryEntity heuristics.
     /// </summary>
-    public static class ManagerDescriptionBuilder
+    public class ManagerDescriptionBuilder : IBuildDescriptionProcessor
     {
+        public Task<InvokeResult> ProcessAsync(IndexingPipelineContext ctx, IndexingWorkItem workItem)
+        {
+            return Task.FromResult(InvokeResult.Success);
+        }
+
         public static InvokeResult<ManagerDescription> CreateManagerDescription(IndexFileContext ctx, string sourceText)
         {
             if (string.IsNullOrWhiteSpace(sourceText))

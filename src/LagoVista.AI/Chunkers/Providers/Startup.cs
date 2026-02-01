@@ -1,4 +1,5 @@
 
+using LagoVista.AI.Indexing.Interfaces;
 using LagoVista.Core.Interfaces;
 using LagoVista.IoT.Logging.Loggers;
 
@@ -8,7 +9,7 @@ namespace LagoVista.AI.Chunkers.Providers
     {
         public static void ConfigureServices(IServiceCollection services, IAdminLogger adminLogger)
         {
-            Registries.Startup.ConfigureServices(services, adminLogger);
+            services.AddSingleton<IBuildDescriptionProcessor, DefaultDescriptionBuilder>();
             PipeLine.Startup.ConfigureServices(services, adminLogger);
         }
     }

@@ -1,12 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using LagoVista.AI.Chunkers.Interfaces;
+﻿using LagoVista.AI.Chunkers.Interfaces;
+using LagoVista.AI.Rag.Chunkers.Models;
+using LagoVista.Core.Utils.Types.Nuviot.RagIndexing;
 using LagoVista.Core.Validation;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 namespace LagoVista.AI.Chunkers.Services
 {
@@ -15,10 +17,10 @@ namespace LagoVista.AI.Chunkers.Services
     /// Each result includes using statements + namespace + symbol body.
     ///
     /// This is intentionally separate from SubKind analysis so the pipeline can
-    /// 1) Split symbols (including nested types)
+    /// 1) Chunk symbols (including nested types)
     /// 2) Analyze each independently (SubKind, metadata, etc)
     /// </summary>
-    public class CSharpSymbolSplitterService : ICSharpSymbolSplitterService
+    public class CSharpSymbolSplitterService: ICSharpSymbolSplitterService
     {
         public InvokeResult<IReadOnlyList<SplitSymbolResult>> Split(string sourceText)
         {
@@ -200,6 +202,7 @@ namespace LagoVista.AI.Chunkers.Services
             return sb.ToString();
         }
 
+
         /// <summary>
         /// Removes any nested type/enum declarations that are descendants of this node,
         /// leaving only the current symbol's own body. This prevents duplicates between
@@ -257,5 +260,34 @@ namespace LagoVista.AI.Chunkers.Services
         /// (with nested type declarations removed).
         /// </summary>
         public string Text { get; set; }
+
+        public RagVectorPayload GetPayload(IndexFileContext fileContext)
+        {
+            return new RagVectorPayload()
+            {
+                Extra = new RagVectorPayloadExtra()
+                {
+                    Repo = fileContext.GitRepoInfo.RemoteUrl,
+                    RepoBranch = fileContext.GitRepoInfo.BranchRef,
+                    Path = fileContext.RelativePath,
+                    CommitSha = fileContext.GitRepoInfo.CommitSha,
+                    SymbolName = SymbolName,
+                    SymbolType = SymbolKind,
+                },
+                Meta = new RagVectorPayloadMeta()
+                {
+
+                    DocId = fileContext.DocumentIdentity.DocId,
+                    OrgNamespace = fileContext.DocumentIdentity.OrgNamespace,
+                    OrgId = fileContext.DocumentIdentity.OrgId,
+                    ProjectId = fileContext.DocumentIdentity.ProjectId,
+                    ContentTypeId = RagContentType.SourceCode,
+                    Language = "en-US",
+                    Subtype = "RawCode",
+                    SysDomain = "Backend",
+                },
+            };
+        }
+
     }
 }

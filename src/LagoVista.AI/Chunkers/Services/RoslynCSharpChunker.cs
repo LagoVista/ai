@@ -1,14 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
+using LagoVista.AI.Chunkers.Interfaces;
 using LagoVista.AI.Indexing.Utils;
 using LagoVista.AI.Rag.Chunkers.Models;
 using LagoVista.Core.Validation;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Text;
 
 namespace LagoVista.AI.Rag.Chunkers.Services
 {
@@ -18,7 +19,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
     /// Includes robust cursor-advance logic to avoid infinite loops even with
     /// extreme settings (e.g., tiny token budgets or large overlaps).
     /// </summary>
-    public static class RoslynCSharpChunker
+    public static class RoslynCSharpChunker 
     {
         /// <summary>
         /// Chunk a C# file into a collection of CSharpComponentChunk, including:

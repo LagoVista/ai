@@ -55,6 +55,12 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         /// </summary>
         public IReadOnlyList<InterfaceMethodDescription> Methods { get; set; }
 
+        public IReadOnlyList<InterfacePropertyDescription> Properties { get; set; }
+
+        public List<string> ReturnTypes { get; set; } = new List<string>();
+
+        public List<string> OperatesOnTypes { get; set; } = new List<string>();
+
         /// <summary>
         /// Full type names of implementing classes, when known.
         /// (May be populated by a later pass; builder leaves empty by default.)
@@ -106,6 +112,30 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         /// Method parameters.
         /// </summary>
         public IReadOnlyList<InterfaceMethodParameterDescription> Parameters { get; set; }
+
+        /// <summary>
+        /// XML summary text for the method, when present.
+        /// </summary>
+        public string Summary { get; set; }
+
+        /// <summary>
+        /// 1-based line where the method starts (inclusive).
+        /// </summary>
+        public int? LineStart { get; set; }
+
+        /// <summary>
+        /// 1-based line where the method ends (inclusive).
+        /// </summary>
+        public int? LineEnd { get; set; }
+    }
+
+    public class InterfacePropertyDescription
+    {
+        public string Name { get; set; }
+        public string Type { get; set; }
+
+        public bool HasGetter { get; set; }
+        public bool HasSetter { get; set; }
 
         /// <summary>
         /// XML summary text for the method, when present.

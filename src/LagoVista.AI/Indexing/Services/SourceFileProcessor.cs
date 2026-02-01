@@ -225,7 +225,7 @@
 
 //        private InvokeResult<IReadOnlyList<SplitSymbolResult>> SplitSymbols(string sourceText)
 //        {
-//            return CSharpSymbolSplitter.Split(sourceText);
+//            return CSharpSymbolSplitter.Chunk(sourceText);
 //        }
 
 //        // 7.2 - Source Kind Analysis ---------------------------------------
@@ -254,7 +254,7 @@
 //            IReadOnlyList<EnrichedSymbol> enrichedSymbols)
 //        {
 //            // TODO: Use Roslyn-based chunker per symbol.
-//            // - Split into methods, properties, regions, etc.
+//            // - Chunk into methods, properties, regions, etc.
 //            // - Preserve enough context to build normalized text later.
 //            throw new NotImplementedException();
 //        }

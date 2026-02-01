@@ -124,7 +124,7 @@ namespace LagoVista.AI.Chunkers
                 foreach (var filePlan in plan.FilesToIndex)
                 {
                     var fileContext = await _indexFileContextBuilder.BuildAsync(config, gitInfo.Result, repoId, filePlan, localIndex, cancellationToken);
-                    await _pipeline.IndexFileAsync(fileContext);
+                    await _pipeline.IndexFileAsync(domainCatalog, resources, fileContext);
                 }
 
             }

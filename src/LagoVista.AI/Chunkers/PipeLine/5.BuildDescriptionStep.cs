@@ -1,3 +1,4 @@
+using LagoVista.AI.Chunkers.Interfaces;
 using LagoVista.AI.Indexing.Interfaces;
 using LagoVista.AI.Indexing.Models;
 using LagoVista.Core.Validation;
@@ -7,17 +8,25 @@ namespace LagoVista.AI.Indexing.PipeLine
 {
     public sealed class BuildDescriptionStep : IndexingPipelineStepBase, IBuildDescriptionStep
     {
-        public BuildDescriptionStep(IUploadContentStep next) : base(next) { }
+        IBuildDescriptionProcessorRegistry _registry;
+
+        public BuildDescriptionStep(IBuildDescriptionProcessorRegistry buildDescriptionsRegistry, IUploadContentStep next) : base(next) 
+        {
+            _registry = buildDescriptionsRegistry ?? throw new System.ArgumentNullException(nameof(buildDescriptionsRegistry));
+        }
 
         public override IndexingPipelineSteps StepType => IndexingPipelineSteps.BuildDescription;
 
-        protected override Task<InvokeResult> ExecuteAsync(IndexingPipelineContext ctx, IndexingWorkItem workItem)
+        protected override async Task<InvokeResult> ExecuteAsync(IndexingPipelineContext ctx, IndexingWorkItem workItem)
         {
-            // TODO:
-            // - Populate lens fields (EmbedSnippet, ModelSummary, UserDetail)
-            // - CleanupGuidance optional
-            // - Populate additional RagPayload fields as needed
-            return Task.FromResult(InvokeResult.Success);
+            if (_registry.TryGet(workItem.Kind, out IBuildDescriptionProcessor processor))
+            {
+                var result = await processor.ProcessAsync(ctx, workItem);
+                workItem.RagPayload.Meta.Subtype = workItem.Kind.ToString();
+                if (!result.Successful) return result;
+            }
+
+            return InvokeResult.Success;
         }
     }
 }

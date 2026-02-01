@@ -1,9 +1,12 @@
+using LagoVista.AI.Chunkers.Providers.DomainDescription;
+using LagoVista.AI.Indexing.Interfaces;
+using LagoVista.AI.Indexing.Models;
+using LagoVista.AI.Rag.Chunkers.Models;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using LagoVista.AI.Indexing.Interfaces;
-using LagoVista.AI.Rag.Chunkers.Models;
 
 namespace LagoVista.AI.Indexing.Services
 {
@@ -28,7 +31,7 @@ namespace LagoVista.AI.Indexing.Services
             _piplineStep = piplineStep ?? throw new ArgumentNullException(nameof(piplineStep)); 
         }
 
-        public async Task IndexFileAsync(IndexFileContext context, CancellationToken token = default)
+        public async Task IndexFileAsync(DomainModelCatalog domainCatalog, Dictionary<string, string> resourceDictionary, IndexFileContext context, CancellationToken token = default)
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
             if (string.IsNullOrWhiteSpace(context.FullPath))
@@ -42,7 +45,7 @@ namespace LagoVista.AI.Indexing.Services
             {
                 var content = await reader.ReadToEndAsync().ConfigureAwait(false);
                 context.Contents = content;
-                var indexContext = new Models.IndexingPipelineContext(context);
+                var indexContext = new Models.IndexingPipelineContext(context, domainCatalog, resourceDictionary);
                 var workItem = new Models.IndexingWorkItem();
                 indexContext.AddWorkItem(workItem);
                 await _piplineStep.ExecuteAsync(indexContext);

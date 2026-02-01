@@ -81,7 +81,7 @@ namespace LagoVista.AI.Rag.Services
                     continue;
                 }
 
-                //var splitterResults = CSharpSymbolSplitter.Split(source);
+                //var splitterResults = CSharpSymbolSplitter.Chunk(source);
                 //if (!splitterResults.Successful)
                 //{
                 //    throw new InvalidOperationException(

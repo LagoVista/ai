@@ -7,18 +7,25 @@ namespace LagoVista.AI.Indexing.PipeLine
 {
     public sealed class SegmentContentStep : IndexingPipelineStepBase, ISegmentContentStep
     {
-        public SegmentContentStep(IBuildDescriptionStep next) : base(next) { }
+        private readonly ISegmentContentProcessorRegistry _registry;
+
+        public SegmentContentStep(ISegmentContentProcessorRegistry registry, IBuildDescriptionStep next) : base(next) 
+        { 
+            _registry = registry ?? throw new System.ArgumentNullException(nameof(registry));
+        }
 
         public override IndexingPipelineSteps StepType => IndexingPipelineSteps.SegmentContent;
 
-        protected override Task<InvokeResult> ExecuteAsync(IndexingPipelineContext ctx, IndexingWorkItem workItem)
+        protected override async Task<InvokeResult> ExecuteAsync(IndexingPipelineContext ctx, IndexingWorkItem workItem)
         {
-            // TODO:
-            // - Never replace original work item
-            // - Add child work items via ctx.CloneAndAddChild(parent) (deep copy semantics)
-            // - Set ParentPointId on payload (once payload is strongly typed)
-            // - Populate EmbedSnippet for each segment
-            return Task.FromResult(InvokeResult.Success);
+            // Perhaps in the future we may want to slice up a symbol into smaller chunks.
+            //if(_registry.TryGet(workItem.Kind, out ISegmentContentProcessor processor))
+            //{
+            //   var result = await  processor.ProcessAsync(ctx, workItem);
+            //    if (!result.Successful) return result;
+            //}
+       
+            return InvokeResult.Success;
         }
     }
 }

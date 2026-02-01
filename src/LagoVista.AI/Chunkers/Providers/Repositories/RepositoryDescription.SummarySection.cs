@@ -87,7 +87,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
 
             // -----------------------------------------------------------------
             // repository-methods (uses MethodSummaryBuilder + domain/model info)
-            // Split into multiple SummarySections if we exceed maxTokens.
+            // Chunk into multiple SummarySections if we exceed maxTokens.
             // -----------------------------------------------------------------
 
             var methodsHeader = BuildRepositoryMethodsHeader(symbol, headerInfo);

@@ -17,9 +17,14 @@ namespace LagoVista.AI.Chunkers.Providers.DomainDescription
     /// deterministic and does not call any LLMs. It parses the domain document, queries
     /// the domain catalog for model classes, and constructs a DomainDescriptionRag.
     /// </summary>
-    public sealed class DomainDescriptionBuilder : IDescriptionBuilder
+    public sealed class DomainDescriptionBuilder : IDescriptionBuilder, IBuildDescriptionProcessor
     {
         private readonly IAdminLogger _logger;
+
+        public Task<InvokeResult> ProcessAsync(IndexingPipelineContext ctx, IndexingWorkItem workItem)
+        {
+            return Task.FromResult(InvokeResult.Success);
+        }
 
         public DomainDescriptionBuilder(IAdminLogger logger)
         {

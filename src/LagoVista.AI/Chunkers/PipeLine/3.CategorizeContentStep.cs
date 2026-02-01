@@ -22,6 +22,7 @@ namespace LagoVista.AI.Indexing.PipeLine
             if(_registry.TryGet(ctx.Resources.FileContext.DocumentIdentity.Type, out ISubtypeKindCategorizer categorizer))
             {
                 var result = await categorizer.ProcessAsync(ctx, workItem);
+                workItem.RagPayload.Meta.Subtype = workItem.Kind.ToString();
                 if (!result.Successful) return result;
             }
 

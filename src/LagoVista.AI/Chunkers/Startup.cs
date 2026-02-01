@@ -13,7 +13,8 @@ namespace LagoVista.AI.Chunkers
             Registries.Startup.ConfigureServices(services, adminLogger);
             PipeLine.Startup.ConfigureServices(services, adminLogger);
             Services.Startup.ConfigureServices(services, adminLogger);
-            Registries.Startup.ConfigureServices(services, adminLogger);
+            Providers.Startup.ConfigureServices(services, adminLogger);
+
             services.AddSingleton<IIndexRunner, IndexRunner>();
             services.AddSingleton<IExtractSymbolsProcessor, CSharpSymbolExtractorProcessor>();
         }
