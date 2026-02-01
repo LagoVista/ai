@@ -26,14 +26,15 @@ namespace LagoVista.AI.Models
                     Name = "AI Administration",
                     CurrentVersion = new Core.Models.VersionInfo()
                     {
-                        Major=2,
-                        Minor=0,
+                        Major = 2,
+                        Minor = 0,
                         Build = 001,
-                        DateStamp =  new DateTime(2026,1,31),
-                        Revision=1,
+                        DateStamp = new DateTime(2026, 1, 31),
+                        Revision = 1,
                         ReleaseNotes = "Initial unstable preview"
-                    }
-,                    Clusters = new List<string>(){"agent","prompting","rag"}                };
+                    },
+                    Clusters = new List<Cluster>()
+                };
             }
         }
     }
