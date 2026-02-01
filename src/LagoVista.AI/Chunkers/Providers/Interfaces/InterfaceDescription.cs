@@ -57,6 +57,12 @@ namespace LagoVista.AI.Rag.Chunkers.Models
 
         public IReadOnlyList<InterfacePropertyDescription> Properties { get; set; }
 
+        public List<string> OperationKinds { get; set; } = new List<string>(); // "query" | "command"
+        public List<string> CrudVerbs { get; set; } = new List<string>();      // "create"|"read"|"update"|"delete"|"list"|...
+        public List<string> Flags { get; set; } = new List<string>();          // "with_secrets","for_org","by_id","count",...
+        public string FinderSnippet { get; set; }                 // embed text
+
+
         public List<string> ReturnTypes { get; set; } = new List<string>();
 
         public List<string> OperatesOnTypes { get; set; } = new List<string>();

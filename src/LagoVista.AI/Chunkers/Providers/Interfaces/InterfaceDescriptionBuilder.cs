@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -23,7 +24,10 @@ namespace LagoVista.AI.Chunkers.Providers.Interfaces
         public Task<InvokeResult> ProcessAsync(IndexingPipelineContext ctx, IndexingWorkItem workItem)
         {
             var description = InterfaceDescriptionBuilder.CreateInterfaceDescription(ctx.Resources.FileContext, workItem.Lenses.SymbolText);
-            
+
+            workItem.Lenses.EmbedSnippet = InterfaceFinderSnippetBuilder.BuildFinderSnippet(description.Result);
+            workItem.Lenses.ModelSummary = InterfaceCardBuilder.BuildInterfaceCard(description.Result, Path.Combine(ctx.Resources.FileContext.RepoId, ctx.Resources.FileContext.RelativePath));
+
             return Task.FromResult(InvokeResult.Success);
         }
 
@@ -125,7 +129,9 @@ namespace LagoVista.AI.Chunkers.Providers.Interfaces
 
                 properties.Add(propertyDescription);
             }
-            
+
+            description.Properties = properties;
+
             return InvokeResult<InterfaceDescription>.Create(description);
         }
 
