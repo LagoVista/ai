@@ -1,10 +1,11 @@
 using System;
 using System.Text;
 using LagoVista.AI.Chunkers.Providers.DomainDescription;
+using LagoVista.AI.Chunkers.Providers.Domains;
 using LagoVista.AI.Rag.Chunkers.Models;
 using LagoVista.Core.Utils.Types.Nuviot.RagIndexing;
 
-namespace LagoVista.AI.Chunkers.Providers.ModelStructure
+namespace LagoVista.AI.Chunkers.Providers.ModelStructure.Utils
 {
     /// <summary>
     /// Helper for constructing IDX-068 compliant Finder Snippet text

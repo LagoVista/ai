@@ -1,4 +1,5 @@
 using LagoVista.AI.Chunkers.Providers.DomainDescription;
+using LagoVista.AI.Chunkers.Providers.Domains;
 using LagoVista.AI.Chunkers.Providers.ModelMetaData;
 using LagoVista.AI.Rag.Chunkers.Interfaces;
 using System;
@@ -110,8 +111,6 @@ namespace LagoVista.AI.Rag.Chunkers.Models
                         overview.AppendLine("- " + url);
                 }
             }
-
-
 
             sections.Add(new SummarySection
             {

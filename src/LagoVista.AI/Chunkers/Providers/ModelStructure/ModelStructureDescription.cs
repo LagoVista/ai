@@ -1,29 +1,21 @@
-// --- BEGIN CODE INDEX META (do not edit) ---
-// ContentHash: TBD
-// IndexVersion: 1
-// --- END CODE INDEX META ---
-using LagoVista.Core.AI.Interfaces;
-using LagoVista.Core.Interfaces;
-using LagoVista.Core.Utils.Types.Nuviot.RagIndexing;
-using LagoVista.Core.Validation;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
-namespace LagoVista.AI.Rag.Chunkers.Models
+
+namespace LagoVista.AI.Chunkers.Providers.ModelStructure
 {
     /// <summary>
     /// IDX-0037: Structured chunk for Kind=Model capturing identity, domain,
     /// structural graph, properties, entity header references, child objects,
     /// relationships, and operational affordances.
     /// </summary>
-    public sealed partial class ModelStructureDescription : SummaryFacts
+    public sealed partial class ModelStructureDescription : IDescriptionProvider
     {
-        public override string Subtype { get => "Model"; }
 
+        public string QualifiedName { get; set; }
 
         public string ModelName { get; set; }
+
+        public string BusinessDomainKey { get; set; }
 
         // ---------- UX Strings ----------
         public string Title { get; set; }
@@ -50,6 +42,24 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         public string GetUrl { get; set; }
         public string GetListUrl { get; set; }
         public string DeleteUrl { get; set; }
+
+        public string PreviewUIUrl { get; set; }
+
+        public string ClusterKey { get; set; }
+        public string EntityKey { get; set; }
+
+        public string ModelType { get; set; }     // e.g. "Configuration"
+        public string Shape { get; set; }         // e.g. "Entity"
+        public string Lifecycle { get; set; }     // e.g. "DesignTime"
+        public string Sensitivity { get; set; }   // e.g. "Internal"
+
+        public bool IndexInclude { get; set; }
+        public string IndexTier { get; set; }     // e.g. "Primary"
+        public int? IndexPriority { get; set; }   // 0-100
+        public List<string> IndexTags { get; set; } = new List<string>();
+        public string IndexTagsCsv { get; set; }  // keep raw if you want
+
+        public string Icon { get; set; }
 
         // ---------- Structural Graph ----------
         public List<ModelPropertyDescription> Properties { get; set; } =

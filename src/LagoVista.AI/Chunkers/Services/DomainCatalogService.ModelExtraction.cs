@@ -138,7 +138,7 @@ namespace LagoVista.AI.Rag.Services
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (resources == null) throw new ArgumentNullException(nameof(resources));
 
-            var analysisResult = ModelSourceAnalyzer.Analyze(source, resources);
+            var analysisResult = ModelSourceAnalyzer.Analyze(source,null, resources);
             if (!analysisResult.Successful || analysisResult.Result == null)
             {
                 // Not a valid/interesting model snippet for our purposes.

@@ -7,8 +7,9 @@ using LagoVista.AI.Rag.Chunkers.Interfaces;
 using LagoVista.AI.Indexing.Interfaces;
 using LagoVista.AI.Indexing.Models;
 using LagoVista.AI.Chunkers.Interfaces;
+using LagoVista.AI.Chunkers.Providers.DomainDescription.Utils;
 
-namespace LagoVista.AI.Chunkers.Providers.DomainDescription
+namespace LagoVista.AI.Chunkers.Providers.Domains
 {
     /// <summary>
     /// DomainDescriptionBuilder (IDX-072).
@@ -21,9 +22,10 @@ namespace LagoVista.AI.Chunkers.Providers.DomainDescription
     {
         private readonly IAdminLogger _logger;
 
-        public Task<InvokeResult> ProcessAsync(IndexingPipelineContext ctx, IndexingWorkItem workItem)
+        public Task<InvokeResult<IDescriptionProvider>> ProcessAsync(IndexingPipelineContext ctx, IndexingWorkItem workItem)
         {
-            return Task.FromResult(InvokeResult.Success);
+            var description = DomainDescriptorSummaryExtractor.Extract(workItem.Lenses.SymbolText);
+            return Task.FromResult(InvokeResult<IDescriptionProvider>.Create(description.Result));
         }
 
         public DomainDescriptionBuilder(IAdminLogger logger)
@@ -63,21 +65,22 @@ namespace LagoVista.AI.Chunkers.Providers.DomainDescription
                     return Task.FromResult(InvokeResult<IRagDescription>.FromError("Unable to determine domain name from document."));
                 }
 
-                var domainKey = DomainDescriptionSectionKeyHelper.NormalizeDomainName(parsed.DomainName);
+                throw new NotImplementedException();
+                //var domainKey = DomainDescriptionSectionKeyHelper.NormalizeDomainName(parsed.DomainName);
 
-                // Domain catalog lookups are synchronous; we treat an empty list as a valid state.
-                var classes = domainCatalogService.GetClassesForDomain(domainKey);
+                //// Domain catalog lookups are synchronous; we treat an empty list as a valid state.
+                //var classes = domainCatalogService.GetClassesForDomain(domainKey);
 
-                var description = new DomainDescriptionRag(
-                    parsed.DomainName,
-                    parsed.DomainSummary,
-                    parsed.DomainNarrative,
-                    classes);
+                //var description = new DomainDescriptionRag(
+                //    parsed.DomainName,
+                //    parsed.DomainSummary,
+                //    parsed.DomainNarrative,
+                //    classes);
 
-                // Populate common indexing metadata from the file context.
-                description.SetCommonProperties(fileContext);
+                //// Populate common indexing metadata from the file context.
+                //description.SetCommonProperties(fileContext);
 
-                return Task.FromResult(InvokeResult<IRagDescription>.Create(description));
+                //return Task.FromResult(InvokeResult<IRagDescription>.Create(description));
             }
             catch (Exception ex)
             {

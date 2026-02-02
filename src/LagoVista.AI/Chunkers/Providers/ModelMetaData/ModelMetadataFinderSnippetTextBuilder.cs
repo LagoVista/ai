@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Text;
 using LagoVista.AI.Chunkers.Providers.DomainDescription;
+using LagoVista.AI.Chunkers.Providers.Domains;
 using LagoVista.AI.Rag.Chunkers.Models;
 using LagoVista.Core.Utils.Types.Nuviot.RagIndexing;
 

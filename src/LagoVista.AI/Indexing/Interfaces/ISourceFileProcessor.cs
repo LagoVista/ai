@@ -5,6 +5,7 @@ using LagoVista.AI.Models;
 using System.Threading.Tasks;
 using LagoVista.AI.Indexing.Models;
 using LagoVista.AI.Chunkers.Providers.DomainDescription;
+using LagoVista.AI.Chunkers.Providers.Domains;
 
 namespace LagoVista.AI.Indexing.Interfaces
 {

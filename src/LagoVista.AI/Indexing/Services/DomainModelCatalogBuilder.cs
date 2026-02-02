@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Chunkers.Interfaces;
 using LagoVista.AI.Chunkers.Providers.DomainDescription;
+using LagoVista.AI.Chunkers.Providers.Domains;
 using LagoVista.AI.Indexing.Models;
 using LagoVista.AI.Rag.Chunkers.Interfaces;
 using LagoVista.AI.Rag.Chunkers.Services;
@@ -46,8 +47,8 @@ namespace LagoVista.AI.Indexing.Services
         {
             if (files == null) throw new ArgumentNullException(nameof(files));
 
-            var domainsByKey = new Dictionary<string, DomainSummaryInfo>(StringComparer.OrdinalIgnoreCase);
-            var domainsByKeyName = new Dictionary<string, DomainSummaryInfo>(StringComparer.OrdinalIgnoreCase);
+            var domainsByKey = new Dictionary<string, DomainDescription>(StringComparer.OrdinalIgnoreCase);
+            var domainsByKeyName = new Dictionary<string, DomainDescription>(StringComparer.OrdinalIgnoreCase);
             var modelsByQualifiedName = new Dictionary<string, ModelCatalogEntry>(StringComparer.OrdinalIgnoreCase);
 
             _adminLogger.Trace($"[DomainModelCatalogBuilder__BuildAsync] - will scan {files.Count} for domain or models.");

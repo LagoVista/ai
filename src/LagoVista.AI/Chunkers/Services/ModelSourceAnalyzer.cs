@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using LagoVista.AI.Chunkers.Providers.DomainDescription;
+using LagoVista.AI.Chunkers.Providers.Domains;
 using LagoVista.Core.Validation;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -48,8 +50,30 @@ namespace LagoVista.AI.Rag.Chunkers.Services
         public string GetUrl { get; set; }
         public string GetListUrl { get; set; }
         public string DeleteUrl { get; set; }
-
         // ----- Structural / UI fields -----
+
+        // ----- New: RAG + organization knobs -----
+        public string ClusterKey { get; set; }
+        public string EntityKey { get; set; }
+
+        public string ModelType { get; set; }     // e.g. "Configuration"
+        public string Shape { get; set; }         // e.g. "Entity"
+        public string Lifecycle { get; set; }     // e.g. "DesignTime"
+        public string Sensitivity { get; set; }   // e.g. "Internal"
+
+        public bool IndexInclude { get; set; }
+        public string IndexTier { get; set; }     // e.g. "Primary"
+        public int? IndexPriority { get; set; }   // 0-100
+        public List<string> IndexTags { get; } = new List<string>();
+        public string IndexTagsCsv { get; set; }  // keep raw if you want
+
+        public string Icon { get; set; }
+
+        public string PreviewUIUrl { get; set; }
+
+        public DomainDescription DomainSummary { get; set; }
+
+
         public List<FormFieldSyntaxInfo> Fields { get; } = new List<FormFieldSyntaxInfo>();
     }
 
@@ -91,9 +115,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
     /// </summary>
     public static class ModelSourceAnalyzer
     {
-        public static InvokeResult<ModelSourceAnalysisResult> Analyze(
-            string sourceText,
-            IReadOnlyDictionary<string, string> resources)
+        public static InvokeResult<ModelSourceAnalysisResult> Analyze(string sourceText, DomainModelCatalog catalog, IReadOnlyDictionary<string, string> resources)
         {
             if (sourceText == null) throw new ArgumentNullException(nameof(sourceText));
             if (resources == null) throw new ArgumentNullException(nameof(resources));
@@ -125,11 +147,11 @@ namespace LagoVista.AI.Rag.Chunkers.Services
 
             var domainExpr = args.Value[0].Expression;
             var titleKey = ExtractResourceKey(args.Value[1].Expression);
-            var descKey = ExtractResourceKey(args.Value[2].Expression);
-            var helpKey = ExtractResourceKey(args.Value[3].Expression);
+            var helpKey = ExtractResourceKey(args.Value[2].Expression);
+            var descKey = ExtractResourceKey(args.Value[3].Expression);
 
             var domain = ExtractDomainValue(domainExpr);
-
+            
             var title = Lookup(resources, titleKey, "EntityDescription TitleResource");
             var description = Lookup(resources, descKey, "EntityDescription DescriptionResource");
             var help = Lookup(resources, helpKey, "EntityDescription UserHelpResource");
@@ -164,7 +186,37 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                 GetUrl = GetNamedString(entityAttr, "GetUrl"),
                 GetListUrl = GetNamedString(entityAttr, "GetListUrl"),
                 DeleteUrl = GetNamedString(entityAttr, "DeleteUrl"),
+                PreviewUIUrl = GetNamedString(entityAttr, "PreviewUIUrl"),
+                Icon = GetNamedString(entityAttr, "Icon"),
             };
+
+            result.DomainSummary = catalog.GetDomainByKey(domain)?.Result;
+
+            result.ClusterKey = GetNamedString(entityAttr, "ClusterKey");
+            result.EntityKey = GetNamedString(entityAttr, "EntityKey");
+
+            result.ModelType = GetNamedEnumName(entityAttr, "ModelType");
+            result.Shape = GetNamedEnumName(entityAttr, "Shape");
+            result.Lifecycle = GetNamedEnumName(entityAttr, "Lifecycle");
+            result.Sensitivity = GetNamedEnumName(entityAttr, "Sensitivity");
+
+            result.IndexInclude = GetNamedBoolOrDefault(entityAttr, "IndexInclude", defaultValue: true);
+            result.IndexTier = GetNamedEnumName(entityAttr, "IndexTier");
+            result.IndexPriority = GetNamedIntOrDefault(entityAttr, "IndexPriority", defaultValue: 50);
+
+            result.IndexTagsCsv = GetNamedString(entityAttr, "IndexTagsCsv");
+            if (!string.IsNullOrWhiteSpace(result.IndexTagsCsv))
+            {
+                foreach (var t in result.IndexTagsCsv.Split(','))
+                {
+                    var tag = t.Trim();
+                    if (!string.IsNullOrWhiteSpace(tag))
+                        result.IndexTags.Add(tag);
+                }
+            }
+
+
+
 
             // 3) Pre-scan enums so we can detect enum-backed fields
             var enumNames = new HashSet<string>(
@@ -481,5 +533,43 @@ namespace LagoVista.AI.Rag.Chunkers.Services
 
             return simple;
         }
+
+        private static bool GetNamedBoolOrDefault(AttributeSyntax attr, string name, bool defaultValue)
+        {
+            var arg = attr.ArgumentList?.Arguments.FirstOrDefault(a => GetAttributeArgumentName(a) == name);
+            if (arg == null) return defaultValue;
+
+            if (arg.Expression is LiteralExpressionSyntax lit)
+            {
+                if (lit.IsKind(SyntaxKind.TrueLiteralExpression)) return true;
+                if (lit.IsKind(SyntaxKind.FalseLiteralExpression)) return false;
+            }
+
+            return defaultValue;
+        }
+
+        private static int? GetNamedIntOrDefault(AttributeSyntax attr, string name, int? defaultValue)
+        {
+            var arg = attr.ArgumentList?.Arguments.FirstOrDefault(a => GetAttributeArgumentName(a) == name);
+            if (arg == null) return defaultValue;
+
+            if (arg.Expression is LiteralExpressionSyntax lit &&
+                lit.IsKind(SyntaxKind.NumericLiteralExpression) &&
+                lit.Token.Value is int i)
+            {
+                return i;
+            }
+
+            // handle things like 90L, or const identifiers if you want (optional)
+            if (arg.Expression is LiteralExpressionSyntax lit2 &&
+                lit2.IsKind(SyntaxKind.NumericLiteralExpression) &&
+                lit2.Token.Value is long l)
+            {
+                if (l >= int.MinValue && l <= int.MaxValue) return (int)l;
+            }
+
+            return defaultValue;
+        }
+
     }
 }

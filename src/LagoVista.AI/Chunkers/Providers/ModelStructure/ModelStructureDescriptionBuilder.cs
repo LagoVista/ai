@@ -1,4 +1,6 @@
 using LagoVista.AI;
+using LagoVista.AI.Chunkers.Providers.DomainDescription;
+using LagoVista.AI.Chunkers.Providers.Domains;
 using LagoVista.AI.Indexing.Interfaces;
 using LagoVista.AI.Indexing.Models;
 using LagoVista.AI.Rag.Chunkers.Models;
@@ -23,39 +25,21 @@ namespace LagoVista.AI.Chunkers.Providers.ModelStructure
     /// </summary>
     public class ModelStructureDescriptionBuilder : IBuildDescriptionProcessor
     {
-        public Task<InvokeResult> ProcessAsync(IndexingPipelineContext ctx, IndexingWorkItem workItem)
+        public Task<InvokeResult<IDescriptionProvider>> ProcessAsync(IndexingPipelineContext ctx, IndexingWorkItem workItem)
         {
 
-            var description = ModelStructureDescriptionBuilder.FromSource(ctx.Resources.FileContext, workItem.Lenses.SymbolText, ctx.Resources.ResourceDictionary);
-
-
-            return Task.FromResult(InvokeResult.Success);
+            var description = ModelStructureDescriptionBuilder.FromSource(workItem.Lenses.SymbolText, ctx.Resources.DomainCatalog, ctx.Resources.ResourceDictionary);
+            return Task.FromResult(InvokeResult<IDescriptionProvider>.Create(description.Result));
         }
 
 
-        public static InvokeResult<ModelStructureDescription> FromSource(IndexFileContext ctx, string sourceText, IReadOnlyDictionary<string, string> resources)
-        {
-            var description = FromSource(sourceText, resources);
-            if (description.Successful)
-                /* populate ctx fields */
-                description.Result.SetCommonProperties(ctx);
-
-            return description;
-        }
-
-        public static InvokeResult<ModelStructureDescription> FromSource(string sourceText)
-        {
-            return FromSource(sourceText, new Dictionary<string, string>());
-        }
-
-
-        public static InvokeResult<ModelStructureDescription> FromSource(string sourceText, IReadOnlyDictionary<string, string> resources)
+        public static InvokeResult<ModelStructureDescription> FromSource(string sourceText, DomainModelCatalog catalog, IReadOnlyDictionary<string, string> resources)
         {
             if (sourceText == null) throw new ArgumentNullException(nameof(sourceText));
             if (resources == null) throw new ArgumentNullException(nameof(resources));
 
             // Core analysis (EntityDescription + FormField metadata)
-            var analysisResult = ModelSourceAnalyzer.Analyze(sourceText, resources);
+            var analysisResult = ModelSourceAnalyzer.Analyze(sourceText, catalog, resources);
 
             if (!analysisResult.Successful)
             {
@@ -67,12 +51,9 @@ namespace LagoVista.AI.Chunkers.Providers.ModelStructure
             {
                 FullSourceText = sourceText,
 
+                QualifiedName = analysis.QualifiedName,
                 // Identity
                 ModelName = analysis.ModelName,
-                PrimaryEntity = analysis.ModelName,
-                Namespace = analysis.Namespace,
-                QualifiedName = analysis.QualifiedName,
-                BusinessDomainKey = analysis.Domain,
 
                 // UX strings
                 Title = analysis.Title,
@@ -87,6 +68,7 @@ namespace LagoVista.AI.Chunkers.Providers.ModelStructure
                 // UI / API affordances
                 ListUIUrl = analysis.ListUIUrl,
                 EditUIUrl = analysis.EditUIUrl,
+                PreviewUIUrl = analysis.PreviewUIUrl,
                 CreateUIUrl = analysis.CreateUIUrl,
                 HelpUrl = analysis.HelpUrl,
                 InsertUrl = analysis.InsertUrl,
@@ -96,6 +78,18 @@ namespace LagoVista.AI.Chunkers.Providers.ModelStructure
                 GetUrl = analysis.GetUrl,
                 GetListUrl = analysis.GetListUrl,
                 DeleteUrl = analysis.DeleteUrl,
+
+                ClusterKey = analysis.ClusterKey,
+                EntityKey = analysis.EntityKey,
+                ModelType = analysis.ModelType,
+                Shape = analysis.Shape,
+                Lifecycle = analysis.Lifecycle,
+                Sensitivity = analysis.Sensitivity,
+                IndexInclude = analysis.IndexInclude,
+                IndexTier = analysis.IndexTier,
+                IndexPriority = analysis.IndexPriority,
+                IndexTags = analysis.IndexTags,
+                IndexTagsCsv = analysis.IndexTagsCsv,
 
                 Properties = new List<ModelPropertyDescription>(),
                 EntityHeaderRefs = new List<ModelEntityHeaderRefDescription>(),

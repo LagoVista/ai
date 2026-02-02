@@ -1,4 +1,5 @@
-﻿using LagoVista.AI.Indexing.Models;
+﻿using LagoVista.AI.Chunkers.Providers.Interfaces;
+using LagoVista.AI.Indexing.Models;
 using LagoVista.AI.Models;
 using LagoVista.AI.Rag.Chunkers.Models;
 using LagoVista.Core.Validation;

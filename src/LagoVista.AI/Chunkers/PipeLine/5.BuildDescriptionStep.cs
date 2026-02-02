@@ -22,8 +22,12 @@ namespace LagoVista.AI.Indexing.PipeLine
             if (_registry.TryGet(workItem.Kind, out IBuildDescriptionProcessor processor))
             {
                 var result = await processor.ProcessAsync(ctx, workItem);
+
+                if (!result.Successful) return result.ToInvokeResult();
                 workItem.RagPayload.Meta.Subtype = workItem.Kind.ToString();
-                if (!result.Successful) return result;
+                workItem.Lenses.EmbedSnippet = result.Result.BuildSummaryForEmbedding();
+                workItem.Lenses.ModelSummary = result.Result.BuildSummaryForModel();
+                workItem.Lenses.UserDetail = result.Result.BuildSummaryForHuman();
             }
 
             return InvokeResult.Success;

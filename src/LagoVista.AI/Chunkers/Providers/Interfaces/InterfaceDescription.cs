@@ -1,15 +1,21 @@
+using LagoVista.AI.Chunkers.Providers;
 using System;
 using System.Collections.Generic;
 
-namespace LagoVista.AI.Rag.Chunkers.Models
+namespace LagoVista.AI.Chunkers.Providers.Interfaces
 {
     /// <summary>
     /// Pure semantic description of a C# interface (IDX-0042 InterfaceOverview).
     ///
     /// This is contract-focused metadata only; no chunking/indexing concerns.
     /// </summary>
-    public partial class InterfaceDescription : SummaryFacts
+    public partial class InterfaceDescription : IDescriptionProvider
     {
+        public string Namespace { get; set; }
+
+        public string SourcePath { get; set; }
+
+        public string PrimaryEntity { get; set; }
         /// <summary>
         /// Simple interface name, e.g. IDeviceManager.
         /// </summary>
@@ -88,8 +94,6 @@ namespace LagoVista.AI.Rag.Chunkers.Models
         /// 1-based line where the interface ends (inclusive).
         /// </summary>
         public int? LineEnd { get; set; }
-
-        public override string Subtype => "Interface";
     }
 
     /// <summary>

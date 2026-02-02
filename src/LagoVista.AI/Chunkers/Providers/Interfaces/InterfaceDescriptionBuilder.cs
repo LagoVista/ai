@@ -21,14 +21,13 @@ namespace LagoVista.AI.Chunkers.Providers.Interfaces
     public  class InterfaceDescriptionBuilder : IBuildDescriptionProcessor
     {
 
-        public Task<InvokeResult> ProcessAsync(IndexingPipelineContext ctx, IndexingWorkItem workItem)
+        public Task<InvokeResult<IDescriptionProvider>> ProcessAsync(IndexingPipelineContext ctx, IndexingWorkItem workItem)
         {
             var description = InterfaceDescriptionBuilder.CreateInterfaceDescription(ctx.Resources.FileContext, workItem.Lenses.SymbolText);
 
-            workItem.Lenses.EmbedSnippet = InterfaceFinderSnippetBuilder.BuildFinderSnippet(description.Result);
-            workItem.Lenses.ModelSummary = InterfaceCardBuilder.BuildInterfaceCard(description.Result, Path.Combine(ctx.Resources.FileContext.RepoId, ctx.Resources.FileContext.RelativePath));
-
-            return Task.FromResult(InvokeResult.Success);
+           
+            
+            return Task.FromResult(InvokeResult<IDescriptionProvider>.Create(description.Result));
         }
 
         public static InvokeResult<InterfaceDescription> CreateInterfaceDescription(IndexFileContext ctx, string sourceText)
@@ -67,6 +66,7 @@ namespace LagoVista.AI.Chunkers.Providers.Interfaces
             {
                 InterfaceName = name,
                 Namespace = ns,
+                SourcePath = $"/{ctx.RepoId}/{ctx.RelativePath}",
                 FullName = fullName,
                 IsGeneric = interfaceDecl.TypeParameterList != null,
                 GenericArity = interfaceDecl.TypeParameterList?.Parameters.Count ?? 0,
@@ -79,8 +79,6 @@ namespace LagoVista.AI.Chunkers.Providers.Interfaces
                 LineStart = GetLine(interfaceDecl.GetLocation()?.GetLineSpan().StartLinePosition.Line),
                 LineEnd = GetLine(interfaceDecl.GetLocation()?.GetLineSpan().EndLinePosition.Line)
             };
-
-            description.SetCommonProperties(ctx);
 
             var methods = new List<InterfaceMethodDescription>();
 

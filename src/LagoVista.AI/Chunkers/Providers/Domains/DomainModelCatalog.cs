@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using LagoVista.AI.Chunkers.Providers.ModelStructure;
 using LagoVista.AI.Rag.Chunkers.Models;
 using LagoVista.AI.Rag.Chunkers.Services;
 using LagoVista.Core.Validation;
 
-namespace LagoVista.AI.Chunkers.Providers.DomainDescription
+
+namespace LagoVista.AI.Chunkers.Providers.Domains
 {
     /// <summary>
     /// In-memory catalog of domains and models discovered during the pre-scan.
@@ -13,15 +15,15 @@ namespace LagoVista.AI.Chunkers.Providers.DomainDescription
     /// </summary>
     public sealed class DomainModelCatalog
     {
-        public IReadOnlyDictionary<string, DomainSummaryInfo> DomainsByKey { get; }
+        public IReadOnlyDictionary<string, DomainDescription> DomainsByKey { get; }
 
-        public IReadOnlyDictionary<string, DomainSummaryInfo> DomainsByKeyName { get; }
+        public IReadOnlyDictionary<string, DomainDescription> DomainsByKeyName { get; }
 
         public IReadOnlyDictionary<string, ModelCatalogEntry> ModelsByQualifiedName { get; }
 
         public DomainModelCatalog(
-            IReadOnlyDictionary<string, DomainSummaryInfo> domainsByKey,
-            IReadOnlyDictionary<string, DomainSummaryInfo> domainsByKeyName,
+            IReadOnlyDictionary<string, DomainDescription> domainsByKey,
+            IReadOnlyDictionary<string, DomainDescription> domainsByKeyName,
             IReadOnlyDictionary<string, ModelCatalogEntry> modelsByQualifiedName)
         {
             DomainsByKey = domainsByKey ?? throw new ArgumentNullException(nameof(domainsByKey));
@@ -29,21 +31,21 @@ namespace LagoVista.AI.Chunkers.Providers.DomainDescription
             ModelsByQualifiedName = modelsByQualifiedName ?? throw new ArgumentNullException(nameof(modelsByQualifiedName));
         }
 
-        public InvokeResult<DomainSummaryInfo> GetDomainByKey(string domainKey)
+        public InvokeResult<DomainDescription> GetDomainByKey(string domainKey)
         {
             if (domainKey == null) throw new ArgumentNullException(nameof(domainKey));
 
             if (DomainsByKey.ContainsKey(domainKey))
             {
-                return InvokeResult<DomainSummaryInfo>.Create(DomainsByKey[domainKey]);
+                return InvokeResult<DomainDescription>.Create(DomainsByKey[domainKey]);
             }
             if (DomainsByKeyName.ContainsKey(domainKey))
             {
-                return InvokeResult<DomainSummaryInfo>.Create(DomainsByKeyName[domainKey]);
+                return InvokeResult<DomainDescription>.Create(DomainsByKeyName[domainKey]);
             }
 
 
-            return InvokeResult<DomainSummaryInfo>.FromError($"Domain with key '{domainKey}' not found in catalog.");
+            return InvokeResult<DomainDescription>.FromError($"Domain with key '{domainKey}' not found in catalog.");
         }
 
         public InvokeResult<ModelCatalogEntry> GetModelByName(string qualifiedName)

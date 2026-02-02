@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using LagoVista.AI.Chunkers.Providers.Interfaces;
 using LagoVista.AI.Indexing.Models;
 using LagoVista.AI.Quality.Services;
 using LagoVista.AI.Rag.Chunkers.Models;

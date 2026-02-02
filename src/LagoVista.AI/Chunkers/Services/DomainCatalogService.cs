@@ -10,6 +10,7 @@ using LagoVista.AI.Rag.Chunkers.Models;                 // DomainSummaryInfo
 using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Newtonsoft.Json;
 
 namespace LagoVista.AI.Rag.Services
@@ -278,29 +279,28 @@ namespace LagoVista.AI.Rag.Services
                 .ToDictionary(g => g.Key, g => (IReadOnlyList<ModelClassEntry>)g.ToList(), StringComparer.OrdinalIgnoreCase);
 
             var domains = new List<DomainEntry>();
-
-            foreach (var summary in domainSummaries)
+            var summary = domainSummaries.First(); 
+           
+            if (string.IsNullOrWhiteSpace(summary.DomainKey) ||
+                string.IsNullOrWhiteSpace(summary.Title) ||
+                string.IsNullOrWhiteSpace(summary.Description))
             {
-                if (string.IsNullOrWhiteSpace(summary.DomainKey) ||
-                    string.IsNullOrWhiteSpace(summary.Title) ||
-                    string.IsNullOrWhiteSpace(summary.Description))
-                {
-                    throw new InvalidOperationException($"Domain descriptor '{summary.DomainKey ?? "<null>"}' is missing required fields.");
-                }
-
-                if (!classesByDomain.TryGetValue(summary.DomainKey, out var classesForDomain))
-                {
-                    classesForDomain = Array.Empty<ModelClassEntry>();
-                }
-
-                var domainEntry = new DomainEntry(
-                    domainKey: summary.DomainKey,
-                    title: summary.Title,
-                    description: summary.Description,
-                    classes: classesForDomain);
-
-                domains.Add(domainEntry);
+                throw new InvalidOperationException($"Domain descriptor '{summary.DomainKey ?? "<null>"}' is missing required fields.");
             }
+
+            if (!classesByDomain.TryGetValue(summary.DomainKey, out var classesForDomain))
+            {
+                classesForDomain = Array.Empty<ModelClassEntry>();
+            }
+
+            var domainEntry = new DomainEntry(
+                domainKey: summary.DomainKey,
+                title: summary.Title,
+                description: summary.Description,
+                classes: classesForDomain);
+
+            domains.Add(domainEntry);
+
 
             // Flat class list is the union of all model classes returned by the extractor.
             var catalog = new DomainCatalog(domains, modelClasses);

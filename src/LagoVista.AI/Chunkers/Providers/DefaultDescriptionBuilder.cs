@@ -10,9 +10,9 @@ namespace LagoVista.AI.Chunkers.Providers
 {
     internal class DefaultDescriptionBuilder : IBuildDescriptionProcessor
     {
-        public Task<InvokeResult> ProcessAsync(IndexingPipelineContext ctx, IndexingWorkItem workItem)
+        public Task<InvokeResult<IDescriptionProvider>> ProcessAsync(IndexingPipelineContext ctx, IndexingWorkItem workItem)
         {
-            return Task.FromResult(InvokeResult.Success);
+            return Task.FromResult(InvokeResult<IDescriptionProvider>.Create(null));
         }
     }
 }

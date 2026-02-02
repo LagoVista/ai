@@ -7,6 +7,7 @@ using LagoVista.Core.Utils.Types;
 using LagoVista.Core.Validation;
 using LagoVista.AI.Chunkers.Providers.DomainDescription;
 using LagoVista.AI.Quality.Model;
+using LagoVista.AI.Chunkers.Providers.Domains;
 
 namespace LagoVista.AI.Rag.Chunkers.Services
 {
@@ -24,7 +25,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
 
         string BuildSummaryForMethod(MethodSummaryContext ctx);
 
-        IReadOnlyList<DomainSummaryInfo> ExtractDomains(string filePath);
+        IReadOnlyList<DomainDescription> ExtractDomains(string filePath);
 
         Task<TitleDescriptionReviewResult> ReviewTitleAndDescriptionAsync(
             SummaryObjectKind kind,

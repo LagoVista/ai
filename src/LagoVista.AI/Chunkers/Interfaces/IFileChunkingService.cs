@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using LagoVista.AI.Chunkers.Providers.DomainDescription;
+using LagoVista.AI.Chunkers.Providers.Domains;
 using LagoVista.AI.Rag.Chunkers.Models;
 
 namespace LagoVista.AI.Rag.Chunkers.Interfaces

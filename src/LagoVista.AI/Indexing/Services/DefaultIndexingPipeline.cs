@@ -1,4 +1,5 @@
 using LagoVista.AI.Chunkers.Providers.DomainDescription;
+using LagoVista.AI.Chunkers.Providers.Domains;
 using LagoVista.AI.Indexing.Interfaces;
 using LagoVista.AI.Indexing.Models;
 using LagoVista.AI.Rag.Chunkers.Models;

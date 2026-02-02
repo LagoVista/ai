@@ -4,28 +4,29 @@ using System.Linq;
 using System.Text;
 using LagoVista.AI;
 using LagoVista.Core.Attributes; // DomainDescriptorAttribute, DomainDescriptionAttribute
-using LagoVista.Core.Models.UIMetaData; // DomainDescription
+using LagoVista.Core.Models.UIMetaData; // DomainDescription, Cluster
 using LagoVista.Core.Validation;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace LagoVista.AI.Chunkers.Providers.DomainDescription
+
+namespace LagoVista.AI.Chunkers.Providers.DomainDescription.Utils
 {
-    /// <summary>
+    /// <summary>`
     /// Uses Roslyn to parse C# source files that declare domain descriptors and
-    /// produces <see cref="DomainSummaryInfo"/> objects for indexing.
+    /// produces <see cref="DomainDescriptoin"/> objects for indexing.
     /// </summary>
     public static class DomainDescriptorSummaryExtractor
     {
-        public static InvokeResult<IReadOnlyList<DomainSummaryInfo>> Extract(string source)
+        public static InvokeResult<LagoVista.AI.Chunkers.Providers.Domains.DomainDescription> Extract(string source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
 
             var tree = CSharpSyntaxTree.ParseText(source);
             var root = tree.GetCompilationUnitRoot();
 
-            var summaries = new List<DomainSummaryInfo>();
+            var summaries = new List<LagoVista.AI.Chunkers.Providers.Domains.DomainDescription>();
 
             foreach (var classDecl in root.DescendantNodes().OfType<ClassDeclarationSyntax>())
             {
@@ -35,12 +36,12 @@ namespace LagoVista.AI.Chunkers.Providers.DomainDescription
                 ExtractFromDomainClass(classDecl, summaries);
             }
 
-            return InvokeResult<IReadOnlyList<DomainSummaryInfo>>.Create(summaries);
+            return InvokeResult<LagoVista.AI.Chunkers.Providers.Domains.DomainDescription>.Create(summaries.First());
         }
 
         private static void ExtractFromDomainClass(
             ClassDeclarationSyntax classDecl,
-            List<DomainSummaryInfo> target)
+            List<LagoVista.AI.Chunkers.Providers.Domains.DomainDescription> target)
         {
             var typeName = classDecl.Identifier.Text;
             var fullTypeName = typeName;
@@ -67,7 +68,7 @@ namespace LagoVista.AI.Chunkers.Providers.DomainDescription
 
                 var domainKey = ResolveDomainKey(domainAttr, constStringFields) ?? "";
 
-                var (title, description, domainTypeName) = ExtractDomainDescriptionInitializer(prop);
+                var (title, description, domainTypeName, clusters) = ExtractDomainDescriptionInitializer(prop);
 
                 var domainType = Core.Models.UIMetaData.DomainDescription.DomainTypes.BusinessObject;
                 if (!string.IsNullOrWhiteSpace(domainTypeName))
@@ -83,38 +84,43 @@ namespace LagoVista.AI.Chunkers.Providers.DomainDescription
                     title = !string.IsNullOrWhiteSpace(domainKey) ? domainKey : prop.Identifier.Text;
                 }
 
-                var info = new DomainSummaryInfo(
+                var info = new LagoVista.AI.Chunkers.Providers.Domains.DomainDescription(
                     domainKey: !string.IsNullOrWhiteSpace(domainKey) ? domainKey : title,
                     domainKeyName: ResolveDomainKeyName(domainAttr, constStringFields),
                     title: title,
                     description: description ?? string.Empty,
                     domainType: domainType,
                     sourceTypeName: fullTypeName,
-                    sourcePropertyName: prop.Identifier.Text);
+                    sourcePropertyName: prop.Identifier.Text,
+                    clusters: clusters);
 
                 target.Add(info);
             }
         }
 
-        private static (string title, string description, string domainTypeName) ExtractDomainDescriptionInitializer(PropertyDeclarationSyntax prop)
+        private static (string title, string description, string domainTypeName, IReadOnlyList<Cluster> clusters)
+            ExtractDomainDescriptionInitializer(PropertyDeclarationSyntax prop)
         {
+            // Handles the canonical:
+            // get { return new DomainDescription() { ... }; }
             var getter = prop.AccessorList?.Accessors.FirstOrDefault(a => a.Kind() == SyntaxKind.GetAccessorDeclaration);
             if (getter == null)
-                return (null, null, null);
+                return (null, null, null, Array.Empty<Cluster>());
 
             var returnStmt = getter.Body?.Statements.OfType<ReturnStatementSyntax>().FirstOrDefault();
             if (returnStmt == null)
-                return (null, null, null);
+                return (null, null, null, Array.Empty<Cluster>());
 
             if (!(returnStmt.Expression is ObjectCreationExpressionSyntax creation))
-                return (null, null, null);
+                return (null, null, null, Array.Empty<Cluster>());
 
             if (creation.Initializer == null)
-                return (null, null, null);
+                return (null, null, null, Array.Empty<Cluster>());
 
             string title = null;
             string description = null;
             string domainTypeName = null;
+            IReadOnlyList<Cluster> clusters = Array.Empty<Cluster>();
 
             foreach (var expr in creation.Initializer.Expressions.OfType<AssignmentExpressionSyntax>())
             {
@@ -140,9 +146,71 @@ namespace LagoVista.AI.Chunkers.Providers.DomainDescription
                 {
                     domainTypeName = TryGetEnumMemberName(expr.Right) ?? domainTypeName;
                 }
+                else if (leftName.Equals("Clusters", StringComparison.OrdinalIgnoreCase))
+                {
+                    clusters = ExtractClusters(expr.Right);
+                }
             }
 
-            return (title, description, domainTypeName);
+            return (title, description, domainTypeName, clusters);
+        }
+
+        private static IReadOnlyList<Cluster> ExtractClusters(ExpressionSyntax expr)
+        {
+            if (expr == null) return Array.Empty<Cluster>();
+
+            // Find: new Cluster() { ... } anywhere under the Clusters RHS.
+            var clusterCreates = expr.DescendantNodesAndSelf()
+                .OfType<ObjectCreationExpressionSyntax>()
+                .Where(o => o.Type != null && o.Type.ToString().EndsWith("Cluster", StringComparison.Ordinal))
+                .ToList();
+
+            if (clusterCreates.Count == 0)
+                return Array.Empty<Cluster>();
+
+            var clusters = new List<Cluster>();
+
+            foreach (var create in clusterCreates)
+            {
+                var init = create.Initializer;
+                if (init == null) continue;
+
+                string key = null;
+                string name = null;
+                string desc = null;
+
+                foreach (var assign in init.Expressions.OfType<AssignmentExpressionSyntax>())
+                {
+                    var leftName = assign.Left switch
+                    {
+                        IdentifierNameSyntax ident => ident.Identifier.Text,
+                        MemberAccessExpressionSyntax member => member.Name.Identifier.Text,
+                        _ => null
+                    };
+
+                    if (string.IsNullOrWhiteSpace(leftName))
+                        continue;
+
+                    if (leftName.Equals("Key", StringComparison.OrdinalIgnoreCase))
+                        key = TryGetStringLiteral(assign.Right) ?? key;
+                    else if (leftName.Equals("Name", StringComparison.OrdinalIgnoreCase))
+                        name = TryGetStringLiteral(assign.Right) ?? name;
+                    else if (leftName.Equals("Description", StringComparison.OrdinalIgnoreCase))
+                        desc = TryGetStringLiteral(assign.Right) ?? desc;
+                }
+
+                if (!string.IsNullOrWhiteSpace(key))
+                {
+                    clusters.Add(new Cluster
+                    {
+                        Key = key.Trim(),
+                        Name = (name ?? string.Empty).Trim(),
+                        Description = (desc ?? string.Empty).Trim()
+                    });
+                }
+            }
+
+            return clusters;
         }
 
         private static Dictionary<string, string> BuildConstStringLookup(ClassDeclarationSyntax classDecl)
@@ -199,7 +267,6 @@ namespace LagoVista.AI.Chunkers.Providers.DomainDescription
                 return null;
 
             var argExpr = attr.ArgumentList.Arguments[0].Expression;
-
 
             if (argExpr is IdentifierNameSyntax ident)
             {

@@ -1,6 +1,7 @@
 // Path: LagoVista.AI.Rag.Chunkers/Models/EndpointDescription.SummarySection.cs
 
 using LagoVista.AI.Chunkers.Providers.DomainDescription;
+using LagoVista.AI.Chunkers.Providers.Domains;
 using LagoVista.AI.Rag.Chunkers.Interfaces;
 using System;
 using System.Collections.Generic;

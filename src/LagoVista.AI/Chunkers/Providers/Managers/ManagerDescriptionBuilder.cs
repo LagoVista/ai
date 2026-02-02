@@ -23,9 +23,9 @@ namespace LagoVista.AI.Chunkers.Providers.Managers
     /// </summary>
     public class ManagerDescriptionBuilder : IBuildDescriptionProcessor
     {
-        public Task<InvokeResult> ProcessAsync(IndexingPipelineContext ctx, IndexingWorkItem workItem)
+        public Task<InvokeResult<IDescriptionProvider>> ProcessAsync(IndexingPipelineContext ctx, IndexingWorkItem workItem)
         {
-            return Task.FromResult(InvokeResult.Success);
+            return Task.FromResult(InvokeResult<IDescriptionProvider>.Create(null));
         }
 
         public static InvokeResult<ManagerDescription> CreateManagerDescription(IndexFileContext ctx, string sourceText)

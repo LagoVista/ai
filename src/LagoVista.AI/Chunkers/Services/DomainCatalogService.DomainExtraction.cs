@@ -31,11 +31,11 @@ namespace LagoVista.AI.Rag.Services
         ///   classes and their DomainSummaryInfo.
         /// - Enforces mandatory fields (DomainKey, Title, Description) at this level.
         /// </summary>
-        private async Task<IReadOnlyList<DomainSummaryInfo>> ExtractDomainsAsync(
+        private async Task<IReadOnlyList<LagoVista.AI.Chunkers.Providers.Domains.DomainDescription>> ExtractDomainsAsync(
             IReadOnlyList<DiscoveredFile> files,
             CancellationToken cancellationToken)
         {
-            var domainsByKey = new Dictionary<string, DomainSummaryInfo>(StringComparer.OrdinalIgnoreCase);
+            var domainsByKey = new Dictionary<string, DomainDescription>(StringComparer.OrdinalIgnoreCase);
 
             _adminLogger.Trace($"[DomainCatalogService__ExtractDomainsAsync] - scanning {files.Count} files for [DomainDescriptor] classes.");
 
@@ -126,7 +126,8 @@ namespace LagoVista.AI.Rag.Services
                 //}
             }
 
-            return domainsByKey.Values.ToList();
+            throw new NotImplementedException();
+      //      return domainsByKey.Values.ToList();
         }
 
         /// <summary>
@@ -139,14 +140,14 @@ namespace LagoVista.AI.Rag.Services
         /// It is kept private and exercised via tests using reflection to avoid
         /// expanding the public surface.
         /// </summary>
-        private static IReadOnlyList<DomainSummaryInfo> ExtractDomainsFromSnippet(string source)
+        private static IReadOnlyList<LagoVista.AI.Chunkers.Providers.Domains.DomainDescription> ExtractDomainsFromSnippet(string source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
 
             var tree = CSharpSyntaxTree.ParseText(source);
             var root = tree.GetCompilationUnitRoot();
 
-            var summaries = new List<DomainSummaryInfo>();
+            var summaries = new List<LagoVista.AI.Chunkers.Providers.Domains.DomainDescription>();
 
             foreach (var classDecl in root.DescendantNodes().OfType<ClassDeclarationSyntax>())
             {
@@ -161,7 +162,7 @@ namespace LagoVista.AI.Rag.Services
 
         private static void ExtractFromDomainClass(
             ClassDeclarationSyntax classDecl,
-            List<DomainSummaryInfo> target)
+            List<LagoVista.AI.Chunkers.Providers.Domains.DomainDescription> target)
         {
             var typeName = classDecl.Identifier.Text;
             var fullTypeName = typeName;
@@ -201,15 +202,16 @@ namespace LagoVista.AI.Rag.Services
                     title = !string.IsNullOrWhiteSpace(domainKey) ? domainKey : prop.Identifier.Text;
                 }
 
-                var info = new DomainSummaryInfo(
+                var info = new LagoVista.AI.Chunkers.Providers.Domains.DomainDescription(
                     domainKey: !string.IsNullOrWhiteSpace(domainKey) ? domainKey : title,
                     domainKeyName: ResolveDomainKeyName(domainAttr, constStringFields),
                     title: title,
                     description: description ?? string.Empty,
                     domainType: domainType,
                     sourceTypeName: fullTypeName,
-                    sourcePropertyName: prop.Identifier.Text);
-
+                    sourcePropertyName: prop.Identifier.Text,
+                    new List<Cluster>());
+                
                 target.Add(info);
             }
         }

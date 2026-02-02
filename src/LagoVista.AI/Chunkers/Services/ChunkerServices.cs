@@ -1,10 +1,13 @@
 ﻿using LagoVista.AI.Chunkers.Providers.DomainDescription;
+using LagoVista.AI.Chunkers.Providers.DomainDescription.Utils;
+using LagoVista.AI.Chunkers.Providers.Domains;
 using LagoVista.AI.Indexing.Utils;
 using LagoVista.AI.Quality.Model;
 using LagoVista.AI.Quality.Services;
 using LagoVista.AI.Rag.Chunkers.Models;
 using LagoVista.Core.Utils.Types;
 using LagoVista.Core.Validation;
+using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
@@ -19,9 +22,10 @@ namespace LagoVista.AI.Rag.Chunkers.Services
             return MethodSummaryBuilder.BuildSummary(ctx);
         }
 
-        public IReadOnlyList<DomainSummaryInfo> ExtractDomains(string source)
+        public IReadOnlyList<DomainDescription> ExtractDomains(string source)
         {
-            return DomainDescriptorSummaryExtractor.Extract(source).Result;
+            throw new NotImplementedException();
+          //  return DomainDescriptorSummaryExtractor.Extract(source).Result;
         }
 
         public Task<TitleDescriptionReviewResult> ReviewTitleAndDescriptionAsync(SummaryObjectKind kind, string symbolName, string title, string description, string llmUrl, string llmApiKey, HttpClient httpClient = null, string model = "gpt-4.1-mini", CancellationToken cancellationToken = default)
