@@ -66,7 +66,7 @@ namespace LagoVista.AI.Services.Tools
             public bool IsClientExecutedOnly { get; set; } = true;
             public string Message { get; set; } = string.Empty;
 
-            public Args? Args { get; set; }
+            public Args Args { get; set; }
         }
 
         public Task<InvokeResult<string>> ExecuteAsync(string argumentsJson, IAgentPipelineContext context)
@@ -76,7 +76,7 @@ namespace LagoVista.AI.Services.Tools
         {
             try
             {
-                Args? args = null;
+                Args args = null;
 
                 if (!string.IsNullOrWhiteSpace(argumentsJson))
                 {

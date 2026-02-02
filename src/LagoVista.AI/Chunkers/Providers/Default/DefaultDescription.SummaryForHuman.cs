@@ -2,16 +2,15 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace LagoVista.AI.Chunkers.Providers.Interfaces
+namespace LagoVista.AI.Chunkers.Providers.Default
 {
-    public partial class InterfaceDescription
+    public partial class DefaultDescription
     {
-        public string BuildSummaryForHuman()
+        public virtual string BuildSummaryForHuman()
         {
             var builder = new StringBuilder();
 
             return builder.ToString();
         }
-
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LagoVista.AI.Chunkers.Providers.Default;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,7 +8,7 @@ namespace LagoVista.AI.Chunkers.Providers.Interfaces
 {
     public partial class InterfaceDescription
     {
-        public string BuildSummaryForModel()
+        public override string BuildSummaryForModel()
         {
             var maxMethods = 50;
             var maxProps = 30;
@@ -38,7 +39,7 @@ namespace LagoVista.AI.Chunkers.Providers.Interfaces
             AppendList(sb, "Returns", iface.ReturnTypes);
 
             // Methods
-            var methods = iface.Methods ?? Array.Empty<InterfaceMethodDescription>();
+            var methods = iface.Methods ?? Array.Empty<MethodDescription>();
             if (methods.Count > 0)
             {
                 sb.AppendLine();
@@ -70,7 +71,7 @@ namespace LagoVista.AI.Chunkers.Providers.Interfaces
             }
 
             // Properties
-            var props = iface.Properties ?? Array.Empty<InterfacePropertyDescription>();
+            var props = iface.Properties ?? Array.Empty<PropertyDescription>();
             if (props.Count > 0)
             {
                 sb.AppendLine();
@@ -121,7 +122,7 @@ namespace LagoVista.AI.Chunkers.Providers.Interfaces
             sb.AppendLine($"{label}: {string.Join(", ", distinct)}{(items.Count > distinct.Count ? " …" : "")}");
         }
 
-        private static IEnumerable<string> BuildPropertyLines(InterfacePropertyDescription p)
+        private static IEnumerable<string> BuildPropertyLines(PropertyDescription p)
         {
             if (p == null || string.IsNullOrWhiteSpace(p.Name) || string.IsNullOrWhiteSpace(p.Type))
                 yield break;

@@ -73,7 +73,6 @@ namespace LagoVista.AI.Chunkers
             }
             _adminLogger.Trace($"{this.Tag()} - Found {resources.Count} in  all Resources {sw.Elapsed.TotalMilliseconds}ms.");
 
-
             var resourceDictionary = new ResourceDictionary(resources);
             var totalFilesFound = 0;
             var totalPartsToIndex = 0;

@@ -24,8 +24,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
 
         public IReadOnlyList<DomainDescription> ExtractDomains(string source)
         {
-            throw new NotImplementedException();
-          //  return DomainDescriptorSummaryExtractor.Extract(source).Result;
+            return DomainDescriptorSummaryExtractor.ExtractDomains(source).Result;
         }
 
         public Task<TitleDescriptionReviewResult> ReviewTitleAndDescriptionAsync(SummaryObjectKind kind, string symbolName, string title, string description, string llmUrl, string llmApiKey, HttpClient httpClient = null, string model = "gpt-4.1-mini", CancellationToken cancellationToken = default)

@@ -1,3 +1,4 @@
+using LagoVista.AI.Chunkers.Services;
 using LagoVista.AI.Indexing.Interfaces;
 using LagoVista.AI.Indexing.Models;
 using LagoVista.AI.Rag.Chunkers.Services;              // CSharpSymbolSplitter, ModelSourceAnalyzer
@@ -90,31 +91,31 @@ namespace LagoVista.AI.Rag.Services
                     continue;
                 }
 
-                //var splitterResults = CSharpSymbolSplitter.Chunk(source);
-                //if (!splitterResults.Successful)
-                //{
-                //    throw new InvalidOperationException(
-                //        $"SymbolSplitter failed for file '{file.RelativePath ?? file.FullPath}'.");
-                //}
+                var splitterResults = new CSharpSymbolSplitterService().Split(source);
+                if (!splitterResults.Successful)
+                {
+                    throw new InvalidOperationException(
+                        $"SymbolSplitter failed for file '{file.RelativePath ?? file.FullPath}'.");
+                }
 
-                //foreach (var snippet in splitterResults.Result)
-                //{
-                //    cancellationToken.ThrowIfCancellationRequested();
+                foreach (var snippet in splitterResults.Result)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
 
-                //    var text = snippet.Text;
-                //    if (string.IsNullOrWhiteSpace(text))
-                //    {
-                //        continue;
-                //    }
+                    var text = snippet.Text;
+                    if (string.IsNullOrWhiteSpace(text))
+                    {
+                        continue;
+                    }
 
-                //    var modelEntry = ExtractModelFromSnippet(text, relative, resources);
-                //    if (modelEntry == null)
-                //    {
-                //        continue; // not an interesting or incomplete model
-                //    }
+                    var modelEntry = ExtractModelFromSnippet(text, relative, resources);
+                    if (modelEntry == null)
+                    {
+                        continue; // not an interesting or incomplete model
+                    }
 
-                //    models.Add(modelEntry);
-                //}
+                    models.Add(modelEntry);
+                }
             }
 
             return models;

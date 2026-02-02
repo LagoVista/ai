@@ -65,8 +65,6 @@ namespace LagoVista.AI.Indexing.Services
                     token.ThrowIfCancellationRequested();
                 }
 
-
-
                 // Only consider C# files for domain/model catalog.
                 if (!file.FullPath.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
                     continue;

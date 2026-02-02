@@ -1,3 +1,4 @@
+using LagoVista.AI.Chunkers.Providers.Default;
 using LagoVista.AI.Indexing.Interfaces;
 using LagoVista.AI.Indexing.Models;
 using LagoVista.AI.Rag.Chunkers.Models;
@@ -18,10 +19,10 @@ namespace LagoVista.AI.Chunkers.Providers.Interfaces
     ///
     /// Pure contract-level description only – no chunking/indexing concerns.
     /// </summary>
-    public  class InterfaceDescriptionBuilder : IBuildDescriptionProcessor
+    public  class InterfaceDescriptionBuilder : DefaultDescriptionBuilder, IBuildDescriptionProcessor
     {
 
-        public Task<InvokeResult<IDescriptionProvider>> ProcessAsync(IndexingPipelineContext ctx, IndexingWorkItem workItem)
+        public override Task<InvokeResult<IDescriptionProvider>> ProcessAsync(IndexingPipelineContext ctx, IndexingWorkItem workItem)
         {
             var description = InterfaceDescriptionBuilder.CreateInterfaceDescription(ctx.Resources.FileContext, workItem.Lenses.SymbolText);
 
@@ -73,136 +74,26 @@ namespace LagoVista.AI.Chunkers.Providers.Interfaces
                 BaseInterfaces = GetBaseInterfaces(symbol),
                 PrimaryEntity = DetectPrimaryEntity(symbol, interfaceDecl, semanticModel),
                 Role = ClassifyRole(name),
-                Methods = new List<InterfaceMethodDescription>(),
                 ImplementedBy = Array.Empty<string>(),
                 UsedByControllers = Array.Empty<string>(),
                 LineStart = GetLine(interfaceDecl.GetLocation()?.GetLineSpan().StartLinePosition.Line),
                 LineEnd = GetLine(interfaceDecl.GetLocation()?.GetLineSpan().EndLinePosition.Line)
             };
 
-            var methods = new List<InterfaceMethodDescription>();
+            var methods = new List<MethodDescription>();
 
-            foreach (var method in interfaceDecl.Members.OfType<MethodDeclarationSyntax>())
-            {
-                var parameters = method.ParameterList.Parameters
-                    .Select(p => new InterfaceMethodParameterDescription
-                    {
-                        Name = p.Identifier.Text,
-                        Type = GetParameterTypeName(p, semanticModel),
-                        IsOptional = p.Default != null,
-                        DefaultValue = p.Default?.Value?.ToString()
-                    })
-                    .ToArray();
-
-                var returnTypeString = method.ReturnType.ToString();
-
-                var methodDesc = new InterfaceMethodDescription
-                {
-                    Name = method.Identifier.Text,
-                    ReturnType = returnTypeString,
-                    IsAsync = IsAsyncReturnType(method.ReturnType),
-                    Parameters = parameters,
-                    Summary = GetXmlSummary(method),
-                    LineStart = GetLine(method.GetLocation()?.GetLineSpan().StartLinePosition.Line),
-                    LineEnd = GetLine(method.GetLocation()?.GetLineSpan().EndLinePosition.Line)
-                };
-
-                methods.Add(methodDesc);
-            }
-            description.Methods = methods;
-
-            var properties = new List<InterfacePropertyDescription>();  
-
-            foreach (var property in interfaceDecl.Members.OfType<PropertyDeclarationSyntax>())
-            {
-                var propertyDescription = new InterfacePropertyDescription()
-                {
-                    Name = property.Identifier.Text,
-                    Type = property.Type.ToString(),
-                    HasGetter = property.AccessorList?.Accessors.Any(a => a.Kind() == SyntaxKind.GetAccessorDeclaration) == true,
-                    HasSetter = property.AccessorList?.Accessors.Any(a => a.Kind() == SyntaxKind.SetAccessorDeclaration) == true,
-                    LineStart = GetLine(property.GetLocation()?.GetLineSpan().StartLinePosition.Line),
-                    LineEnd = GetLine(property.GetLocation()?.GetLineSpan().EndLinePosition.Line)
-                };
-
-                properties.Add(propertyDescription);
-            }
-
-            description.Properties = properties;
-
+            description.Methods = Getmethods(interfaceDecl.Members.OfType<MethodDeclarationSyntax>(), semanticModel);
+            description.Properties = GetProperties(interfaceDecl.Members.OfType<PropertyDeclarationSyntax>());
             return InvokeResult<InterfaceDescription>.Create(description);
         }
 
-        private static string GetNamespace(InterfaceDeclarationSyntax interfaceDecl)
+        private static string GetNamespace(SyntaxNode interfaceDecl)
         {
             var parent = interfaceDecl.Parent;
             while (parent != null && !(parent is NamespaceDeclarationSyntax))
                 parent = parent.Parent;
 
             return parent is NamespaceDeclarationSyntax ns ? ns.Name.ToString() : null;
-        }
-
-        private static IReadOnlyList<string> GetBaseInterfaces(INamedTypeSymbol symbol)
-        {
-            if (symbol == null || symbol.AllInterfaces.Length == 0)
-                return Array.Empty<string>();
-
-            return symbol.AllInterfaces
-                .Select(i => i.ToDisplayString())
-                .Distinct(StringComparer.Ordinal)
-                .ToArray();
-        }
-
-        private static string GetXmlSummary(MemberDeclarationSyntax member)
-        {
-            var trivia = member.GetLeadingTrivia()
-                .Select(t => t.GetStructure())
-                .OfType<DocumentationCommentTriviaSyntax>()
-                .FirstOrDefault();
-
-            if (trivia == null) return null;
-
-            var summary = trivia.Content
-                .OfType<XmlElementSyntax>()
-                .FirstOrDefault(e => e.StartTag.Name.ToString() == "summary");
-
-            return summary?.ToString()
-                .Replace("<summary>", string.Empty)
-                .Replace("</summary>", string.Empty)
-                .Trim();
-        }
-
-        private static string GetParameterTypeName(ParameterSyntax parameter, SemanticModel model)
-        {
-            if (parameter.Type == null)
-                return null;
-
-            var typeSymbol = model.GetTypeInfo(parameter.Type).Type as INamedTypeSymbol;
-            if (typeSymbol != null)
-            {
-                return typeSymbol.Name;
-            }
-
-            // Fallback to syntactic type name
-            return parameter.Type.ToString();
-        }
-
-        private static bool IsAsyncReturnType(TypeSyntax returnType)
-        {
-            if (returnType == null) return false;
-
-            var text = returnType.ToString();
-            if (string.IsNullOrWhiteSpace(text)) return false;
-
-            // Simple heuristic: Task or Task<T>
-            if (text.StartsWith("Task<", StringComparison.Ordinal)
-                || text.Equals("Task", StringComparison.Ordinal)
-                || text.StartsWith("System.Threading.Tasks.Task", StringComparison.Ordinal))
-            {
-                return true;
-            }
-
-            return false;
         }
 
         private static string DetectPrimaryEntity(INamedTypeSymbol interfaceSymbol, InterfaceDeclarationSyntax interfaceDecl, SemanticModel model)
@@ -304,11 +195,5 @@ namespace LagoVista.AI.Chunkers.Providers.Interfaces
             if (string.IsNullOrWhiteSpace(key)) return;
             dict[key] = dict.TryGetValue(key, out var v) ? v + 1 : 1;
         }
-
-        private static int? GetLine(int? zeroBased)
-        {
-            return zeroBased.HasValue ? zeroBased + 1 : null;
-        }
-
     }
 }

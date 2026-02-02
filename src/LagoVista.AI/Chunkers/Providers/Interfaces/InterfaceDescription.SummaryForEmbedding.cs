@@ -1,4 +1,5 @@
-﻿using LagoVista.AI.Rag.Chunkers.Models;
+﻿using LagoVista.AI.Chunkers.Providers.Default;
+using LagoVista.AI.Rag.Chunkers.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +10,7 @@ namespace LagoVista.AI.Chunkers.Providers.Interfaces
 {
     public partial class InterfaceDescription
     {
-        public string BuildSummaryForEmbedding()
+        public override string BuildSummaryForEmbedding()
         {
             var iface = this;
 
@@ -58,7 +59,7 @@ namespace LagoVista.AI.Chunkers.Providers.Interfaces
             return string.Join("\n", lines.Where(l => !string.IsNullOrWhiteSpace(l)));
         }
 
-        public string BuildMethodAtom(InterfaceMethodDescription method)
+        public string BuildMethodAtom(MethodDescription method)
         {
             if (method == null || string.IsNullOrWhiteSpace(method.Name))
                 return null;
@@ -128,7 +129,7 @@ namespace LagoVista.AI.Chunkers.Providers.Interfaces
         "DateTime","Guid"
     };
 
-        private string BuildMethodLine(InterfaceMethodDescription m)
+        private string BuildMethodLine(MethodDescription m)
         {
             if (m == null || string.IsNullOrWhiteSpace(m.Name)) return null;
 
@@ -216,7 +217,7 @@ namespace LagoVista.AI.Chunkers.Providers.Interfaces
         private string MapVerb(string leadToken)
             => VerbMap.TryGetValue(leadToken, out var mapped) ? mapped : leadToken.ToLowerInvariant();
 
-        private static List<string> ExtractQualifiers(string methodStem, IReadOnlyList<InterfaceMethodParameterDescription> parameters)
+        private static List<string> ExtractQualifiers(string methodStem, IReadOnlyList<MethodParameterDescription> parameters)
         {
             var q = new List<string>();
 
@@ -230,7 +231,7 @@ namespace LagoVista.AI.Chunkers.Providers.Interfaces
             if (methodStem.IndexOf("WithoutOrgs", StringComparison.OrdinalIgnoreCase) >= 0) q.Add("without orgs");
 
             // From parameters
-            var p = parameters ?? Array.Empty<InterfaceMethodParameterDescription>();
+            var p = parameters ?? Array.Empty<MethodParameterDescription>();
 
             bool hasPartition = p.Any(x => x?.Name?.Equals("partitionKey", StringComparison.OrdinalIgnoreCase) == true);
             bool hasRow = p.Any(x => x?.Name?.Equals("rowKey", StringComparison.OrdinalIgnoreCase) == true);
@@ -262,7 +263,7 @@ namespace LagoVista.AI.Chunkers.Providers.Interfaces
             return ToWords(rest).ToLowerInvariant();
         }
 
-        private static string ExtractSubjectFromParameters(IReadOnlyList<InterfaceMethodParameterDescription> parameters)
+        private static string ExtractSubjectFromParameters(IReadOnlyList<MethodParameterDescription> parameters)
         {
             if (parameters == null) return null;
 

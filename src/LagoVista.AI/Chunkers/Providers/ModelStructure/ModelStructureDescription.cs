@@ -1,3 +1,4 @@
+using LagoVista.AI.Chunkers.Providers.Default;
 using System.Collections.Generic;
 
 
@@ -8,7 +9,7 @@ namespace LagoVista.AI.Chunkers.Providers.ModelStructure
     /// structural graph, properties, entity header references, child objects,
     /// relationships, and operational affordances.
     /// </summary>
-    public sealed partial class ModelStructureDescription : IDescriptionProvider
+    public sealed partial class ModelStructureDescription : DefaultDescription, IDescriptionProvider
     {
 
         public string QualifiedName { get; set; }

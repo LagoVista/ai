@@ -24,7 +24,7 @@ namespace LagoVista.AI.Chunkers.Providers.Domains
 
         public Task<InvokeResult<IDescriptionProvider>> ProcessAsync(IndexingPipelineContext ctx, IndexingWorkItem workItem)
         {
-            var description = DomainDescriptorSummaryExtractor.Extract(workItem.Lenses.SymbolText);
+            var description = DomainDescriptorSummaryExtractor.ExtractDomain(workItem.Lenses.SymbolText);
             return Task.FromResult(InvokeResult<IDescriptionProvider>.Create(description.Result));
         }
 

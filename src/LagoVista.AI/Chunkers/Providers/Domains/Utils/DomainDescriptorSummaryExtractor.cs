@@ -13,13 +13,15 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace LagoVista.AI.Chunkers.Providers.DomainDescription.Utils
 {
-    /// <summary>`
-    /// Uses Roslyn to parse C# source files that declare domain descriptors and
-    /// produces <see cref="DomainDescriptoin"/> objects for indexing.
-    /// </summary>
     public static class DomainDescriptorSummaryExtractor
     {
-        public static InvokeResult<LagoVista.AI.Chunkers.Providers.Domains.DomainDescription> Extract(string source)
+        public static InvokeResult<Domains.DomainDescription> ExtractDomain(string source)
+        {
+            var domains = ExtractDomains(source);
+            return InvokeResult<Domains.DomainDescription>.Create(domains.Result.First());
+        }
+
+        public static InvokeResult<IReadOnlyList<Domains.DomainDescription>> ExtractDomains(string source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
 
@@ -36,11 +38,10 @@ namespace LagoVista.AI.Chunkers.Providers.DomainDescription.Utils
                 ExtractFromDomainClass(classDecl, summaries);
             }
 
-            return InvokeResult<LagoVista.AI.Chunkers.Providers.Domains.DomainDescription>.Create(summaries.First());
+            return InvokeResult<IReadOnlyList<Domains.DomainDescription>>.Create(summaries);
         }
 
-        private static void ExtractFromDomainClass(
-            ClassDeclarationSyntax classDecl,
+        private static void ExtractFromDomainClass(ClassDeclarationSyntax classDecl,
             List<LagoVista.AI.Chunkers.Providers.Domains.DomainDescription> target)
         {
             var typeName = classDecl.Identifier.Text;
