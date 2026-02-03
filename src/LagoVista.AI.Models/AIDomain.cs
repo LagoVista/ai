@@ -22,19 +22,22 @@ namespace LagoVista.AI.Models
                 return new DomainDescription()
                 {
                     Description = "Tools and data structures for configuring and managing AI models, agents, and their conversations.",
-                    DomainType = DomainDescription.DomainTypes.BusinessObject,
-                    Name = "AI Administration",
-                    CurrentVersion = new Core.Models.VersionInfo()
+                        DomainType = DomainDescription.DomainTypes.BusinessObject,
+                        Name = "AI Administration",
+                        CurrentVersion = new Core.Models.VersionInfo()
                     {
-                        Major = 2,
-                        Minor = 0,
+                        Major=4,
+                        Minor=0,
                         Build = 001,
-                        DateStamp = new DateTime(2026, 1, 31),
-                        Revision = 1,
+                        DateStamp =  new DateTime(2026,2,2),
+                        Revision=1,
                         ReleaseNotes = "Initial unstable preview"
                     },
-                    Clusters = new List<Cluster>()
-                };
+                        Clusters = new List<Cluster>() {
+                        new Cluster() { Key = "agent", Name = "Agents", Description = "Agent runtime and configuration" },
+                        new Cluster() { Key = "prompting", Name = "Prompting", Description = "Prompts, templates, and context" },
+                        new Cluster() { Key = "rag", Name = "RAG", Description = "Index, chunks, embeddings, retrieval settings" }
+                    }                };
             }
         }
     }
