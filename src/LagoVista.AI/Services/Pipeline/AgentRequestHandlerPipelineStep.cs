@@ -107,11 +107,14 @@ namespace LagoVista.AI.Services.Pipeline
 
                 ctx.ThisTurn.Status = EntityHeader<AgentSessionTurnStatuses>.Create(AgentSessionTurnStatuses.Completed);
                 ctx.ThisTurn.ExecutionMs = sw.Elapsed.TotalMilliseconds;
-                await _agentSessionManager.UpdateSessionAsync(result.Result.Session, org, user);
-
                 var postValidation = _validator.ValidatePostStep(result.Result, PipelineSteps.RequestHandler);
-                if(!postValidation.Successful) return InvokeResult<AgentExecuteResponse>.FromInvokeResult(postValidation.ToInvokeResult());
+                if (!postValidation.Successful) return InvokeResult<AgentExecuteResponse>.FromInvokeResult(postValidation.ToInvokeResult());
 
+                if (ctx.Type == AgentPipelineContextTypes.Initial)
+                    await _agentSessionManager.AddAgentSessionAsync(result.Result.Session, org, user);
+                else
+                    await _agentSessionManager.UpdateSessionAsync(result.Result.Session, org, user);
+        
                 var response = await _responseBuilder.BuildAsync(result.Result);
 
                 _adminLogger.Trace($"[PipelineStep__ExecuteAsync] Line: 00 - Completed {nameof(AgentRequestHandlerPipelineStep)} {sw.Elapsed.TotalMilliseconds}ms");
