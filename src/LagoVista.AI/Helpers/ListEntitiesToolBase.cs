@@ -34,6 +34,8 @@ namespace LagoVista.AI.Helpers
         {
             public int? PageSize { get; set; }
             public int? PageIndex { get; set; }
+            public bool? ShowDrafts { get; set; } = true;
+            public bool? IncludeDeleted { get; set; }
         }
 
         protected sealed class Result
@@ -61,7 +63,12 @@ namespace LagoVista.AI.Helpers
                 {
                     PageSize = args.PageSize ?? DefaultPageSize,
                     PageIndex = args.PageIndex ?? DefaultPageIndex,
+                    ShowDrafts = args.ShowDrafts ?? false,
+                    ShowDeleted = args.IncludeDeleted ?? false
+                    // List tools typically want to show drafts, but this can be made more flexible if needed
                 };
+
+
 
                 var items = await ListAsync(listRequest, context);
 
@@ -118,6 +125,8 @@ namespace LagoVista.AI.Helpers
             {
                 p.Integer("pageSize", $"Max results to return (default 50).");
                 p.Integer("pageIndex", $"0-based page index (default 1).");
+                p.Boolean("showDrafts", $"Whether to include draft items (default true).");
+                p.Boolean("includeDeleted", $"Whether to include deleted items (default false).");
             });
         }
     }

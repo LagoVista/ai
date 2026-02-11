@@ -3,12 +3,14 @@ using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
 using LagoVista.Core;
 using LagoVista.Core.Models;
+using LagoVista.Core.Models.ML;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -40,6 +42,8 @@ namespace LagoVista.AI.Helper
             public string SessionId { get; set; }
             public string Op { get; set; }
             public string ItemId { get; set; }
+            public string ErrorMessage { get; set; }
+            public ValidationResult ValidationResult { get; set; }
         }
 
 
@@ -89,6 +93,8 @@ namespace LagoVista.AI.Helper
                 if (entity == null)
                     return InvokeResult<string>.FromError($"{Name} could not find entity '{args.Id}'.");
 
+                var wasDraft = entity.IsDraft;
+
                 var prop = ResolveProperty(args.Field);
                 if (prop == null || !prop.CanWrite)
                     return InvokeResult<string>.FromError($"{Name} could not find a writable property '{args.Field}'.");
@@ -98,12 +104,44 @@ namespace LagoVista.AI.Helper
                 if (!IsFieldAllowed(prop))
                     return InvokeResult<string>.FromError($"{Name} does not allow updating field '{prop.Name}'.");
 
+                ValidationResult validationResult = new ValidationResult();
+
                 ApplyUpdate(entity, prop, args);
 
-                if(entity is IValidateable validatable)
+                if (entity is IValidateable)
                 {
-                    var results = Validator.Validate(validatable, Actions.Update);
-                    entity.IsDraft = results.Errors.Any();
+                    validationResult = Validator.Validate(entity as IValidateable, Actions.Update);
+                    if(!validationResult.Successful)
+                    {
+                        var idx = 1;
+                        var errs = validationResult.Errors.Select(er => er.Message.ToKVP($"Err: {idx++}")).ToArray();
+                        _adminlogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Warning, $"[UpdateEntityFieldToolBase__{entity.EntityType}__ExecuteAsync]", $"Validation failed for entity '{args.Id}'  after updating field '{prop.Name}' - Mark as draft.", errs);
+
+                        if (!wasDraft)
+                        {
+                            var failedUpdatePayload = new UpdateFieldResult
+                            {
+                                Id = args.Id,
+                                Field = prop.Name,
+                                Updated = false,
+                                ErrorMessage = "Your change were not saved, changes to this entity would cause it to have invalid data.  Please review the errors on the validationResult and take appropriate action.",
+                                SessionId = context.Envelope.SessionId,
+                                Op = args.Op,
+                                ItemId = args.ItemId,
+                                ValidationResult = validationResult
+                            };
+
+                            return InvokeResult<string>.Create(JsonConvert.SerializeObject(failedUpdatePayload));
+                        }
+
+                        entity.IsDraft = true;
+                    }
+                    else
+                        _adminlogger.Trace($"[UpdateEntityFieldToolBase__{entity.EntityType}__ExecuteAsync] - Entity '{args.Id}' passed validation '{prop.Name}' with key '{entity.Key}'.");
+                }
+                else
+                {
+                    _adminlogger.Trace($"[UpdateEntityFieldToolBase__{entity.EntityType}__ExecuteAsync] - Entity '{args.Id}' does not implement IValidateable, skipping validation after updating field '{prop.Name}'.");
                 }
 
                 var existingSession = entity.AISessions.FirstOrDefault(session => session.Id == context.Session.Id);
@@ -123,7 +161,8 @@ namespace LagoVista.AI.Helper
                     Updated = true,
                     SessionId = context.Envelope.SessionId,
                     Op = args.Op,
-                    ItemId = args.ItemId
+                    ItemId = args.ItemId,
+                    ValidationResult = validationResult
                 };
 
                 return InvokeResult<string>.Create(JsonConvert.SerializeObject(payload));
@@ -131,7 +170,7 @@ namespace LagoVista.AI.Helper
             catch (Exception ex)
             {
                 await OnExceptionAsync(ex, context);
-                _adminlogger.AddError($"[UpdateEntityFieldToolBase__{Name}__ExecuteAsync]", "failed to {args.Op} update {propName} to value {args.Value}.", args.Field.ToKVP("field"), args.Op.ToKVP("operation"), args.Value.ToString().ToKVP("value") );
+                _adminlogger.AddError($"[UpdateEntityFieldToolBase__{Name}__ExecuteAsync]", $"failed to {args.Op} update {propName} to value {args.Value}.", args.Field.ToKVP("field"), args.Op.ToKVP("operation"), args.Value.ToString().ToKVP("value") );
                 return InvokeResult<string>.FromError($"{Name} failed to {args.Op} update {propName} to value {args.Value}.");
             }
         }

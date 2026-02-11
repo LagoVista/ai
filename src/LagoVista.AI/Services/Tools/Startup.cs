@@ -125,6 +125,9 @@ namespace LagoVista.AI.Services.Tools
             toolRegistry.RegisterTool<GetDdrAgentTool>();
             toolRegistry.RegisterTool<ListDdrsAgentTool>();
 
+            // -- Categoires used to organize entities --
+            toolRegistry.RegisterTool<CategoryCreateTool>();
+            toolRegistry.RegisterTool<CategoryListTool>();
 
             // -- chapter tools --
             toolRegistry.RegisterTool<ListChaptersTool>();

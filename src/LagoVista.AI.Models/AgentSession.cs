@@ -209,6 +209,7 @@ namespace LagoVista.AI.Models
         public bool Shared { get; set; }
 
         public bool Archived { get; set; }
+        public int TotalTokenCount { get; set; }
 
         public AgentSessionSummary CreateSummary()
         {
@@ -346,7 +347,7 @@ namespace LagoVista.AI.Models
         public string Mode { get; set; }
 
         public string InstructionSummary { get; set; }
-
+        public string OriginalInstructions { get; set; }
         public bool InstructionsTruncated { get; set; }
 
         public string AgentAnswerSummary { get; set; }

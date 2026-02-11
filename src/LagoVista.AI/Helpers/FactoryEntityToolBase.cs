@@ -56,13 +56,15 @@ namespace LagoVista.AI.Helpers
         /// If you want to wrap the response differently, override BuildPayloadJson.
         /// Default payload: { id, entity, success, sessionId }
         /// </summary>
-        protected virtual string BuildPayloadJson(string id, AiDetailResponse<TEntity> response)
+        protected virtual string BuildPayloadJson(string id, AiDetailResponse<TEntity> response, TEntity entity)
         {
             var payload = new
             {
                 id,
                 entity = response,
                 success = true,
+                isDraft = entity.IsDraft,
+                errorMessage = entity.IsDraft ? "Entity is in draft state due to validation errors, please review errors in validationResult for more details." : null
             };
 
             return JsonConvert.SerializeObject(payload);
@@ -154,7 +156,7 @@ namespace LagoVista.AI.Helpers
                 if (createResult.Successful)
                 {
                     var response = AiDetailResponse<TEntity>.Create(entity);
-                    var json = BuildPayloadJson(entity.Id, response);
+                    var json = BuildPayloadJson(entity.Id, response, entity);
                     return InvokeResult<string>.Create(json);
                 }
                 else

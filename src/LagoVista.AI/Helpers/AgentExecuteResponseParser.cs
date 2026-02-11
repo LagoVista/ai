@@ -292,6 +292,7 @@ namespace LagoVista.AI.Helpers
                 ctx.ThisTurn.TotalTokens = response.Usage.TotalTokens;
                 ctx.ThisTurn.ReasoningTokens = response.Usage.ReasoningTokens;
                 ctx.ThisTurn.CompletionTokens = response.Usage.CompletionTokens;
+                ctx.Session.TotalTokenCount += response.Usage.TotalTokens;
 
                 ctx.ThisTurn.OpenAIResponseBlobUrl = (await _transcriptStore.SaveTurnResponseAsync(ctx.Envelope.Org.Id, ctx.Session.Id, ctx.ThisTurn.Id, rawJson.Trim(), ctx.CancellationToken)).Result.ToString();
 
