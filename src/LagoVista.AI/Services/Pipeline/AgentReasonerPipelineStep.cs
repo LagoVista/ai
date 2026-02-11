@@ -64,6 +64,8 @@ namespace LagoVista.AI.Services
                         if (currentChapter == null)
                             return InvokeResult<IAgentPipelineContext>.FromError("current chapter not found, potentially legacy session and not supported.");
 
+                        currentChapter.TotalTokenCount = ctx.Session.TotalTokenCount;
+
                         // Archive turns.
                         var archive = await _archiveStore.SaveAsync(ctx.Session, currentChapter, ctx.Session.Turns, ctx.Envelope.User, ctx.CancellationToken);
                         var newChapter = _sessionFactory.CreateBoundaryTurnForNewChapter(ctx);

@@ -199,8 +199,8 @@ namespace LagoVista.AI.Helpers
                 key = key.PadRight(3, 'a');
 
             // 5. enforce max length
-            if (key.Length > 64)
-                key = key.Substring(0, 64);
+            if (key.Length > 32)
+                key = key.Substring(0, 32);
 
             // final safety check
             if (!char.IsLetter(key[0]))

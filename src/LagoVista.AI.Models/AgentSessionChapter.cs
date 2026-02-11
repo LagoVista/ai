@@ -20,6 +20,8 @@ namespace LagoVista.AI.Models
     
         public string BlobUrl { get; set; }
         public string BlobKey { get; set; }
+    
+        public long TotalTokenCount { get; set; }
     }
     
 }

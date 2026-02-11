@@ -60,6 +60,7 @@ namespace LagoVista.AI.Helpers
             {
                 SessionId = ctx.Session.Id,
                 TurnId = ctx.ThisTurn.Id,
+                TotalSessionTokens = ctx.Session.TotalTokenCount,
                 ModeDisplayName = mode.Name
             };
 
@@ -81,6 +82,7 @@ namespace LagoVista.AI.Helpers
                     if (ctx.ThisTurn.Type.Value == AgentSessionTurnType.ChapterEnd)
                     {
                         response.Usage = new LlmUsage() { };
+                        response.TotalSessionTokens = 0;
                     }
                     else
                     {
