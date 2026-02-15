@@ -75,7 +75,6 @@ namespace LagoVista.AI.Chunkers
 
             var resourceDictionary = new ResourceDictionary(resources);
             var totalFilesFound = 0;
-            var totalPartsToIndex = 0;
             var idx = 0;
             foreach (var repoId in repos)
             {

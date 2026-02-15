@@ -63,7 +63,7 @@ namespace LagoVista.AI.Chunkers.Providers.ModelStructure
         public string Icon { get; set; }
 
         // ---------- Structural Graph ----------
-        public List<ModelPropertyDescription> Properties { get; set; } =
+        public new List<ModelPropertyDescription> Properties { get; set; } =
             new List<ModelPropertyDescription>();
 
         public List<ModelEntityHeaderRefDescription> EntityHeaderRefs { get; set; } =

@@ -33,7 +33,7 @@ namespace LagoVista.AI.CloudRepos
 
         public async Task<ListResponse<AgentSessionMemoryNote>> GetMemoryNotesForSessionAsync(string orgId, string sessionId)
         {
-            var nodes = await GetByParitionIdAsync(sessionId);
+            var nodes = await GetByPartitionIdAsync(sessionId);
 
             if (nodes.Select(nd => nd.OrgId != orgId).Any())
                 throw new NotAuthorizedException("unauthorized org access");

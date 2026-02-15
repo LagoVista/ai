@@ -4,11 +4,6 @@
     <TargetFramework>netstandard2.1</TargetFramework>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Remove="Models\Tools\**" />
-    <EmbeddedResource Remove="Models\Tools\**" />
-    <None Remove="Models\Tools\**" />
-  </ItemGroup>
 
   <PropertyGroup>
     <LangVersion>8.0</LangVersion>
@@ -17,14 +12,11 @@
   <ItemGroup>
     <ProjectReference Include="..\LagoVista.AI.Models\LagoVista.AI.Models.csproj" />
     <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
-    <PackageReference Include="LagoVista.MediaServices" Version="3.0.3196.0658" />
+    <PackageReference Include="LagoVista.MediaServices" Version="3.0.3196.0922" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.13" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.22.1" />
-   <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
-  </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Chunkers\Providers\Common\" />
+
   </ItemGroup>
 
 </Project>

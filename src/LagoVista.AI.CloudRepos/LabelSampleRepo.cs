@@ -29,7 +29,7 @@ namespace LagoVista.AI.CloudRepos
 
         public async Task<List<LabelSample>> GetLabelsForSampleAsync(string sampleId)
         {
-            return new List<LabelSample>(await base.GetByParitionIdAsync(sampleId));
+            return new List<LabelSample>(await base.GetByPartitionIdAsync(sampleId));
         }
 
         public Task RemoveLabelSampleAsync(string labelId, string sampleId)

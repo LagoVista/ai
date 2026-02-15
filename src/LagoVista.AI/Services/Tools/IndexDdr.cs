@@ -4,16 +4,13 @@ using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Managers;
 using LagoVista.AI.Interfaces.Repos;
-using LagoVista.AI.Managers;
 using LagoVista.AI.Models;
-using LagoVista.AI.Rag.Chunkers.Models;
 using LagoVista.Core.AI.Models;
 using LagoVista.Core.Interfaces;
 using LagoVista.Core.Utils.Types.Nuviot.RagIndexing;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.UserAdmin.Interfaces.Managers;
-using Microsoft.CodeAnalysis.Text;
 using Newtonsoft.Json;
 
 namespace LagoVista.AI.Services.Tools
@@ -90,32 +87,16 @@ Return a small JSON result indicating success and any indexing details available
                     return InvokeResult<string>.FromError($"index_ddr - could not find DDR {args.Identifier} to process.");
                 if (String.IsNullOrEmpty(ddr.RagIndexCard))
                     return InvokeResult<string>.FromError("index_ddr - Summary is empty, can not index.");
-                var ctx = new IndexFileContext()
-                {
-                    Contents = ddr.FullDDRMarkDown,
-                    FullPath = $"/{context.Org.Id.ToLower()}/{args.Identifier}.md",
-                    RelativePath = $"/{context.Org.Id.ToLower()}/{args.Identifier}.md",
-                    DocumentIdentity = new DocumentIdentity()
-                    {
-                        OrgId = context.Org.Id,
-                        OrgNamespace = await _orgManager.GetOrgNameSpaceAsync(context.Org.Id),
-                        DocId = ddr.Id,
-                    },
-                    GitRepoInfo = new GitRepoInfo()
-                    {
-                        RemoteUrl = "ddr-repo",
-                        BranchRef = "main",
-                    },
-                    RepoId = "ddr-repo",
-                };
 
-                var addContentResult = await _llmContentRepo.AddContentAsync(ctx.DocumentIdentity.OrgNamespace, $"ddrs/{ddr.DdrIdentifier.Replace("-",String.Empty).ToLower()}.model.txt", ddr.CondensedDdrContent);
+                var orgNS = await _orgManager.GetOrgNameSpaceAsync(context.Org.Id);
+                
+                var addContentResult = await _llmContentRepo.AddContentAsync(orgNS, $"ddrs/{ddr.DdrIdentifier.Replace("-",String.Empty).ToLower()}.model.txt", ddr.CondensedDdrContent);
                 if(!addContentResult.Successful)
                 {
                     return InvokeResult<string>.FromInvokeResult(addContentResult.ToInvokeResult());
                 }
 
-                var humanContentResult = await _llmContentRepo.AddContentAsync(ctx.DocumentIdentity.OrgNamespace, $"ddrs/{ddr.DdrIdentifier.Replace("-", String.Empty).ToLower()}.human.txt", ddr.CondensedDdrContent);
+                var humanContentResult = await _llmContentRepo.AddContentAsync(orgNS, $"ddrs/{ddr.DdrIdentifier.Replace("-", String.Empty).ToLower()}.human.txt", ddr.CondensedDdrContent);
                 if (!humanContentResult.Successful)
                 {
                     return InvokeResult<string>.FromInvokeResult(humanContentResult.ToInvokeResult());   
@@ -131,8 +112,8 @@ Return a small JSON result indicating success and any indexing details available
                         Meta = new RagVectorPayloadMeta()
                         {
                             DocId = ddr.Id,
-                            OrgNamespace = ctx.DocumentIdentity.OrgNamespace,
-                            OrgId = ctx.DocumentIdentity.OrgId,
+                            OrgNamespace = orgNS,
+                            OrgId = context.Org.Id,
                             Title = $"{ddr.DdrIdentifier} - {ddr.Name}",
                             SectionKey = "RagIndexCard",
                             EmbeddingModel = vector.Result.EmbeddingModel,
@@ -145,8 +126,8 @@ Return a small JSON result indicating success and any indexing details available
                         },
                         Extra = new RagVectorPayloadExtra()
                         {
-                            Repo = ctx.GitRepoInfo.RemoteUrl,
-                            RepoBranch = ctx.GitRepoInfo.BranchRef,
+                            Repo = "ddr-repo",
+                            RepoBranch = "main",
                             CommitSha = "n/a",
                             FullDocumentBlobUri = addContentResult.Result.ToString(),
                             HumanContentUrl = humanContentResult.Result.ToString()

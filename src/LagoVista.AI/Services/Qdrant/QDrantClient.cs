@@ -34,7 +34,6 @@ namespace LagoVista.AI.Services.Qdrant
         public const string VECTOR_DISTANCE = "Cosine";
 
         private readonly object _initLock = new object();
-        private Task _initTask;
 
 
         public QdrantClient(IQdrantSettings settings, IAdminLogger adminLogger)

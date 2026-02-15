@@ -1,13 +1,6 @@
-// --- BEGIN CODE INDEX META (do not edit) ---
-// ContentHash: a27eb1c13ec36c494606c61641bc0faf9a49475edbd635b2b55772bd73be8e95
-// IndexVersion: 2
-// --- END CODE INDEX META ---
-using LagoVista.AI.Indexing.Interfaces;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Repos;
-using LagoVista.AI.Managers;
 using LagoVista.Core.Interfaces;
-using System;
 
 namespace LagoVista.AI.CloudRepos
 {
@@ -35,8 +28,6 @@ namespace LagoVista.AI.CloudRepos
             services.AddSingleton<IDdrRepo, DdrRepo>();
             services.AddSingleton<IWorkflowDefinitionRepo, WorkflowDefinitionRepo>();
             services.AddSingleton<ITlaCatalogRepo, TlaCatalogRepo>();
-            services.AddSingleton<IContentStorage, ContentStorage>();
-            services.AddSingleton<IResourceUsageTableWriter, ResourceUsageTableWriter>();
             services.AddSingleton<IDdrConsumptionFieldProvider, DdrRepo>();
             services.AddSingleton<IAgentToolBoxRepo, AgentToolBoxRepo>();
             services.AddSingleton<IToolCallManifestRepo,  ToolCallManifestRepo>();

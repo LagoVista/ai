@@ -22,10 +22,10 @@ namespace LagoVista.AI.RagConsole
         // Parse command-line arguments
         // Modes: "index" | "subkind" | "resources"
         static string mode = "index";
-        static string? repoId = "";
-        static bool showHelp = false;
         static bool verbose = false;
         static bool dryRun = false;
+        static string? repoId = "";
+        static bool showHelp = false;
         static SubtypeKind? subKindFilter;
 
         public static async Task Main(string[] args)
@@ -106,6 +106,8 @@ namespace LagoVista.AI.RagConsole
                 PrintUsage();
                 return;
             }
+
+            Console.Write($"{mode}, {verbose}, {dryRun}, Repo: {repoId}, SubKindFilter: {subKindFilter}");
 
             var configLoader = new JsonIngestionConfigProvider();
             var json = System.IO.File.ReadAllText("appsettings.json");

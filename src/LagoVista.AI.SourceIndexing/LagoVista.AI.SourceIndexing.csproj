@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <OutputType>library</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LagoVista.Core" Version="3.0.3196.0922" />
+    <PackageReference Include="LagoVista.CloudStorage" Version="3.0.3196.0922" />
+
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.14.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="4.14.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="4.14.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LagoVista.AI\LagoVista.AI.csproj" />
+  </ItemGroup>
+  
+
+</Project>

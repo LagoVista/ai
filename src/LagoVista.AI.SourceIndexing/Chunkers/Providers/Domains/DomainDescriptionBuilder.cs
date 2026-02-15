@@ -201,7 +201,7 @@ namespace LagoVista.AI.Chunkers.Providers.Domains
                 if (summaryIndex >= 0 && summaryIndex + 1 < lines.Length)
                 {
                     var narrativeLines = new ArraySegment<string>(lines, summaryIndex + 1, lines.Length - (summaryIndex + 1));
-                    result.DomainNarrative = string.Join("\n", narrativeLines).Trim();
+                  //  result.DomainNarrative = System.String.Join('\n', narrativeLines).Trim();
                 }
                 else
                 {

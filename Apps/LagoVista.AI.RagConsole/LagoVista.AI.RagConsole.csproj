@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   
@@ -16,11 +16,12 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
-    <PackageReference Include="LagoVista.Core.DependencyInjection" Version="3.0.3181.1958" />
+    <PackageReference Include="LagoVista.Core.DependencyInjection" Version="3.0.3196.0922" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\LagoVista.AI.CloudRepos\LagoVista.AI.CloudRepos.csproj" />
+    <ProjectReference Include="..\..\src\LagoVista.AI.SourceIndexing\LagoVista.AI.SourceIndexing.csproj" />
     <ProjectReference Include="..\..\src\LagoVista.AI\LagoVista.AI.csproj" />
   </ItemGroup>
 

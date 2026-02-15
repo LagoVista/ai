@@ -1,15 +1,12 @@
 using System;
-using System.Drawing;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Managers;
 using LagoVista.AI.Models;
-using LagoVista.Core;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Newtonsoft.Json;
 
 namespace LagoVista.AI.Services.Tools

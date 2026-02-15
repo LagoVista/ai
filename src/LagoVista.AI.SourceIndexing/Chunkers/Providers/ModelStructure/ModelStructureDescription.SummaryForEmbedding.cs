@@ -22,7 +22,7 @@ namespace LagoVista.AI.Chunkers.Providers.ModelStructure
         /// artifacts only.
         /// </summary>
 
-        public string BuildSummaryForEmbedding()
+        public override string BuildSummaryForEmbedding()
         {
             var builder = new StringBuilder();
 
