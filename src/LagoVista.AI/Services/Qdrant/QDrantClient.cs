@@ -498,7 +498,7 @@ namespace LagoVista.AI.Services.Qdrant
 
                 switch (c.Operator)
                 {
-                    case RagScopeOperator.Equals:
+                    case RagScopeOperator.IsEquals:
                         // IN
                         cond.Match.Any = values;
                         filter.Must.Add(cond);

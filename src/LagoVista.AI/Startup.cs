@@ -1,4 +1,5 @@
 using LagoVista.AI.Helpers;
+using LagoVista.AI.Indexing.Services;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Services;
 
@@ -50,6 +51,7 @@ namespace LagoVista.AI
 
             services.AddSingleton<IStructuredTextLlmService, HttpStructuredTextLlmService>();
             services.AddSingleton<IEmbedder, OpenAIEmbedder>();
+            services.AddSingleton<IRagIndexingServices, RagIndexingService>();
 
             services.AddSingleton<IAgentExecuteResponseParser, AgentExecuteResponseParser>();
 

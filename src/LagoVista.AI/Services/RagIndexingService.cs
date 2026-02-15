@@ -45,7 +45,6 @@ namespace LagoVista.AI.Indexing.Services
             _documentBuilder = documentBuilder ?? throw new ArgumentNullException(nameof(documentBuilder));
             _embedder = embedder ?? throw new ArgumentNullException(nameof(embedder));
             _orgRepo = orgRepo ?? throw new ArgumentNullException(nameof(orgRepo));
-            _documentBuilder = documentBuilder ?? throw new ArgumentNullException(nameof(documentBuilder));
             _llmContentRepo = llmContentRepo ?? throw new ArgumentNullException(nameof(llmContentRepo));
             _taskService = taskService ?? throw new ArgumentNullException(nameof(taskService));
             _vectorDbClient = vectorDbClient ?? throw new ArgumentNullException(nameof(vectorDbClient));
