@@ -1,6 +1,7 @@
 using LagoVista.AI.Helpers;
 using LagoVista.AI.Indexing.Services;
 using LagoVista.AI.Interfaces;
+using LagoVista.AI.Interfaces.Pipeline;
 using LagoVista.AI.Interfaces.Services;
 
 using LagoVista.AI.Services;
@@ -46,7 +47,8 @@ namespace LagoVista.AI
             services.AddScoped<IStructuredTextLlmService, HttpStructuredTextLlmService>();
             services.AddScoped<ITextLlmService, HttpTextLlmService>();
             services.AddScoped<IAgentStreamingContext, AgentStreamingContext>();
-            
+            services.AddScoped<IAgentToolLoopGuard>(_ => new ToolLoopGuard(warnThreshold: 2, suppressThreshold: 3));
+
             services.AddSingleton<IContentHashService, DefaultContentHashService>();
 
             services.AddSingleton<IStructuredTextLlmService, HttpStructuredTextLlmService>();
@@ -57,4 +59,4 @@ namespace LagoVista.AI
 
          }
     }
-}
+}   

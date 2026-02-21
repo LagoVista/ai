@@ -1271,4 +1271,13 @@
   <data name="AgentSessionTurnTypes_ChapterEnd" xml:space="preserve">
     <value>Chapter End</value>
   </data>
+  <data name="AgentContext_DefaultPromptTokenProduct" xml:space="preserve">
+    <value>Default Prompt Token Product</value>
+  </data>
+  <data name="AgentContext_DefaultCompletionTokenProduct" xml:space="preserve">
+    <value>Default Completion Token Product</value>
+  </data>
+  <data name="AgentContext_DefaultTokenProduct_Select" xml:space="preserve">
+    <value>-select product-</value>
+  </data>
 </root>

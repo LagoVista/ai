@@ -1,14 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using LagoVista.AI.Interfaces;
+using LagoVista.AI.Interfaces.Repos;
 using LagoVista.AI.Interfaces.Services;
 using LagoVista.AI.Models;
 using LagoVista.Core;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LagoVista.AI.Services.Tools
 {
@@ -24,12 +25,15 @@ namespace LagoVista.AI.Services.Tools
         public const string ToolName = "workspace_create_file";
         private readonly IAdminLogger _logger;
         private readonly IContentHashService _hashService;
+        private readonly ISessionCodeFilesRepo _codeFileRepo;
+
         public bool IsToolFullyExecutedOnServer => false;
 
-        public WorkspaceCreateFileTool(IAdminLogger logger, IContentHashService hashService)
+        public WorkspaceCreateFileTool(IAdminLogger logger, IContentHashService hashService, ISessionCodeFilesRepo codeFileRepo)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _hashService = hashService ?? throw new ArgumentNullException(nameof(hashService)); 
+            _codeFileRepo = codeFileRepo ?? throw new ArgumentNullException(nameof(codeFileRepo));
         }
 
         public const string ToolSummary = "create a file on the user machine with a client side tool";
@@ -48,6 +52,9 @@ namespace LagoVista.AI.Services.Tools
 
             [JsonProperty("content")]
             public string Content { get; set; } = string.Empty;
+
+            [JsonProperty("reason")]
+            public string Reason { get; set; } = string.Empty;
 
             [JsonProperty("overwrite")]
             public bool? Overwrite { get; set; }
@@ -94,9 +101,18 @@ namespace LagoVista.AI.Services.Tools
                         context.Session.TouchedFiles.Add(new TouchedFile()
                         {
                             Path = args.Path,
+                            Reason = args.Reason,
                             ContentHash =  await _hashService.ComputeFileHashAsync(args.Content),
                             LastAccess = DateTime.UtcNow.ToJSONString(),        
-                        });                      
+                        });
+
+                        await _codeFileRepo.AddSessionCodeFileActivityAsync(context.Session.Id, new SessionCodeFileActivity()
+                        {
+                            Reason = args.Reason,
+                            FilePath = args.Path,
+                            Timestamp = DateTime.UtcNow.ToJSONString(),
+                        });
+
                     }
                     catch (Exception ex)
                     {
@@ -126,6 +142,7 @@ namespace LagoVista.AI.Services.Tools
                 p.String("path", "Workspace-relative file path where the new file should be created. Must not be absolute or escape the workspace root (for example: src/Services/AgentOrchestrator.cs).", required: true);
                 p.String("content", "Full text content of the file. The client should write this as UTF-8 without BOM, normalizing line endings to \n.", required: true);
                 p.Boolean("overwrite", "Optional. When true, the client may fully replace an existing file at this path. When false or omitted, the client must fail if the file already exists.");
+                p.String("reason", "Provide a one or two sentance reason as to why this file was added or changed. This will be used to keep track of all the files that have been touched during this agent session. ");
             });
         }
 

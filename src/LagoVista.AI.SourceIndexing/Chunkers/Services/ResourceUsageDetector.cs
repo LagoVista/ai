@@ -254,7 +254,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
 
             if (string.Equals(attributeName, "EntityDescription", StringComparison.OrdinalIgnoreCase))
             {
-                // [EntityDescription(Title, Help, Description)] -- zero-based positions.
+                // [EntityDescription(Title, Help, Reason)] -- zero-based positions.
                 switch (position)
                 {
                     case 1:
@@ -266,7 +266,7 @@ namespace LagoVista.AI.Rag.Chunkers.Services
                         attributePropertyName = "HelpResource";
                         return true;
                     case 3:
-                        usageKind = ResourceUsageKind.ModelDescription; // Description
+                        usageKind = ResourceUsageKind.ModelDescription; // Reason
                         attributePropertyName = "DescriptionResource";
                         return true;
                     default:

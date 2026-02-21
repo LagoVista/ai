@@ -33,7 +33,7 @@ namespace LagoVista.AI.Services.Tools
                 {
                     p.String("batchLabel", "Optional human-readable label for this patch batch (for example: Add tests for AgentOrchestrator).");
                     p.String("batchKey", "Optional LLM-chosen stable key for this batch so the LLM can reference it later (for example: agent-orchestrator-tests-v1).");
-
+                    p.String("reason", "Provide a one or two sentance reason as to why this file was added or changed. This will be used to keep track of all the files that have been touched during this agent session. ");
                     p.ObjectArray("files", "One or more file patch descriptors.",
                         file =>
                         {

@@ -34,7 +34,7 @@ namespace LagoVista.AI.Chunkers.Providers.Default
     }
 
     /// <summary>
-    /// Description of a single interface method.
+    /// Reason of a single interface method.
     /// </summary>
     public class MethodDescription
     {
@@ -77,7 +77,7 @@ namespace LagoVista.AI.Chunkers.Providers.Default
     }
 
     /// <summary>
-    /// Description of a method parameter on an interface.
+    /// Reason of a method parameter on an interface.
     /// </summary>
     public class MethodParameterDescription
     {

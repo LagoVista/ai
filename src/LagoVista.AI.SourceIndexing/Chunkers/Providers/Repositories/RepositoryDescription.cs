@@ -63,7 +63,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
     }
 
     /// <summary>
-    /// Description of a single constructor on a Repository.
+    /// Reason of a single constructor on a Repository.
     /// </summary>
     public class RepositoryConstructorDescription
     {
@@ -89,7 +89,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
     }
 
     /// <summary>
-    /// Description of a single repository method (IDX-0040 RepositoryMethod).
+    /// Reason of a single repository method (IDX-0040 RepositoryMethod).
     /// </summary>
     public class RepositoryMethodDescription
     {
@@ -155,7 +155,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
     }
 
     /// <summary>
-    /// Description of a method or constructor parameter.
+    /// Reason of a method or constructor parameter.
     /// </summary>
     public class RepositoryMethodParameterDescription
     {

@@ -79,6 +79,7 @@ namespace LagoVista.AI.Services
                 Type = EntityHeader<AgentSessionTurnType>.Create(AgentSessionTurnType.Initial),
                 StatusTimeStamp = now,
                 InstructionSummary = BuildInstructionSummary(ctx.Envelope.OriginalInstructions),
+                OriginalInstructions = ctx.Envelope.OriginalInstructions,
                 SessionId = session.Id,
                 Mode = session.Mode
             };
@@ -100,6 +101,7 @@ namespace LagoVista.AI.Services
                 Mode = session.Mode,
                 Type = EntityHeader<AgentSessionTurnType>.Create(AgentSessionTurnType.ChapterStart),
                 InstructionSummary = BuildInstructionSummary(ctx.Envelope.OriginalInstructions),
+                OriginalInstructions = ctx.Envelope.OriginalInstructions,
                 SessionId = session.Id,
                 OpenAIResponseId = null
             };
@@ -123,6 +125,7 @@ namespace LagoVista.AI.Services
                 Mode = session.Mode,
                 Type = EntityHeader<AgentSessionTurnType>.Create(AgentSessionTurnType.Normal),
                 InstructionSummary = BuildInstructionSummary(ctx.Envelope.OriginalInstructions),
+                OriginalInstructions = ctx.Envelope.OriginalInstructions,
                 SessionId = session.Id
             };
 

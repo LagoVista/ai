@@ -8,7 +8,7 @@ using System.Collections.Generic;
 namespace LagoVista.AI.Rag.Chunkers.Models
 {
     /// <summary>
-    /// IDX-0038: Model Metadata & UI Description
+    /// IDX-0038: Model Metadata & UI Reason
     /// Detailed UI, validation, picker, layout, labeling, and metadata for model entities.
     /// </summary>
     public sealed partial class ModelMetadataDescription : SummaryFacts
@@ -159,7 +159,7 @@ namespace LagoVista.AI.Rag.Chunkers.Models
     }
 
     /// <summary>
-    /// Description of an additional action on the form.
+    /// Reason of an additional action on the form.
     /// Derived from IFormAdditionalActions.GetAdditionalActions().
     /// </summary>
     public sealed class ModelFormAdditionalActionDescription

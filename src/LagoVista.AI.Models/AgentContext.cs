@@ -113,6 +113,13 @@ namespace LagoVista.AI.Models
         public List<string> Instructions { get; set; }= new List<string>();
 
 
+        [FormField(LabelResource: AIResources.Names.AgentContext_DefaultPromptTokenProduct, FieldType: FieldTypes.ProductPicker, WaterMark: AIResources.Names.AgentContext_DefaultTokenProduct_Select, IsRequired:true, ResourceType: typeof(AIResources))]
+        public EntityHeader DefaultPromptTokenProduct { get; set; }
+
+        [FormField(LabelResource: AIResources.Names.AgentContext_DefaultCompletionTokenProduct, FieldType: FieldTypes.ProductPicker, WaterMark:AIResources.Names.AgentContext_DefaultTokenProduct_Select, IsRequired: true, ResourceType: typeof(AIResources))]
+        public EntityHeader DefaultCompletionTokenProduct { get; set; }
+
+
         [FormField(LabelResource: AIResources.Names.AgentContext_Modes, HelpResource: AIResources.Names.AgentContext_Mode_Help, ChildListDisplayMember: nameof(AgentMode.Name), AllowAddChild: true, CanAddRows: true, FieldType: FieldTypes.ChildList, FactoryUrl: "/api/ai/agentcontext/mode/factory",
            ResourceType: typeof(AIResources))]
         public List<AgentMode> AgentModes { get; set; } = new List<AgentMode>();
@@ -173,6 +180,8 @@ namespace LagoVista.AI.Models
         {
             return new List<string>()
             {
+                nameof(DefaultPromptTokenProduct),  
+                nameof(DefaultCompletionTokenProduct),
                 nameof(ToolBoxes),
                 nameof(InstructionDdrs),
                 nameof(ReferenceDdrs),

@@ -166,7 +166,7 @@ namespace LagoVista.AI.Chunkers.Providers.Domains
                 }
             }
 
-            // Description: include, but cap it so domains don’t become huge.
+            // Reason: include, but cap it so domains don’t become huge.
             var descTrimmed = (domain.Description ?? string.Empty).Trim();
             if (!string.IsNullOrWhiteSpace(descTrimmed))
             {

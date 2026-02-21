@@ -27,10 +27,11 @@ namespace LagoVista.AI.Services
         private readonly IPromptKnowledgeProvider _pkpService;
         private readonly IAgentSessionFactory _sessionFactory;
         private readonly IAgentSessionTurnChapterStore _archiveStore;
+        private readonly IAgentToolLoopGuard _toolLoopGuard;
         private const int MaxReasoningIterations = 8;
 
         public AgentReasonerPipelineStep(ILLMClient llmClient, IAgentToolExecutor toolExecutor,
-            IAgentPipelineContextValidator validator, IPromptKnowledgeProvider pkpService, 
+            IAgentPipelineContextValidator validator, IPromptKnowledgeProvider pkpService, IAgentToolLoopGuard reasoningGuard,
             IAdminLogger logger, IAgentStreamingContext agentStreamingContext, IAgentSessionTurnChapterStore archiveStore, IAgentSessionFactory sessionFactory) : base(validator, logger)
         {
             _llmClient = llmClient ?? throw new ArgumentNullException(nameof(llmClient));
@@ -40,6 +41,7 @@ namespace LagoVista.AI.Services
             _pkpService = pkpService ?? throw new ArgumentNullException(nameof(pkpService));
             _agentStreamingContext = agentStreamingContext ?? throw new ArgumentNullException(nameof(agentStreamingContext));
             _sessionFactory = sessionFactory ?? throw new ArgumentNullException(nameof(sessionFactory));
+            _toolLoopGuard = reasoningGuard ?? throw new ArgumentNullException(nameof(reasoningGuard));    
         }
 
         protected override PipelineSteps StepType => PipelineSteps.Reasoner;
@@ -64,8 +66,6 @@ namespace LagoVista.AI.Services
                         if (currentChapter == null)
                             return InvokeResult<IAgentPipelineContext>.FromError("current chapter not found, potentially legacy session and not supported.");
 
-                        currentChapter.TotalTokenCount = ctx.Session.TotalTokenCount;
-
                         // Archive turns.
                         var archive = await _archiveStore.SaveAsync(ctx.Session, currentChapter, ctx.Session.Turns, ctx.Envelope.User, ctx.CancellationToken);
                         var newChapter = _sessionFactory.CreateBoundaryTurnForNewChapter(ctx);
@@ -85,23 +85,52 @@ namespace LagoVista.AI.Services
                 var originalMode = ctx.Session.AgentMode.Id;
 
                 var newInstructions = new StringBuilder();
+
+                var hasAnyToolResultsThisTurn = ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCallResults.Any();
                 foreach (var toolCall in ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCalls)
                 {
                     var sw = Stopwatch.StartNew();
+
+                    var decision = _toolLoopGuard.Evaluate(toolCall, iteration, MaxReasoningIterations, hasAnyToolResultsThisTurn);
+
+                    if (!String.IsNullOrWhiteSpace(decision.AdditionalInstructions))
+                    {
+                        newInstructions.AppendLine(decision.AdditionalInstructions);
+                    }
+
+                    if (decision.Action == ToolLoopAction.SuppressWithSyntheticResult)
+                    {
+                        // IMPORTANT: still add a tool result to satisfy protocol
+                        ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCallResults.Add(decision.SyntheticResult);
+
+                        await _agentStreamingContext.AddWorkflowAsync(
+                            "success calling tool " + toolCall.Name + " (suppressed: loop detected)",
+                            ctx.CancellationToken);
+
+                        continue;
+                    }
 
                     var callResponse = await _toolExecutor.ExecuteServerToolAsync(toolCall, ctx);
 
                     foreach (var warning in callResponse.Warnings)
                     {
                         newInstructions.AppendLine(warning.Message);
-                    }   
+                    }
 
-                    await _agentStreamingContext.AddWorkflowAsync((callResponse.Successful ? "success" : "failed") + " calling tool " + toolCall.Name + (callResponse.Successful ? "" : ", err: " + callResponse.ErrorMessage) + " in " + sw.Elapsed.TotalMilliseconds.ToString("0.0") + "ms...", ctx.CancellationToken);
+                    await _agentStreamingContext.AddWorkflowAsync(
+                        (callResponse.Successful ? "success" : "failed") + " calling tool " + toolCall.Name +
+                        (callResponse.Successful ? "" : ", err: " + callResponse.ErrorMessage) +
+                        " in " + sw.Elapsed.TotalMilliseconds.ToString("0.0") + "ms...",
+                        ctx.CancellationToken);
 
                     if (ctx.CancellationToken.IsCancellationRequested) { return InvokeResult<IAgentPipelineContext>.Abort(); }
                     if (!callResponse.Successful) { return InvokeResult<IAgentPipelineContext>.FromInvokeResult(callResponse.ToInvokeResult()); }
+
                     var result = callResponse.Result;
                     ctx.PromptKnowledgeProvider.ToolCallManifest.ToolCallResults.Add(result);
+
+                    // once we've added at least one result, the guard will begin emitting countdown/warnings on subsequent repeats
+                    hasAnyToolResultsThisTurn = true;
                 }
 
                 _logger.Trace($"[JSON.PromptKnowledgeProvider.ToolCallManifest]={JsonConvert.SerializeObject(ctx.PromptKnowledgeProvider.ToolCallManifest)}");

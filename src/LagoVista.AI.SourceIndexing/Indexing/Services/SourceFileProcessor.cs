@@ -210,10 +210,10 @@
 //                    {
 //                        DomainKey = domainKey,
 //                        DomainName = domain.Result.Title,
-//                        DomainTagLine = domain.Result.Description,
+//                        DomainTagLine = domain.Result.Reason,
 //                        ModelName = model.Result.Structure.ModelName,
 //                        ModelClassName = fact.PrimaryEntity,
-//                        ModelTagLine = model.Result.Structure.Description
+//                        ModelTagLine = model.Result.Structure.Reason
 //                    });
 //                }
 //                else

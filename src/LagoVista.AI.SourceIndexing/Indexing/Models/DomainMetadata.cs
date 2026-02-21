@@ -25,7 +25,7 @@ namespace LagoVista.AI.Indexing.Models
         public string Name { get; set; }
 
         /// <summary>
-        /// DomainDescription.Description
+        /// DomainDescription.Reason
         /// </summary>
         public string Description { get; set; }
 

@@ -124,7 +124,7 @@ namespace LagoVista.AI.Chunkers.Providers.ModelStructure
     }
 
     /// <summary>
-    /// Description of a nested/child object on the model (owned type / value object).
+    /// Reason of a nested/child object on the model (owned type / value object).
     /// </summary>
     public sealed class ModelChildObjectDescription
     {

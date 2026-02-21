@@ -167,6 +167,7 @@ namespace LagoVista.AI.Managers
             cloned.Status = EntityHeader<AgentSessionTurnStatuses>.Create(AgentSessionTurnStatuses.RolledBackTurn);
             cloned.StatusTimeStamp = DateTime.UtcNow.ToJSONString();
             cloned.InstructionSummary = $"Rolled Back to on {DateTime.UtcNow.ToJSONString()}\r\n{turn.InstructionSummary}";
+            cloned.OriginalInstructions = turn.OriginalInstructions;
 
             if (session.Mode != cloned.Mode)
             {
@@ -178,6 +179,10 @@ namespace LagoVista.AI.Managers
                     Reason = "session rolled back"
                 });
             }
+
+            session.Turns.Add(cloned);
+
+            await UpdateSessionAsync(session, org, user);
 
             return InvokeResult<AgentSession>.Create(session);
         }
@@ -382,29 +387,29 @@ namespace LagoVista.AI.Managers
             return await RestoreSessionChapterAsync(session, chapterId, org, user);
         }
 
-         public async Task<InvokeResult<AgentSession>> RestoreSessionChapterAsync(AgentSession session, string chapterId, EntityHeader org, EntityHeader user)
+        public async Task<InvokeResult<AgentSession>> RestoreSessionChapterAsync(AgentSession session, string chapterId, EntityHeader org, EntityHeader user)
         {
-
-            var archive = session.Chapters?.FirstOrDefault(a => a.Id == chapterId); 
-            if(archive == null)
-                throw new RecordNotFoundException(nameof(AgentSessionChapter), chapterId);
-
-            if(session.Turns.Any())
+            if (session.Turns.Any())
             {
                 session.Turns.Last().Type = EntityHeader<AgentSessionTurnType>.Create(AgentSessionTurnType.ChapterEnd);
-                session.Turns = new List<AgentSessionTurn>();
-
+        
                 var currentArchive = session.Chapters?.FirstOrDefault(a => a.ChapterIndex == session.CurrentChapterIndex);
-                if(currentArchive != null)
+                if (currentArchive != null)
                     await _chapterStore.UpdateAsync(currentArchive, session, session.Turns, user);
             }
 
-            var turns = await _chapterStore.LoadAsync(archive);
+            var chatper = session.Chapters?.FirstOrDefault(a => a.Id == chapterId); 
+            if(chatper == null)
+                throw new RecordNotFoundException(nameof(AgentSessionChapter), chapterId);
+
+            var turns = await _chapterStore.LoadAsync(chatper);
             session.Turns = new List<AgentSessionTurn>(turns);
-            session.ChapterSeed = archive.Summary;
-            session.CurrentChapterIndex = archive.ChapterIndex;
-            session.CurrentChapter = EntityHeader.Create(archive.Id, archive.Title);
-      
+            session.ChapterSeed = chatper.Summary;
+            session.CurrentChapterIndex = chatper.ChapterIndex;
+            session.CurrentChapter = EntityHeader.Create(chatper.Id, chatper.Title);
+
+            await UpdateSessionAsync(session, org, user);
+
             return InvokeResult<AgentSession>.Create(session);
         }
     }

@@ -209,7 +209,12 @@ namespace LagoVista.AI.Models
         public bool Shared { get; set; }
 
         public bool Archived { get; set; }
-        public int TotalTokenCount { get; set; }
+        public int TotalPromptTokenCount { get; set; }
+        public int TotalCompletionTokenCount { get; set; }
+
+        public decimal CostPer1MCompletionTokens = 14.0m;
+        public decimal CostPer1MPromptTokens = 1.75m;
+        public decimal TokenDiscountPercent = 0;
 
         public AgentSessionSummary CreateSummary()
         {
@@ -287,6 +292,7 @@ namespace LagoVista.AI.Models
 
     public class TouchedFile
     {
+        public string Reason { get; set; }
         public string Path { get; set; }
 
         public string ContentHash { get; set; }

@@ -154,6 +154,9 @@ namespace LagoVista.AI.Services.Tools
         [JsonProperty("batchKey")]
         public string BatchKey { get; set; }
 
+        [JsonProperty("reason")]
+        public string Reason { get; set; }
+
         [JsonProperty("files")]
         public List<FilePatchArgs> Files { get; set; } = new List<FilePatchArgs>();
     }

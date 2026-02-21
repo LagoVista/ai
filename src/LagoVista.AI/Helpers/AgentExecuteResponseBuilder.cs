@@ -6,6 +6,7 @@ using LagoVista.AI.Interfaces.Repos;
 using LagoVista.AI.Models;
 using LagoVista.Core;
 using LagoVista.Core.AI.Models;
+using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 
@@ -60,8 +61,10 @@ namespace LagoVista.AI.Helpers
             {
                 SessionId = ctx.Session.Id,
                 TurnId = ctx.ThisTurn.Id,
-                TotalSessionTokens = ctx.Session.TotalTokenCount,
-                ModeDisplayName = mode.Name
+                TotalSessionCompletionTokens = ctx.Session.TotalCompletionTokenCount,
+                TotalSessionPromptTokens = ctx.Session.TotalPromptTokenCount,
+                ModeDisplayName = mode.Name,
+                Chapters = ctx.Session.Chapters.Select(ch => ch.ToEntityHeader()).ToList()
             };
 
             switch(ctx.ResponseType)
@@ -82,7 +85,6 @@ namespace LagoVista.AI.Helpers
                     if (ctx.ThisTurn.Type.Value == AgentSessionTurnType.ChapterEnd)
                     {
                         response.Usage = new LlmUsage() { };
-                        response.TotalSessionTokens = 0;
                     }
                     else
                     {

@@ -12,7 +12,7 @@ namespace LagoVista.AI.ACP
 
     /// <summary>
     /// Declares a class as an ACP Command.
-    /// NOTE: Per v1 requirements, CommandId, DisplayName, and Description are required.
+    /// NOTE: Per v1 requirements, CommandId, DisplayName, and Reason are required.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
     public sealed class AcpCommandAttribute : Attribute

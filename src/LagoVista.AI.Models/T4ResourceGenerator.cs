@@ -1,4 +1,4 @@
-﻿/*1/15/2026 11:08:57 AM*/
+﻿/*2/21/2026 10:46:44 AM*/
 using System.Globalization;
 using System.Reflection;
 
@@ -78,6 +78,9 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:AgentContext_CompletionReservePercent_Help
 
 		public static string AgentContext_CompletionReservePercent_Help { get { return GetResourceString("AgentContext_CompletionReservePercent_Help"); } }
+//Resources:AIResources:AgentContext_DefaultCompletionTokenProduct
+
+		public static string AgentContext_DefaultCompletionTokenProduct { get { return GetResourceString("AgentContext_DefaultCompletionTokenProduct"); } }
 //Resources:AIResources:AgentContext_DefaultMode
 
 		public static string AgentContext_DefaultMode { get { return GetResourceString("AgentContext_DefaultMode"); } }
@@ -93,12 +96,18 @@ namespace LagoVista.AI.Models.Resources
 //Resources:AIResources:AgentContext_DefaultPersona_Select
 
 		public static string AgentContext_DefaultPersona_Select { get { return GetResourceString("AgentContext_DefaultPersona_Select"); } }
+//Resources:AIResources:AgentContext_DefaultPromptTokenProduct
+
+		public static string AgentContext_DefaultPromptTokenProduct { get { return GetResourceString("AgentContext_DefaultPromptTokenProduct"); } }
 //Resources:AIResources:AgentContext_DefaultRole
 
 		public static string AgentContext_DefaultRole { get { return GetResourceString("AgentContext_DefaultRole"); } }
 //Resources:AIResources:AgentContext_DefaultRole_Select
 
 		public static string AgentContext_DefaultRole_Select { get { return GetResourceString("AgentContext_DefaultRole_Select"); } }
+//Resources:AIResources:AgentContext_DefaultTokenProduct_Select
+
+		public static string AgentContext_DefaultTokenProduct_Select { get { return GetResourceString("AgentContext_DefaultTokenProduct_Select"); } }
 //Resources:AIResources:AgentContext_InstructionDDRs
 
 		public static string AgentContext_InstructionDDRs { get { return GetResourceString("AgentContext_InstructionDDRs"); } }
@@ -1218,13 +1227,16 @@ namespace LagoVista.AI.Models.Resources
 			public const string AgentContext_AvailableTools_Help = "AgentContext_AvailableTools_Help";
 			public const string AgentContext_CompletionReservePercent = "AgentContext_CompletionReservePercent";
 			public const string AgentContext_CompletionReservePercent_Help = "AgentContext_CompletionReservePercent_Help";
+			public const string AgentContext_DefaultCompletionTokenProduct = "AgentContext_DefaultCompletionTokenProduct";
 			public const string AgentContext_DefaultMode = "AgentContext_DefaultMode";
 			public const string AgentContext_DefaultMode_Select = "AgentContext_DefaultMode_Select";
 			public const string AgentContext_DefaultPersona = "AgentContext_DefaultPersona";
 			public const string AgentContext_DefaultPersona_Help = "AgentContext_DefaultPersona_Help";
 			public const string AgentContext_DefaultPersona_Select = "AgentContext_DefaultPersona_Select";
+			public const string AgentContext_DefaultPromptTokenProduct = "AgentContext_DefaultPromptTokenProduct";
 			public const string AgentContext_DefaultRole = "AgentContext_DefaultRole";
 			public const string AgentContext_DefaultRole_Select = "AgentContext_DefaultRole_Select";
+			public const string AgentContext_DefaultTokenProduct_Select = "AgentContext_DefaultTokenProduct_Select";
 			public const string AgentContext_InstructionDDRs = "AgentContext_InstructionDDRs";
 			public const string AgentContext_InstructionDDRs_Help = "AgentContext_InstructionDDRs_Help";
 			public const string AgentContext_Instructions = "AgentContext_Instructions";

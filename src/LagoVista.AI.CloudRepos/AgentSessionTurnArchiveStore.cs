@@ -100,27 +100,30 @@ namespace LagoVista.AI.CloudRepos
             return chapter;
         }
 
-        public async Task<IReadOnlyList<AgentSessionTurn>> LoadAsync(AgentSessionChapter archive, CancellationToken ct = default)
+        public async Task<IReadOnlyList<AgentSessionTurn>> LoadAsync(AgentSessionChapter chapter, CancellationToken ct = default)
         {
-            if (archive == null) throw new ArgumentNullException(nameof(archive));
-            if (string.IsNullOrWhiteSpace(archive.BlobKey)) throw new ArgumentNullException(nameof(archive.BlobKey));
+            if (chapter == null) throw new ArgumentNullException(nameof(chapter));
+            if (string.IsNullOrWhiteSpace(chapter.BlobKey)) throw new ArgumentNullException(nameof(chapter.BlobKey));
 
-            var orgId = GetOrgIdFromBlobKey(archive.BlobKey);
+            var orgId = GetOrgIdFromBlobKey(chapter.BlobKey);
             if (string.IsNullOrWhiteSpace(orgId))
                 throw new InvalidOperationException("Unable to determine orgId from archive.BlobKey.");
 
             var container = GetContainerName(orgId);
-            var bufferResult = await GetFileAsync(container, archive.BlobKey);
+            var bufferResult = await GetFileAsync(container, chapter.BlobKey);
             if (!bufferResult.Successful)
                 throw new Exception($"Failed to load archive blob: {bufferResult.Errors?[0]?.Message}");
 
             var json = Encoding.UTF8.GetString(bufferResult.Result);
             var sha = ComputeSha256Hex(json);
-            if (!string.IsNullOrWhiteSpace(archive.ContentSha256) && !string.Equals(archive.ContentSha256, sha, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException($"Archive content sha mismatch. Expected {archive.ContentSha256}, got {sha}.");
+            if (!string.IsNullOrWhiteSpace(chapter.ContentSha256) && !string.Equals(chapter.ContentSha256, sha, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException($"Archive content sha mismatch. Expected {chapter.ContentSha256}, got {sha}.");
 
             var payload = JsonConvert.DeserializeObject<ArchivePayload>(json);
             if (payload?.Turns == null) return Array.Empty<AgentSessionTurn>();
+
+            _adminLogger.Trace($"{this.Tag()} Loaded archive {chapter.Id} for session {payload.SessionId} chapter {payload.ChapterIndex} turns={payload.TurnCount} sha={sha}");
+
             return payload.Turns;
         }
 

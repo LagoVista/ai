@@ -200,16 +200,16 @@ namespace LagoVista.AI.Rest
             return new JsonResult(result);
         }
 
-        [HttpGet("/api/ai/agent/session/{id}/rollback/{turnid}")]
-        public Task<InvokeResult<AgentSession>> RollbackAgentSessionTurn(string id, string turnid)
+        [HttpGet("/api/ai/agent/session/{sessionid}/rollback/{turnid}")]
+        public Task<InvokeResult<AgentSession>> RollbackAgentSessionTurn(string sessionid, string turnid)
         {
-            return _sessionManager.RollbackAsync(null, turnid, OrgEntityHeader, UserEntityHeader);
+            return _sessionManager.RollbackAsync(sessionid, turnid, OrgEntityHeader, UserEntityHeader);
         }
 
-        [HttpGet("/api/ai/agent/session/{sessionid}/chapter/restore/{archiveid}")]
-        public Task<InvokeResult<AgentSession>> RestoreAgentSessionChapter(string sessionid, string archiveid)
+        [HttpGet("/api/ai/agent/session/{sessionid}/chapter/restore/{chapterid}")]
+        public Task<InvokeResult<AgentSession>> RestoreAgentSessionChapter(string sessionid, string chapterid)
         {
-            return _sessionManager.RestoreSessionChapterAsync(sessionid, archiveid, OrgEntityHeader, UserEntityHeader);
+            return _sessionManager.RestoreSessionChapterAsync(sessionid, chapterid, OrgEntityHeader, UserEntityHeader);
         }
 
         [HttpGet("/api/ai/agent/session/{sessionid}/branch/{turnid}")]

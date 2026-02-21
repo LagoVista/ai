@@ -241,7 +241,7 @@ namespace LagoVista.AI
             //        [arg.Kind] = new JObject
             //        {
             //            ["type"] = arg.Type,
-            //            ["description"] = arg.Description
+            //            ["description"] = arg.Reason
             //        }
             //    });
             //}

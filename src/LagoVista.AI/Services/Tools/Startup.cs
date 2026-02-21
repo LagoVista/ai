@@ -50,6 +50,7 @@ namespace LagoVista.AI.Services.Tools
             toolRegistry.RegisterTool<CodeHashNormalizedTool>();
             toolRegistry.RegisterTool<WorkspaceCreateFileTool>();
             toolRegistry.RegisterTool<WorkspaceTocGetTool>();
+            toolRegistry.RegisterTool<GetSessionCodeFileActivitiesTool>();
 
             /* session tools */
             toolRegistry.RegisterTool<ChapterResetPrepareTool>();

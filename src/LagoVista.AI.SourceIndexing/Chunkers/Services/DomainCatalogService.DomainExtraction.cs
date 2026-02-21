@@ -29,7 +29,7 @@ namespace LagoVista.AI.Rag.Services
         /// - Uses CSharpSymbolSplitter to get one-class snippets.
         /// - Each snippet is parsed with Roslyn to find [DomainDescriptor]
         ///   classes and their DomainSummaryInfo.
-        /// - Enforces mandatory fields (DomainKey, Title, Description) at this level.
+        /// - Enforces mandatory fields (DomainKey, Title, Reason) at this level.
         /// </summary>
         private async Task<IReadOnlyList<LagoVista.AI.Chunkers.Providers.Domains.DomainDescription>> ExtractDomainsAsync(
             IReadOnlyList<DiscoveredFile> files,
@@ -109,10 +109,10 @@ namespace LagoVista.AI.Rag.Services
                 //    {
                 //        if (string.IsNullOrWhiteSpace(summary.DomainKey) ||
                 //            string.IsNullOrWhiteSpace(summary.Title) ||
-                //            string.IsNullOrWhiteSpace(summary.Description))
+                //            string.IsNullOrWhiteSpace(summary.Reason))
                 //        {
                 //            throw new InvalidOperationException(
-                //                $"Domain descriptor in '{file.RelativePath ?? file.FullPath}' produced an incomplete DomainSummaryInfo. DomainKey, Title, and Description are all required.");
+                //                $"Domain descriptor in '{file.RelativePath ?? file.FullPath}' produced an incomplete DomainSummaryInfo. DomainKey, Title, and Reason are all required.");
                 //        }
 
                 //        if (!domainsByKey.ContainsKey(summary.DomainKey))

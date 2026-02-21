@@ -287,12 +287,21 @@ namespace LagoVista.AI.Helpers
 
                 response.PrimaryOutputText = textSegments.Count > 0 ? string.Join("\n\n", textSegments) : null;
 
+                var currentChapter = ctx.Session.Chapters?.FirstOrDefault(c => c.Id == ctx.Session.CurrentChapter.Id);
+                if (currentChapter == null)
+                    return InvokeResult<IAgentPipelineContext>.FromError("current chapter not found, potentially legacy session and not supported.");
+
+                currentChapter.TotalPromptTokenCount += response.Usage.PromptTokens;
+                currentChapter.TotalCompletionTokenCount += response.Usage.PromptTokens;
+
                 ctx.ThisTurn.PromptTokens = response.Usage.PromptTokens;
                 ctx.ThisTurn.CachedTokens = response.Usage.CachedTokends;
                 ctx.ThisTurn.TotalTokens = response.Usage.TotalTokens;
                 ctx.ThisTurn.ReasoningTokens = response.Usage.ReasoningTokens;
                 ctx.ThisTurn.CompletionTokens = response.Usage.CompletionTokens;
-                ctx.Session.TotalTokenCount += response.Usage.TotalTokens;
+                ctx.Session.TotalPromptTokenCount += response.Usage.PromptTokens;
+                ctx.Session.TotalCompletionTokenCount += response.Usage.CompletionTokens;
+    
                 ctx.ThisTurn.OpenAIResponseBlobUrl = (await _transcriptStore.SaveTurnResponseAsync(ctx.Envelope.Org.Id, ctx.Session.Id, ctx.ThisTurn.Id, rawJson.Trim(), ctx.CancellationToken)).Result.ToString();
 
                 var lastIteration = ctx.ThisTurn.Iterations.LastOrDefault();

@@ -21,7 +21,7 @@ namespace LagoVista.AI.Indexing.Services
     /// - Scan provided C# files for [DomainDescriptor] classes.
     /// - Within those, locate the single [DomainDescription] member that
     ///   returns a DomainDescription instance.
-    /// - Extract DomainKey (constant), Kind, and Description.
+    /// - Extract DomainKey (constant), Kind, and Reason.
     /// - Associate models with domains based on ModelMetadata.DomainKey.
     /// - Record structural issues in DomainMetadata.Errors (no exceptions).
     /// </summary>
@@ -147,7 +147,7 @@ namespace LagoVista.AI.Indexing.Services
                         domain.DomainKey = ExtractSymbolKey(domainArg);
                     }
 
-                    // Attempt to locate the DomainDescription initializer to read Kind/Description.
+                    // Attempt to locate the DomainDescription initializer to read Kind/Reason.
                     ExtractNameAndDescription(descMember, domain);
 
                     // Attach entities (if any) based on DomainKey.
@@ -182,7 +182,7 @@ namespace LagoVista.AI.Indexing.Services
             //         return new DomainDescription
             //         {
             //             Kind = "AI Admin",
-            //             Description = "..."
+            //             Reason = "..."
             //         };
             //     }
             // }
