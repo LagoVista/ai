@@ -25,8 +25,6 @@ namespace LagoVista.AI.Models
         IndexTier: EntityDescriptionAttribute.IndexTiers.Secondary, IndexPriority: 65, IndexTagsCsv: "ai,taxonomy,category")]
     public class ModelCategory : EntityBase, IDescriptionEntity, IValidateable, IFormDescriptor, ISummaryFactory, IIconEntity, ICategorized
     {
-        [FormField(LabelResource: AIResources.Names.Common_Icon, FieldType: FieldTypes.Icon, ResourceType: typeof(AIResources))]
-        public string Icon { get; set; }
 
         public ModelCategorySummary CreateSummary()
         {

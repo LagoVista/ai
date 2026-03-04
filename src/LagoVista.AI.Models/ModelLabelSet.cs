@@ -36,10 +36,6 @@ namespace LagoVista.AI.Models
             Icon = "icon-pz-text-2";
         }
 
-
-        [FormField(LabelResource: AIResources.Names.Common_Icon, FieldType: FieldTypes.Icon, ResourceType: typeof(AIResources))]
-        public string Icon { get; set; }
-
         [FormField(LabelResource: AIResources.Names.LabelSet_Labels, FieldType: FieldTypes.ChildListInline, FactoryUrl:  "/api/ml/modellabel/factory", ResourceType: typeof(AIResources))] 
         public new List<ModelLabel> Labels { get; set; }
 

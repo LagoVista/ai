@@ -198,7 +198,7 @@ namespace LagoVista.AI.Indexing.Services
 
                     var point = new RagPoint();
                     point.Payload = RagVectorPayload.FromEntity(entity);
-                    point.PointId = entity.Id.ToGuidString();
+                    point.PointId = entity.Id.Value.ToGuidString();
                     point.Payload.Extra.Path = entity.EntityType;
                     point.Payload.Meta.OrgNamespace = org.Namespace;
                     point.Payload.Extra.ModelContentUrl = modelFileName;

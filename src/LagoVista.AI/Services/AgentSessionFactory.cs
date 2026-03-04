@@ -61,7 +61,7 @@ namespace LagoVista.AI.Services
             session.CurrentChapter = EntityHeader.Create(chapter.Id, chapter.Title);
 
             session.Chapters.Add(chapter);
-            session.Key = session.Id.ToLower();
+            session.Key = session.Id.Value.ToLower();
             return session;
         }
 

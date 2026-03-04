@@ -29,10 +29,12 @@ namespace LagoVista.AI.Models
         IndexPriority: 90, IndexTagsCsv: "ai,agent,configuration")]
     public class AgentContext : EntityBase, IFormDescriptor, ISummaryFactory, IFormConditionalFields, IValidateable, IFormDescriptorCol2, IFormDescriptorBottom, IAgentKnowledgeProvider, IToolBoxProvider
     {
-        public const string LlmProvider_OpenAI = "openai";
+        public AgentContext()
+        {
+            Icon = "icon-ae-database-3";
+        }
 
-        [FormField(LabelResource: AIResources.Names.Common_Icon, FieldType: FieldTypes.Icon, ResourceType: typeof(AIResources))]
-        public string Icon { get; set; } = "icon-ae-database-3";
+        public const string LlmProvider_OpenAI = "openai";
 
         [FormField(LabelResource: AIResources.Names.VectorDatabase_CollectionName, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
         public string VectorDatabaseCollectionName { get; set; }

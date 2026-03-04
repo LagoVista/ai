@@ -31,9 +31,6 @@ namespace LagoVista.AI.Models
     
         [FormField(LabelResource: AIResources.Names.Label_Title, FieldType: FieldTypes.Text, IsRequired: true, ResourceType: typeof(AIResources))]
         public string Title { get; set; }
-
-        [FormField(LabelResource: AIResources.Names.Label_Icon, FieldType: FieldTypes.Icon, IsRequired: false, ResourceType: typeof(AIResources))]
-        public string Icon { get; set; }
  
         public AiModelLabelSummary CreateSummary()
         {

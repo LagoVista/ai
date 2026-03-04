@@ -49,7 +49,7 @@ namespace LagoVista.AI.Services.Tools
         {
             public String Name { get; set; }
             public String CategoryType { get; set; }
-            public String Key { get; set; }
+            public LagoVistaKey Key { get; set; }
             public String Description { get; set; }
         }
 
@@ -84,7 +84,7 @@ namespace LagoVista.AI.Services.Tools
                     return InvokeResult<string>.FromError("categoryType is required.");
 
                 var exitingCategories = await _categoryManager.GetCategoriesAsync(args.CategoryType, ListRequest.CreateForAll(), context.Envelope.Org, context.Envelope.User);
-                var exisitng = exitingCategories.Model.FirstOrDefault(c => c.Key.Equals(args.Key, StringComparison.OrdinalIgnoreCase));
+                var exisitng = exitingCategories.Model.FirstOrDefault(c => c.Key == args.Key);
                 if(exisitng != null)
                     return InvokeResult<string>.FromError($"A category with the key '{args.Key}' already exists for type '{args.CategoryType}'. Please choose a different key.");
 

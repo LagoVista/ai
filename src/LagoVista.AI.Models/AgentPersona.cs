@@ -76,9 +76,10 @@ namespace LagoVista.AI.Models
         public const string RiskSensitivity_Normal = "normal";
         public const string RiskSensitivity_High = "high";
 
-
-        [FormField(LabelResource: AIResources.Names.Common_Icon, FieldType: FieldTypes.Icon, ResourceType: typeof(AIResources))]
-        public string Icon { get; set; } = "icon-ae-call-center";
+        public AgentPersonaDefinition()
+        {
+            Icon = "icon-ae-call-center";
+        }
 
         [FormField(
             LabelResource: AIResources.Names.PersonaDefinition_DisplayName,

@@ -106,7 +106,7 @@ namespace LagoVista.AI.CloudRepos
                 var ddrs = await GetDdrs(missingIds.ToArray(), orgId);
 
                 // Fail-fast if any requested DDR wasn't found
-                var foundIds = new HashSet<string>(ddrs.Select(d => d.Id), StringComparer.OrdinalIgnoreCase);
+                var foundIds = new HashSet<string>(ddrs.Select(d => d.Id.Value), StringComparer.OrdinalIgnoreCase);
                 var notFound = missingIds.Where(id => !foundIds.Contains(id)).ToArray();
                 if (notFound.Length > 0)
                 {
@@ -161,7 +161,7 @@ namespace LagoVista.AI.CloudRepos
 
         public async Task<List<DetailedDesignReview>> GetDdrs(string[] ddrs, string orgId)
         {
-           var result = await QueryAsync(rec => ddrs.Contains(rec.Id)  && rec.OwnerOrganization.Id == orgId, rec => rec.DdrIdentifier , ListRequest.CreateForAll());
+           var result = await QueryAsync(rec => ddrs.Contains(rec.Id.Value)  && rec.OwnerOrganization.Id == orgId, rec => rec.DdrIdentifier , ListRequest.CreateForAll());
             return result.Model.ToList();
         }
 

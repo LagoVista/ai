@@ -24,9 +24,10 @@ namespace LagoVista.AI.Models
         IndexPriority: 75, IndexTagsCsv: "ai,prompting,toolbox")]
     public class AgentToolBox : EntityBase, IValidateable, ISummaryFactory, IFormDescriptor, IFormDescriptorCol2, IAgentKnowledgeProvider
     {
-
-        [FormField(LabelResource: AIResources.Names.Common_Icon, FieldType: FieldTypes.Icon, ResourceType: typeof(AIResources), IsRequired: true, IsUserEditable: true)]
-        public string Icon { get; set; } = "icon-ae-direction";
+        public AgentToolBox()
+        {
+            Icon = "icon-ae-direction";
+        }
 
 
         [FormField(LabelResource: AIResources.Names.AgentToolBox_SummaryInstructions, HelpResource: AIResources.Names.AgentToolBox_SummaryInstructions_Help, FieldType: FieldTypes.MultiLineText, IsRequired: false, ResourceType: typeof(AIResources))]
