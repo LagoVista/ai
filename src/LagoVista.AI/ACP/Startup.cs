@@ -1,6 +1,6 @@
 ﻿using LagoVista.AI.Interfaces;
-using LagoVista.Core.Interfaces;
 using LagoVista.IoT.Logging.Loggers;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LagoVista.AI.ACP
 {
@@ -11,10 +11,10 @@ namespace LagoVista.AI.ACP
 
             Commands.Startup.ConfigureServices(services, adminLogger);
 
-            services.AddSingleton<IAcpCommandRouter, AcpCommandRouter>();
-            services.AddSingleton<IAcpCommandExecutor, AcpCommandExecutor>();
-            services.AddSingleton<IAcpCommandRouter, AcpCommandRouter>();
-            services.AddSingleton<IAcpCommandFactory, AcpCommandFactory>();
+            services.AddTransient<IAcpCommandRouter, AcpCommandRouter>();
+            services.AddTransient<IAcpCommandExecutor, AcpCommandExecutor>();
+            services.AddTransient<IAcpCommandRouter, AcpCommandRouter>();
+            services.AddTransient<IAcpCommandFactory, AcpCommandFactory>();
         }
     }
 }

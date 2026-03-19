@@ -74,12 +74,12 @@ namespace LagoVista.AI.Models
 
             CancellationToken = token;
             CorrelationId = Guid.NewGuid().ToId();
-            TimeStamp = DateTime.UtcNow.ToJSONString();
+            TimeStamp = UtcTimestamp.Now;
         }
 
         public AgentPipelineContextTypes Type { get; }
 
-        public string TimeStamp { get; } 
+        public UtcTimestamp TimeStamp { get; } 
 
         // Identity / correlation
         public string CorrelationId { get; }

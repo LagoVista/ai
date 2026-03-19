@@ -2,6 +2,7 @@ using LagoVista.AI.Interfaces;
 using LagoVista.AI.Models;
 using LagoVista.AI.Models.Context;
 using LagoVista.AI.Services.Pipeline;
+using LagoVista.Core;
 using LagoVista.Core.AI.Models;
 using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
@@ -42,7 +43,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
 
             public string ToolManifestId { get; set; }
 
-            public string TimeStamp { get; set; } = DateTime.UtcNow.ToString("o");
+            public UtcTimestamp TimeStamp { get; set; } = UtcTimestamp.Now;
             public Envelope Envelope { get; set; }
 
             public AgentSessionTurn PreviousTurn { get; set; }
@@ -160,7 +161,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             var ctx = new TestPipelineContext
             {
                 Type = AgentPipelineContextTypes.Initial,
-                TimeStamp = DateTime.UtcNow.ToString("o"),
+                TimeStamp = UtcTimestamp.Now,
                 CorrelationId = "corr_1",
                 Envelope = null
             };
@@ -182,7 +183,7 @@ namespace LagoVista.AI.Tests.Services.Pipeline
             var ctx = new TestPipelineContext
             {
                 Type = AgentPipelineContextTypes.Initial,
-                TimeStamp = DateTime.UtcNow.ToString("o"),
+                TimeStamp = UtcTimestamp.Now,
                 CorrelationId = "corr_1",
                 Envelope = env
             };

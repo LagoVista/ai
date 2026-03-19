@@ -22,8 +22,7 @@ namespace LagoVista.AI.Managers
 
         private readonly IDdrRepo _ddrRepo;
         private readonly ITlaCatalogRepo _tlaCatalogRepo;
-        public DdrManager(IDdrRepo ddrRepo, ITlaCatalogRepo tlaCatalogRepo, ILogger logger, IAppConfig appConfig, IDependencyManager dependencyManager, ISecurity security) : 
-            base(logger, appConfig, dependencyManager, security)
+        public DdrManager(IDdrRepo ddrRepo, ITlaCatalogRepo tlaCatalogRepo, ICoreAppServices coreAppServices) : base(coreAppServices)
         {
             _ddrRepo = ddrRepo ?? throw new ArgumentNullException(nameof(ddrRepo));
             _tlaCatalogRepo = tlaCatalogRepo ?? throw new ArgumentNullException(nameof(tlaCatalogRepo));

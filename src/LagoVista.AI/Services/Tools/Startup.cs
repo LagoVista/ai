@@ -1,6 +1,6 @@
 ﻿using LagoVista.AI.Interfaces;
-using LagoVista.Core.Interfaces;
 using LagoVista.IoT.Logging.Loggers;
+using Microsoft.Extensions.DependencyInjection;
 
 
 namespace LagoVista.AI.Services.Tools

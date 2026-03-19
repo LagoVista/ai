@@ -1,10 +1,7 @@
 ﻿using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Managers;
-using LagoVista.Core.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 using LagoVista.IoT.Logging.Loggers;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace LagoVista.AI.Managers
 {
@@ -21,14 +18,14 @@ namespace LagoVista.AI.Managers
             services.AddTransient<IExperimentResultManager, ExperimentResultManager>();
             services.AddTransient<IDdrManager, DdrManager>();
             services.AddTransient<IWorkflowDefinitionManager, WorkflowDefinitionManager>();
-            services.AddScoped<IAgentContextManager, AgentContextManager>();
-            services.AddScoped<IAgentSessionManager, AgentSessionManager>();
-            services.AddScoped<IImageGeneratorManager, OpenAIManager>();
-            services.AddScoped<IAiConversationManager, AiConversationManager>();
-            services.AddScoped<ITextQueryManager, OpenAIManager>();
-            services.AddSingleton<IAgentPersonaDefinitionManager, AgentPersonaDefinitionManager>();
-            services.AddSingleton<IAgentToolBoxManager, AgentToolBoxManager>();
-            services.AddSingleton<IReferenceEntryManager, ReferenceEntryManager>();
+            services.AddTransient<IAgentContextManager, AgentContextManager>();
+            services.AddTransient<IAgentSessionManager, AgentSessionManager>();
+            services.AddTransient<IImageGeneratorManager, OpenAIManager>();
+            services.AddTransient<IAiConversationManager, AiConversationManager>();
+            services.AddTransient<ITextQueryManager, OpenAIManager>();
+            services.AddTransient<IAgentPersonaDefinitionManager, AgentPersonaDefinitionManager>();
+            services.AddTransient<IAgentToolBoxManager, AgentToolBoxManager>();
+            services.AddTransient<IReferenceEntryManager, ReferenceEntryManager>();
         }
     }
 }

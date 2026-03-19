@@ -16,8 +16,7 @@ namespace LagoVista.AI.Managers
     {
         private readonly IExperimentResultRepo _repo;
 
-        public ExperimentResultManager(IExperimentResultRepo repo, ILogger logger, IAppConfig appConfig, IDependencyManager dependencyManager, ISecurity security) 
-            : base(logger, appConfig, dependencyManager, security)
+        public ExperimentResultManager(IExperimentResultRepo repo, ICoreAppServices coreAppServices) : base(coreAppServices)
         {
             this._repo = repo;
         }

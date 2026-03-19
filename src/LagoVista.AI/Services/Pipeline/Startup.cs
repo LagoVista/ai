@@ -1,8 +1,6 @@
-using LagoVista.AI.ACP;
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Pipeline;
-using LagoVista.AI.Services.OpenAI;
-using LagoVista.Core.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 using LagoVista.IoT.Logging.Loggers;
 
 
@@ -12,17 +10,17 @@ namespace LagoVista.AI.Services.Pipeline
     {
         public static void ConfigureServices(IServiceCollection services, IAdminLogger adminLogger)
         {
-            services.AddScoped<IAgentContextLoaderPipelineStap, AgentContextLoaderPipelineStap >();
-            services.AddScoped<IAgentContextResolverPipelineStep, AgentContextResolverPipelineStep>();
-            services.AddScoped<IAgentReasonerPipelineStep, AgentReasonerPipelineStep>();
-            services.AddScoped<IAgentRequestHandlerStep, AgentRequestHandlerPipelineStep>();
-            services.AddScoped<IAgentSessionCreatorPipelineStep, AgentSessionCreatorPipelineStep>();
-            services.AddScoped<IAgentSessionRestorerPipelineStep, AgentSessionRestorerPipelineStep>();
-            services.AddScoped<IClientToolCallSessionRestorerPipelineStep, ClientToolCallSessionRestorerPipelineStep>();
-            services.AddScoped<IClientToolContinuationResolverPipelineStep, ClientToolContinuationResolverPipelineStep>();
-            services.AddScoped<IAgentPipelineContextValidator, AgentPipelineContextValidator>();
-            services.AddScoped<IPromptKnowledgeProviderInitializerPipelineStep, PromptKnowledgeProviderInitializerPipelineStep>();
-            services.AddScoped<IAcpCommandPipelineStep, AcpCommandPipelineStep>();
+            services.AddTransient<IAgentContextLoaderPipelineStap, AgentContextLoaderPipelineStap >();
+            services.AddTransient<IAgentContextResolverPipelineStep, AgentContextResolverPipelineStep>();
+            services.AddTransient<IAgentReasonerPipelineStep, AgentReasonerPipelineStep>();
+            services.AddTransient<IAgentRequestHandlerStep, AgentRequestHandlerPipelineStep>();
+            services.AddTransient<IAgentSessionCreatorPipelineStep, AgentSessionCreatorPipelineStep>();
+            services.AddTransient<IAgentSessionRestorerPipelineStep, AgentSessionRestorerPipelineStep>();
+            services.AddTransient<IClientToolCallSessionRestorerPipelineStep, ClientToolCallSessionRestorerPipelineStep>();
+            services.AddTransient<IClientToolContinuationResolverPipelineStep, ClientToolContinuationResolverPipelineStep>();
+            services.AddTransient<IAgentPipelineContextValidator, AgentPipelineContextValidator>();
+            services.AddTransient<IPromptKnowledgeProviderInitializerPipelineStep, PromptKnowledgeProviderInitializerPipelineStep>();
+            services.AddTransient<IAcpCommandPipelineStep, AcpCommandPipelineStep>();
         }
     }
 }

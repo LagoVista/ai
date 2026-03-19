@@ -19,8 +19,7 @@ namespace LagoVista.AI.Managers
     {
         ITrainingDataSetRepo _repo;
 
-        public TrainingDataSetManager(ITrainingDataSetRepo repo, ILogger logger, IAppConfig appConfig, IDependencyManager dependencyManager, ISecurity security)
-            : base(logger, appConfig, dependencyManager, security)
+        public TrainingDataSetManager(ITrainingDataSetRepo repo, ICoreAppServices coreAppServices) : base(coreAppServices)
         {
             this._repo = repo;
         }

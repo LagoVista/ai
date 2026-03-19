@@ -21,8 +21,7 @@ namespace LagoVista.AI.Managers
         private readonly ILabelRepo _repo;
         private readonly ILabelSetRepo _labelSetRepo;
 
-        public LabelManager(ILabelRepo labelRepo, ILabelSetRepo labelSetRepo, IAdminLogger logger, IAppConfig appConfig, IDependencyManager dependencyManager, ISecurity security)
-                  : base(logger, appConfig, dependencyManager, security)
+        public LabelManager(ILabelRepo labelRepo, ILabelSetRepo labelSetRepo, ICoreAppServices coreAppServices) : base(coreAppServices)
         {
             _repo = labelRepo ?? throw new NullReferenceException(nameof(labelRepo));
             _labelSetRepo = labelSetRepo ?? throw new NullReferenceException(nameof(labelSetRepo));

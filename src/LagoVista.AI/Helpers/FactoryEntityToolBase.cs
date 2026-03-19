@@ -133,7 +133,7 @@ namespace LagoVista.AI.Helpers
                 if (string.IsNullOrWhiteSpace(name))
                     return InvokeResult<string>.FromError(MissingNameMessage);
 
-                var now = DateTime.UtcNow.ToJSONString();
+                var now = UtcTimestamp.Now;
 
                 var entity = new TEntity();
                 entity.Id = Guid.NewGuid().ToId();

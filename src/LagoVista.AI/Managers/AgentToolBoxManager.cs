@@ -23,8 +23,7 @@ namespace LagoVista.AI.Managers
     {
         private readonly IAgentToolBoxRepo _repo;
     
-        public AgentToolBoxManager(IAgentToolBoxRepo repo, IAdminLogger logger, IAppConfig appConfig, IDependencyManager dependencyManager, ISecurity security)
-                  : base(logger, appConfig, dependencyManager, security)
+        public AgentToolBoxManager(IAgentToolBoxRepo repo, ICoreAppServices coreAppServices) : base(coreAppServices)
         {
             _repo = repo ?? throw new NullReferenceException(nameof(repo));
         }

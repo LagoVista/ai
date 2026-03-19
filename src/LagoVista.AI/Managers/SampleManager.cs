@@ -30,8 +30,7 @@ namespace LagoVista.AI.Managers
         ILabelSampleRepo _labelSampleRepo;
 
         public SampleManager(ISampleRepo sampleRepo, ISampleMediaRepo sampleMediaRepo, ISampleLabelRepo sampleLabelRepo, ILabelSampleRepo labelSampleRepo,
-            ILabelRepo repo, ILogger logger, IAppConfig appConfig, IDependencyManager dependencyManager, ISecurity security)
-            : base(logger, appConfig, dependencyManager, security)
+            ILabelRepo repo, ICoreAppServices coreAppServices) : base(coreAppServices)
         {
             this._sampleMediaRepo = sampleMediaRepo ?? throw new NullReferenceException(nameof(sampleMediaRepo));
             this._sampleRepo = sampleRepo ?? throw new NullReferenceException(nameof(sampleRepo));
@@ -91,7 +90,7 @@ namespace LagoVista.AI.Managers
         {
             var now = DateTime.UtcNow;
 
-            var timeStamp = now.ToJSONString();
+            var timeStamp = UtcTimestamp.Now;
 
             var file = new FileInfo(fileName);
 

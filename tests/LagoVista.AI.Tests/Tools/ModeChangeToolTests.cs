@@ -6,6 +6,7 @@ using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Managers;
 using LagoVista.AI.Models;
 using LagoVista.AI.Services.Tools;
+using LagoVista.Core;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Moq;
@@ -38,7 +39,7 @@ namespace LagoVista.AI.Tests.Tools
             var ctxMock = new Mock<IAgentPipelineContext>(MockBehavior.Strict);
 
             ctxMock.SetupGet(c => c.Session).Returns(session);
-            ctxMock.SetupGet(c => c.TimeStamp).Returns(timeStamp);
+            ctxMock.SetupGet(c => c.TimeStamp).Returns(UtcTimestamp.Parse(timeStamp));
 
             // These aren’t used by ModeChangeTool, but are part of the interface.
             // Keep them safely wired so future refactors don’t explode tests.
@@ -67,7 +68,7 @@ namespace LagoVista.AI.Tests.Tools
                 Mode = "Chat",
                 ModeReason = "Initial",
                 ModeSetTimestamp = "2025-12-25T10:00:00.000Z",
-                LastUpdatedDate = "2025-12-25T10:00:00.000Z",
+                LastUpdatedDate = UtcTimestamp.Parse("2025-12-25T10:00:00.000Z"),
                 ModeHistory = new List<ModeHistory>()
             };
 

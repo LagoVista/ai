@@ -22,8 +22,7 @@ namespace LagoVista.AI.Managers
     {
         private readonly IReferenceEntryRepo _repo;
 
-        public ReferenceEntryManager(IReferenceEntryRepo repo, IAdminLogger logger, IAppConfig appConfig, IDependencyManager dependencyManager, ISecurity security)
-            : base(logger, appConfig, dependencyManager, security)
+        public ReferenceEntryManager(IReferenceEntryRepo repo, ICoreAppServices coreAppServices) : base(coreAppServices)
         {
             _repo = repo ?? throw new ArgumentNullException(nameof(repo));
         }

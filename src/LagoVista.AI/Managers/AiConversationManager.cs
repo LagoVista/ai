@@ -19,8 +19,7 @@ namespace LagoVista.AI.Managers
     {
         IAiConversationRepo _repo;
 
-        public AiConversationManager(IAiConversationRepo modelRepo, ILogger logger, IAppConfig appConfig, IDependencyManager dependencyManager, ISecurity security) 
-            : base(logger, appConfig, dependencyManager, security)
+        public AiConversationManager(IAiConversationRepo modelRepo, ICoreAppServices coreAppServices) : base(coreAppServices)
         {
             this._repo = modelRepo;
         }

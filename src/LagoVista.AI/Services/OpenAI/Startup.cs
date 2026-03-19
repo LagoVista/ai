@@ -1,7 +1,7 @@
 ﻿using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Services;
-using LagoVista.Core.Interfaces;
 using LagoVista.IoT.Logging.Loggers;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LagoVista.AI.Services.OpenAI
 {
@@ -9,11 +9,10 @@ namespace LagoVista.AI.Services.OpenAI
     {
         public static void ConfigureServices(IServiceCollection services, IAdminLogger adminLogger)
         {
-            services.AddScoped<IEmbedder, OpenAIEmbedder>();
             services.AddScoped<IOpenAIErrorFormatter, OpenAIErrorFormatter>();
             services.AddScoped<IOpenAINonStreamingResponseReader, OpenAINonStreamingResponseReader>();
             services.AddScoped<IOpenAIResponsesExecutor, OpenAIResponsesExecutor>();
-            services.AddScoped<IEmbedder, OpenAIEmbedder>();
+            services.AddScoped<LagoVista.Core.Interfaces.IEmbedder, OpenAIEmbedder>();
             services.AddScoped<ILLMClient, OpenAIResponsesClientPipelineStap>();
             services.AddScoped<IAgentSessionNamingService, OpenAISessionNamingService>();
             services.AddScoped<IOpenAIStreamingResponseReader, OpenAIStreamingResponseReader>();

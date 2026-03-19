@@ -25,7 +25,7 @@ namespace LagoVista.AI.Services
         {
             if (ctx == null) throw new ArgumentNullException(nameof(ctx));
 
-            var now = DateTime.UtcNow.ToJSONString();
+            var now = UtcTimestamp.Now;
 
             var potentialName = String.IsNullOrEmpty(ctx.Envelope.OriginalInstructions) ? "File Upload" : ctx.Envelope.OriginalInstructions;
             var generatedName = await _namingService.GenerateNameAsync(ctx.AgentContext, potentialName, ctx.CancellationToken);
@@ -70,7 +70,7 @@ namespace LagoVista.AI.Services
         {
             if (ctx == null) throw new ArgumentNullException(nameof(ctx));
 
-            var now = DateTime.UtcNow.ToJSONString();
+            var now = UtcTimestamp.Now;
             var turn = new AgentSessionTurn
             {
                 SequenceNumber = 1,
@@ -114,7 +114,7 @@ namespace LagoVista.AI.Services
         {
             if (ctx == null) throw new ArgumentNullException(nameof(ctx));
 
-            var now = DateTime.UtcNow.ToJSONString();
+            var now = UtcTimestamp.Now;
 
             var turn = new AgentSessionTurn
             {
@@ -158,7 +158,7 @@ namespace LagoVista.AI.Services
                 CreationDate = ctx.TimeStamp
             };
 
-            ctx.Session.LastUpdatedDate = DateTime.UtcNow.ToJSONString();
+            ctx.Session.LastUpdatedDate = UtcTimestamp.Now;
             ctx.Session.LastUpdatedBy = ctx.Envelope.User;
             ctx.Session.CurrentChapterIndex = ctx.Session.CurrentChapterIndex + 1;
             ctx.Session.CurrentChapter = EntityHeader.Create(newChapter.Id, newChapter.Title);
@@ -171,7 +171,7 @@ namespace LagoVista.AI.Services
         {
             if (ctx == null) throw new ArgumentNullException(nameof(ctx));
 
-            var now = DateTime.UtcNow.ToJSONString();
+            var now = UtcTimestamp.Now;
             var turn = new AgentSessionTurn
             {
                 SequenceNumber = 2,

@@ -1,6 +1,6 @@
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Repos;
-using LagoVista.Core.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LagoVista.AI.CloudRepos
 {

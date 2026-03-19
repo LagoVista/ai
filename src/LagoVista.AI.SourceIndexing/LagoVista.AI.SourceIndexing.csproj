@@ -6,8 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="LagoVista.Core" Version="3.0.3196.0922" />
-    <PackageReference Include="LagoVista.CloudStorage" Version="3.0.3196.0922" />
+    <PackageReference Include="LagoVista.Core" Version="3.0.3228.1607" />
+    <PackageReference Include="LagoVista.CloudStorage" Version="3.0.3228.1607" />
 
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.14.0" />

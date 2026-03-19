@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="LagoVista.Core" Version="3.0.3196.0922" />
+    <PackageReference Include="LagoVista.Core" Version="3.0.3228.1607" />
   </ItemGroup>
 
   <ItemGroup>

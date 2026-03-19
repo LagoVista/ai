@@ -2,6 +2,7 @@
 // ContentHash: 22b169a72d03951d415769c7ec58d779494dad3d3355ac78ac9a290228d3a8fb
 // IndexVersion: 2
 // --- END CODE INDEX META ---
+using LagoVista.Core;
 using LagoVista.Core.Models;
 
 namespace LagoVista.AI.Models.TrainingData
@@ -16,8 +17,8 @@ namespace LagoVista.AI.Models.TrainingData
         public string FileName { get; set; }
         public string ContentType { get; set; }
         public long ContentSize { get; set; }
-        public string CreationDate { get; set; }
-        public string LastUpdatedDate { get; set; }
+        public UtcTimestamp CreationDate { get; set; }
+        public UtcTimestamp LastUpdatedDate { get; set; }
         public string CreatedById { get; set; }
         public string CreatedByName { get; set; }
         public string LastUpdatedById { get; set; }

@@ -7,6 +7,7 @@ using System;
 using System.ComponentModel;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
+using LagoVista.Core;
 
 namespace LagoVista.AI.Interfaces
 {
@@ -18,7 +19,7 @@ namespace LagoVista.AI.Interfaces
 
     public interface IHasTimeStamp
     {
-        string TimeStamp { get; }
+        UtcTimestamp TimeStamp { get; }
     }
 
     public interface IHasEnvelope

@@ -19,8 +19,7 @@ namespace LagoVista.AI.Managers
     {
         IModelCategoryRepo _repo;
 
-        public ModelCategoryManager(IModelCategoryRepo modelRepo, ILogger logger, IAppConfig appConfig, IDependencyManager dependencyManager, ISecurity security) 
-            : base(logger, appConfig, dependencyManager, security)
+        public ModelCategoryManager(IModelCategoryRepo modelRepo, ICoreAppServices coreAppServices) : base(coreAppServices)
         {
             this._repo = modelRepo;
         }

@@ -26,8 +26,7 @@ namespace LagoVista.AI.Managers
         // Storage for the actual model.
         IMLModelRepo _modelRepo;
 
-        public ModelManager(IModelRepo modelRepo, IMLModelRepo mlModelRepo, ILogger logger, IAppConfig appConfig, IDependencyManager dependencyManager, ISecurity security) 
-            : base(logger, appConfig, dependencyManager, security)
+        public ModelManager(IModelRepo modelRepo, IMLModelRepo mlModelRepo, ICoreAppServices coreAppServices) : base(coreAppServices)
         {
             this._repo = modelRepo;
             this._modelRepo = mlModelRepo;
