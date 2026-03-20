@@ -1,155 +1,145 @@
 ﻿using LagoVista.AI.Interfaces;
+using LagoVista.Core.PlatformSupport;
 using LagoVista.IoT.Logging.Loggers;
 using Microsoft.Extensions.DependencyInjection;
-
+using LagoVista.DependencyInjection;
 
 namespace LagoVista.AI.Services.Tools
 {
     public static class Startup
     {
-        private static IAgentToolRegistry _agentToolRegistry;
-
-        public static void RegisterTool<T>() where T : IAgentTool
-        {
-            _agentToolRegistry.RegisterTool<T>();
-        }
-
         public static void ConfigureServices(IServiceCollection services, IAdminLogger adminLogger)
         {
-            var toolRegistry = new AgentToolRegistry(adminLogger);
-
-            _agentToolRegistry = toolRegistry;
-
             adminLogger.Trace("[AgentToolRegistry_RegisterTool] - Start Register Server Tools");
 
-            toolRegistry.RegisterTool<ActivateToolsTool>();
+            services.AddAgentTool<ActivateToolsTool>();
+            services.AddAgentTool<HelloWorldTool>();
 
             ///* define our agent tools here */
-            toolRegistry.RegisterTool<HelloWorldTool>();
-            toolRegistry.RegisterTool<HelloWorldClientTool>();
-            toolRegistry.RegisterTool<PingPongTool>();
-            toolRegistry.RegisterTool<CalculatorTool>();
-            toolRegistry.RegisterTool<DelayTool>();
-            toolRegistry.RegisterTool<FailureInjectionTool>();
+            services.AddAgentTool<HelloWorldTool>();
+            services.AddAgentTool<HelloWorldClientTool>();
+            services.AddAgentTool<PingPongTool>();
+            services.AddAgentTool<CalculatorTool>();
+            services.AddAgentTool<DelayTool>();
+            services.AddAgentTool<FailureInjectionTool>();
 
             ///* utility tools
-            toolRegistry.RegisterTool<GetAuditFieldsForUpdate>();
-            toolRegistry.RegisterTool<GetAuditFieldsForCreate>();
-            toolRegistry.RegisterTool<GetCurrentTimeStamp>();
-            toolRegistry.RegisterTool<GetCurrentUser>();
+            services.AddAgentTool<GetAuditFieldsForUpdate>();
+            services.AddAgentTool<GetAuditFieldsForCreate>();
+            services.AddAgentTool<GetCurrentTimeStamp>();
+            services.AddAgentTool<GetCurrentUser>();
 
-            toolRegistry.RegisterTool<FetchWebPageTool>();
+            services.AddAgentTool<FetchWebPageTool>();
 
-            toolRegistry.RegisterTool<AgentListModesTool>();
-            toolRegistry.RegisterTool<ModeChangeTool>();
-            toolRegistry.RegisterTool<RequestUserApprovalAgentTool>();
+            services.AddAgentTool<AgentListModesTool>();
+            services.AddAgentTool<ModeChangeTool>();
+            services.AddAgentTool<RequestUserApprovalAgentTool>();
 
-            toolRegistry.RegisterTool<WorkspaceReadServerFileTool>();
-            toolRegistry.RegisterTool<WorkspaceReadClientFileTool>();
-            toolRegistry.RegisterTool<WorkspaceWritePatchTool>();
-            toolRegistry.RegisterTool<CodeHashNormalizedTool>();
-            toolRegistry.RegisterTool<WorkspaceCreateFileTool>();
-            toolRegistry.RegisterTool<WorkspaceTocGetTool>();
-            toolRegistry.RegisterTool<GetSessionCodeFileActivitiesTool>();
+            services.AddAgentTool<WorkspaceReadServerFileTool>();
+            services.AddAgentTool<WorkspaceReadClientFileTool>();
+            services.AddAgentTool<WorkspaceWritePatchTool>();
+            services.AddAgentTool<CodeHashNormalizedTool>();
+            services.AddAgentTool<WorkspaceCreateFileTool>();
+            services.AddAgentTool<WorkspaceTocGetTool>();
+            services.AddAgentTool<GetSessionCodeFileActivitiesTool>();
 
             /* session tools */
-            toolRegistry.RegisterTool<ChapterResetPrepareTool>();
-            toolRegistry.RegisterTool<ChapterResetCommitTool>();
-            toolRegistry.RegisterTool<AskAgentFirstTool>();
-            toolRegistry.RegisterTool<WriteAuthoritativeAnswerTool>();
+            services.AddAgentTool<ChapterResetPrepareTool>();
+            services.AddAgentTool<ChapterResetCommitTool>();
+            services.AddAgentTool<AskAgentFirstTool>();
+            services.AddAgentTool<WriteAuthoritativeAnswerTool>();
 
 
             ///* workflow authoring + registry tools */
-            toolRegistry.RegisterTool<ListWorkflowsTool>();
-            toolRegistry.RegisterTool<GetWorkflowManifestTool>();
-            toolRegistry.RegisterTool<MatchWorkflowTool>();
+            services.AddAgentTool<ListWorkflowsTool>();
+            services.AddAgentTool<GetWorkflowManifestTool>();
+            services.AddAgentTool<MatchWorkflowTool>();
 
             /* CRUD authoring tools */
-            toolRegistry.RegisterTool<CreateWorkflowTool>();
-            toolRegistry.RegisterTool<UpdateWorkflowTool>();
-            toolRegistry.RegisterTool<DeleteWorkflowTool>();
+            services.AddAgentTool<CreateWorkflowTool>();
+            services.AddAgentTool<UpdateWorkflowTool>();
+            services.AddAgentTool<DeleteWorkflowTool>();
 
             // --- DDR / TLA ActiveTools ---
-            toolRegistry.RegisterTool<GetTlaCatalogAgentTool>();
-            toolRegistry.RegisterTool<AddTlaAgentTool>();
-            toolRegistry.RegisterTool<CreateDdrAgentTool>();
-            toolRegistry.RegisterTool<UpdateDdrMetadataAgentTool>();
-            toolRegistry.RegisterTool<MoveDdrTlaAgentTool>();
-            toolRegistry.RegisterTool<GetCondensedDdrAgentTool>();
-            toolRegistry.RegisterTool<GetdDdrInstructionsAgentTool>();
+            services.AddAgentTool<GetTlaCatalogAgentTool>();
+            services.AddAgentTool<AddTlaAgentTool>();
+            services.AddAgentTool<CreateDdrAgentTool>();
+            services.AddAgentTool<UpdateDdrMetadataAgentTool>();
+            services.AddAgentTool<MoveDdrTlaAgentTool>();
+            services.AddAgentTool<GetCondensedDdrAgentTool>();
+            services.AddAgentTool<GetdDdrInstructionsAgentTool>();
 
             // --- Goal ActiveTools ---
-            toolRegistry.RegisterTool<SetGoalAgentTool>();
-            toolRegistry.RegisterTool<ApproveGoalAgentTool>();
+            services.AddAgentTool<SetGoalAgentTool>();
+            services.AddAgentTool<ApproveGoalAgentTool>();
 
             // -- Checkpoint ActiveTools --
-            toolRegistry.RegisterTool<SessionCheckpointListTool>();
-            toolRegistry.RegisterTool<SessionCheckpointRestoreTool>();
-            toolRegistry.RegisterTool<SessionCheckpointSetTool>();
+            services.AddAgentTool<SessionCheckpointListTool>();
+            services.AddAgentTool<SessionCheckpointRestoreTool>();
+            services.AddAgentTool<SessionCheckpointSetTool>();
 
             // -- Session Memory ActiveTools
-            toolRegistry.RegisterTool<SessionMemoryListTool>();
-            toolRegistry.RegisterTool<SessionMemoryRecallTool>();
-            toolRegistry.RegisterTool<SessionMemoryStoreTool>();
+            services.AddAgentTool<SessionMemoryListTool>();
+            services.AddAgentTool<SessionMemoryRecallTool>();
+            services.AddAgentTool<SessionMemoryStoreTool>();
 
             // -- KFR (Known Fact Registry ActiveTools)
-            toolRegistry.RegisterTool<SessionKfrClearTool>();
-            toolRegistry.RegisterTool<SessionKfrEvictTool>();
-            toolRegistry.RegisterTool<SessionKfrListTool>();
-            toolRegistry.RegisterTool<SessionKfrUpsertTool>();
+            services.AddAgentTool<SessionKfrClearTool>();
+            services.AddAgentTool<SessionKfrEvictTool>();
+            services.AddAgentTool<SessionKfrListTool>();
+            services.AddAgentTool<SessionKfrUpsertTool>();
             
-            toolRegistry.RegisterTool<KfrListCategoriesTool>();
-            toolRegistry.RegisterTool<KfrListTagsTool>();
-            toolRegistry.RegisterTool<KfrQueryByCategoryTool>();
-            toolRegistry.RegisterTool<KfrQueryByTagsTool>();
-            toolRegistry.RegisterTool<KfrSetCategoryTool>();
-            toolRegistry.RegisterTool<KfrSetTagsTool>();
+            services.AddAgentTool<KfrListCategoriesTool>();
+            services.AddAgentTool<KfrListTagsTool>();
+            services.AddAgentTool<KfrQueryByCategoryTool>();
+            services.AddAgentTool<KfrQueryByTagsTool>();
+            services.AddAgentTool<KfrSetCategoryTool>();
+            services.AddAgentTool<KfrSetTagsTool>();
 
             // --- Chapter ActiveTools ---
-            toolRegistry.RegisterTool<AddChapterAgentTool>();
-            toolRegistry.RegisterTool<AddChaptersAgentTool>();
-            toolRegistry.RegisterTool<UpdateChapterSummaryAgentTool>();
-            toolRegistry.RegisterTool<UpdateChapterDetailsAgentTool>();
-            toolRegistry.RegisterTool<ApproveChapterAgentTool>();
-            toolRegistry.RegisterTool<ListChaptersAgentTool>();
-            toolRegistry.RegisterTool<ReorderChaptersAgentTool>();
-            toolRegistry.RegisterTool<DeleteChapterAgentTool>();
+            services.AddAgentTool<AddChapterAgentTool>();
+            services.AddAgentTool<AddChaptersAgentTool>();
+            services.AddAgentTool<UpdateChapterSummaryAgentTool>();
+            services.AddAgentTool<UpdateChapterDetailsAgentTool>();
+            services.AddAgentTool<ApproveChapterAgentTool>();
+            services.AddAgentTool<ListChaptersAgentTool>();
+            services.AddAgentTool<ReorderChaptersAgentTool>();
+            services.AddAgentTool<DeleteChapterAgentTool>();
 
             // --- DDR ModeStatus & Approval ---
-            toolRegistry.RegisterTool<SetDdrStatusAgentTool>();
-            toolRegistry.RegisterTool<ApproveDdrAgentTool>();
+            services.AddAgentTool<SetDdrStatusAgentTool>();
+            services.AddAgentTool<ApproveDdrAgentTool>();
 
-            toolRegistry.RegisterTool<IndexDdrTool>();
-            toolRegistry.RegisterTool<ImportDdrTool>();
+            services.AddAgentTool<IndexDdrTool>();
+            services.AddAgentTool<ImportDdrTool>();
 
             // --- DDR Retrieval ---
-            toolRegistry.RegisterTool<GetDdrAgentTool>();
-            toolRegistry.RegisterTool<ListDdrsAgentTool>();
+            services.AddAgentTool<GetDdrAgentTool>();
+            services.AddAgentTool<ListDdrsAgentTool>();
 
             // -- Categoires used to organize entities --
-            toolRegistry.RegisterTool<CategoryCreateTool>();
-            toolRegistry.RegisterTool<CategoryListTool>();
+            services.AddAgentTool<CategoryCreateTool>();
+            services.AddAgentTool<CategoryListTool>();
 
             // -- chapter tools --
-            toolRegistry.RegisterTool<ListChaptersTool>();
-            toolRegistry.RegisterTool<SwitchChapterTool>();
-            toolRegistry.RegisterTool<RenameCurrentChapterTool>();
+            services.AddAgentTool<ListChaptersTool>();
+            services.AddAgentTool<SwitchChapterTool>();
+            services.AddAgentTool<RenameCurrentChapterTool>();
 
             // -- Session Lists ActiveTools --
-            toolRegistry.RegisterTool<SessionListCreateTool>();
-            toolRegistry.RegisterTool<SessionListListTool>();
-            toolRegistry.RegisterTool<SessionListGetTool>();
-            toolRegistry.RegisterTool<SessionListUpdateTool>();
-            toolRegistry.RegisterTool<SessionListDeleteTool>();
-            toolRegistry.RegisterTool<SessionListItemAddTool>();
-            toolRegistry.RegisterTool<SessionListItemUpdateTool>();
-            toolRegistry.RegisterTool<SessionListItemRemoveTool>();
-            toolRegistry.RegisterTool<SessionListItemMoveTool>();
-            toolRegistry.RegisterTool<SessionListSummaryItemListTool>();
+            services.AddAgentTool<SessionListCreateTool>();
+            services.AddAgentTool<SessionListListTool>();
+            services.AddAgentTool<SessionListGetTool>();
+            services.AddAgentTool<SessionListUpdateTool>();
+            services.AddAgentTool<SessionListDeleteTool>();
+            services.AddAgentTool<SessionListItemAddTool>();
+            services.AddAgentTool<SessionListItemUpdateTool>();
+            services.AddAgentTool<SessionListItemRemoveTool>();
+            services.AddAgentTool<SessionListItemMoveTool>();
+            services.AddAgentTool<SessionListSummaryItemListTool>();
 
             /*--*/
 
-            services.AddSingleton<IAgentToolRegistry>(toolRegistry);
             services.AddScoped<IWorkspaceWritePatchOrchestrator, WorkspaceWritePatchOrchestrator>();
             services.AddScoped<IWorkspacePatchStore, InMemoryWorkspacePatchStore>();
             services.AddScoped<IWorkspaceWritePatchValidator, WorkspaceWritePatchValidator>();

@@ -7,6 +7,7 @@ using LagoVista.AI.Interfaces.Services;
 using LagoVista.AI.Services;
 using LagoVista.AI.Services.Hashing;
 using LagoVista.AI.Services.OpenAI;
+using LagoVista.Core.PlatformSupport;
 using LagoVista.IoT.Logging.Loggers;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net.Http;
@@ -23,19 +24,13 @@ namespace LagoVista.AI
 
     public static class Startup
     {
-
-        public static void RegisterTool<T>() where T : IAgentTool
-        {
-           Services.Tools.Startup.RegisterTool<T>();
-        } 
-
         public static void ConfigureServices(IServiceCollection services, IAdminLogger adminLogger)
         {
 
             Services.Tools.Startup.ConfigureServices(services, adminLogger);
             Services.Startup.ConfigureServices(services, adminLogger);
             Services.OpenAI.Startup.ConfigureServices(services, adminLogger);
-            Managers.Startup.ConfigureServices(services, adminLogger);
+            Managers.Startup.ConfigureServices(services);
 
             services.AddSingleton<IHttpClientFactory>(new LagoVistaClientFactory());
             services.AddTransient<IAgentToolFactory, AgentToolFactory>();

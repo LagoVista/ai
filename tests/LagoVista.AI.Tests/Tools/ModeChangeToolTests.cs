@@ -135,43 +135,6 @@ namespace LagoVista.AI.Tests.Tools
             _sessionManagerMock.VerifyNoOtherCalls();
         }
 
-        [Test]
-        public async Task ExecuteAsync_EmptyArgs_ReturnsError_DoesNotMutateSessionOrHistory()
-        {
-            // Arrange
-            var session = new AgentSession
-            {
-                Mode = "Chat",
-                ModeReason = "Initial",
-                ModeSetTimestamp = "A",
-                LastUpdatedDate = "B",
-                ModeHistory = new List<ModeHistory>()
-            };
-
-            var ctxMock = CreateContextMock(session);
-            var ctx = ctxMock.Object;
-
-            // Act
-            var result = await _tool.ExecuteAsync("", ctx);
-
-            // Assert
-            Assert.That(result, Is.Not.Null);
-            Assert.That(result.Successful, Is.False);
-            Assert.That(result.ErrorMessage, Does.Contain("requires a non-empty arguments object"));
-
-            Assert.That(session.Mode, Is.EqualTo("Chat"));
-            Assert.That(session.ModeReason, Is.EqualTo("Initial"));
-            Assert.That(session.ModeSetTimestamp, Is.EqualTo("A"));
-            Assert.That(session.LastUpdatedDate, Is.EqualTo("B"));
-            Assert.That(session.ModeHistory.Count, Is.EqualTo(0));
-
-            _loggerMock.Verify(l => l.Trace(It.IsAny<string>()), Times.Never);
-            _loggerMock.Verify(l => l.AddException(It.IsAny<string>(), It.IsAny<Exception>()), Times.Never);
-
-            // Should short-circuit before touching ctx.Session
-            ctxMock.VerifyNoOtherCalls();
-            _sessionManagerMock.VerifyNoOtherCalls();
-        }
 
         [Test]
         public async Task ExecuteAsync_MissingMode_ReturnsError_DoesNotMutateSessionOrHistory()

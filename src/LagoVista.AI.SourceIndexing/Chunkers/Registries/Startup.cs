@@ -10,6 +10,7 @@ using LagoVista.AI.Indexing.Registries;
 using LagoVista.AI.Rag.Chunkers.Models;
 using LagoVista.Core.Interfaces;
 using LagoVista.IoT.Logging.Loggers;
+using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Generic;
 
 namespace LagoVista.AI.Chunkers.Registries

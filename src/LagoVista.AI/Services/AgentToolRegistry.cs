@@ -1,28 +1,45 @@
+using LagoVista.AI.Interfaces;
+using LagoVista.Core.Interfaces;
+using LagoVista.DependencyInjection;
+using LagoVista.IoT.Logging.Loggers;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using LagoVista.AI.Interfaces;
-using LagoVista.Core.Interfaces;
-using LagoVista.IoT.Logging.Loggers;
 
 namespace LagoVista.AI.Services
 {
     public class AgentToolRegistry : IAgentToolRegistry
     {
         private readonly Dictionary<string, Type> _toolsByName;
-        private readonly IAdminLogger _logger;
+        private IAdminLogger _logger;
 
         private readonly List<AgentToolSummary> _allTools = new List<AgentToolSummary>();
 
-        
-        public static AgentToolRegistry Instance { get; private set; }
+       
+        public AgentToolRegistry(IEnumerable<AgentToolDescriptor> descriptors, IAdminLogger adminLogger)
+        {
+            foreach (var descriptor in descriptors)
+            {
+                RegisterTool(descriptor.ToolType, adminLogger);
+            }
+        }
+        private void RegisterTool(Type toolType, IAdminLogger adminLogger)
+        {
+            if (!typeof(IAgentTool).IsAssignableFrom(toolType))
+            {
+                throw new InvalidOperationException($"{toolType.FullName} does not implement {nameof(IAgentTool)}.");
+            }
+
+            _toolsByName[toolType.Name] = toolType;
+            adminLogger?.Trace($"[AgentToolRegistry_RegisterTool] - Registered tool {toolType.FullName}");
+            _logger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
+        }
 
         public AgentToolRegistry(IAdminLogger logger)
         {
-            AgentToolRegistry.Instance = this;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _toolsByName = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
         }

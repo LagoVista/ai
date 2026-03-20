@@ -2,12 +2,13 @@
 using LagoVista.AI.Interfaces.Managers;
 using Microsoft.Extensions.DependencyInjection;
 using LagoVista.IoT.Logging.Loggers;
+using LagoVista.Core.PlatformSupport;
 
 namespace LagoVista.AI.Managers
 {
     public static class Startup
     {
-        public static void ConfigureServices(IServiceCollection services, IAdminLogger adminLogger)
+        public static void ConfigureServices(IServiceCollection services)
         {
             services.AddTransient<IModelCategoryManager, ModelCategoryManager>();
             services.AddTransient<IModelManager, ModelManager>();

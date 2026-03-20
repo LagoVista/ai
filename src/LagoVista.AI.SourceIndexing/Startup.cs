@@ -13,6 +13,7 @@ using LagoVista.AI.Rag.Chunkers.Services;
 using LagoVista.AI.Rag.Services;
 using LagoVista.Core.Interfaces;
 using LagoVista.IoT.Logging.Loggers;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;

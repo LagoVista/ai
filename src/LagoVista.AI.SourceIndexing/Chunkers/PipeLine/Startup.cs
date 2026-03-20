@@ -2,6 +2,7 @@ using LagoVista.AI.Indexing.Interfaces;
 using LagoVista.AI.Indexing.PipeLine;
 using LagoVista.Core.Interfaces;
 using LagoVista.IoT.Logging.Loggers;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LagoVista.AI.Chunkers.PipeLine
 {
