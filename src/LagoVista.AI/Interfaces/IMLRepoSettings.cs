@@ -9,9 +9,8 @@ namespace LagoVista.AI.CloudRepos
 {
     public interface IMLRepoSettings
     {
-        IConnectionSettings MLDocDbStorage { get; set; }
-        IConnectionSettings MLBlobStorage { get; set; }
-        IConnectionSettings MLTableStorage { get; set; }
-        bool ShouldConsolidateCollections { get; }
+        IConnectionSettings MLDocDbStorage { get;  }
+        IConnectionSettings MLBlobStorage { get; }
+        IConnectionSettings MLTableStorage { get;}
     }
 }

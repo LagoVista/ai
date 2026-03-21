@@ -40,6 +40,10 @@ namespace LagoVista.AI.CloudRepos
             services.AddSingleton<IAgentSessionTurnChapterStore, AgentSessionTurnArchiveStore>();
             services.AddSingleton<IAgentPersonaDefinitionRepo, AgentPersonaDefinitionRepo>();
             services.AddSingleton<ISessionCodeFilesRepo, SessionCodeFilesRepo>();
+            services.AddSingleton<IMLRepoSettings, MLRepoSettings>();
+            services.AddSingleton<IQdrantSettings, QdrantSettings>();
+            services.AddSingleton<IOpenAISettings, OpenAISettings>();
+            services.AddSingleton<ITrainingDataSettings, TrainingDataSettings>();
         }
     }
 }

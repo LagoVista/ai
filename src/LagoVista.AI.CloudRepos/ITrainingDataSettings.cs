@@ -15,7 +15,5 @@ namespace LagoVista.AI.CloudRepos
         IConnectionSettings SampleMediaConnectionsSettings { get; }
         IConnectionSettings TrainingDataSetsConnectionSettings { get; }
         IConnectionSettings LabelsConnectionSettings { get; }
-
-        bool ShouldConsolidateCollections { get; }
     }
 }
