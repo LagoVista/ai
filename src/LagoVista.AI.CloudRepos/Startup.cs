@@ -1,6 +1,9 @@
 using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Repos;
-using LagoVista.Core.Interfaces;
+using LagoVista.AI.Models;
+using LagoVista.IoT.Logging.Loggers;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LagoVista.AI.CloudRepos
 {
@@ -37,6 +40,19 @@ namespace LagoVista.AI.CloudRepos
             services.AddSingleton<IAgentSessionTurnChapterStore, AgentSessionTurnArchiveStore>();
             services.AddSingleton<IAgentPersonaDefinitionRepo, AgentPersonaDefinitionRepo>();
             services.AddSingleton<ISessionCodeFilesRepo, SessionCodeFilesRepo>();
+        }
+    }
+}
+
+namespace LagoVista.DependencyInjection
+{
+    public static class AiModule
+    {
+        public static void AddAiModule(this IServiceCollection services, IConfigurationRoot configRoot, IAdminLogger logger)
+        {
+            LagoVista.AI.CloudRepos.Startup.ConfigureServices(services);
+            LagoVista.AI.Startup.ConfigureServices(services, logger);
+            services.AddMetaDataHelper<AgentToolBox>();
         }
     }
 }

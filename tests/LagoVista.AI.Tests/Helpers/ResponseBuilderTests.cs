@@ -9,6 +9,7 @@ using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Repos;
 using LagoVista.AI.Models;
 using LagoVista.AI.Models.Context;
+using LagoVista.Core;
 using LagoVista.Core.AI.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
@@ -47,7 +48,7 @@ namespace LagoVista.AI.Tests.Helpers
 
             public string ToolManifestId { get; set; }
 
-            public string TimeStamp { get; set; } = DateTime.UtcNow.ToString("o");
+            public UtcTimestamp TimeStamp { get; set; } = UtcTimestamp.Now;
             public Envelope Envelope { get; set; }
 
             public AgentToolExecutionContext ToToolContext() => new AgentToolExecutionContext();

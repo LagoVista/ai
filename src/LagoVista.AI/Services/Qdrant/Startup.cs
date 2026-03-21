@@ -1,5 +1,6 @@
 ﻿using LagoVista.AI.Interfaces;
-using LagoVista.Core.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
+
 using LagoVista.IoT.Logging.Loggers;
 
 namespace LagoVista.AI.Services.Qdrant
@@ -8,8 +9,8 @@ namespace LagoVista.AI.Services.Qdrant
     {
         public static void ConfigureServices(IServiceCollection services, IAdminLogger adminLogger)
         {
-            services.AddSingleton<IQdrantClient, QdrantClient>();
-            services.AddSingleton<IRagContextBuilder, QdrantRagContextBuilder>();
+            services.AddTransient<IQdrantClient, QdrantClient>();
+            services.AddTransient<IRagContextBuilder, QdrantRagContextBuilder>();
         }
     }
 }

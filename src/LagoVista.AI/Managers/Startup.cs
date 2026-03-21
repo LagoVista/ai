@@ -1,16 +1,14 @@
 ﻿using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Managers;
-using LagoVista.Core.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 using LagoVista.IoT.Logging.Loggers;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using LagoVista.Core.PlatformSupport;
 
 namespace LagoVista.AI.Managers
 {
     public static class Startup
     {
-        public static void ConfigureServices(IServiceCollection services, IAdminLogger adminLogger)
+        public static void ConfigureServices(IServiceCollection services)
         {
             services.AddTransient<IModelCategoryManager, ModelCategoryManager>();
             services.AddTransient<IModelManager, ModelManager>();
@@ -21,14 +19,14 @@ namespace LagoVista.AI.Managers
             services.AddTransient<IExperimentResultManager, ExperimentResultManager>();
             services.AddTransient<IDdrManager, DdrManager>();
             services.AddTransient<IWorkflowDefinitionManager, WorkflowDefinitionManager>();
-            services.AddScoped<IAgentContextManager, AgentContextManager>();
-            services.AddScoped<IAgentSessionManager, AgentSessionManager>();
-            services.AddScoped<IImageGeneratorManager, OpenAIManager>();
-            services.AddScoped<IAiConversationManager, AiConversationManager>();
-            services.AddScoped<ITextQueryManager, OpenAIManager>();
-            services.AddSingleton<IAgentPersonaDefinitionManager, AgentPersonaDefinitionManager>();
-            services.AddSingleton<IAgentToolBoxManager, AgentToolBoxManager>();
-            services.AddSingleton<IReferenceEntryManager, ReferenceEntryManager>();
+            services.AddTransient<IAgentContextManager, AgentContextManager>();
+            services.AddTransient<IAgentSessionManager, AgentSessionManager>();
+            services.AddTransient<IImageGeneratorManager, OpenAIManager>();
+            services.AddTransient<IAiConversationManager, AiConversationManager>();
+            services.AddTransient<ITextQueryManager, OpenAIManager>();
+            services.AddTransient<IAgentPersonaDefinitionManager, AgentPersonaDefinitionManager>();
+            services.AddTransient<IAgentToolBoxManager, AgentToolBoxManager>();
+            services.AddTransient<IReferenceEntryManager, ReferenceEntryManager>();
         }
     }
 }

@@ -3,6 +3,7 @@ using LagoVista.AI.Chunkers.Interfaces;
 using LagoVista.AI.Indexing.Interfaces;
 using LagoVista.Core.Interfaces;
 using LagoVista.IoT.Logging.Loggers;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LagoVista.AI.Chunkers
 {

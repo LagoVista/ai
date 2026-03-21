@@ -125,7 +125,8 @@ namespace LagoVista.AI.RagConsole
             var embedder = new OpenAIEmbedder(openAISettings, adminLogger);            
             var collection = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
 
-            var diManagement = new LagoVista.Core.DependencyInjection.DIManagement(collection);
+            var diManagement = new ServiceCollection();
+
             diManagement.AddSingleton<IAdminLogger>(adminLogger);
             diManagement.AddSingleton<IQdrantSettings>(qdrantSettings);
             diManagement.AddSingleton<IngestionConfig>(result.Result);

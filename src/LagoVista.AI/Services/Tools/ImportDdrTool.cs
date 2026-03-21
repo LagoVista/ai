@@ -366,7 +366,7 @@ dryRun, confirmed, markdown, source
                 }
 
                 // Confirmed path: persist
-                var now = DateTime.UtcNow.ToJSONString();
+                var now = UtcTimestamp.Now;
 
                 if (!TryParseSchemaId(parsed.Id, out var tla, out var idx))
                 {

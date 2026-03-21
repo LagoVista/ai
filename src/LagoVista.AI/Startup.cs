@@ -7,8 +7,9 @@ using LagoVista.AI.Interfaces.Services;
 using LagoVista.AI.Services;
 using LagoVista.AI.Services.Hashing;
 using LagoVista.AI.Services.OpenAI;
-using LagoVista.Core.Interfaces;
+using LagoVista.Core.PlatformSupport;
 using LagoVista.IoT.Logging.Loggers;
+using Microsoft.Extensions.DependencyInjection;
 using System.Net.Http;
 
 namespace LagoVista.AI
@@ -23,19 +24,13 @@ namespace LagoVista.AI
 
     public static class Startup
     {
-
-        public static void RegisterTool<T>() where T : IAgentTool
-        {
-           Services.Tools.Startup.RegisterTool<T>();
-        } 
-
         public static void ConfigureServices(IServiceCollection services, IAdminLogger adminLogger)
         {
 
             Services.Tools.Startup.ConfigureServices(services, adminLogger);
             Services.Startup.ConfigureServices(services, adminLogger);
             Services.OpenAI.Startup.ConfigureServices(services, adminLogger);
-            Managers.Startup.ConfigureServices(services, adminLogger);
+            Managers.Startup.ConfigureServices(services);
 
             services.AddSingleton<IHttpClientFactory>(new LagoVistaClientFactory());
             services.AddTransient<IAgentToolFactory, AgentToolFactory>();
@@ -52,8 +47,8 @@ namespace LagoVista.AI
             services.AddSingleton<IContentHashService, DefaultContentHashService>();
 
             services.AddSingleton<IStructuredTextLlmService, HttpStructuredTextLlmService>();
-            services.AddSingleton<IEmbedder, OpenAIEmbedder>();
-            services.AddSingleton<IRagIndexingServices, RagIndexingService>();
+            services.AddSingleton<LagoVista.Core.Interfaces.IEmbedder, OpenAIEmbedder>();
+            services.AddSingleton<LagoVista.Core.Interfaces.IRagIndexingServices, RagIndexingService>();
 
             services.AddSingleton<IAgentExecuteResponseParser, AgentExecuteResponseParser>();
 

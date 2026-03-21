@@ -14,8 +14,8 @@ namespace LagoVista.AI.Managers
     {
         private readonly IAgentPersonaDefinitionRepo _repo;
 
-        public AgentPersonaDefinitionManager(IAgentPersonaDefinitionRepo repo, IAdminLogger logger, IAppConfig appConfig, IDependencyManager dependencyManager, ISecurity security)
-                  : base(logger, appConfig, dependencyManager, security)
+        public AgentPersonaDefinitionManager(IAgentPersonaDefinitionRepo repo, ICoreAppServices coreAppServices)
+                  : base(coreAppServices)
         {
             _repo = repo ?? throw new NullReferenceException(nameof(repo));
         }

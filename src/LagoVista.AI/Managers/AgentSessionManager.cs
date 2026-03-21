@@ -1,7 +1,6 @@
 using LagoVista.AI.Interfaces.Managers;
 using LagoVista.AI.Interfaces.Repos;
 using LagoVista.AI.Models;
-using LagoVista.AI.Models.Resources;
 using LagoVista.Core;
 using LagoVista.Core.Exceptions;
 using LagoVista.Core.Interfaces;
@@ -9,12 +8,10 @@ using LagoVista.Core.Managers;
 using LagoVista.Core.Models;
 using LagoVista.Core.Models.UIMetaData;
 using LagoVista.Core.Validation;
-using LagoVista.IoT.Logging.Loggers;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace LagoVista.AI.Managers
@@ -22,18 +19,10 @@ namespace LagoVista.AI.Managers
     public class AgentSessionManager : ManagerBase, IAgentSessionManager
     {
         private readonly IAgentSessionRepo _repo;
-        private readonly IAdminLogger _adminLogger;        
         private readonly IAgentSessionTurnChapterStore _chapterStore;
 
-        public AgentSessionManager(
-            IAgentSessionRepo repo,
-            IAdminLogger logger,
-            IAppConfig appConfig,
-            IAgentSessionTurnChapterStore archiveStore,
-            IDependencyManager dependencyManager,
-            ISecurity security) : base(logger, appConfig, dependencyManager, security)
+        public AgentSessionManager( IAgentSessionRepo repo, IAgentSessionTurnChapterStore archiveStore, ICoreAppServices coreAppServices) : base(coreAppServices)
         {
-            _adminLogger = logger ?? throw new ArgumentNullException(nameof(logger));
             _repo = repo ?? throw new ArgumentNullException(nameof(repo));
             _chapterStore = archiveStore ?? throw new ArgumentNullException(nameof(archiveStore));
         }
@@ -72,7 +61,7 @@ namespace LagoVista.AI.Managers
         {
             var session = await GetAgentSessionAsync(sessionid, org, user);
             session.Name = name;
-            session.LastUpdatedDate = DateTime.UtcNow.ToJSONString();
+            session.LastUpdatedDate = UtcTimestamp.Now;
             session.LastUpdatedBy = user;
             await _repo.UpdateSessionAsyunc(session);
 
@@ -83,7 +72,7 @@ namespace LagoVista.AI.Managers
         {
             var session = await GetAgentSessionAsync(sessionid, org, user);
             session.Archived = true;
-            session.LastUpdatedDate = DateTime.UtcNow.ToJSONString();
+            session.LastUpdatedDate = UtcTimestamp.Now;
             session.LastUpdatedBy = user;
             await _repo.UpdateSessionAsyunc(session);
 
@@ -94,7 +83,7 @@ namespace LagoVista.AI.Managers
         {
             var session = await GetAgentSessionAsync(sessionid, org, user);
             session.Shared = true;
-            session.LastUpdatedDate = DateTime.UtcNow.ToJSONString();
+            session.LastUpdatedDate = UtcTimestamp.Now;
             session.LastUpdatedBy = user;
             await _repo.UpdateSessionAsyunc(session);
 
@@ -105,7 +94,7 @@ namespace LagoVista.AI.Managers
         {
             var session = await GetAgentSessionAsync(sessionid, org, user);
             session.IsDeleted = true;
-            session.LastUpdatedDate = DateTime.UtcNow.ToJSONString();
+            session.LastUpdatedDate = UtcTimestamp.Now;
             session.DeletionDate = session.LastUpdatedDate;
             session.LastUpdatedBy = user;
             await _repo.UpdateSessionAsyunc(session);
@@ -117,7 +106,7 @@ namespace LagoVista.AI.Managers
         {
             var session = await GetAgentSessionAsync(sessionId, org, user);
             session.Completed = true;
-            session.LastUpdatedDate = DateTime.UtcNow.ToJSONString();
+            session.LastUpdatedDate = UtcTimestamp.Now;
             session.LastUpdatedBy = user;
             await _repo.UpdateSessionAsyunc(session);
 
@@ -206,7 +195,7 @@ namespace LagoVista.AI.Managers
             clonedSession.Id = Guid.NewGuid().ToId();
             clonedSession.Name = $"Branch - {sourceSession.Name}";
             clonedSession.LastUpdatedBy = user;
-            clonedSession.LastUpdatedDate = DateTime.UtcNow.ToJSONString();
+            clonedSession.LastUpdatedDate = UtcTimestamp.Now;
             clonedSession.Mode = branchedTurn.Mode;
 
             clonedSession.SourceSessionId = null;
@@ -307,7 +296,7 @@ namespace LagoVista.AI.Managers
             }
 
             var opId = NextRestoreOperationId(branchedSession.RestoreReports);
-            var completedUtc = DateTime.UtcNow.ToString("o");
+            var completedUtc = UtcTimestamp.Now;
 
             branchedSession.SourceSessionId = sourceSession.Id;
             branchedSession.SourceCheckpointId = cp.CheckpointId;

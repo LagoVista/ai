@@ -1,6 +1,7 @@
 ﻿using LagoVista.AI.Interfaces;
 using LagoVista.IoT.Logging.Loggers;
-using LagoVista.Core.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
+
 
 namespace LagoVista.AI.ACP.Commands
 {

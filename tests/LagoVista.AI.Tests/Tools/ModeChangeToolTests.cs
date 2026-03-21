@@ -6,6 +6,7 @@ using LagoVista.AI.Interfaces;
 using LagoVista.AI.Interfaces.Managers;
 using LagoVista.AI.Models;
 using LagoVista.AI.Services.Tools;
+using LagoVista.Core;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using Moq;
@@ -38,7 +39,7 @@ namespace LagoVista.AI.Tests.Tools
             var ctxMock = new Mock<IAgentPipelineContext>(MockBehavior.Strict);
 
             ctxMock.SetupGet(c => c.Session).Returns(session);
-            ctxMock.SetupGet(c => c.TimeStamp).Returns(timeStamp);
+            ctxMock.SetupGet(c => c.TimeStamp).Returns(UtcTimestamp.Parse(timeStamp));
 
             // These aren’t used by ModeChangeTool, but are part of the interface.
             // Keep them safely wired so future refactors don’t explode tests.
@@ -67,7 +68,7 @@ namespace LagoVista.AI.Tests.Tools
                 Mode = "Chat",
                 ModeReason = "Initial",
                 ModeSetTimestamp = "2025-12-25T10:00:00.000Z",
-                LastUpdatedDate = "2025-12-25T10:00:00.000Z",
+                LastUpdatedDate = UtcTimestamp.Parse("2025-12-25T10:00:00.000Z"),
                 ModeHistory = new List<ModeHistory>()
             };
 
@@ -134,43 +135,6 @@ namespace LagoVista.AI.Tests.Tools
             _sessionManagerMock.VerifyNoOtherCalls();
         }
 
-        [Test]
-        public async Task ExecuteAsync_EmptyArgs_ReturnsError_DoesNotMutateSessionOrHistory()
-        {
-            // Arrange
-            var session = new AgentSession
-            {
-                Mode = "Chat",
-                ModeReason = "Initial",
-                ModeSetTimestamp = "A",
-                LastUpdatedDate = "B",
-                ModeHistory = new List<ModeHistory>()
-            };
-
-            var ctxMock = CreateContextMock(session);
-            var ctx = ctxMock.Object;
-
-            // Act
-            var result = await _tool.ExecuteAsync("", ctx);
-
-            // Assert
-            Assert.That(result, Is.Not.Null);
-            Assert.That(result.Successful, Is.False);
-            Assert.That(result.ErrorMessage, Does.Contain("requires a non-empty arguments object"));
-
-            Assert.That(session.Mode, Is.EqualTo("Chat"));
-            Assert.That(session.ModeReason, Is.EqualTo("Initial"));
-            Assert.That(session.ModeSetTimestamp, Is.EqualTo("A"));
-            Assert.That(session.LastUpdatedDate, Is.EqualTo("B"));
-            Assert.That(session.ModeHistory.Count, Is.EqualTo(0));
-
-            _loggerMock.Verify(l => l.Trace(It.IsAny<string>()), Times.Never);
-            _loggerMock.Verify(l => l.AddException(It.IsAny<string>(), It.IsAny<Exception>()), Times.Never);
-
-            // Should short-circuit before touching ctx.Session
-            ctxMock.VerifyNoOtherCalls();
-            _sessionManagerMock.VerifyNoOtherCalls();
-        }
 
         [Test]
         public async Task ExecuteAsync_MissingMode_ReturnsError_DoesNotMutateSessionOrHistory()

@@ -91,7 +91,7 @@ namespace LagoVista.AI.Services.Tools
                 }
 
                 var identifier = $"{tla}-{tlaIndex:D3}";
-                var now = DateTime.UtcNow.ToJSONString();
+                var now = UtcTimestamp.Now;
                 var ddr = new DetailedDesignReview
                 {
                     Tla = tla,

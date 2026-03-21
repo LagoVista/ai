@@ -25,8 +25,7 @@ namespace LagoVista.AI.Managers
     {
         private readonly IWorkflowDefinitionRepo _repo;
 
-        public WorkflowDefinitionManager(IWorkflowDefinitionRepo repo, ILogger logger, IAppConfig appConfig, IDependencyManager dependencyManager, ISecurity security)
-            : base(logger, appConfig, dependencyManager, security)
+        public WorkflowDefinitionManager(IWorkflowDefinitionRepo repo, ICoreAppServices coreAppServices) : base(coreAppServices)
         {
             _repo = repo;
         }
