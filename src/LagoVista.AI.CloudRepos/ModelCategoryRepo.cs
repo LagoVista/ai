@@ -14,14 +14,11 @@ namespace LagoVista.AI.CloudRepos
 {
     public class ModelCategoryRepo : DocumentDBRepoBase<ModelCategory>, IModelCategoryRepo
     {
-        private readonly bool _shouldConsolidateCollections;
         public ModelCategoryRepo(IMLRepoSettings repoSettings, IAdminLogger logger) :
             base(repoSettings.MLDocDbStorage.Uri, repoSettings.MLDocDbStorage.AccessKey, repoSettings.MLDocDbStorage.ResourceName, logger)
         {
-            _shouldConsolidateCollections = repoSettings.ShouldConsolidateCollections;
         }
 
-        protected override bool ShouldConsolidateCollections => _shouldConsolidateCollections;
         public Task AddModelCategoryAsync(ModelCategory modelCategory)
         {
             return this.CreateDocumentAsync(modelCategory);

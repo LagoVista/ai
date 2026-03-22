@@ -14,15 +14,11 @@ namespace LagoVista.AI.CloudRepos
     /// </summary>
     public class WorkflowDefinitionRepo : DocumentDBRepoBase<WorkflowDefinition>, IWorkflowDefinitionRepo
     {
-        private readonly bool _shouldConsolidateCollections;
-
+  
         public WorkflowDefinitionRepo(IMLRepoSettings settings, IAdminLogger logger)
             : base(settings.MLDocDbStorage.Uri, settings.MLDocDbStorage.AccessKey, settings.MLDocDbStorage.ResourceName, logger)
         {
-            _shouldConsolidateCollections = settings.ShouldConsolidateCollections;
         }
-
-        protected override bool ShouldConsolidateCollections => _shouldConsolidateCollections;
 
         public Task AddWorkflowDefinitionAsync(WorkflowDefinition definition)
         {

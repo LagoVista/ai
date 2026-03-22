@@ -14,14 +14,11 @@ namespace LagoVista.AI.CloudRepos
 {
     public class AiConversationRepo : DocumentDBRepoBase<AiConversation>, IAiConversationRepo
     {
-        private readonly bool _shouldConsolidateCollections;
         public AiConversationRepo(IMLRepoSettings repoSettings, IAdminLogger logger) :
             base(repoSettings.MLDocDbStorage.Uri, repoSettings.MLDocDbStorage.AccessKey, repoSettings.MLDocDbStorage.ResourceName, logger)
         {
-            _shouldConsolidateCollections = repoSettings.ShouldConsolidateCollections;
         }
 
-        protected override bool ShouldConsolidateCollections => _shouldConsolidateCollections;
         public Task AddAiConversationAsync(AiConversation aiConversation)
         {
             return this.CreateDocumentAsync(aiConversation);

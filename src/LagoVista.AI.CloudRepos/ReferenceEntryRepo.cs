@@ -11,15 +11,10 @@ namespace LagoVista.AI.CloudRepos
 {
     public class ReferenceEntryRepo : DocumentDBRepoBase<ReferenceEntry>, IReferenceEntryRepo
     {
-        private readonly bool _shouldConsolidateCollections;
-
         public ReferenceEntryRepo(IMLRepoSettings settings, IDocumentCloudCachedServices services) :
             base(settings.MLDocDbStorage.Uri, settings.MLDocDbStorage.AccessKey, settings.MLDocDbStorage.ResourceName, services)
         {
-            _shouldConsolidateCollections = settings.ShouldConsolidateCollections;
         }
-
-        protected override bool ShouldConsolidateCollections => _shouldConsolidateCollections;
 
         public Task AddReferenceEntryAsync(ReferenceEntry referenceEntry)
         {

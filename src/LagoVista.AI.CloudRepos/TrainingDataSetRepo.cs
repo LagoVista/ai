@@ -14,15 +14,10 @@ namespace LagoVista.AI.CloudRepos
 {
     public class TrainingDataSetRepo : DocumentDBRepoBase<TrainingDataSet>, ITrainingDataSetRepo
     {
-        private readonly bool _shouldConsolidateCollections;
-
         public TrainingDataSetRepo(ITrainingDataSettings settings, IAdminLogger logger) :
             base(settings.TrainingDataSetsConnectionSettings.Uri, settings.TrainingDataSetsConnectionSettings.AccessKey, settings.TrainingDataSetsConnectionSettings.ResourceName, logger)
         {
-            _shouldConsolidateCollections = settings.ShouldConsolidateCollections;
         }
-
-        protected override bool ShouldConsolidateCollections => _shouldConsolidateCollections;
 
         public Task AddTrainingDataSetsAsync(TrainingDataSet dataSet)
         {

@@ -10,15 +10,10 @@ namespace LagoVista.AI.CloudRepos
 {
     public class AgentSessionRepo : DocumentDBRepoBase<AgentSession>, IAgentSessionRepo
     {
-        private readonly bool _shouldConsolidateCollections;
-
         public AgentSessionRepo(IMLRepoSettings settings, IAdminLogger adminLogger, ICacheProvider cacheProvider) :
             base(settings.MLDocDbStorage.Uri, settings.MLDocDbStorage.AccessKey, settings.MLDocDbStorage.ResourceName, adminLogger, cacheProvider)
         {
-            _shouldConsolidateCollections = settings.ShouldConsolidateCollections;
         }
-
-        protected override bool ShouldConsolidateCollections => _shouldConsolidateCollections; 
 
         public Task AddSessionAsync(AgentSession session)
         {

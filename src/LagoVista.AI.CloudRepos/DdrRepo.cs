@@ -21,7 +21,6 @@ namespace LagoVista.AI.CloudRepos
 {
     public class DdrRepo : DocumentDBRepoBase<DetailedDesignReview>, IDdrRepo, IDdrConsumptionFieldProvider
     {
-        private readonly bool _shouldConsolidateCollections;
         private readonly IAdminLogger _logger;
         private readonly ICacheProvider _cacheProvider;
 
@@ -30,7 +29,6 @@ namespace LagoVista.AI.CloudRepos
         {
             _logger = services.AdminLogger ?? throw new ArgumentNullException(nameof(services.AdminLogger));
             _cacheProvider = services.CacheProvider ?? throw new ArgumentNullException(nameof(services.CacheProvider));
-            _shouldConsolidateCollections = settings.ShouldConsolidateCollections;
         }
 
 
@@ -38,8 +36,6 @@ namespace LagoVista.AI.CloudRepos
         {
             return $"ddr_{ddr.OwnerOrganization.Id}_{ddr.DdrIdentifier.Replace("-", "_")}".ToLower();
         }
-
-        protected override bool ShouldConsolidateCollections => _shouldConsolidateCollections;
 
         public async Task AddDdrAsync(DetailedDesignReview ddr)
         {

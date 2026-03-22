@@ -14,15 +14,10 @@ namespace LagoVista.AI.CloudRepos
 {
     public class ModelLabelSetRepo : DocumentDBRepoBase<ModelLabelSet>, ILabelSetRepo
     {
-        private readonly bool _shouldConsolidateCollections;
-
         public ModelLabelSetRepo(ITrainingDataSettings settings, IAdminLogger logger) :
             base(settings.LabelsConnectionSettings.Uri, settings.LabelsConnectionSettings.AccessKey, settings.LabelsConnectionSettings.ResourceName, logger)
         {
-            _shouldConsolidateCollections = settings.ShouldConsolidateCollections;
         }
-
-        protected override bool ShouldConsolidateCollections => _shouldConsolidateCollections;
 
         public Task AddLabelAsync(ModelLabelSet label)
         {

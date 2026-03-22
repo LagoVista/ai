@@ -13,23 +13,18 @@ namespace LagoVista.AI.CloudRepos
 {
     internal class AgentToolBoxRepo : DocumentDBRepoBase<AgentToolBox>, IAgentToolBoxRepo
     {
-        private readonly bool _shouldConsolidateCollections;
-
         private readonly ICacheProvider _cacheProvider;
 
         public AgentToolBoxRepo(IMLRepoSettings settings, IDocumentCloudCachedServices services) :
             base(settings.MLDocDbStorage.Uri, settings.MLDocDbStorage.AccessKey, settings.MLDocDbStorage.ResourceName, services)
         {
             _cacheProvider = services.CacheProvider;
-            _shouldConsolidateCollections = settings.ShouldConsolidateCollections;
         }
 
         private string ToolBoxCacheKey(string orgId, string key)
         {
             return $"{key}-{orgId}".ToLowerInvariant();
         }
-
-        protected override bool ShouldConsolidateCollections => _shouldConsolidateCollections;
 
         public async Task AddAgentToolBoxAsync(AgentToolBox agentToolBox)
         {

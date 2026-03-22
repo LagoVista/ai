@@ -15,15 +15,10 @@ namespace LagoVista.AI.CloudRepos
 {
     public class TlaCatalogRepo : DocumentDBRepoBase<DdrTlaCatalog>, ITlaCatalogRepo
     {
-        private readonly bool _shouldConsolidateCollections;
-
         public TlaCatalogRepo(IMLRepoSettings settings, IAdminLogger logger) :
             base(settings.MLDocDbStorage.Uri, settings.MLDocDbStorage.AccessKey, settings.MLDocDbStorage.ResourceName, logger)
         {
-            _shouldConsolidateCollections = settings.ShouldConsolidateCollections;
         }
-
-        protected override bool ShouldConsolidateCollections => _shouldConsolidateCollections;
 
         public async Task<DdrTlaCatalog> GetTlaCatalogAsync(EntityHeader org, EntityHeader user)
         {

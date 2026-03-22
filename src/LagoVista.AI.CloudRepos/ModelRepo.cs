@@ -14,14 +14,10 @@ namespace LagoVista.AI.CloudRepos
 {
     public class ModelRepo : DocumentDBRepoBase<Model>, IModelRepo
     {
-        private readonly bool _shouldConsolidateCollections;
         public ModelRepo(IMLRepoSettings repoSettings, IAdminLogger logger) :
             base(repoSettings.MLDocDbStorage.Uri, repoSettings.MLDocDbStorage.AccessKey, repoSettings.MLDocDbStorage.ResourceName, logger)
         {
-            _shouldConsolidateCollections = repoSettings.ShouldConsolidateCollections;
         }
-
-        protected override bool ShouldConsolidateCollections => _shouldConsolidateCollections;
 
         public Task AddModelAsync(Model model)
         {

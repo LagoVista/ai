@@ -16,15 +16,12 @@ namespace LagoVista.AI.CloudRepos
     /// </summary>
     public class AgentContextLoaderRepo : DocumentDBRepoBase<AgentContext> , IAgentContextLoaderRepo
     {
-        private readonly bool _shouldConsolidateCollections;
-
+      
         public AgentContextLoaderRepo(IMLRepoSettings settings, IAdminLogger logger, ICacheProvider cacheProvider) : 
             base(settings.MLDocDbStorage.Uri, settings.MLDocDbStorage.AccessKey, settings.MLDocDbStorage.ResourceName, logger, cacheProvider)
         {
-            _shouldConsolidateCollections = settings.ShouldConsolidateCollections;
         }
-        protected override bool ShouldConsolidateCollections => _shouldConsolidateCollections;
-
+ 
         public Task<AgentContext> GetAgentContextAsync(string id)
         {
             return this.GetDocumentAsync(id);
@@ -34,16 +31,13 @@ namespace LagoVista.AI.CloudRepos
 
     public class AgentContextRepo : DocumentDBRepoBase<AgentContext>, IAgentContextRepo
     {
-        private readonly bool _shouldConsolidateCollections;
-
+      
         public AgentContextRepo(IMLRepoSettings settings, IDocumentCloudCachedServices services) :
             base(settings.MLDocDbStorage.Uri, settings.MLDocDbStorage.AccessKey, settings.MLDocDbStorage.ResourceName, services)
         {
-            _shouldConsolidateCollections = settings.ShouldConsolidateCollections;
         }
 
-        protected override bool ShouldConsolidateCollections => _shouldConsolidateCollections;
-
+     
         public Task AddAgentContextAsync(AgentContext VectorDatabase)
         {
             return this.CreateDocumentAsync(VectorDatabase);
