@@ -28,9 +28,9 @@ namespace LagoVista.AI.CloudRepos
 
         public QdrantSettings(IConfiguration configuration)
         {
-            configuration.GetRequiredSection("Qdrant");
-            QdrantEndpoint = configuration.Require("Uri");
-            QdrantApiKey = configuration.Require("ApiKey");
+            var qdrant =configuration.GetRequiredSection("Qdrant");
+            QdrantEndpoint = qdrant.Require("Uri");
+            QdrantApiKey = qdrant.Require("ApiKey");
         }
     }
 
@@ -41,9 +41,9 @@ namespace LagoVista.AI.CloudRepos
 
         public OpenAISettings(IConfiguration configuration)
         {
-            configuration.GetRequiredSection("OpenAI");
-            OpenAIUrl = configuration.Require("URL");
-            OpenAIApiKey = configuration.Require("APIKey");
+            var openAiSection = configuration.GetRequiredSection("OpenAI");
+            OpenAIUrl = openAiSection.Require("URL");
+            OpenAIApiKey = openAiSection.Require("APIKey");
         }
     }
 
